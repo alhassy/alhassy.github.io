@@ -1,7 +1,7 @@
 #+title: AlBasmala ^_^
 #+date: <1991-08-20 19:29>
 #+filetags: emacs
-#+fileimage: org_logo.png
+#+fileimage: org_logo.png 150 150
 
 # C-c C-v C-b ⇒ Evaluate all src blocks
 
@@ -276,14 +276,20 @@ for the JavaScript code in this tag.
 #+begin_src emacs-lisp
 ;; every article declaratively has an associated image ^_^
 ;; If none declared, we use emacs-birthday-present.png :-)
-(cl-defun my/org-static-blog-assemble-image (file &optional (width 350) (height 350))
+(cl-defun my/org-static-blog-assemble-image (file)
 (with-temp-buffer
   (insert-file-contents file)
   (goto-char 0)
   (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
-  (format "<center> <img src=\"images/%s\" alt=\"Article image\" width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
-  (substring-no-properties (or (match-string 1) "emacs-birthday-present.png"))
-            width height)))
+  (-let [(image width height)
+         (s-split " " (substring-no-properties
+                       (or (match-string 1)
+                           "emacs-birthday-present.png")))]
+    (setq width (or width 350))
+    (setq height (or height 350))
+  (format "<center> <img src=\"images/%s\" alt=\"Article image\"
+  width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
+          image width height))))
 #+end_src
 
 #+RESULTS:
@@ -392,7 +398,7 @@ posts as full text posts."
                                         (delete-other-windows)
                                         (/ _x 200))) ;; 200 words per minute reading
 
-                                 (my/org-static-blog-assemble-image it 300 300)
+                                 (my/org-static-blog-assemble-image it)
                                  it
                                  (concat org-static-blog-publish-url (f-base it)))
                          post-filenames))
@@ -417,6 +423,10 @@ posts as full text posts."
 : org-static-blog-assemble-index
 
 * COMMENT todo
+
+change the multipost method to behave like the way I have it for index.html;
+e.g., for tags, showing a full post is unreasonable ---my posts are long.
+
 + in the index, under each article's name:
   - date and badge tags ^_^
     - org-static-blog-get-date
