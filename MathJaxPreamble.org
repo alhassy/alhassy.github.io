@@ -1,0 +1,153 @@
+# This file is intended to be #+INCLUDE'd into other files.
+# Thus its top matter is commented out.
+
+# TITLE: MathJaxPreamble
+# DESCRIPTION: This file provides support for using equations and calculations in my articles.
+#+HTML_MATHJAX: align: left indent: 5em tagside: right font: Neo-Euler
+#
+# https://orgmode.org/manual/Math-formatting-in-HTML-export.html
+
+# https://math.meta.stackexchange.com/questions/5020/mathjax-basic-tutorial-and-quick-reference
+
+* BEGIN Invisible :ignore:
+
+#+HTML: <div id="myMathJaxStuff" style="display: none;">
+#+LaTeX: \iffalse
+
+We do not want the MathJax declarations to use vertical whitespace;
+so we do not display their residual whitespace.
+
+Moreover the form of MathJax declarations differs from usual LaTeX
+declarations, so we iffalse...fi these ones.
+
+Commenting the MathJax using <!-- HTML comments -->
+makes the commands inaccessible elsewhere.
+
+The alternative is to declare a [[https://stackoverflow.com/questions/1992114/how-do-you-create-a-hidden-div-that-doesnt-create-a-line-break-or-horizontal-sp][non-displayed ~div]]~.
+
+* Calculations  :ignore:
+$$\newcommand{\step}[1]{ \\ = \;\; & \qquad \color{maroon}{⟨ \text{ #1 } ⟩} \\ & }$$
+$$\newcommand{\stepWith}[2]{ \\ #1 \;\; & \qquad \color{maroon}{⟨ \text{ #2 } ⟩} \\ & }$$
+$$\newenvironment{calc}{\begin{align*} & }{\end{align*}}$$
+
+* Equations  :ignore:
+
+Having identical label references for different equations will break rendering!
+
+eqn            := display name, then display formula.
+eqnColour      := display name, then display formula, then colour
+eqnLabel       := display name, then display formula, then label
+eqnLabelColour := display name, then display formula, then label, then colour
+eqnLabelColour := display name, then display formula, then colour, then label -- safe redundancy!
+
+$$\newcommand{\eqnLabelColour}[4]{ \begin{equation} \color{#4}{#2} \label{#3}\tag{$\color{#4}{\text{#1}}$} \end{equation} }$$
+
+$$\newcommand{\eqnColourLabel}[4]{ \eqnLabelColour{#1}{#2}{#4}{#3} }$$
+
+Default equation colour is: navy
+$$\newcommand{\eqnLabel}[3]{ \eqnLabelColour{#1}{#2}{#3}{navy} }$$
+
+Default label is the display name
+$$\newcommand{\eqnColour}[3]{ \eqnLabelColour{#1}{#2}{#1}{#3} }$$
+
+$$\newcommand{\eqn}[2]{ \eqnLabel{#1}{#2}{#1} }$$
+
+Notice that \ref{Label} and \ref{Label2} have the same displayed name,
+but *cannot* have the same label!
+
+# Examples
+#
+# $$\eqnColourLabel{this}{that}{tiel}{NOPE}$$
+# $$\eqnLabelColour{this}{that}{this}{red}$$
+# $$\eqnColour{this2}{that}{green}$$
+
+* Givens and Requireds  :ignore:
+
+$$\newcommand{\givens}[1]{ \color{teal}{#1} }$$
+$$\newcommand{\requireds}[1]{ \color{navy}{#1} }$$
+
+* Logical Operators with Spacing  :ignore:
+
+$$\def\lands{\;\land\;}$$
+$$\def\landS{\quad\land\quad}$$
+
+$$\def\impliess{\;\Rightarrow\;}$$
+$$\def\impliesS{\quad\Rightarrow\quad}$$
+
+$$\def\equivs{\;\equiv\;}$$
+$$\def\equivS{\quad\equiv\quad}$$
+
+$$\def\eqs{\;=\;}$$
+$$\def\eqS{\quad=\quad}$$
+
+$$\def\sqleqs{\;\sqsubseteq\;}$$
+$$\def\sqleqS{\quad\sqsubseteq\quad}$$
+
+* Category Theory keywords  :ignore:
+$$\def\foldr{\mathsf{foldr}}$$
+$$\def\edge{\mathsf{edge}}$$
+$$\def\Func{\mathsf{Func}}$$
+$$\def\Id{\mathsf{Id}}$$
+$$\def\src{\mathsf{src}}$$
+$$\def\tgt{\mathsf{tgt}}$$
+$$\def\obj{\mathsf{obj}}$$
+$$\def\mor{\mathsf{mor}}$$
+$$\def\natTo{\overset{.}{→}}$$
+$$\def\Obj{\mathsf{Obj}\,}$$
+$$\def\List{\mathsf{List}\,}$$
+* END Invisible, for latex  :ignore:
+
+After this, only pure latex commands should exist.
+
+However, the whitespace they produce via MathJax is ignored
+since the HTML div is not yet closed.
+
+#+LaTeX: \fi
+
+* LaTeX Setup  :ignore:
+
+#+LaTeX_HEADER: \setlength{\parskip}{0.5em}
+#+LaTeX_HEADER: \newcommand{\color}[2]{#2}
+
+#+LATEX_HEADER: \usepackage{calculation}
+#+LaTeX_HEADER: \newenvironment{calc}{ \begin{calculation} }{ \end{calculation} }
+# The calculation package defines \step as we want it here.
+#+LaTeX_HEADER: \newcommand{\stepWith}[2]{ \step[#1]{#2} }
+
+#+LaTeX_HEADER: \usepackage{amsmath,mdframed}
+
+#  LaTeX_HEADER: \def\eqn#1#2{ \vspace{-0.5em}\centerline{ \ensuremath{#2} \hfill #1}\unskip }
+# LaTeX_HEADER: \def\eqn#1#2{ \newline \fbox{$#2$ \hfill \text{\sc #1}} \newline }
+#+LaTeX_HEADER: \def\eqn#1#2{ \newline \begin{mdframed} $\quad#2$ \hfill $\quad$ \text{\sc #1} \end{mdframed} \newline }
+#+LaTeX_HEADER: \newcommand{\eqnLabelColour}[4]{ \eqn{#1}{#2} }
+#+LaTeX_HEADER: \newcommand{\eqnColourLabel}[4]{ \eqn{#1}{#2} }
+#+LaTeX_HEADER: \newcommand{\eqnLabel}[3]{ \eqn{#1}{#2} }
+#+LaTeX_HEADER: \newcommand{\eqnColour}[3]{ \eqn{#1}{#2} }
+#
+#   LaTeX: \def\eqn#1#2{ \begin{flalign*} #2 && \tag*{\sc #1} \label{#1} \end{flalign*}  }
+
+#+LaTeX_HEADER: \newcommand{\givens}[1]{ \color{teal}{#1} }
+#+LaTeX_HEADER: \newcommand{\requireds}[1]{ \color{navy}{#1}}
+#+LaTeX_HEADER: \def\lands{\;\land\;}
+#+LaTeX_HEADER: \def\landS{\quad\land\quad}
+#+LaTeX_HEADER: \def\impliess{\;\Rightarrow\;}
+#+LaTeX_HEADER: \def\impliesS{\quad\Rightarrow\quad}
+#+LaTeX_HEADER: \def\equivs{\;\equiv\;}
+#+LaTeX_HEADER: \def\equivS{\quad\equiv\quad}
+#+LaTeX_HEADER: \def\sqleqs{\;\sqsubseteq\;}
+#+LaTeX_HEADER: \def\sqleqS{\quad\sqsubseteq\quad}
+
+#
+# I may use hspace in web article for spacing, which might ruin the pdf, so
+# such hspaces are ignored and latex typesets things as is standard.
+#
+
+#+LaTeX: \def\ref#1{#1}
+#+LaTeX: \def\hspace#1{}
+
+* END Invisible, for HTML                                            :ignore:
+  :PROPERTIES:
+  :UNNUMBERED: t
+  :CUSTOM_ID: end
+  :END:
+#+HTML: </div>

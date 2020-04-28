@@ -1,0 +1,656 @@
+#+TITLE: Discovering Heyting Algebra
+#+DATE: <2018-11-14 19:29>
+#+AUTHOR: Musa Al-hassy
+#+EMAIL: alhassy@gmail.com
+#+filetags: order-theory category-theory
+#+fileimage: HeytingAlgebra.png 350 350
+#+DESCRIPTION: How do friends communicate secretly using non-invertible operations such as minimum? An introduction to Heyting Algebra --an instance of Cartesian Closed Categories!
+
+#+INCLUDE: ../MathJaxPreamble.org
+
+* Abstract                                                           :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Abstract
+:END:
+
+#+toc: headlines 2
+
+We attempt to motivate the structure of a Heyting Algebra
+by considering ‘inverse problems’.
+
+For example,
++ You have a secret number $x$ and your friend has a secret number $y$, which you've
+  communicated to each other in person.
++ You communicate a ‘message’ to each other
+  by adding onto your secret number.
++ Hence, if I receive a number $z$, then I can /undo/ the addition operation to find the ‘message’ $m = z - y$.
+
+What if we decided, for security, to change our protocol from using addition to using
+minimum. That is, we encode our message $m$ as $z = x ↓ m$. Since minimum is not
+invertible, we decide to send our encoded messages with a ‘context’ $c$ as a pair $(z, c)$.
+From this pair, a unique number $m′$ can be extracted, which is not necessarily the original $m$.
+Read on, and perhaps you'll figure out which messages can be communicated 😉
+
+# For example, we wrote our message on a piece of paper and placed it on a cafe bulletin board --a context!
+
+This exploration demonstrates that relative pseudo-complements
++ Are admitted by the usual naturals precisely when infinity is considered a number;
++ Are /exactly/ implication for the Booleans;
++ /Internalises/ implication for sets;
++ Yield /the largest complementary subgraph/ when considering subgraphs.
+# + Generalise the /deduction theorem/.
+
+In some sense, the pseudo-complement is the “best approximate inverse” to forming meets, minima, intersections.
+
+Along the way we develop a number of the theorems describing the relationships
+between different structural components of Heyting Algebras;
+most notably the internalisation of much of its own structure.
+
+The article aims to be self-contained, however it may be helpful to
+look at [[https://alhassy.github.io/CatsCheatSheet/LatticesCheatSheet.pdf][this lattice cheat sheet]] (•̀ᴗ•́)و
+
+* Photograph Credit                                                  :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Photograph-Credit
+:END:
+
+#+LaTeX: \iffalse
+#+HTML: <small> <center>
+( Photo by
+[[https://unsplash.com/@ludovicphoto?utm_medium=referral&utm_campaign=photographer-credit&utm_content=creditBadge][Ludovic Fremondiere]]
+on [[https://unsplash.com/][Unsplash]] )
+#+HTML: </center> </small>
+#+LaTeX: \fi
+
+# "Download free do whatever you want high-resolution photos from Unsplash."
+
+* Meet Semi-Lattices
+:PROPERTIES:
+:CUSTOM_ID: Meet-Semi-Lattices
+:END:
+
+Recall that an /order/ is nothing more than a type $Carrier$ with a relation
+$\_⊑\_$ such that the following list of axioms holds: For any $x,y,z : Carrier$,
+
+\[\eqn{⊑-reflexive}{x ⊑ x}\]
+
+\[\eqn{⊑-transitive}{x ⊑ y \landS y ⊑ z \impliesS x ⊑ z}\]
+
+\[\eqn{⊑-antisymmetric}{x ⊑ y \landS y ⊑ x \impliesS x = y}\]
+
+This models notions of containment, inclusion, hierarchy, and approximation.
+
+Recall that a /meet/ is an additional operation $\_⊓\_$ specified by
+\[\eqnColour{Meet Characterisation}{ z \;⊑\; x ⊓ y \equivS z ⊑ x \landS z ⊑ y}{green}\]
+
+Meets model notions of /greatest lower bounds/, or /infima/.
+
+Observe that /meets allow us to encode a pair of inclusions as a single inclusion!/
+That is, an /external/ conjunction $∧$ is equivalent to an /internal/ meet $⊓$.
+
+In computing parlance, think of a top-level ‘method’ that takes and yields
+data. In many languages, the method itself can be thought of as data!
+It is this kind of external-internal duality we are alluding to
+--and is captured nicely by exponential objects in category theory,
+of which we are considering a special case.
+
+** Examples
+:PROPERTIES:
+:CUSTOM_ID: Examples
+:END:
++ (ℕ, ≤, ↓)   ---where ↓ denotes minimum.
++ (ℕ, ∣, gcd)  --the naturals ordered by divisibility.
++ (Sets, ⊆, ∩)
++ (𝔹, ⇒, ∧)
++ Formulae of a logic ordered by the /proves/, or /syntactic consequence/, relationship $\_⊢\_$ with
+  syntactic conjunction as meet.
++ (Sets, →, ×): Sets with “A atmost B” meaning there is a function $f : A → B$,
+  then the Cartesian product can be used as meet.
+   - This is not strictly a semi-lattice, as defined here, but it is when we consider ‘setoids’.
+   - Moreover it provides excellent intuition!
++ Subgraphs of a given simple graph $G = (V,E)$ --which is just a relation $E$ on a set of vertices $V$.
+  - The ordering is obtained by subset inclusion, \[(V₁, E₁) ⊑ (V₂, E₂) \equivS V₁ ⊆ V₂ \lands E₁ ⊆ E₂\]
+    and so the meet is obtained by intersection, \[(V₁, E₁) ⊓ (V₂, E₂) = (V₁ ∩ V₂, E₁ ∩ E₂)\]
+    # Likewise joins are given by unions.
+  - However, we cannot define complement in the same fashion, since the resulting relation
+    is not over the resulting vertex set!
+
+    Indeed suppose we define $∼ (V′, E′) \;:=\; (V - V′, E - E′)$, then
+    the discrete graph $(V, ø)$ has complement $(ø, E)$ which is a ‘graph’
+    with many edges $E$ but no vertices! ---Provided $(V,E)$ has edges.
+
+    However, the edges can be /relativised/ to the vertices to produce the pseudo-complement.
+
+# Every interior algebra provides a Heyting algebra in the form of its lattice of open elements. Every Heyting algebra is of this form as a Heyting algebra can be completed to a Boolean algebra by taking its free Boolean extension as a bounded distributive lattice and then treating it as a generalized topology in this Boolean algebra.
+#
+# The global elements of the subobject classifier Ω of an elementary topos form a Heyting algebra; it is the Heyting algebra of truth values of the intuitionistic higher-order logic induced by the topos.
+#
+
+** The Principle of Indirect Equality
+:PROPERTIES:
+:CUSTOM_ID: The-Principle-of-Indirect-Equality
+:END:
+
+It is not clear how $\ref{Meet Characterisation}$ can be used to /prove/
+properties about meet.
+# Recall it says, for any $x, y, z$,
+# \[ z \;⊑\; x ⊓ y \equivS z ⊑ x \landS z ⊑ y \]
+
+The laws \ref{⊑-antisymmetric} and \ref{⊑-reflexive} can be fused together
+into one law:
+\[\eqnColour{Indirect Equality}{ x = y \equivS \left(∀ z \;•\quad ⊑\; z ⊑ x \equivs z ⊑ y\right)}{green}\]
+
+That is, /for all practical purposes, $x = y$ precisely when they have the same sub-parts!/
+
+Using this, we can prove that meet is idempotent $x ⊓ x = x$,
+symmetric $x ⊓ y = y ⊓ x$, associative $x ⊓ (y ⊓ z) = (x ⊓ y) ⊓ z$,
+and monotonic: $a ⊑ b \landS c ⊑ d \impliesS a ⊓ c \sqleqS b ⊓ c$.
+
+Below we use this principle in a number of places, for example \ref{Distributivity of → over ⊓}.
+
+* Relative Pseudo-complements
+:PROPERTIES:
+:CUSTOM_ID: Relative-Pseudo-complements
+:END:
+
+The /relative pseudo-complement of $a$ wrt $b$/, $(a ⟶ b)$,
+is /“the largest element $x$ that ensures modus ponens”/, i.e.,
+/“the largest element $x$ whose meet with $a$ is contained in $b$”/:
+
+\[\eqnColour{Relative Pseudo-Complement Characterisation}{\hspace{-5em} a ⊓ x \;⊑\; b  \equivS  x \;⊑\; (a → b)}{green}\]
+
+This is also sometimes denoted $a ➩ b$ or $a \backslash b$.
+
+In five of the above settings this becomes,
++ $m ↓ x ≤ n  \equivS  x ≤ (m → n)$
+
+   Not at all clear what to do so looking for a counterexample
+   shows that pseduocomplements cannot exist for the naturals
+   otherwise selecting $m ≔ n$ yields:
+   # $n ↓ x ≤ n  ≡  x ≤ (n → n)$ i.e., $true ≡ x ≤ (n → n)$
+   # and so existence of psquedo-complements implies the existence of a top element “$(n ⟶ n) = +∞$”!
+   #  Question: Why does this pass `quickCheck $ \m -> \n -> \x -> (m `min` x <= n) === (x <= n)`?
+
+    \begin{calc}
+       ∀ x \;•\quad  n ↓ x \;≤\; n \equivS x \;≤\; (n → n)
+    \step{ Weakening: The minimum is at least both its arguments }
+       ∀ x \;•\quad  \mathsf{true} \equivS x \;≤\; (n → n)
+    \step{ Identity of ≡ }
+       ∀ x \;•\quad  x \;≤\; (n → n)
+    \step{ Definition of Infinity }
+       (n → n) \;=\; +∞
+    \end{calc}
+
+    Thus the existence of psquedo-complements implies the existence of a top element “$(n ⟶ n) = +∞$”!
+
+    Okay, no problem: Let's consider 𝒩, the set of natural numbers along with a new maximum element “+∞”;
+    then we can define a relative pseudo-complement.
+    \[\eqn{Definition of → for 𝒩}{m → n \quad=\quad \mathsf{if}\; m > n \;\mathsf{then}\; n \;\mathsf{else}\; +∞ \;\mathsf{fi}}\]
+    We now have a way to approximate an inverse to minima, which is in general not invertible.
+
+    --This definition works for any linear order with a top element---
+
++ $p ∧ x ⇒ q  \equivS  x ⇒ (p → q)$
+
+  Starting with the right side,
+    \begin{calc}
+       x \impliesS (p → q)
+    \step{ Characterisation of pseudo-complement }
+       p ∧ x \impliesS q
+    \step{ Symmetry of ∧ }
+       x ∧ p \impliesS q
+    \step{ Shunting }
+       x \impliesS (p ⇒ q)
+    \end{calc}
+
+    Hence, by indirect equality, $p → q \;=\; p ⇒ q \;=\; ¬ p ∨ q$.
+
++ $(A ∩ X)  \;⊆\;  B  \equivS  X  \;⊆\;  (A → B)$
+
+  Where we can similarly verify $(A → B) \;\;=\;\; ∼ A ∪ B$.
+
+  It is interesting to note that $x ∈ (A → B) \equivS x ∈ A \impliess x ∈ B$.
+
++ $G ⊓ X \;⊑\; G′  \equivS  X \;⊑\; (G → G′)$
+
+  We disclosed earlier that subgraph difference did not yield valid subgraphs,
+  but if we relativised the resulting edge relationship to only consider the
+  resulting vertex set, then we do have a subgraph.
+
+  That is, subgraphs admit relative pseduo-complements, by
+  $(V₁, E₁) → (V₂, E₂) \equivS (V₁ - V₂, (E₁ - E₂) ∩ (V₃ × V₃))$ where $V₃ = V₁ - V₂$.
+
+  /The result of $G₁ → G₂$ is the largest subgraph of $G₁$ that does not overlap with $G₂$./
+
++ $(A × B → C) \equivS A → (B → C)$
+
+  In the setting of functions, this says that a function taking a pair of inputs
+  can be considered as a function that takes one input, of type $A$, then yields
+  another function that takes the second input. That is, the two inputs no longer
+  need to be provided at the same time. This is known as currying.
+
++ $P, Q ⊢ R \equivS P ⊢ (Q → R)$
+
+  In the logical formulae setting,
+  the characterisation is known as /the deduction theorem/ and allows us
+  to ‘suppose’ an antecedent in the process of a proof.
+
+In the above we have witnessed that the usual naturals admit pseudo-complements precisely
+when infinity is considered a number, that it is /exactly/ implication for the Booleans,
+that it /internalises/ implication for sets, and for subgraphs it is encodes
+/the largest complementary subgraph/.
+
+In some sense, the pseudo-complement is the “best approximate inverse” to forming minima.
+
+We leave the remaining example as an exercise 😉
+
+* Theorems --- Generalising Observations from the Examples
+:PROPERTIES:
+:CUSTOM_ID: Theorems-Generalising-Observations-from-the-Examples
+:END:
+
+Recall the \ref{Relative Pseudo-Complement Characterisation} says
+\[a ⊓ x \;⊑\; b  \equivS  x \;⊑\; (a → b)\]
+
+We readily obtain some results by making parts of the characterisation true.
+E.g., making the left/right part true by instantiating the variables.
+
+For example, taking $x ≔ (a → b)$ yields
+\[\eqn{Modus Ponens}{a ⊓ (a → b) \quad⊑\quad b}\]
+Exercise: Prove this directly!
+
++ In the Boolean setting, this reads “if $a$ is true and $a$ implies $b$, then $b$ is true”.
++ In the functional setting, this reads “if $f : A → B$ and we have an element $a : A$, then
+  we have an element $f(a) \, : \, B$”. In this setting, this operation is known as ‘evaluation’,
+  or /function application/.
+
+Using the principle of indirect equality, we can strengthen this into an equality
+and also obtain a close variant.
+\[\eqn{Strong Modus Ponens}{a ⊓ (a → b) \quad=\quad a ⊓ b}\]
+:Proof:
+   x ⊑ a ⊓ (a → b)
+≡  x ⊑ a  ∧  x ⊑ a → b
+≡  x ⊑ a  ∧  a ⊓ x ⊑ b
+≡  x ⊑ a  ∧  x ⊑ b
+≡  x ⊑ a ⊓ b
+:end:
+
+\[\eqn{Absorption}{b ⊓ (a → b) \quad=\quad b}\]
+:Proof:
+x ⊑ b ⊓ (a → b)
+≡ x ⊑ b ∧ x ⊑ a → b
+≡ x ⊑ b ∧ x ⊓ a ⊑ b
+≡ x ⊑ b ∧ (x ⊓ b) ⊓ a ⊑ b
+≡ x ⊑ b
+:end:
+
+# $a ⊓ x \;⊑\; b  \equivS  x \;⊑\; (a → b)$
+\ref{Modus Ponens} suggest an order preservation property:
+\begin{calc}
+   a → x \quad⊑\quad a → y
+\step{ \ref{Relative Pseudo-Complement Characterisation} }
+   a ⊓ (a → x) \quad⊑\quad y
+\stepWith{\Leftarrow}{ \ref{⊑-transitive} }
+   a ⊓ (a → x) \quad⊑\quad x \landS x \quad⊑\quad y
+\step{ \ref{Modus Ponens} and Identity of ∧ }
+   x \quad⊑\quad y
+\end{calc}
+Hence we have derived the following /consequent weakening rule/,
+\[\eqn{Monotonicity₂}{a → x \quad⊑\quad a → y \qquad\Leftarrow\qquad x \;⊑\; y}\]
+
+An immediate sequel is,
+\[\eqn{Weakening₂}{a → (x ⊓ y) \quad⊑\quad a → y}\]
+
+Here are a few more properties for you to get familiar with this,
+the first three are immediate instantiation of the characterisation,
+while the fourth one may require using monotonicity properties of meet,
+and the final one uses indirect equality.
+
+# Taking b ≔ a
+\[\eqn{Top Element}{x \quad⊑\quad a → a}\]
+
+# Take x ≔ b
+\[\eqn{Strengthening}{b \quad⊑\quad a → b}\]
+
+# Take b ≔ a ⊓ x
+\[\eqn{UnCurrying}{x \quad⊑\quad a → a ⊓ x}\]
+
+# Take a ≔ a ⊓ b
+\[\eqn{Weakening}{x \quad⊑\quad (a ⊓ b) → b}\]
+
+\[\eqn{Antitonicity₁}{a → x \quad⊑\quad b → x \qquad\Leftarrow\qquad b \;⊑\; a}\]
+:Proof:
+If b ⊑ a, then a → x  ⊑ b → x
+   a → x  ⊑ b → x
+≡  b ⊓ (a → x)  ⊑ x
+⇐ b ⊓ (a → x)  ⊑ a ⊓ (a → x)  ⊑ x
+⇐ b ⊑ a
+:end:
+
+\[\eqn{Self-Sub-Distributive}{a → (b → c)  \sqleqS  (a → b) → (a → c)}\]
+:Proof:
+  x ⊑ (a → b) → (a → c)
+≡ (a → b) ⊓ x ⊑ a → c
+≡  a ⊓ (a → b) ⊓ x ⊑ c
+≡  a ⊓ b ⊓ x ⊑ c        , strong modus ponens
+≡  a ⊓ x ⊑ b → c
+≡  x ⊑ a → (b → c)
+:end:
+
+Observe that, in the functional case, \ref{UnCurrying} says we have a function
+\[X → (A → (A × X)) \;\;:\;\; x \mapsto (a \mapsto (a, x))\]
+
+* → Furnishes ⊓
+:PROPERTIES:
+:CUSTOM_ID: Furnishes
+:END:
+
+Recall \ref{Top Element} said that we have a greatest element in the order.
+Suppose our universe, $Carrier$, is non-empty and has some element $c₀$.
+Then we may /define/ $⊤ = (c₀ → c₀)$. This element is in-fact invariant
+over $c₀$:
+
+\[\eqn{Top Element Invariance}{ ∀ x \;•\quad ⊤ \quad=\quad (x → x) }\]
+The proof is simply an appeal to \ref{⊑-antisymmetric} then \ref{Top Element}
+twice.
+
+From this, we obtain two immediate properties about meets.
+
+\[\eqn{Identity of ⊓}{ x ⊓ ⊤ \quad=\quad x }\]
+:Proof:
+  x ⊓ ⊤
+= x ⊓ (x → x)
+⊑ x
+= x ⊓ x
+⊑ x ⊓ ⊤
+:end:
+
+\[\eqn{Shunting}{x \;⊑\; a → (b → c) \equivS x \;⊑\; (a ⊓ b) → c}\]
+:Proof:
+   x ⊑ a → (b → c)
+≡  a ⊓ x ⊑ (b → c)
+≡  (b ⊓ a) ⊓ x ⊑ c
+≡ x ⊑ (a ⊓ b) → c
+:end:
+
+Along with two properties about top element.
+
+\[\eqn{Right Zero of →}{ x → ⊤ \quad=\quad ⊤ }\]
+:Proof:
+  x → ⊤
+= x → (x → x)
+= x ⊓ x → x
+= x → x
+= ⊤
+:end:
+
+# The next one can be easily proven using indirect equality.
+\[\eqn{Left Identity of →}{ ⊤ → x \quad=\quad x }\]
+:Proof:
+      z       ⊑  ⊤ → x
+   ≡  z ⊓ ⊤  ⊑  x
+   ≡  z       ⊑ x
+Thus by law of indirect equality, x = (⊤ → x).
+:end:
+
+Notice that \ref{Right Zero of →} /internalises/ what it means to
+be a \ref{Top Element}; namely $∀ x \;•\; x ≤ ⊤$.
+
+A bit more interestingly, we can /fuse/ a meet with a pseudo-complement:
+# The next one needs antitonicity in the first argument of `→'!
+# “Lower adjoint after upper adjoint is contained in the reversal”
+\[\eqn{Sub-mutual Associtivity of ⊓ and →}{\hspace{-3em}x ⊓ (a → b)  \sqleqS (x ⊓ a) → b}\]
+:Proof:
+   x ⊓ (a → b)  ⊑ (x ⊓ a) → b
+≡  (a → b)  ⊑ x → ((x ⊓ a) → b)
+≡  (a → b)  ⊑ (x ⊓ x ⊓ a) → b
+⇐ x ⊓ x ⊓ a ⊑ a
+≡ true
+:end:
+
+The converse of this statement is not true in general.
+In particular, in the presence of bottoms, the converse,
+$(x ⊓ a) → b   \;\;⊑\;\;   x ⊓ (a → b)$, implies that there is only
+one possible value: ⊥!
+
+Exercise: Show that the converse statement implies $⊥ = ⊤$
+then from this conclude that $x = ⊥$, for all $x$.
+:Proof:
+Then taking a ≔ b ≔ x ≔ ⊥ yields
+   (⊥ ⊓ ⊥) → ⊥   ⊑   ⊥ ⊓ (⊥ → ⊥).
+≡  ⊥ → ⊥   ⊑   ⊥ ; zero of ⊓
+≡  ⊤   ⊑   ⊥ ; defn of ⊤
+≡ ⊥ ⊑ ⊤ ⊑ ⊥
+≡ ⊥ = ⊤
+
+Theorem “OhNo!”: ⊥ = ⊤
+Theorem “Explosion” “Everything is ⊥”: p = ⊥
+Proof:
+    p
+  =⟨ “Identity of ∧” ⟩
+    p ⊓ ⊤
+  =⟨ “OhNo!” ⟩
+    p ⊓ ⊥
+  =⟨ “Zero of ⊓” ⟩
+    ⊥
+:end:
+
+# Every element x with the property x* = 0 (or equivalently, x** = 1) is called dense.
+
+* Internalising ⊑ and ⊓
+:PROPERTIES:
+:CUSTOM_ID: Internalising-and
+:END:
+
+We have seen how relative pseudo-complements allowed us to reflect
+external characterisations such as \ref{Top Element} that use
+logical connectives into internal forms such as \ref{Right Zero of →}
+which only /uses the symbols of the language/, namely →, ⊓, ⊤.
+
+Even the order, which takes two elements and yields a Boolean, can be internalised:
+\[\eqn{Internalising}{a ⊑ b  \equivS  (a → b) = ⊤}\]
+:Proof:
+   a → b = ⊤
+≡  ⊤ ⊑ a → b
+≡ a ⊓ ⊤ ⊑ b
+≡ a ⊑ b
+:end:
+Notice the striking resemblance to the \ref{Definition of → for 𝒩}!
+
+\ref{Meet Characterisation} can also be internalised:
+\begin{calc}
+x \sqleqS (a → c) \;⊓\; (a → b)
+  \step{ \ref{Meet Characterisation} }
+x ⊑ (a → c) \landS  x ⊑ (a → b)
+  \step{ \ref{Relative Pseudo-Complement Characterisation} }
+a ⊓ x ⊑ c   \landS  a ⊓ x ⊑ b
+  \step{ \ref{Meet Characterisation} }
+a ⊓ x \sqleqS c ⊓ b
+  \step{ \ref{Relative Pseudo-Complement Characterisation} }
+x \sqleqS  a → (c ⊓ b)
+\end{calc}
+Hence, by the principle of \ref{Indirect Equality}, we have
+\[\eqn{Distributivity of → over ⊓}{ a → (c ⊓ b) \quad=\quad (a → c) \;⊓\; (a → b) }\]
+
+* Flipping the Inclusions Around
+:PROPERTIES:
+:CUSTOM_ID: Flipping-the-Inclusions-Around
+:END:
+# -- Adding -⊔-
+
+Recall \ref{Meet Characterisation} says
+\[ z \;⊑\; x ⊓ y \equivS z ⊑ x \landS z ⊑ y \]
+If we now mirror ‘⊑’ with ‘⊒’ we obtain --after renaming ⊓ with ⊔--
+\[ z \;⊒\; x ⊔ y \equivS z ⊒ x \landS z ⊒ y \]
+That is, we obtain upper bounds!
+\[\eqnColour{Join Characterisation}{ x ⊔ y \;⊑\; z \equivS x ⊑ z \landS y ⊑ z}{green}\]
+
+# (x → z) ⊓ (y → z)  ⊑  (x ⊔ y) → z
+
+Moreover, using →, it can be shown that joins and meets distribute over each other.
+
+\[\eqn{Distributivity₁}{a \;⊔\; (b ⊓ c) \quad=\quad (a ⊔ b) \;⊓\; (a ⊔ c)}\]
+\[\eqn{Distributivity₂}{a \;⊓\; (b ⊔ c) \quad=\quad (a ⊓ b) \;⊔\; (a ⊓ c)}\]
+:Proof:
+The ⊒ is true, by monoctonicty. Or more directly:
+
+   (a ⊓ b) ⊔ (a ⊓ c)  ⊑ a ⊓ (b ⊔ c)
+≡  (a ⊓ b) ⊑ a ⊓ (b ⊔ c)  ∧   (a ⊓ c) ⊑ a ⊓ (b ⊔ c)
+≡      (a ⊓ b) ⊑ a  ∧  (a ⊓ b) ⊑ (b ⊔ c)
+   ∧   (a ⊓ c) ⊑ a   ∧ (a ⊓ c) ⊑ (b ⊔ c)
+≡      true   ∧  (a ⊓ b) ⊑ (b ⊔ c)
+   ∧   true   ∧ (a ⊓ c) ⊑ (b ⊔ c)
+≡   a ⊓ b ⊑ b ⊔ c  ∧  a ⊓ c ⊑ b ⊔ c
+⇐  a ⊓ b ⊑ b ⊑ b ⊔ c  ∧  a ⊓ c ⊑ c ⊑ b ⊔ c
+≡ true
+
+So the other inclusion:
+  a ⊓ (b ⊔ c)  ⊑  (a ⊓ b) ⊔ (a ⊓ c)
+≡  (b ⊔ c)  ⊑  a → ( (a ⊓ b) ⊔ (a ⊓ c) )
+≡    b ⊑  a → ( (a ⊓ b) ⊔ (a ⊓ c) )
+   ∧ c ⊑  a → ( (a ⊓ b) ⊔ (a ⊓ c) )
+≡    a ⊓ b ⊑  (a ⊓ b) ⊔ (a ⊓ c) )
+   ∧ a ⊓ c ⊑  (a ⊓ b) ⊔ (a ⊓ c) )
+≡ true, weakening twice.
+:end:
+
+* Almost /True/ Complements
+:PROPERTIES:
+:CUSTOM_ID: Almost-True-Complements
+:END:
+# -- Adding ⊥
+
+Can we obtain the usual De Morgan's law?
+
+Suppose we have a /least element/ $⊥ : Carrier$, i.e., for any $x$,
+\[\eqn{Bottom Element}{ ⊥ \sqleqs x}\]
+
+For usual ℕ, 𝔹, sets, and graphs this amounts to 0, $\mathsf{false}$, $\emptyset$, and the
+empty graph with no nodes nor any edges, respectively.
+
+Unsurprising this can also be internalised!
+\[\eqn{ex falso quod libet}{⊥ → a \quad=\quad ⊤}\]
+:Proof:
+  ⊥ → a
+= ⊥ ⊓ a → a
+= ⊥ → (a → a)
+= ⊥ → ⊤
+= ⊤       by right zero.
+:end:
+
+Moreover we can now define an operation $¬\_$ as follows,
+\[\eqn{Pseudo-Complement Definition}{ ¬ x \quad=\quad (x → ⊥) }\]
+
+/A complement/ of an element $x$ is an element $y$ that is
+disjoint from $x$ and together their join is the top element.
+
+/A [[https://en.wikipedia.org/wiki/Pseudocomplement][pseudo-complement]]/ generalises this idea by discarding the second half
+of that conjunction; i.e., instead requiring a greatest element $y$
+disjoint from $x$.
+
+Indeed this is the case here,
+\begin{calc}
+   x \;⊓\; ¬ x \quad=\quad ⊥
+\step{ \ref{⊑-antisymmetric} }
+   (x \;⊓\; ¬ x) \sqleqs ⊥
+   \landS ⊥ \sqleqs (x \;⊓\; ¬ x)
+\step{ \ref{Bottom Element} }
+   x \;⊓\; ¬ x \sqleqS ⊥
+\step{ \ref{Modus Ponens} }
+   \mathsf{true}
+\end{calc}
+
+We now have the linguistic prerequisites to actually express De Morgan's laws.
+\[\eqn{Constructive De Morgan}{¬(x \;⊔\; y) \quad=\quad ¬ x \;⊓\; ¬ y}\]
+
+The other form $¬(x ⊓ y) \;=\; ¬ x ⊔ ¬ y$ however is not true in general.
+Likewise neither are double negation, $¬¬x \;=\; x$, nor the law of the
+the excluded middle $x \;⊔\; ¬ x \;=\; ⊤$.
+
+Indeed for 𝒩, the natural numbers extended with +∞, the law of the exluded middle
+is falsified as follows:
+
+\begin{calc}
+   3 ↑ ¬ 3
+\step{ \ref{Pseudo-Complement Definition} }
+   3 ↑ (3 → 0)
+\step{ \ref{Definition of → for 𝒩} }
+   3 ↑ 0
+\step{ Maximum }
+   3
+\end{calc}
+
+Likewise double negation is falsified by $¬ ¬ 3 \;=\; 0$.
+
+Exercise: Find an example to falsify the other De Morgan's law.
+
+Having ⊓, ⊔, ⊥, ⊤, → together constitutes a [[https://en.wikipedia.org/wiki/Heyting_algebra][Heyting Algebra]].
+
+** COMMENT Old stuff
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Old-stuff
+:END:
+Let's close by showing that
+/relative pseudo-complements $a → b$ are the largest subparts of $a$ disjoint from $b$!/
+
+We can say two elements are /disjoint/ when their commonality is the least element; i.e.,
+when $a ⊓ b \;=\; ⊥$.
+
+With this setup, our final claim can be phrased as
+\[ x ⊑ a  \landS  x ⊓ b = ⊥  \impliesS  x ⊑ a → b \]
+
+Let's prove it!
+
+\begin{calc}
+   x ⊑ a \landS x ⊓ b = ⊥
+\step{justification ;; nice }
+   x ⊑ a \landS x ⊓ b ⊑ ⊥  \landS ⊥ ⊑ x ⊓ b
+\step{justification ;; woah }
+   x ⊑ a \landS x ⊓ b ⊑ ⊥
+\step{justification ;; woah }
+   x ⊑ a \landS x ⊑ b → ⊥
+\step{justification ;; woah }
+   x ⊑ a ⊓ (b → ⊥) --- Nice!
+\end{calc}
+
+# Counter-example to: a → b  =  a ⊓ (b → ⊥)
+# =  p ⇒ q   ≡   p ∧ ¬ q
+# =  p ∧ q ≡ p ≡ p ∧ ¬ q
+# =  p ∧ (q ≡ ¬ q ≡ true)
+# =  p ∧ false
+# =  false
+
+Indeed, it seems more often that: a → b  =  ¬ a ⊔ b
+Provided ¬ is a true complement.
+
+   ¬ a ⊔ b  ⊑  a → b
+≡  a ⊓ (¬ a ⊔ b)  ⊑  b
+≡  (a ⊓ ¬ a) ⊔ (a ⊓ b) ⊑ b
+≡  ⊥ ⊔ (a ⊓ b) ⊑ b          -- since ¬ is a real complement.
+≡  a ⊓ b  ⊑ b
+≡  true
+
+And the converse?
+
+* So long and thanks for the fish
+:PROPERTIES:
+:CUSTOM_ID: So-long-and-thanks-for-the-fish
+:END:
+
+It took a while, but we've more or less shimmied our
+way to the structure needed for Heyting Algebras.
+
+Hope you had fun!
+
+* COMMENT footer
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-footer
+:END:
+
+# Local Variables:
+# eval: (visual-line-mode t)
+# eval: (setq SOURCE "https://raw.githubusercontent.com/alhassy/LatticesCheatSheet/master/HeytingAlgebra.org")
+# eval: (load-file "~/alhassy.github.io/content/AlBasmala.el")
+# eval: (setq pdfsLocation "~/alhassy.github.io/assets/pdfs/")
+# compile-command: (progn (org-babel-tangle) (my-org-html-export-to-html))
+# End:
