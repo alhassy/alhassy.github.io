@@ -3,6 +3,7 @@
 #+filetags: emacs
 #+fileimage: org_logo.png 150 150
 #+options: d:nil
+#+PROPERTY: header-args  :exports code
 
 # C-c C-v C-b ⇒ Evaluate all src blocks
 
@@ -13,13 +14,21 @@
 # (cl-defun not-currently-working-with (&optional z) t)
 # (cl-defun currently-working-with (&optional y) )
 
+# (org-static-blog-assemble-index)
+
 * Abstract                                                           :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: Abstract
+  :END:
 
 #+TOC: headlines 2
 
 How my blog is setup (•̀ᴗ•́)و
 
 * [[https://github.com/bastibe/org-static-blog][org-static-block]]
+  :PROPERTIES:
+  :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
+  :END:
 
   #+begin_src emacs-lisp
 (setq org-static-blog-publish-title "Life & Computing Science")
@@ -35,7 +44,10 @@ How my blog is setup (•̀ᴗ•́)و
 #+RESULTS:
 
 * HTML Header
-#+begin_src emacs-lisp
+  :PROPERTIES:
+  :CUSTOM_ID: HTML-Header
+  :END:
+#+begin_src emacs-lisp  :exports code
 ;; This header is inserted into the <head> section of every page:
 (setq org-static-blog-page-header
 "<meta name=\"author\" content=\"Musa Al-hassy\">
@@ -200,6 +212,9 @@ for the JavaScript code in this tag.
 ⇒ file:../org-notes-style.css ⇐
 
 * Content Header
+  :PROPERTIES:
+  :CUSTOM_ID: Content-Header
+  :END:
 
 :NotYet:
 #+begin_example html
@@ -243,7 +258,6 @@ for the JavaScript code in this tag.
 ;; This preamble is inserted at the beginning of the <body> of every page:
 ;;   This particular HTML creates a <div> with a simple linked headline
 (setq org-static-blog-page-preamble
-(format
 "<div class=\"header\">
   <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
   <br>
@@ -265,6 +279,9 @@ org-static-blog-publish-title
 :End:
 
 * HTML Footer
+  :PROPERTIES:
+  :CUSTOM_ID: HTML-Footer
+  :END:
 #+begin_src emacs-lisp
 ;; This postamble is inserted at the end of the <body> of every page:
 ;;   This particular HTML creates a <div> with a link to the archive page
@@ -330,6 +347,9 @@ org-static-blog-publish-title
 #+end_example
 
 * Images
+  :PROPERTIES:
+  :CUSTOM_ID: Images
+  :END:
 #+begin_src emacs-lisp
 ;; every article declaratively has an associated image ^_^
 ;; If none declared, we use emacs-birthday-present.png :-)
@@ -353,6 +373,9 @@ org-static-blog-publish-title
 : my/org-static-blog-assemble-image
 
 * [[http://taopeng.me/org-notes-style/][org-notes-style]]
+  :PROPERTIES:
+  :CUSTOM_ID: http-taopeng-me-org-notes-style-org-notes-style
+  :END:
 #+begin_src emacs-lisp
 ;; MA: For org-notes-style, I need “title” and not “post-title”;
 ;; but need “post-title” for “org-static-blog”; so using an auxilary div.
@@ -385,22 +408,133 @@ Modify this function if you want to change a posts headline."
 #+RESULTS:
 : org-static-blog-post-preamble
 
-* The Landing Page
+* multipost-pages
+
+# The =org-static-blog-with-find-file= macro does a lot of ‘in your face’ writing,
+# which really ought to be hidden from sight.
+
+#+begin_src emacs-lisp
+(defvar octoicon:tag
+"@@html:<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 15 16\" width=\"15\" height=\"16\"><path fill-rule=\"evenodd\" d=\"M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z\"></path></svg>@@"
+
+"See:
+https://alhassy.github.io/org-special-block-extras/README.html#Link-Here-OctoIcons")
+
+(defvar octoicon:clock
+"@@html:<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 14 16\" width=\"14\" height=\"16\"><path fill-rule=\"evenodd\" d=\"M8 8h3v2H7c-.55 0-1-.45-1-1V4h2v4zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 011.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"></path></svg>@@")
+#+end_src
 
 #+begin_src emacs-lisp
 ;; MA: Let's change how the index appears: I only want the abstracts.
 
-(defun org-static-blog-assemble-index_OG ()
-  "Assemble the blog index page.
-The index page contains the last `org-static-blog-index-length`
-posts as full text posts."
-  (let ((post-filenames (org-static-blog-get-post-filenames)))
-    ;; reverse-sort, so that the later `last` will grab the newest posts
-    (setq post-filenames (sort post-filenames (lambda (x y) (time-less-p (org-static-blog-get-date x)
-                                                                         (org-static-blog-get-date y)))))
-    (org-static-blog-assemble-multipost-page
-     (concat org-static-blog-publish-directory org-static-blog-index-file)
-     (last post-filenames org-static-blog-index-length))))
+(setq index-content-header
+      (concat
+ "Here are some of my latest thoughts..."
+ " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
+ " tweet:https://alhassy.github.io/"))
+#+end_src
+
+#+begin_src emacs-lisp
+(setq show-reading-time nil)
+
+(defun org-static-blog-assemble-multipost-page (pub-filename post-filenames &optional front-matter)
+  "Assemble a page that contains multiple posts one after another.
+Posts are sorted in descending time."
+  (setq post-filenames
+        (sort post-filenames (lambda (x y)
+                               (time-less-p (org-static-blog-get-date y)
+                                            (org-static-blog-get-date x)))))
+
+(with-temp-buffer
+    (insert
+     (concat
+      "#+EXPORT_FILE_NAME: " pub-filename
+      "\n#+options: toc:nil title:nil html-postamble:nil"
+      "\n#+title: " (if (equal "index" (f-base pub-filename))
+                        org-static-blog-publish-title
+                        (f-base pub-filename))
+      "\n#+begin_export html\n "
+        org-static-blog-page-preamble
+        org-static-blog-page-header
+        (if front-matter front-matter "")
+      "\n#+end_export"
+
+      "\n\n"
+      (if (equal "index" (f-base pub-filename))
+          index-content-header
+        "")
+
+      "\n\n" ;; abstracts of posts
+      (thread-last post-filenames
+        (--map
+         (format
+          (concat
+           ;; ⟨0⟩ Title and link to article
+           "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>"
+           ;; ⟨1⟩ Tags and reading time
+           "\n#+begin_center\n%s\n%s\n#+end_center"
+           ;; ⟨2⟩ Article image
+           "\n@@html:%s@@"
+           ;; ⟨3⟩ Preview
+           "\n#+INCLUDE: \"%s::*Abstract\" :only-contents t"
+           ;; ⟨4⟩ “Read more” link
+           "\n@@html:<p style=\"text-align:right\">@@"
+           " badge:Read|more|green|%s|read-the-docs @@html:</p>@@")
+          ;; ⟨0⟩ Title and link to article
+          (concat org-static-blog-publish-url (f-base it))
+          (org-static-blog-get-title it)
+          ;; ⟨1⟩ Tags and reading time
+          (concat octoicon:tag " "
+                  (s-join " "
+                          (--map (format "badge:|%s|grey|%stag-%s.html"
+                                         (s-replace "-" "_" it)
+                                         org-static-blog-publish-url it)
+                                 (org-static-blog-get-tags it))))
+          (if (not show-reading-time)
+              ""
+            (format "\n%s %s mins read"
+                    octoicon:clock
+                    (with-temp-buffer (insert-file-contents it)
+                                      (org-ascii-export-as-ascii)
+                                      (setq __x
+                                            (count-words (point-min) (point-max)))
+                                      (kill-buffer "*Org ASCII Export*")
+                                      (delete-other-windows)
+                                      (/ __x 200)))) ;; 200 words per minute reading
+          ;; ⟨2⟩ Article image
+          (my/org-static-blog-assemble-image it)
+          ;; ⟨3⟩ Preview
+          it
+          ;; ⟨4⟩ “Read more” link
+          (concat org-static-blog-publish-url (f-base it))))
+        (s-join "\n\n"))
+
+      ;; bottom matter
+      "\n#+begin_export html:\n"
+      "<hr><hr> <div id=\"archive\">"
+      "<a href=\""
+      (org-static-blog-get-absolute-url org-static-blog-archive-file)
+      "\">" (org-static-blog-gettext 'other-posts) "</a>"
+      "</div>"
+      "</div>"
+      "<div id=\"postamble\" class=\"status\">"
+      org-static-blog-page-postamble
+      "</div>"
+      "\n#+end_export"))
+    (org-mode)
+    (org-html-export-to-html)))
+
+;; The existing org-static-blog-assemble-index is really fast,
+;; since it just dumps articles wholesale into the landing page; not ideal.
+;; I'd rather have a ‘preview’ of articles.
+#+end_src
+
+* COMMENT The Landing Page :posterity:
+  :PROPERTIES:
+  :CUSTOM_ID: The-Landing-Page
+  :END:
+
+#+begin_src emacs-lisp
 
 (defun org-static-blog-assemble-index ()
   "Assemble the blog index page.
@@ -419,8 +553,8 @@ posts as full text posts."
      (format
       (concat
     "#+EXPORT_FILE_NAME: %s"
-    "#+options: toc:nil title:nil html-postamble:nil"
-    "\n#+html: <title>%s</title>"
+    "\n#+options: toc:nil title:nil html-postamble:nil"
+    "\n#+title: %s"
     "\n#+begin_export html\n %s\n#+end_export"
     "\n#+HTML_HEAD: <link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
     "\n\n Here are some of my latest thoughts... or see the %s or %s... badge:here|there ... doc:thread-first"
@@ -486,11 +620,17 @@ posts as full text posts."
 : org-static-blog-assemble-index
 
 * No eval upon export
+  :PROPERTIES:
+  :CUSTOM_ID: No-eval-upon-export
+  :END:
 #+BEGIN_SRC emacs-lisp
 ;; No code execution on export
 (setq org-export-use-babel nil)
 #+END_SRC
 * Publishing with =[C-u C-u] C-c C-b=
+  :PROPERTIES:
+  :CUSTOM_ID: Publishing-with-C-u-C-u-C-c-C-b
+  :END:
 #+begin_src emacs-lisp
 ;; No lock files, for now
 ;; The “.#file” files
@@ -512,11 +652,14 @@ C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts"
        ;; to publish the blog; otherwise I got some errors.
        (4  (org-static-blog-publish-file (f-full (buffer-name)))
            (org-static-blog-publish)))))
-       ; (16 (org-static-blog-publish-file (f-full (buffer-name)))
-       ;    (org-static-blog-publish t)))
+       ;; (16 (org-static-blog-publish-file (f-full (buffer-name)))
+       ;;    (org-static-blog-publish t))
 #+end_src
 
 * COMMENT todo
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-todo
+  :END:
 
 change the multipost method to behave like the way I have it for index.html;
 e.g., for tags, showing a full post is unreasonable ---my posts are long.
