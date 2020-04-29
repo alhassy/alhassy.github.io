@@ -1,9 +1,12 @@
 #+title: AlBasmala ^_^
+# +DATE: 2018-06-01
 #+date: <1991-08-20 19:29>
 #+filetags: emacs
 #+fileimage: org_logo.png 150 150
 #+options: d:nil
 #+PROPERTY: header-args  :exports code
+#+OPTIONS: toc:nil html-postamble:nil d:nil
+#+PROPERTY: header-args :tangle "AlBasmala.el"
 
 # C-c C-v C-b ⇒ Evaluate all src blocks
 
@@ -24,6 +27,20 @@
 #+TOC: headlines 2
 
 How my blog is setup (•̀ᴗ•́)و
+
+# This, like the upcoming articles, is intended to be a living document.
+# The date serves to be date of the first release and the repo contains
+# the history of any alterations.
+
+
+# Briefly,
+
+# + This article is a literate [[https://orgmode.org/][Org]] file that when loaded executes ~(org-babel-tangle)~ to produce
+#   an elisp file which is then loaded locally.
+
+# + The resulting elisp file is then used to actually produce this webpage.
+
+# The remainder of this article discusses the elisp utilities that made the second point possible.
 
 * [[https://github.com/bastibe/org-static-blog][org-static-block]]
   :PROPERTIES:
@@ -802,3 +819,738 @@ cd ~/Learning; mkdir drafts
      </div>
  </footer>
  #+end_export
+** Ideas
+
+ + Footer should include
+   - See Org Source; see HTML source
+   - buy-me-a-coffee
+
+#+html: <hr>
+#+begin_center
+badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
+badge:|buy_me_a coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+#+end_center
+
+* The name: [[https://en.wikipedia.org/wiki/Basmala][al-bas-mala]]
+
+The prefix /al/ is the Arabic definite particle which may correspond to English's /the/;
+whereas /basmala/ refers to a beginning.
+
+That is, this is a variation on the traditional [[https://en.wikipedia.org/wiki/%22Hello,_World!%22_program]["hello world"]] ;-)
+
+* COMMENT Old Jekyll Setup :posterity:terrible:
+Write in Org-mode and generate coloured markdown for Jekyll usage
+
+# Usage ∷ Begin blog server then load AlBasmala, then edit & preview.
+#
+# (shell-command "cd ~/alhassy.github.io/ ; bundle exec jekyll serve &")
+# (find-file "~/alhassy.github.io/content/AlBasmala.el")
+# (preview-article :browser t)
+# (preview-article)
+
+** Server Setup
+
+ When drafting, it's ideal to be able to inspect the resulting web article.
+ To do so, we may initialise the Jekyll server as follows.
+ #+begin_src emacs-lisp :tangle no
+(shell-command "cd ~/alhassy.github.io/ ; bundle exec jekyll serve &")
+ #+end_src
+
+ In order to be an Org only interface, let's remove this shell invocation from
+ the user's view --as an Org user, they need not be forced to learn such Jekyll intricacies.
+
+ #+begin_src emacs-lisp
+(defvar jekyll-served nil "Documents whether the blog server has begun.")
+
+(defun ensure-blog-is-serving ()
+  "Ensure that the server has begun."
+   (unless jekyll-served
+      (shell-command "cd ~/alhassy.github.io/ ; bundle exec jekyll serve &")
+      (setq jekyll-served t)))
+ #+end_src
+
+ Super simple, but hides an annoying step & layer from the user.
+
+** ~file~ Symbols
+
+ We will look at various generated files revolving around the given file,
+ so let us generate the necessary variables that refer to such names.
+
+ First off, some useful libraries.
+ #+BEGIN_SRC emacs-lisp
+(require 'dash) ;; A modern list library for Emacs
+(require 's)    ;; String processing library.
+ #+END_SRC
+
+ Now, let's make a function that produces our variables.
+ This way we avoid tedious repetition of a particular pattern.
+ #+BEGIN_SRC emacs-lisp
+(cl-defun make-file-extension-variables (&key prefix name extensions)
+  " Produce symbols ‘prefix.ext’ whose value is the string ‘name.ext’, where
+    ‘ext’ range over the list ‘extensions’.
+
+    Both ‘prefix’ and ‘name’ should be strings.
+
+    I insist that the arguments be keywords, “:prefix, :name, :extensions”,
+    since I currently feel that this is more informative.
+    All three pieces need to be there, otherwise no variables are formed.
+    Success is signalled by the message string ”new filename variables created”.
+
+    Moreover, these symbols are local to the current buffer;
+    in-particular, their values cannot be altered from other buffers.
+  "
+  (and prefix name
+    (dolist (ext extensions (message "new filename variables created"))
+      (let* ((name.ext (concat name "." ext))
+         (symbol   (intern (concat prefix "." ext))))
+       (set symbol name.ext)
+       ;; (make-local-variable symbol)
+       ;; Undesirable since I want to use these names in other buffers.
+      ))))
+ #+END_SRC
+
+ :Example_of_locals_in_elisp:
+ #+BEGIN_SRC emacs-lisp :tangle no
+(setq bar "noah")          ;; All buffers can access this variable, with only this value as default value.
+(make-local-variable 'bar) ;; All future setq's only affect this buffer.
+(setq bar "rab")
+
+;; As such, the following approach makes a variable local to begin with.
+
+(make-local-variable 'foo) ;;
+(setq foo "woah")
+ #+END_SRC
+ :End:
+
+ With that in hand, let's actually make the ~file.*~ variables.
+ #+BEGIN_SRC emacs-lisp
+(setq AbsNAME (file-name-sans-extension buffer-file-name))
+(setq NAME (file-name-sans-extension (buffer-name)))
+
+(make-file-extension-variables
+   :prefix     "file"
+   :name       NAME
+   :extensions '("org" "el" "src" "tex" "pdf" "html"))
+ #+END_SRC
+
+ Finally, it would be nice to know where the blog repository lives.
+ #+BEGIN_SRC emacs-lisp
+(defvar blogrepo "~/alhassy.github.io/"
+    "The path to the blog repository on a local machine.")
+
+(defvar blogrepo-posts "~/alhassy.github.io/_posts/"
+    "The path to the blog repository's posts directory.")
+
+(defvar blogrepo-file.pdf (concat "../assets/pdfs/" file.pdf) ;; (concat "~/alhassy.github.io/assets/pdfs/" file.pdf)
+  "The path to the blog repository where the generated PDF should live.")
+
+;; Make these variables local to the current buffer.
+;; Undesirable since I'd like to utlise these in other buffers.
+;; (make-local-variable 'blogrepo)
+;; (make-local-variable 'blogrepo-posts)
+;; (make-local-variable 'blogrepo-file.pdf)
+ #+END_SRC
+
+ Before we close we need Jekyll relevant names.
+ #+begin_src emacs-lisp
+(defvar jekyll.name nil
+  "The formal name of the resulting Jekyll blog article.")
+
+(defvar jekyll.name.md nil
+  "The formal markdown of the resulting Jekyll blog article.")
+ #+end_src
+
+** Get Org Keywords
+
+ We want to be able to access ~#+key: value~ pairs from the article org source
+ as a variable ~org.key~. We also allow as input default values, since the user
+ may not have provided values for them.
+
+ #+begin_src emacs-lisp
+(defvar albasmala/keywords
+ `(("title"       . nil)
+   ("date"        . ,(format-time-string "%Y-%m-%d"))
+   ("author"      . nil)
+   ("image"       . nil)
+   ("imageheight" . 142)
+   ("imagewidth"  . 142)
+   ("categories"  . nil)
+   ("sourcefile"  .
+    ,(concat "https://raw.githubusercontent.com/alhassy/alhassy.github.io/master/content/"
+        (buffer-name)))
+   ("nopdf"              . nil)
+   ("nomodificationdate" . nil)
+   ("draft"              . nil))
+ "This list contains tuples denoting a ‘property’ and it's ‘default’ value.
+  These are the keywords that the user of this AlBasmala setup should utilise.
+
+  For example, if the user does not provide a ‘date’, then one is provided,
+  for them; the default date.
+
+  Note that ‘sourcefile’ refers to the URL to the raw master location of the blog
+  repository by default, but it's useful for the user to set it when the file is
+  associated with a different repoistory. The URL should begin ‘https://⋯’.
+
+  By default we produce a PDF and link to it from the article.
+  If ‘nopdf’ is set to a non-nil value, then no PDF is generated
+  --which may be usefull since making a pdf takes time, which may not be desirable
+  while drafting. Likewise, we always produce the most recent modification date,
+  unless instructed otherwise. --c.f., ‘draft’.
+
+  The ‘draft’ variable is useful since it puts the word DRAFT alongside
+  a generated number when drafting so as to ensure you're actually
+  re-generating the article --rather than loading a previously generated one.
+  When drafting, no PDF is generated.
+
+  Warning: The values cannot have links; e.g., embedding a link in the
+  value of ‘author’ renders this script useless.
+ ")
+ #+end_src
+
+ For each keyword, let's uniformly produce these symbols, attempt to obtain their values,
+ and use the defaults otherwise.
+
+ #+begin_src emacs-lisp
+(defun make-org-variables (keywords)
+  "For each “(key . default)” in the ‘keywords’ list, we produce a symbol named
+  ‘org.key’ whose value is set to be the value from “#+key: value”
+  from the current buffer.
+
+  The keys may be in lower case; we upcase them before obtaining
+  their values. If there is no value, we use the defaults in ‘keywords’.
+  "
+
+  (dolist (keydef keywords (message "new org keyword variables created"))
+    (let* ((key (car keydef))
+       (value (org-keyword (upcase key)))
+       (org.key (concat "org." key))
+       (symbol  (intern org.key)))
+
+       (set symbol value)
+       (unless value (set symbol (cdr keydef)))
+       (put symbol 'variable-documentation
+        "Variable generated by ‘make-org-variables’")
+
+       ;; (make-local-variable symbol)
+       ;; Undesirable since I use the ‘org.key’ symbols
+       ;; in the assocaited html buffers.
+      )))
+ #+end_src
+
+ :Setting_docstrings_after_the_fact:
+
+ (put FUNCTIONSYMBOL 'function-documentation VALUE)
+
+ (get 'org.sourcefile 'variable-documentation)
+ (put 'org.sourcefile 'variable-documentation "nice")
+
+ (get symbol 'variable-documentation)
+ (put 'symbol 'variable-documentation 'doc-string)
+ :End:
+
+ We know turn to actually obtaining the values of keywords as a function call.
+ Why not just set them once? These values can be altered any time by the user, e.g., me,
+ and as such they need to be reloaded before the post is created as a precautionary measure.
+ E.g., the title in the org file and the title in the article may be distinct, so we allow
+       the user this added flexibility.
+
+ We invoke ~make-org-variables~ to produce variables of the form ~org.var~.
+
+ #+BEGIN_SRC emacs-lisp
+(defun GetOrgKeyWords () "Get the #+KEYWORD values from the org-file."
+
+   (make-org-variables albasmala/keywords)
+
+   ;; We have these here in-case the “org.date” is altered.
+   (setq jekyll.name   (concat org.date "-" NAME))
+   (setq jekyll.name.md (concat org.date "-" NAME ".markdown"))
+)
+
+;; Globally set the variables
+;; (GetOrgKeyWords)
+ #+END_SRC
+
+ Note that these values can be manually overridden by including in your locals, for example:
+ #+BEGIN_SRC emacs-lisp :tangle no
+# eval: (setq org.title "Experimenting..." )
+ #+END_SRC
+
+** MakeHeader
+
+ The Jekyll backend has a particular header for articles, which we produce:
+
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(defun MakeHeader () "Header for Jekyll backend."
+  (setq HEADER (concat
+   "---\nlayout: post\nname: " jekyll.name
+   "\ntitle: "			org.title
+   "\ndate: "			org.date
+   "\nauthor: "			org.author
+   "\nimage:\n   href: "	org.image
+   "\ncategories: "		org.categories
+   "\n---\n"
+   )))
+ #+END_SRC
+
+** Article Image
+
+ An image is included via the ~#+IMAGE:location~ --see the usages sections below.
+ Alternative methods include.
+
+ + An image can be embedded as a url, in Org-mode:
+    #+BEGIN_SRC org :tangle no
+,#+begin_export html
+<center> <img src="http://book.realworldhaskell.org/support/rwh-200.jpg"
+  alt="RWH Cover" width="142" height="142" align="top"> </center>
+,#+end_export
+ #+END_SRC
+
+   :One_long_line:
+    #+BEGIN_SRC org :tangle no
+,#+HTML: <center> <img src="http://book.realworldhaskell.org/support/rwh-200.jpg" alt="RWH Cover" width="142" height="142" align="top"> </center>
+ #+END_SRC
+ :End:
+ + Or as an Org link:
+    #+BEGIN_SRC org :tangle no
+[[file:../assets/img/rwh-200.jpg]]
+ #+END_SRC
+
+ + Or as local image via explicit html link:
+    #+BEGIN_SRC org :tangle no
+,#+begin_export html
+<center> <img src="../assets/img/rwh-200.jpg" alt="RWH Cover"
+width="142" height="142" align="top"> </center>
+,#+end_export
+ #+END_SRC
+
+   :One_long_line:
+    #+BEGIN_SRC org :tangle no
+,#+HTML: <center> <img src="../assets/img/rwh-200.jpg" alt="RWH Cover" width="142" height="142" align="top"> </center>
+ #+END_SRC
+ :End:
+
+ For now, I use the approach of inserting an HTML URL:
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(defun insert-image-and-other-formats ()
+   "Insert image location obtained from #+IMAGE org keyword, as well as top-matter."
+
+   (let ((html.image.info
+       (concat "<center> <img src=\"" org.image
+         "\" alt=\"Musa's article image\""
+         " width=\"" (format "%s" org.imagewidth) "\" "
+         "height=\"" (format "%s" org.imageheight) "\" "
+         "align=\"top\"> </center>")))
+
+   (re-replace-in-file ;; see below
+      (concat AbsNAME ".html")
+      "<h1.*h1>"
+      (lambda (x) (concat x "\n" html.image.info "\n" (make-top-matter))))))
+ #+END_SRC
+
+ One possible extension would be to make parameters for image width and height.
+ Perhaps I will get to doing so in time.
+
+ Disclaimer: I wrote the following /before/ I learned any lisp; everything below is
+ probably terrible.
+ #+BEGIN_SRC emacs-lisp
+(defun re-replace-in-file (file regex whatDo)
+   "Find and replace a regular expression in-place in a file.
+
+   Terrible function … before I took the time to learn any Elisp!
+   "
+    (find-file file)
+    (goto-char 0)
+    (let ((altered (replace-regexp-in-string regex whatDo (buffer-string))))
+      (erase-buffer)
+      (insert altered)
+      (save-buffer)
+      (kill-buffer)))
+ #+END_SRC
+
+ Example usage:
+ #+BEGIN_EXAMPLE emacs-lisp
+;; Within mysite.html we rewrite: <h1.*h1>   ↦   <h1.*h1>\n NICE
+;; I.e., we add a line break after the first heading and a new word, “NICE”.
+(re-replace-in-file "mysite.html"
+                    "<h1.*h1>"
+                    (lambda (x) (concat x "\n NICE")))
+ #+END_EXAMPLE
+** PDF Generation
+
+ :Old_tangle_latex_approach:
+ The org block header for the following has
+ #+begin_src org :tangle no
+:var webArticle = (file-name-sans-extension (buffer-name))
+ #+end_src
+ This allows us to use the buffer's name within the tangled LaTeX! Neato.
+ #+NAME: headers
+ BEGIN_SRC org :tangle headers.ltx :exports code :var webArticle = (file-name-sans-extension (buffer-name))
+
+ END_SRC
+ That is, the string ~webArticle~ is a parameter of this source block.
+
+ Later,
+   ;; Replace webArticle with the name of the article in our headers.ltx file.
+   (re-replace-in-file "~/alhassy.github.io/content/headers.ltx" "webArticle" (lambda (x) NAME))
+ :End:
+
+ Finally, we weave everything together:
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+;; Include LaTeX Org-calls, produce the PDF, then revert the file.
+;;
+(defun prepend-for-simple-latex (&rest extras)
+  "Prepend an Org file with a simple LaTeX preamble; perform extras before returing to source file.
+  "
+  (save-buffer)
+  (copy-file file.org file.src 'overwrite)  ;; Produce a checkpoint.
+  (beginning-of-buffer)
+
+  (insert (s-join "\n" `(
+    "#+OPTIONS: toc:nil"
+    "#+LATEX_HEADER: \\usepackage[margin=0.5in]{geometry}"
+    "#+LATEX_HEADER: \\usepackage{fancyhdr}"
+    "#+LATEX_HEADER: \\setlength{\\headheight}{30pt}"
+    "#+LATEX_HEADER: \\lhead{} \\rhead{} \\cfoot{\\vspace{-3em} \\thepage} \\lfoot{} \\rfoot{}"
+    "#+LATEX_HEADER: \\chead{\\emph{This PDF was generated \\emph{ungracefully} from a web article on"
+    ,(concat "#+LATEX_HEADER: \\url{https://alhassy.github.io/" NAME "/}}}")
+    "#+LATEX_HEADER: \\let\\doit=\\maketitle"
+    "#+LATEX_HEADER: \\def\\maketitle{\\doit\\thispagestyle{fancy}}"
+    "#+LATEX: \\pagestyle{fancy} \\tableofcontents \\newpage"
+    "#+LATEX_HEADER: \\usepackage{color}"
+    "#+LATEX_HEADER: \\definecolor{darkgreen}{rgb}{0.0, 0.3, 0.1}"
+    "#+LATEX_HEADER: \\definecolor{darkblue}{rgb}{0.0, 0.1, 0.3}"
+    "#+LATEX_HEADER: \\hypersetup{colorlinks,linkcolor=darkblue,citecolor=darkblue,urlcolor=darkgreen}"
+    "\n"
+      )))
+
+  ;; Using (lambda () (extras...)) makes the extras happen before the reversion below.
+  (eval extras)
+
+  ;; revert to working file
+  (copy-file file.src file.org 'overwrite)
+  (delete-file file.src)
+  (toggle enable-local-variables :all
+    (revert-buffer 'ignore-auto 'no-confirmation))
+
+  ;; A copy, rather a move, since article repo may differ from blog repo.
+  (copy-file file.pdf
+
+         ;; ‘blogrepo-file.pdf’ is the path relative to the blog repository;
+         ;; this format allows us to view the PDF when the local blog server is running.
+         ;; However, we may currently be residing in a different repository.
+         ;; As such, we shift the cp command to move to the absolute path to the blog repo.
+         (concat "~/alhassy.github.io" (s-chop-prefix ".." blogrepo-file.pdf))
+         ;; (file-truename blogrepo-file.pdf) ;; fix me
+
+         'overwrite
+    )
+)
+
+(defun my-org-latex-export-to-pdf ()
+  "Produce a simple PDF that has wide margins and has a warning"
+  (prepend-for-simple-latex (lambda () (org-latex-export-to-pdf)))
+)
+
+ #+END_SRC
+
+** Other Formats
+
+ Readers of the article may want to see the source
+ --which may contain code or parts not rendered in the article, such as exercise solutions.
+ # --
+ # or they may prefer a PDF version for printing or simply for an alternate aesthetic.
+
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(defun get-raw-and-commits (url)
+  "
+  Given a github ‘url’, return the associated commits history and raw textual urls,
+  as a dotted pair.
+
+  For example,
+  url     → https://github.com/⟪user⟫/⟪project⟫/blob/master/content/⟪filepath⟫
+  raw     → https://raw.githubusercontent.com/⟪user⟫/⟪project⟫/master/content/⟪filepath⟫
+  commits → https://github.com/⟪user⟫/⟪project⟫/commits/master/content/⟪filepath⟫
+  "
+
+  (let* ((github  "https://github.com/")
+     (comm  (s-split "/" (s-chop-prefix github url)))
+       )
+
+      (setf (nth 2 comm) "commits")
+
+      ;; raw, then commits
+      `(
+       , (s-prepend "https://raw.githubusercontent.com/"
+         (s-replace "/blob/" "/" (s-chop-prefix github url)))
+       .
+       ,(s-prepend github (s-join "/" comm))
+       )
+  )
+)
+ #+END_SRC
+
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(defun make-html-link (url identifier)
+  "Yield HTML string code for a link to ‘url’ presented as ‘identifier’;
+   if ‘url’ is non-nil; otherwise, yield only the text ‘identifier’.
+  "
+  ;; (message-box url)
+  (if url
+      (concat "<a href=\"" url "\" target=\"_self\">" identifier "</a>")
+      identifier
+  )
+)
+ #+END_SRC
+
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(defun make-top-matter ()
+  "This is the top-most text that appears right after the article's
+   title. It includes viewing the source, a PDF rendition, and
+   the most recent date of modification --unless the variables are nil.
+  "
+  (let* ((date (format-time-string "%Y-%m-%d"))
+     (content "")
+     (rawsrc  (car (get-raw-and-commits org.sourcefile)))
+     (commits (cdr (get-raw-and-commits org.sourcefile)))
+    )
+
+     ;; Perform the loop over tuples (constraint url description).
+     (dolist (var `( (,org.nopdf ,blogrepo-file.pdf  "Read as PDF"   )
+             (,org.nopdf nil                 " or "          )
+             (nil ,rawsrc                    "See the source")
+             (,org.nomodificationdate nil
+                ,(concat " ; " (unless org.nopdf "<br>")))
+             (,org.nomodificationdate ,commits "Last modified")
+             (,org.nomodificationdate nil ,(concat " on " date))
+           )
+          content)
+      ;; Unless there are constraints, concatenate the resulting html.
+      (unless (car var) (setq content (concat content (make-html-link (cadr var) (caddr var)))))
+     )
+
+     ;; for debugging / drafting,
+     (concat
+       (when org.draft (format "<center> Draft: %s </center>" (gensym)))
+       "<small> <center> ⟨ " content " ⟩ </center> </small>")
+  )
+)
+;; Rather than <small>, maybe utilise <font size="3">.
+ #+END_SRC
+
+*** COMMENT org-html-postamble-format at the end of the webpage :old_approach:
+
+ # Look at the super short doc to know how to manipulate this variable: (describe-symbol 'org-html-postamble-format)
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(setq org-html-postamble-format
+  (let* ((nomorg (buffer-name))
+     (nom    (file-name-sans-extension nomorg))
+     (src    (make-html-link (concat "../content/" nomorg) "Org Source"))
+     (nompdf (concat blogrepo "/assets/pdfs/" nom ".pdf"))
+     (pdf    (make-html-link nompdf "View me as a PDF"))
+    )
+`(("en" ,(concat "<hr> <center> Last modified on %C ; " pdf " or see the " src " ; Contact me at %e </center>"))))
+)
+ #+END_SRC
+
+ To avoid having a postamble altogether we could include
+ #+BEGIN_SRC org
+,#+OPTIONS: html-postamble:nil
+ #+END_SRC
+
+** ~preview-article~ -- the heart of ~AlBasmala.el~
+
+ We make the article in stages:
+  0. Go to the Org source and use the native Org utitlies to produce a coloured html file.
+  1. Insert the article image into that html file.
+     - We do so *before* producing the Jekyll markdown variant so that we can preview it correctly.
+  2. Remove some clutter from the html, yielding a markdown file.
+  3. Prepend the Jekyll header created using the keywords.
+  4. Move the markdown file to the ~_posts~ directory and show the html file in a browser.
+
+ :Nope:
+ We use ~toggle~, a personal function from my ~init~,
+ that toggles a variables value till the end of its form.
+ We use it below to disable all [[https://www.gnu.org/software/emacs/manual/html_node/elisp/File-Local-Variables.html][Emacs buffer local variables]], do some work,
+ then re-enable them afterwards. Such variables generally require a query
+ since they could be dangerous, like erasing the disk, so we disable them temporarily.
+ :End:
+
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(local-set-key (kbd "<f7>") 'preview-article)
+
+  (cl-defun preview-article (&key (browser nil) (draft nil))
+    "Create and preview a the html form of the content.
+
+    A non-nil value for “org.nopdf” short-circuits the generation of a PDF,
+    thereby yielding a possibly faster execution.
+
+    A non-nil value for “:browser” opens the article using the default browser.
+    This may be undesirable, since it may open many tabs in your brower.
+
+    The ‘draft’ keyword option is here in case we want to override
+    whatever the local ‘#+DRAFT’ value may be.
+    "
+
+    (interactive)
+    (save-buffer)
+
+    (ensure-blog-is-serving)
+
+    ;; Remove any existing html, in case we fail to generate it
+    ;; we do not want to render an out of date version.
+    (shell-command (concat "rm ~/alhassy.github.io/_posts/" jekyll.name.md))
+
+    (setq enable-local-variables nil)
+    (setq enable-local-eval nil)
+
+    ;; compile coloured html
+    (find-file file.org)
+    (GetOrgKeyWords)
+    (when draft (setq org.draft draft))
+    (org-html-export-to-html)
+
+    ;; Insert image, duh.
+    (insert-image-and-other-formats)
+
+    ;; Discard first 3 lines, (note the 1-indexing), since they don't look very nice
+    ;; in the resulting markdown file when rendered on the Jekyll site.
+    (shell-command (concat "tail -n +4 <" file.html " >" jekyll.name.md))
+
+    ;; Preprend file with a header.
+    (find-file jekyll.name.md)
+    (beginning-of-buffer)
+    (MakeHeader)
+    (insert HEADER)
+    (save-buffer)
+    (kill-buffer jekyll.name.md)
+
+    ;; Move it to posts directory.
+    (shell-command (concat "mv " jekyll.name.md " " blogrepo-posts))
+
+    ;; ;; Uncomment for debugging.
+    ;; ;; (find-file (concat "~/alhassy.github.io/_posts/" jekyll.name.md))
+
+    ;; no pdf generation in draft mode
+    (unless (or org.draft org.nopdf) (my-org-latex-export-to-pdf))
+
+    ;; Preview locally in browser.
+    (when browser
+      (let* ((buf (concat "*AlBasmala*" NAME "*")))
+
+        (toggle kill-buffer-query-functions nil (ignore-errors (kill-buffer buf)))
+        (async-shell-command (concat "open http://localhost:4000/" NAME "/") buf)
+      )
+    )
+
+    (message "Article has been opened in your browser.")
+
+    (setq enable-local-variables t)
+    (setq enable-local-eval t)
+  )
+ #+END_SRC
+
+** COMMENT Version control                     :Deprecated:Before_magit_time:
+
+   A simple version control mechanism; will likely switch to ~magit~ in the future.
+
+  #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(global-set-key (kbd "<f8>") 'commit)
+
+(defun commit () "Commit changes to git in the form: “ChangedFile: CommitMessage”."
+  (interactive)
+
+  ;; In-case the article was updated but we forgot to produce new generated files.
+  (preview-article)
+
+  (shell-command "rm *.html")   ;; remove noise
+
+  (let ((msg (read-string (format "Commit message for %s: " NAME))))
+   ; (shell-command (format "git add    ../_posts/%s ../content/%s %s %s" jekyll.name.md file.org blogrepo-file.pdf file.el))
+   ; (shell-command (format "git commit ../_posts/%s ../content/%s %s %s -m \"%s: %s\"" jekyll.name.md file.org blogrepo-file.pdf file.el NAME msg))
+
+   ;; “git add commitables”
+   (shell-command  (s-join " " (cons "git add" commitables)))
+
+   ;; “git commit commitables -m NAME: message”
+   ;; Note that the commit message needs to be in quotes.
+   (shell-command  (s-join " " (append (cons "git commit" commitables) (list (format "-m \"%s: %s\"" NAME msg)))))
+  )
+)
+  #+END_SRC
+
+** Publish
+
+ #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
+(defun publish () "Send material to github pages."
+  (interactive)
+
+  (message (format "Publishing article: %s " NAME))
+
+  (shell-command "rm *.html")   ;; remove noise
+
+  (eshell)
+  (with-current-buffer "*eshell*"
+    (eshell-return-to-prompt)
+    (insert (concat "cd ~/alhassy.github.io/_posts/"
+            " ; "
+            (format "git add %s %s" jekyll.name.md blogrepo-file.pdf))
+            " ; "
+            (format "git commit %s %s -m \"%s: %s\"" jekyll.name.md blogrepo-file.pdf NAME "Article updated.")
+            " ; "
+            "git push")
+    (switch-to-buffer "*eshell*")
+    (eshell-send-input)
+  )
+)
+ #+END_SRC
+
+ # Remember it takes 10 seconds for the live github page to actually change!
+
+** Usage
+
+ # Within src blocks containing org, you need to escape org heading, the `*`, delimiters with a comma.
+ # E.g.: ,* My heading
+
+
+ #+BEGIN_EXPORT html
+ <table style="width:100%">
+   <tr>
+ #+END_EXPORT
+
+ #+HTML: <td>
+ The [[file:template.org][example]] source,
+ #+HTML: <small>
+ #+INCLUDE: "template.org" src org
+ #+HTML: </small> </td>
+
+ #+HTML:  <td> Results in, <br> <br> <br>
+ #+BEGIN_EXPORT html
+ <iframe src="../assets/demoing_template.html" style="width:100%" height="487">
+     alternative content for browsers which do not support iframe.
+ </iframe>
+ #+END_EXPORT
+ #+HTML:  </td>
+ #+BEGIN_EXPORT html
+   </tr>
+ </table>
+ #+END_EXPORT
+
+ #+latex: In the LaTeX format, this content is not supported.
+
+
+** footer
+
+ NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
+
+ (find-file "AlBasmala.el")
+
+ # Local Variables:
+ # eval: (setq NAME (file-name-sans-extension (buffer-name)))
+ # eval: (org-babel-tangle)
+ # eval: (load-file "AlBasmala.el")
+ # compile-command: (progn (org-babel-tangle) (preview-article))
+ # eval: (require 'ox-extra)
+ # eval: (ox-extras-activate '(ignore-headlines))
+ # org-latex-inputenc-alist: (("utf8" . "utf8x"))
+ # eval: (setq org-latex-default-packages-alist (cons '("mathletters" "ucs" nil) org-latex-default-packages-alist))
+ # End:
