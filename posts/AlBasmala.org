@@ -2,6 +2,7 @@
 #+date: <1991-08-20 19:29>
 #+filetags: emacs
 #+fileimage: org_logo.png 150 150
+#+options: d:nil
 
 # C-c C-v C-b ⇒ Evaluate all src blocks
 
@@ -12,7 +13,7 @@
 # (cl-defun not-currently-working-with (&optional z) t)
 # (cl-defun currently-working-with (&optional y) )
 
-* Abstract :ignore:
+* Abstract                                                           :ignore:
 
 #+TOC: headlines 2
 
@@ -21,7 +22,7 @@ How my blog is setup (•̀ᴗ•́)و
 * [[https://github.com/bastibe/org-static-blog][org-static-block]]
 
   #+begin_src emacs-lisp
-(setq org-static-blog-publish-title "Life and Computing Science")
+(setq org-static-blog-publish-title "Life & Computing Science")
 (setq org-static-blog-publish-url "https://alhassy.github.io/")
 (setq org-static-blog-publish-directory "~/blog/")
 (setq org-static-blog-posts-directory "~/blog/posts/")
@@ -199,20 +200,69 @@ for the JavaScript code in this tag.
 ⇒ file:../org-notes-style.css ⇐
 
 * Content Header
+
+:NotYet:
+#+begin_example html
+<style>
+
+.header {
+  /* Try to load ‘fantasy’ if possible, else try to load the others. */
+  font-family: fantasy, monospace, Times;
+  text-align: center;
+  overflow: hidden;
+  /* background-color: #f1f1f1 !important; */
+  /* background: #4183c4 !important; */
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-shadow: 0 2px 10px 2px rgba(0, 0, 0, 0.2);
+}
+
+.header a.logo {
+  font-size: 50px;
+  font-weight: bold;
+}
+
+.header a {
+  color: black;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.header a:hover {
+  background-color: #ddd;
+  background-color: #fff;
+  color: #4183c4;
+}
+
+</style>
+#+END_example
+:End:
+
 #+begin_src emacs-lisp
 ;; This preamble is inserted at the beginning of the <body> of every page:
 ;;   This particular HTML creates a <div> with a simple linked headline
 (setq org-static-blog-page-preamble
+(format
 "<div class=\"header\">
-  <a href=\"https://alhassy.github.io/\">Life and Computing Science</a>
-</div>
-")
+  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
+  <br>
+    <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
+    <a href=\"https://alhassy.github.io/archive\">Archive</a>
+    <a href=\"https://alhassy.github.io/tags\">Tags</a>
+    <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
+    <a href=\"https://alhassy.github.io/about\">About</a>
+</div>"
+)
 #+end_src
 
-#+RESULTS:
-: <div class="header">
-:   <a href="https://alhassy.github.io/">Life and Computing Science</a>
-: </div>
+Note that we could have been needlessly more generic by using, say,
+=(org-static-blog-get-absolute-url org-static-blog-rss-file)=,
+instead of hardcoding the links.
+:Also:
+org-static-blog-publish-url
+org-static-blog-publish-title
+:End:
 
 * HTML Footer
 #+begin_src emacs-lisp
@@ -241,7 +291,9 @@ for the JavaScript code in this tag.
               </script>
               <noscript>Please enable JavaScript to view the
                   <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
-              <a href=\"http://disqus.com\" class=\"dsq-brlink\">comments powered by <span class=\"logo-disqus\">Disqus</span></a>")))
+              <a href=\"http://disqus.com\" class=\"dsq-brlink\">comments powered by <span class=\"logo-disqus\">Disqus</span></a>")
+
+(when nil
          :html-head-extra
          "<link rel=\"alternate\" type=\"application/rss+xml\"
                 href=\"https://alhassy.github.io//public_html/my-blog.xml\"
@@ -309,22 +361,32 @@ for the JavaScript code in this tag.
 This function is called for every post and prepended to the post body.
 Modify this function if you want to change a posts headline."
   (concat
-   "<div class=\"post-date\">" (format-time-string (org-static-blog-gettext 'date-format)
-                           (org-static-blog-get-date post-filename))
-   "</div>"
+   ;; The title ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    "<h1 class=\"post-title\">"
-   "<div class=\"title\">"  ;; See remark above.
+   "<div class=\"title\" style=\"padding-bottom: 0px\">"  ;; See remark above.
    "<a href=\"" (org-static-blog-get-post-url post-filename) "\">" (org-static-blog-get-title post-filename) "</a>"
-   "</h1></div>\n"
+   "</h1></div>"
+
+   ;; The image ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    (my/org-static-blog-assemble-image post-filename)
    "<br><center><strong>Abstract</strong></center>"
-   ))
+
+   (when nil
+     ;; Move to the footer? Near the ‘Tags’ of the article?
+     ;; The date ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      "<div style=\"text-align: center;\">" (format-time-string (org-static-blog-gettext 'date-format)
+                           (org-static-blog-get-date post-filename))
+
+   "</div>"
+
+   )))
 #+end_src
 
 #+RESULTS:
 : org-static-blog-post-preamble
 
 * The Landing Page
+
 #+begin_src emacs-lisp
 ;; MA: Let's change how the index appears: I only want the abstracts.
 
@@ -357,21 +419,17 @@ posts as full text posts."
      (format
       (concat
     "#+EXPORT_FILE_NAME: %s"
-    "#+options: toc:nil"
-    "\n#+HTML_HEAD: <link rel=\"alternate\" type=\"application/rss+xml\""
-    "href=\"%s\" title=\"RSS feed for %s\"/>"
-    "\n#+title: %s"
-    "\n#+HTML_HEAD: <link href=\"https://alhassy.github.io/next-700-module-systems/prototype/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
-    ; " # OPTIONS: toc:nil d:nil"
-    ; " # Toc is displayed below at a strategic position."
+    "#+options: toc:nil title:nil html-postamble:nil"
+    "\n#+html: <title>%s</title>"
+    "\n#+begin_export html\n %s\n#+end_export"
+    "\n#+HTML_HEAD: <link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
     "\n\n Here are some of my latest thoughts... or see the %s or %s... badge:here|there ... doc:thread-first"
     "\n\n %s"
     "\n\n#+HTML: %s"
     )
     (concat org-static-blog-publish-directory org-static-blog-index-file)
-    (org-static-blog-get-absolute-url org-static-blog-rss-file)
-    org-static-blog-publish-url
     org-static-blog-publish-title
+    org-static-blog-page-preamble
     ;; org-static-blog-page-header
 
     ;; archives
@@ -426,6 +484,37 @@ posts as full text posts."
 
 #+RESULTS:
 : org-static-blog-assemble-index
+
+* No eval upon export
+#+BEGIN_SRC emacs-lisp
+;; No code execution on export
+(setq org-export-use-babel nil)
+#+END_SRC
+* Publishing with =[C-u C-u] C-c C-b=
+#+begin_src emacs-lisp
+;; No lock files, for now
+;; The “.#file” files
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Interlocking.html#Interlocking
+(setq create-lockfiles nil)
+
+;; Override all minor modes that use this binding.
+(bind-key* (kbd "C-c C-b")
+  (lambda (&optional prefix)
+"C-c C-b        ⇒ Publish current buffer
+C-u C-c C-b     ⇒ Publish entire blog
+C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts"
+     (interactive "P")
+     (pcase (or (car prefix) 0)
+       (0  (org-static-blog-publish-file (f-full (buffer-name))))
+           ;; (browse-url-of-file (format "%s%s.html" org-static-blog-posts-directory
+           ;;                            (f-base (buffer-name))))
+       ;; Apparently I have to publish the current buffer before trying
+       ;; to publish the blog; otherwise I got some errors.
+       (4  (org-static-blog-publish-file (f-full (buffer-name)))
+           (org-static-blog-publish)))))
+       ; (16 (org-static-blog-publish-file (f-full (buffer-name)))
+       ;    (org-static-blog-publish t)))
+#+end_src
 
 * COMMENT todo
 
