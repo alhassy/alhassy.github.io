@@ -6,7 +6,7 @@
 #+options: d:nil
 #+PROPERTY: header-args  :exports code
 #+OPTIONS: toc:nil html-postamble:nil d:nil
-#+PROPERTY: header-args :tangle "AlBasmala.el"
+#+PROPERTY: header-args :tangle "~/blog/AlBasmala.el"
 
 # C-c C-v C-b ⇒ Evaluate all src blocks
 
@@ -44,7 +44,7 @@ How my blog is setup (•̀ᴗ•́)و
 
 # The remainder of this article discusses the elisp utilities that made the second point possible.
 
-* [[https://github.com/bastibe/org-static-blog][org-static-block]]
+* COMMENT [[https://github.com/bastibe/org-static-blog][org-static-block]]
   :PROPERTIES:
   :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
   :END:
@@ -62,6 +62,121 @@ How my blog is setup (•̀ᴗ•́)و
 
 #+RESULTS:
 
+* Floating TOC
+  :PROPERTIES:
+  :CUSTOM_ID: Floating-TOC
+  :END:
+When we write =#+toc: headlines 2= in our Org,
+HTML export produces the following.
+#+begin_src html :exports code :tangle no
+<div id="table-of-contents">
+  <h2>Table of Contents</h2>
+  <div id="text-table-of-contents">
+    <ul>
+      <li> section 1 </li>
+             ⋮
+      <li> section 𝓃 </li>
+    </ul>
+  </div>
+</div>
+#+end_src
+Hence, we can style the table of contents by writing rules that target those
+=id='s. We use the following rules, taken from [[https://orgmode.org/worg/][the Worg community]].
+#+begin_src css :tangle ~/blog/floating-toc.css
+/*TOC inspired by https://orgmode.org/worg/ */
+#table-of-contents {
+    position: fixed; right: 0em; top: 0em;
+    margin-top: 120px; /* offset from the top of the screen */
+
+    /* It shrinks and grows as necessary */
+    padding: 0em !important;
+    width: auto !important;
+    min-width: auto !important;
+
+    font-size: 10pt;
+    background: white;
+    line-height: 12pt;
+    text-align: right;
+
+    box-shadow: 0 0 1em #777777;
+    -webkit-box-shadow: 0 0 1em #777777;
+    -moz-box-shadow: 0 0 1em #777777;
+    -webkit-border-bottom-left-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+
+    /* Ensure doesn't flow off the screen when expanded */
+    max-height: 80%;
+    overflow: auto;}
+
+#table-of-contents h2 {
+    font-size: 13pt;
+    max-width: 9em;
+    border: 0;
+    font-weight: normal;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    padding-top: 0.05em;
+    padding-bottom: 0.05em; }
+
+    #table-of-contents #text-table-of-contents {
+    display: none;
+    text-align: left; }
+
+    #table-of-contents:hover #text-table-of-contents {
+    display: block;
+    padding: 0.5em;
+    margin-top: -1.5em; }
+#+end_src
+
+Let's also avoid =Table of Contents= in preference to the Greek [[https://en.wikipedia.org/wiki/Xi_(letter)][letter]] =Ξ=.
+#+begin_src emacs-lisp
+(advice-add 'org-html--translate :before-until 'display-toc-as-Ξ)
+
+(defun display-toc-as-Ξ (phrase info) (when (equal phrase "Table of Contents") "Ξ"))
+#+end_src
+
+How did I get here?
+1. How does Org's HTML export TOCs? ⇒ doc:org-html-toc
+2. Looking at its source, we see doc:org-html--translate being
+   the only place mentioning the string /Table of Contents/.
+3. Let's advise it, with doc:advice-add, to return /Ξ/
+   /only/ on that particular input string.
+4. Joy ♥‿♥
+
+#   I've altered it by adding the following rule for anchors a {⋯};
+#   which resurrects \ref{} calls via MathJax ---which org-notes-style killed.
+#
+# /* To allow \ref{} via MathJax */
+# a { white-space: pre !important; }
+I've added the rule =a { white-space: pre !important; }= to
+~org-notes-style~ to have =\ref{}= calls to work.
+
+# I've also added:
+# /* Org-notes adds extra whitespace after the title, let's avoid that. */
+# .title { margin: 0 0 0 0 !important; }
+
+\[ p ⊓ q = p \quad ≡ \quad p ⊔ q = q \label{Golden-Rule}\tag{Golden-Rule}\]
+
+Look at \ref{Golden-Rule}, it says, when specialised to numbers, /the minimum
+of two items is the first precisely when the maximum of the two is the second/
+---d'uh!
+
+#+begin_edcomm
+:ed: Warning
+
+We can make an equation ℰ named 𝒩 and refer to it by ℒ by declaring
+=\[ℰ \tag{𝒩} \label{ℒ} \]= then refer to it with =\ref{ℒ}=.  However, if 𝒩 contains
+Unicode, then the reference will not generally be ‘clickable’ ---it wont take
+you to the equation's declaration site.  For example, \ref{⊑-Definition} below
+has Unicode in both its tag and label, and so clicking that link wont go
+anywhere, whereas \ref{Order-Definition} has Unicode only in its tag, with the
+label being =\label{Order-Definition}=, and clicking it takes you to the formula.
+
+\[ p ⊑ q \quad ≡ \quad p ⊓ q = p \tag{⊑-Definition}\label{⊑-Definition} \]
+\[ p ⊑ q \quad ≡ \quad p ⊔ q = q \tag{⊑-Definition}\label{Order-Definition} \]
+
+#+end_edcomm
+
 * HTML Header
   :PROPERTIES:
   :CUSTOM_ID: HTML-Header
@@ -69,12 +184,14 @@ How my blog is setup (•̀ᴗ•́)و
 #+begin_src emacs-lisp  :exports code
 ;; This header is inserted into the <head> section of every page:
 (setq org-static-blog-page-header
+(concat org-html-head-extra
 "<meta name=\"author\" content=\"Musa Al-hassy\">
 <meta name=\"referrer\" content=\"no-referrer\">
 <link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />
 <link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />
+<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />
+<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />
 <link rel=\"icon\" href=\"images/favicon.png\">
-
 
 <script type=\"text/javascript\">
 /*
@@ -100,7 +217,7 @@ through which recipients can access the Corresponding Source.
 
 @licend  The above is the entire license notice
 for the JavaScript code in this tag.
-*/
+,*/
 <!--/*--><![CDATA[/*><!--*/
  function CodeHighlightOn(elem, id)
  {
@@ -145,7 +262,7 @@ for the JavaScript code in this tag.
 <script type=\"text/javascript\"
         src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML\"></script>
 
-")
+"))
 #+end_src
 
 ⇒ file:../org-notes-style.css ⇐
@@ -155,10 +272,7 @@ for the JavaScript code in this tag.
   :CUSTOM_ID: Content-Header
   :END:
 
-:NotYet:
-#+begin_example html
-<style>
-
+#+begin_src css :tangle ~/blog/blog-banner.css
 .header {
   /* Try to load ‘fantasy’ if possible, else try to load the others. */
   font-family: fantasy, monospace, Times;
@@ -188,10 +302,7 @@ for the JavaScript code in this tag.
   background-color: #fff;
   color: #4183c4;
 }
-
-</style>
-#+END_example
-:End:
+#+end_src
 
 #+begin_src emacs-lisp
 ;; This preamble is inserted at the beginning of the <body> of every page:
@@ -285,7 +396,7 @@ org-static-blog-publish-title
 #+RESULTS:
 : my/org-static-blog-assemble-image
 
-* [[http://taopeng.me/org-notes-style/][org-notes-style]]
+* this [[http://taopeng.me/org-notes-style/][org-notes-style]]
   :PROPERTIES:
   :CUSTOM_ID: http-taopeng-me-org-notes-style-org-notes-style
   :END:
@@ -299,29 +410,31 @@ Modify this function if you want to change a posts headline."
   (concat
    ;; The title ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"padding-bottom: 0px\">"  ;; See remark above.
+   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  ;; See remark above.
    "<a href=\"" (org-static-blog-get-post-url post-filename) "\">" (org-static-blog-get-title post-filename) "</a>"
    "</h1></div>"
+
+   ;; Move to the footer? Near the ‘Tags’ of the article?
+   ;; The date ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   "<div style=\"text-align: center;\">"
+   (format-time-string (org-static-blog-gettext 'date-format)
+                       (org-static-blog-get-date post-filename))
+   "</div>"
 
    ;; The image ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    (my/org-static-blog-assemble-image post-filename)
    "<br><center><strong>Abstract</strong></center>"
 
-   (when nil
-     ;; Move to the footer? Near the ‘Tags’ of the article?
-     ;; The date ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      "<div style=\"text-align: center;\">" (format-time-string (org-static-blog-gettext 'date-format)
-                           (org-static-blog-get-date post-filename))
-
-   "</div>"
-
-   )))
+   ))
 #+end_src
 
-#+RESULTS:
-: org-static-blog-post-preamble
++ /* Org-notes adds extra whitespace after the title, let's avoid that. */
++ .title { margin: 0 0 0 0 !important; }
 
 * multipost-pages
+  :PROPERTIES:
+  :CUSTOM_ID:  multipost-pages
+  :END:
 
 # The =org-static-blog-with-find-file= macro does a lot of ‘in your face’ writing,
 # which really ought to be hidden from sight.
@@ -716,6 +829,9 @@ cd ~/Learning; mkdir drafts
  </footer>
  #+end_export
 ** Ideas
+   :PROPERTIES:
+   :CUSTOM_ID: Ideas
+   :END:
 
  + Footer should include
    - See Org Source; see HTML source
@@ -728,6 +844,9 @@ badge:|buy_me_a coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffe
 #+end_center
 
 * The name: [[https://en.wikipedia.org/wiki/Basmala][al-bas-mala]]
+  :PROPERTIES:
+  :CUSTOM_ID:  the-name
+  :END:
 
 The prefix /al/ is the Arabic definite particle which may correspond to English's /the/;
 whereas /basmala/ refers to a beginning.
@@ -735,6 +854,9 @@ whereas /basmala/ refers to a beginning.
 That is, this is a variation on the traditional [[https://en.wikipedia.org/wiki/%22Hello,_World!%22_program]["hello world"]] ;-)
 
 * COMMENT Old Jekyll Setup :posterity:terrible:
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-Old-Jekyll-Setup
+  :END:
 Write in Org-mode and generate coloured markdown for Jekyll usage
 
 # Usage ∷ Begin blog server then load AlBasmala, then edit & preview.
@@ -745,6 +867,9 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
 # (preview-article)
 
 ** Server Setup
+   :PROPERTIES:
+   :CUSTOM_ID: Server-Setup
+   :END:
 
  When drafting, it's ideal to be able to inspect the resulting web article.
  To do so, we may initialise the Jekyll server as follows.
@@ -768,6 +893,9 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
  Super simple, but hides an annoying step & layer from the user.
 
 ** ~file~ Symbols
+   :PROPERTIES:
+   :CUSTOM_ID: file-Symbols
+   :END:
 
  We will look at various generated files revolving around the given file,
  so let us generate the necessary variables that refer to such names.
@@ -857,6 +985,9 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
  #+end_src
 
 ** Get Org Keywords
+   :PROPERTIES:
+   :CUSTOM_ID: Get-Org-Keywords
+   :END:
 
  We want to be able to access ~#+key: value~ pairs from the article org source
  as a variable ~org.key~. We also allow as input default values, since the user
@@ -972,6 +1103,9 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
  #+END_SRC
 
 ** MakeHeader
+   :PROPERTIES:
+   :CUSTOM_ID: MakeHeader
+   :END:
 
  The Jekyll backend has a particular header for articles, which we produce:
 
@@ -989,6 +1123,9 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
  #+END_SRC
 
 ** Article Image
+   :PROPERTIES:
+   :CUSTOM_ID: Article-Image
+   :END:
 
  An image is included via the ~#+IMAGE:location~ --see the usages sections below.
  Alternative methods include.
@@ -1072,6 +1209,9 @@ width="142" height="142" align="top"> </center>
                     (lambda (x) (concat x "\n NICE")))
  #+END_EXAMPLE
 ** PDF Generation
+   :PROPERTIES:
+   :CUSTOM_ID: PDF-Generation
+   :END:
 
  :Old_tangle_latex_approach:
  The org block header for the following has
@@ -1150,6 +1290,9 @@ width="142" height="142" align="top"> </center>
  #+END_SRC
 
 ** Other Formats
+   :PROPERTIES:
+   :CUSTOM_ID: Other-Formats
+   :END:
 
  Readers of the article may want to see the source
  --which may contain code or parts not rendered in the article, such as exercise solutions.
@@ -1234,6 +1377,9 @@ width="142" height="142" align="top"> </center>
  #+END_SRC
 
 *** COMMENT org-html-postamble-format at the end of the webpage :old_approach:
+    :PROPERTIES:
+    :CUSTOM_ID: COMMENT-org-html-postamble-format-at-the-end-of-the-webpage
+    :END:
 
  # Look at the super short doc to know how to manipulate this variable: (describe-symbol 'org-html-postamble-format)
  #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
@@ -1254,6 +1400,9 @@ width="142" height="142" align="top"> </center>
  #+END_SRC
 
 ** ~preview-article~ -- the heart of ~AlBasmala.el~
+   :PROPERTIES:
+   :CUSTOM_ID: preview-article-the-heart-of-AlBasmala-el
+   :END:
 
  We make the article in stages:
   0. Go to the Org source and use the native Org utitlies to produce a coloured html file.
@@ -1346,6 +1495,9 @@ width="142" height="142" align="top"> </center>
  #+END_SRC
 
 ** COMMENT Version control                     :Deprecated:Before_magit_time:
+   :PROPERTIES:
+   :CUSTOM_ID: COMMENT-Version-control
+   :END:
 
    A simple version control mechanism; will likely switch to ~magit~ in the future.
 
@@ -1375,6 +1527,9 @@ width="142" height="142" align="top"> </center>
   #+END_SRC
 
 ** Publish
+   :PROPERTIES:
+   :CUSTOM_ID: Publish
+   :END:
 
  #+BEGIN_SRC emacs-lisp :tangle AlBasmala.el
 (defun publish () "Send material to github pages."
@@ -1403,6 +1558,9 @@ width="142" height="142" align="top"> </center>
  # Remember it takes 10 seconds for the live github page to actually change!
 
 ** Usage
+   :PROPERTIES:
+   :CUSTOM_ID: Usage
+   :END:
 
  # Within src blocks containing org, you need to escape org heading, the `*`, delimiters with a comma.
  # E.g.: ,* My heading
@@ -1435,6 +1593,9 @@ width="142" height="142" align="top"> </center>
 
 
 ** footer
+   :PROPERTIES:
+   :CUSTOM_ID: footer
+   :END:
 
  NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
 

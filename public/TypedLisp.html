@@ -7,12 +7,49 @@
       href="https://alhassy.github.io/rss.xml"
       title="RSS feed for https://alhassy.github.io/"/>
 <title>Typed Lisp, A Primer</title>
+
+<link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+<link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+
+ <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+  <script>
+         $(document).ready(function() {
+             $('.tooltip').tooltipster({
+                 theme: 'tooltipster-punk',
+                 contentAsHTML: true,
+                 animation: 'grow',
+                 delay: [100,500],
+                 // trigger: 'click'
+                 trigger: 'custom',
+                 triggerOpen: {
+                     mouseenter: true
+                 },
+                 triggerClose: {
+                     originClick: true,
+                     scroll: true
+                 }
+ });
+         });
+     </script>
+
+<style>
+   abbr {color: red;}
+
+   .tooltip { border-bottom: 1px dotted #000;
+              color:red;
+              text-decoration: none;}
+</style>
 <meta name="author" content="Musa Al-hassy">
 <meta name="referrer" content="no-referrer">
 <link href="usual-org-front-matter.css" rel="stylesheet" type="text/css" />
 <link href="org-notes-style.css" rel="stylesheet" type="text/css" />
+<link href="floating-toc.css" rel="stylesheet" type="text/css" />
+<link href="blog-banner.css" rel="stylesheet" type="text/css" />
 <link rel="icon" href="images/favicon.png">
-
 
 <script type="text/javascript">
 /*
@@ -38,7 +75,7 @@ through which recipients can access the Corresponding Source.
 
 @licend  The above is the entire license notice
 for the JavaScript code in this tag.
-*/
+,*/
 <!--/*--><![CDATA[/*><!--*/
  function CodeHighlightOn(elem, id)
  {
@@ -93,46 +130,46 @@ for the JavaScript code in this tag.
     <a href="https://alhassy.github.io/archive">Archive</a>
     <a href="https://alhassy.github.io/tags">Tags</a>
     <a href="https://alhassy.github.io/rss.xml">RSS</a>
-    <a href="#about">About</a>
+    <a href="https://alhassy.github.io/about">About</a>
 </div></div>
 <div id="content">
-<h1 class="post-title"><div class="title" style="padding-bottom: 0px"><a href="https://alhassy.github.io/TypedLisp.html">Typed Lisp, A Primer</a></h1></div><center> <img src="images/emacs-birthday-present.png" alt="Article image"
+<h1 class="post-title"><div class="title" style="margin: 0 0 0 0 !important;"><a href="https://alhassy.github.io/TypedLisp.html">Typed Lisp, A Primer</a></h1></div><div style="text-align: center;">21 Aug 2019</div><center> <img src="images/emacs-birthday-present.png" alt="Article image"
   width="350" height="350" align="top" /> </center><br><center><strong>Abstract</strong></center>
 <nav id="table-of-contents">
-<h2>Table of Contents</h2>
+<h2>Ξ</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#inconsistent-love">“Loving Haskell &amp; Lisp is Inconsistent”</a></li>
-<li><a href="#terse-types-tutorial">Why Bother with Types? A Terse Tutorial on Type Systems</a>
+<li><a href="#inconsistent-love"><a href="#inconsistent-love">“Loving Haskell &amp; Lisp is Inconsistent”</a></a></li>
+<li><a href="#terse-types-tutorial"><a href="#terse-types-tutorial">Why Bother with Types? A Terse Tutorial on Type Systems</a></a>
 <ul>
-<li><a href="#type-checking">Obtaining &amp; Checking Types</a></li>
-<li><a href="#lisp-is-eval">Statics &amp; Dynamics of Lisp</a></li>
-<li><a href="#lisp-is-dynamic">Variable Scope</a></li>
-<li><a href="#lisp-is-strong">Casts &amp; Coercions</a></li>
-<li><a href="#type-annotations">Type Annotations</a></li>
-<li><a href="#typecase">Type-directed Computations</a></li>
-<li><a href="#type-specifiers">Type Specifiers: On the nature of types in Lisp</a></li>
-<li><a href="#deftype">Making New Types with <code>deftype</code></a></li>
-<li><a href="#adts">Algebraic Data Types a la Haskell</a></li>
+<li><a href="#type-checking"><a href="#type-checking">Obtaining &amp; Checking Types</a></a></li>
+<li><a href="#lisp-is-eval"><a href="#lisp-is-eval">Statics &amp; Dynamics of Lisp</a></a></li>
+<li><a href="#lisp-is-dynamic"><a href="#lisp-is-dynamic">Variable Scope</a></a></li>
+<li><a href="#lisp-is-strong"><a href="#lisp-is-strong">Casts &amp; Coercions</a></a></li>
+<li><a href="#type-annotations"><a href="#type-annotations">Type Annotations</a></a></li>
+<li><a href="#typecase"><a href="#typecase">Type-directed Computations</a></a></li>
+<li><a href="#type-specifiers"><a href="#type-specifiers">Type Specifiers: On the nature of types in Lisp</a></a></li>
+<li><a href="#deftype"><a href="#deftype">Making New Types with <code>deftype</code></a></a></li>
+<li><a href="#adts"><a href="#adts">Algebraic Data Types a la Haskell</a></a></li>
 </ul>
 </li>
-<li><a href="#why-dynamic">In Defence of Being Dynamically Checked</a></li>
-<li><a href="#lisp-funny-history">With its hierarchy of types, why isn't Lisp statically typed?</a></li>
-<li><a href="#lisp-is-typed">Lisp Actually Admits Static Typing!</a></li>
-<li><a href="#elisp-types">ELisp's Type Hierarchy</a>
+<li><a href="#why-dynamic"><a href="#why-dynamic">In Defence of Being Dynamically Checked</a></a></li>
+<li><a href="#lisp-funny-history"><a href="#lisp-funny-history">With its hierarchy of types, why isn't Lisp statically typed?</a></a></li>
+<li><a href="#lisp-is-typed"><a href="#lisp-is-typed">Lisp Actually Admits Static Typing!</a></a></li>
+<li><a href="#elisp-types"><a href="#elisp-types">ELisp's Type Hierarchy</a></a>
 <ul>
-<li><a href="#Number">Number</a></li>
-<li><a href="#Character">Character</a></li>
-<li><a href="#Symbol">Symbol</a></li>
-<li><a href="#Sequence">Sequence</a></li>
-<li><a href="#Function">Function</a></li>
-<li><a href="#Macro">Macro</a></li>
-<li><a href="#Record">Record</a></li>
+<li><a href="#Number"><a href="#Number">Number</a></a></li>
+<li><a href="#Character"><a href="#Character">Character</a></a></li>
+<li><a href="#Symbol"><a href="#Symbol">Symbol</a></a></li>
+<li><a href="#Sequence"><a href="#Sequence">Sequence</a></a></li>
+<li><a href="#Function"><a href="#Function">Function</a></a></li>
+<li><a href="#Macro"><a href="#Macro">Macro</a></a></li>
+<li><a href="#Record"><a href="#Record">Record</a></a></li>
 </ul>
 </li>
-<li><a href="#typing-via-macros">Typing via Macros &amp; Advice</a></li>
-<li><a href="#Closing">Closing</a></li>
-<li><a href="#references">References</a></li>
+<li><a href="#typing-via-macros"><a href="#typing-via-macros">Typing via Macros &amp; Advice</a></a></li>
+<li><a href="#Closing"><a href="#Closing">Closing</a></a></li>
+<li><a href="#references"><a href="#references">References</a></a></li>
 </ul>
 </div>
 </nav>
@@ -156,7 +193,7 @@ Goals for this article:
 <ol class="org-ol">
 <li>Multiple examples of type constructions in Lisp.</li>
 <li>Comparing Lisp type systems with modern languages, such as Haskell.</li>
-<li>Show how algebraic <a href="#org130e1c5">polymorphic</a> types like <code>Pair</code> and <code>Maybe</code> can be defined in Lisp.
+<li>Show how algebraic <a href="#org89e564c">polymorphic</a> types like <code>Pair</code> and <code>Maybe</code> can be defined in Lisp.
 Including heterogeneously typed lists!</li>
 <li>Convey a passion for an elegant language.</li>
 <li>Augment Lisp with functional Haskell-like type declarations ;-)</li>
@@ -190,8 +227,8 @@ pre.src-math:before { content: 'Mathematical! Algebraic! Axiomatic!'; }
 
 </style>
 
-<div id="outline-container-orgd1b289c" class="outline-2">
-<h2 id="inconsistent-love">“Loving Haskell &amp; Lisp is Inconsistent”</h2>
+<div id="outline-container-orgf969500" class="outline-2">
+<h2 id="inconsistent-love"><a href="#inconsistent-love">“Loving Haskell &amp; Lisp is Inconsistent”</a></h2>
 <div class="outline-text-2" id="text-inconsistent-love">
 <p>
 I have convinced a number of my peers to use Emacs/Spacemacs/Doom-emacs,
@@ -339,8 +376,8 @@ as it's orthogonal in many respects; although it is closer to that of <a href="h
 </div>
 </div>
 
-<div id="outline-container-org4960148" class="outline-2">
-<h2 id="terse-types-tutorial">Why Bother with Types? A Terse Tutorial on Type Systems</h2>
+<div id="outline-container-orga322c6b" class="outline-2">
+<h2 id="terse-types-tutorial"><a href="#terse-types-tutorial">Why Bother with Types? A Terse Tutorial on Type Systems</a></h2>
 <div class="outline-text-2" id="text-terse-types-tutorial">
 <p>
 <i>Types allow us to treat objects according a similar structure
@@ -490,7 +527,7 @@ Such case analysis is available in languages such as C# &#x2014;c.f.,
 <a href="https://blogs.msdn.microsoft.com/ericlippert/2010/09/16/is-is-as-or-is-as-is/">is is as or is as is</a>. Finally, it is important to realise that <code>cons</code> is a monomorphic
 type
 &#x2014;it just means an (arbitrary) element consisting of two parts called <code>car</code> and <code>cdr</code>&#x2014;
-we show how to form a <a href="#org130e1c5">polymorphic</a> product type below.
+we show how to form a <a href="#org89e564c">polymorphic</a> product type below.
 </p>
 
 <p>
@@ -519,8 +556,8 @@ in Lisp.
 </p>
 </div>
 
-<div id="outline-container-org5c152e3" class="outline-3">
-<h3 id="type-checking">Obtaining &amp; Checking Types</h3>
+<div id="outline-container-org5b8b6a2" class="outline-3">
+<h3 id="type-checking"><a href="#type-checking">Obtaining &amp; Checking Types</a></h3>
 <div class="outline-text-3" id="text-type-checking">
 <p>
 The typing relationship “:” is usually deterministic in its second argument for
@@ -561,7 +598,7 @@ Lisp's <code>typep</code>.
 </table>
 
 <p>
-In some sense, dynamic languages make it easy to produce <a href="#org130e1c5">polymorphic</a> functions.
+In some sense, dynamic languages make it easy to produce <a href="#org89e564c">polymorphic</a> functions.
 Ironically, the previous sentences is only meaningful if you acknowledge the importance
 of types and type variables.
 </p>
@@ -635,8 +672,8 @@ In summary:
 </p>
 </div>
 </div>
-<div id="outline-container-orgaeac93c" class="outline-3">
-<h3 id="lisp-is-eval">Statics &amp; Dynamics of Lisp</h3>
+<div id="outline-container-org446ed65" class="outline-3">
+<h3 id="lisp-is-eval"><a href="#lisp-is-eval">Statics &amp; Dynamics of Lisp</a></h3>
 <div class="outline-text-3" id="text-lisp-is-eval">
 <blockquote>
 <p>
@@ -716,8 +753,8 @@ We have the following execution rules, where ‘⟿’ denotes “reduces to”.
 </div>
 </div>
 
-<div id="outline-container-org653a0e4" class="outline-3">
-<h3 id="lisp-is-dynamic">Variable Scope</h3>
+<div id="outline-container-org09fb0fa" class="outline-3">
+<h3 id="lisp-is-dynamic"><a href="#lisp-is-dynamic">Variable Scope</a></h3>
 <div class="outline-text-3" id="text-lisp-is-dynamic">
 <p>
 There's also the matter of “scope”, or ‘life time’, of a variable.
@@ -763,11 +800,11 @@ being invoked in the scope.
 <div class="org-src-container">
 <pre class="src src-elisp">(<span style="color: #859900; font-weight: bold;">setq</span> it <span style="color: #2aa198;">"bye"</span>)
 (<span style="color: #859900; font-weight: bold;">defun</span> <span style="color: #b58900;">go</span> () it)
-(<span style="color: #859900; font-weight: bold;">let</span> ((it 3)) (go)) <span style="color: #96A7A9; font-style: italic;">;; </span><span style="color: #96A7A9; font-style: italic;">&#8658; 3; even though &#8220;it&#8221; does not occur textually!</span>
+(<span style="color: #859900; font-weight: bold;">let</span> ((it 3)) (<span style="color: #b58900;">go</span>)) <span style="color: #96A7A9; font-style: italic;">;; </span><span style="color: #96A7A9; font-style: italic;">&#8658; 3; even though &#8220;it&#8221; does not occur textually!</span>
 
 <span style="color: #96A7A9; font-style: italic;">;; </span><span style="color: #96A7A9; font-style: italic;">Temporarily enable lexical binding in Emacs Lisp</span>
 (<span style="color: #859900; font-weight: bold;">setq</span> <span style="color: #268bd2;">lexical-binding</span> <span style="color: #268bd2;">t</span>)
-(<span style="color: #859900; font-weight: bold;">let</span> ((it 3)) (go)) <span style="color: #96A7A9; font-style: italic;">;; </span><span style="color: #96A7A9; font-style: italic;">&#8658; bye; as most languages would act</span>
+(<span style="color: #859900; font-weight: bold;">let</span> ((it 3)) (<span style="color: #b58900;">go</span>)) <span style="color: #96A7A9; font-style: italic;">;; </span><span style="color: #96A7A9; font-style: italic;">&#8658; bye; as most languages would act</span>
 </pre>
 </div>
 
@@ -784,8 +821,8 @@ We simply locally re-define the side-effect component to, say, do nothing. (─�
 </div>
 </div>
 
-<div id="outline-container-org47201bf" class="outline-3">
-<h3 id="lisp-is-strong">Casts &amp; Coercions</h3>
+<div id="outline-container-orgeae4ea1" class="outline-3">
+<h3 id="lisp-is-strong"><a href="#lisp-is-strong">Casts &amp; Coercions</a></h3>
 <div class="outline-text-3" id="text-lisp-is-strong">
 <table>
 <caption class="t-above"><span class="table-number">Table 4:</span> The frequency of implicit type coercions</caption>
@@ -848,8 +885,8 @@ Here's a cute example.
 </div>
 </div>
 </div>
-<div id="outline-container-org58f2940" class="outline-3">
-<h3 id="type-annotations">Type Annotations</h3>
+<div id="outline-container-org6ad8dad" class="outline-3">
+<h3 id="type-annotations"><a href="#type-annotations">Type Annotations</a></h3>
 <div class="outline-text-3" id="text-type-annotations">
 <p>
 We may perform type annotations using the form <code>the</code>; e.g.,
@@ -885,8 +922,8 @@ Computationally, using <code>or</code> as a control structure for lazy sequencin
 </div>
 </div>
 
-<div id="outline-container-org4047f20" class="outline-3">
-<h3 id="typecase">Type-directed Computations</h3>
+<div id="outline-container-org4f0cb48" class="outline-3">
+<h3 id="typecase"><a href="#typecase">Type-directed Computations</a></h3>
 <div class="outline-text-3" id="text-typecase">
 <p>
 Sometimes a value can be one of several types.
@@ -924,8 +961,8 @@ When given a union type, we may want to <i>compute according to the type of a va
 </div>
 </div>
 
-<div id="outline-container-orgeb185db" class="outline-3">
-<h3 id="type-specifiers">Type Specifiers: On the nature of types in Lisp</h3>
+<div id="outline-container-orgfff6a64" class="outline-3">
+<h3 id="type-specifiers"><a href="#type-specifiers">Type Specifiers: On the nature of types in Lisp</a></h3>
 <div class="outline-text-3" id="text-type-specifiers">
 <blockquote>
 <p>
@@ -955,8 +992,8 @@ Type specifiers are thus essentially ‘characteristic functions’ from mathema
 </div>
 </div>
 
-<div id="outline-container-orgfe792a6" class="outline-3">
-<h3 id="deftype">Making New Types with <code>deftype</code></h3>
+<div id="outline-container-orgf9f98f9" class="outline-3">
+<h3 id="deftype"><a href="#deftype">Making New Types with <code>deftype</code></a></h3>
 <div class="outline-text-3" id="text-deftype">
 <p>
 If we use a type specifier often, we may wish to abbreviate it using
@@ -977,7 +1014,7 @@ Register it using <a href="https://www.gnu.org/software/emacs/manual/html_mono/c
 
 <p>
 You could just do number 3 directly, but it's useful to have the
-predicate form of a <a href="#org9226655">type descriptor</a>.
+predicate form of a <a href="#org1a91c7a">type descriptor</a>.
 </p></li>
 </ol>
 
@@ -1032,7 +1069,7 @@ predicate that checks if a list is empty yet <code>null</code> is the type speci
 
 <p>
 Let's form a type of pairs directly &#x2014;which is not ideal!
-This is a <a id="org130e1c5">polymorphic</a> datatype: It takes two type arguments, called <code>a</code> and <code>b</code> below.
+This is a <a id="org89e564c">polymorphic</a> datatype: It takes two type arguments, called <code>a</code> and <code>b</code> below.
 </p>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">(<span style="color: #859900; font-weight: bold;">deftype</span> pair (a b <span style="color: #b58900; font-style: italic;">&amp;optional</span> type)
@@ -1057,7 +1094,7 @@ This is a <a id="org130e1c5">polymorphic</a> datatype: It takes two type argumen
 </div>
 
 <p>
-<b>Exercise:</b> Define the <a href="#org130e1c5">polymorphic</a> <code>maybe</code> type
+<b>Exercise:</b> Define the <a href="#org89e564c">polymorphic</a> <code>maybe</code> type
 such that <code>(maybe τ)</code> has elements being either <code>nil</code> or a value of <code>τ</code>.
 </p>
 <p>
@@ -1137,8 +1174,8 @@ Let me know if you do cool things!
 </p>
 </div>
 </div>
-<div id="outline-container-org8a23697" class="outline-3">
-<h3 id="adts">Algebraic Data Types a la Haskell</h3>
+<div id="outline-container-org966a702" class="outline-3">
+<h3 id="adts"><a href="#adts">Algebraic Data Types a la Haskell</a></h3>
 <div class="outline-text-3" id="text-adts">
 <p>
 Consider the Haskell expression type, example, and integer evaluator.
@@ -1211,7 +1248,7 @@ can be found <a href="https://github.com/stylewarning/cl-algebraic-data-type">he
 <p>
 The Haskell presentation has type-checking baked into it, yet our
 Lisp interpreter <code>int</code> does not! This seems terribly worrying, but
-that <a href="#org406042c"><code>declare-type</code></a> declaration actually handles type checking for us!
+that <a href="#orgf0a7b81"><code>declare-type</code></a> declaration actually handles type checking for us!
 </p>
 <div class="org-src-container">
 <pre class="src src-lisp"><span style="color: #96A7A9; font-style: italic;">;; </span><span style="color: #96A7A9; font-style: italic;">Register the type</span>
@@ -1237,8 +1274,8 @@ Notice that invalid cases yield a helpful (run-time) error message!
 </div>
 </div>
 
-<div id="outline-container-org4fbb515" class="outline-2">
-<h2 id="why-dynamic">In Defence of Being Dynamically Checked</h2>
+<div id="outline-container-org5740cf2" class="outline-2">
+<h2 id="why-dynamic"><a href="#why-dynamic">In Defence of Being Dynamically Checked</a></h2>
 <div class="outline-text-2" id="text-why-dynamic">
 <div class="org-center">
 <p>
@@ -1320,7 +1357,7 @@ the eliminator <code>(|||</code>) &#x2014;from Haskell's <code>Control.Arrow</co
 Some statically typed languages have super weak type systems and ruin the rep
 for everyone else.
 For example, <code>C</code> is great and we all love it of-course, but it's a shame that we can only
-express the <a href="#org130e1c5">polymorphic</a> identity function \(id : ∀{α}. α → α \;=\; λ x → x\),
+express the <a href="#org89e564c">polymorphic</a> identity function \(id : ∀{α}. α → α \;=\; λ x → x\),
 by using the C-preprocessor &#x2014;or dismiss the types by casting pointers around.
 </p>
 
@@ -1344,8 +1381,8 @@ should ignore my blunder and consider trying Lisp yourself to see how awesome it
 </div>
 </div>
 
-<div id="outline-container-orgbf88362" class="outline-2">
-<h2 id="lisp-funny-history">With its hierarchy of types, why isn't Lisp statically typed?</h2>
+<div id="outline-container-org97ffb5e" class="outline-2">
+<h2 id="lisp-funny-history"><a href="#lisp-funny-history">With its hierarchy of types, why isn't Lisp statically typed?</a></h2>
 <div class="outline-text-2" id="text-lisp-funny-history">
 <div class="org-center">
 <p>
@@ -1372,7 +1409,7 @@ and why?
 </p>
 
 <p>
-I may be completely wrong, but below I mention a <a href="#org7569494">bunch of papers</a> that suggest
+I may be completely wrong, but below I mention a <a href="#org8258270">bunch of papers</a> that suggest
 it's kind hard to type this stuff.
 </p>
 
@@ -1458,8 +1495,8 @@ A more informative historical account of Lisp &amp; its universal reverence can 
 </div>
 </div>
 
-<div id="outline-container-orgb419ef8" class="outline-2">
-<h2 id="lisp-is-typed">Lisp Actually Admits Static Typing!</h2>
+<div id="outline-container-org3008424" class="outline-2">
+<h2 id="lisp-is-typed"><a href="#lisp-is-typed">Lisp Actually Admits Static Typing!</a></h2>
 <div class="outline-text-2" id="text-lisp-is-typed">
 <p>
 Besides Common Lisp, “Typed Lisps” include <a href="https://github.com/clojure/core.typed">an optional type system for Clojure</a>
@@ -1557,8 +1594,8 @@ then invoke <code>(disassemble 'go)</code> to see something like
 </div>
 </div>
 
-<div id="outline-container-org4681d71" class="outline-2">
-<h2 id="elisp-types">ELisp's Type Hierarchy</h2>
+<div id="outline-container-org67b1f1f" class="outline-2">
+<h2 id="elisp-types"><a href="#elisp-types">ELisp's Type Hierarchy</a></h2>
 <div class="outline-text-2" id="text-elisp-types">
 <p>
 ⇨ Each primitive type has a corresponding Lisp function that checks whether an object is a
@@ -1567,7 +1604,7 @@ then invoke <code>(disassemble 'go)</code> to see something like
 </p>
 
 <dl class="org-dl">
-<dt><a id="org9226655">Type Descriptor</a></dt><dd><p>
+<dt><a id="org1a91c7a">Type Descriptor</a></dt><dd><p>
 Objects holding information about types.
 </p>
 
@@ -1581,8 +1618,8 @@ This section is based <a href="https://www.gnu.org/software/emacs/manual/html_no
 </p>
 </div>
 
-<div id="outline-container-org2f6e57c" class="outline-3">
-<h3 id="Number">Number</h3>
+<div id="outline-container-org75f69d0" class="outline-3">
+<h3 id="Number"><a href="#Number">Number</a></h3>
 <div class="outline-text-3" id="text-Number">
 <p>
 <i>Numbers, including fractional and non-fractional types.</i>
@@ -1770,8 +1807,8 @@ constants <code>most-negative-fixnum</code> and <code>most-postive-fixnum</code>
 </div>
 </div>
 
-<div id="outline-container-org2226a9f" class="outline-3">
-<h3 id="Character">Character</h3>
+<div id="outline-container-orga3acea4" class="outline-3">
+<h3 id="Character"><a href="#Character">Character</a></h3>
 <div class="outline-text-3" id="text-Character">
 <p>
 <i>Representation of letters, numbers, and control characters.</i>
@@ -1831,8 +1868,8 @@ and lower case with no dash is a space character.
 </div>
 </div>
 
-<div id="outline-container-orga63356a" class="outline-3">
-<h3 id="Symbol">Symbol</h3>
+<div id="outline-container-org9baa906" class="outline-3">
+<h3 id="Symbol"><a href="#Symbol">Symbol</a></h3>
 <div class="outline-text-3" id="text-Symbol">
 <p>
 <i>A multi-use object that refers to functions and variables, and more.</i>
@@ -1935,8 +1972,8 @@ In particular, <code>:x ≠ 'x</code>!
 </div>
 </div>
 
-<div id="outline-container-org590d406" class="outline-3">
-<h3 id="Sequence">Sequence</h3>
+<div id="outline-container-orge92332f" class="outline-3">
+<h3 id="Sequence"><a href="#Sequence">Sequence</a></h3>
 <div class="outline-text-3" id="text-Sequence">
 <p>
 <i>The interface for ordered collections</i>; e.g.,
@@ -2082,8 +2119,8 @@ Interestingly, one writes <code>atom</code>, not <code>atomp</code>.
 </div>
 </div>
 
-<div id="outline-container-org2e198ea" class="outline-3">
-<h3 id="Function">Function</h3>
+<div id="outline-container-org0c4fdca" class="outline-3">
+<h3 id="Function"><a href="#Function">Function</a></h3>
 <div class="outline-text-3" id="text-Function">
 <p>
 <i>Piece of executable code.</i>
@@ -2127,8 +2164,8 @@ Here's some more examples.
 </div>
 </div>
 
-<div id="outline-container-org47cd878" class="outline-3">
-<h3 id="Macro">Macro</h3>
+<div id="outline-container-orgeefaef4" class="outline-3">
+<h3 id="Macro"><a href="#Macro">Macro</a></h3>
 <div class="outline-text-3" id="text-Macro">
 <p>
 <i>A method of expanding an expression into another expression.</i>
@@ -2177,8 +2214,8 @@ its only element is the associated function.
 </div>
 </div>
 
-<div id="outline-container-orgfc1ec88" class="outline-3">
-<h3 id="Record">Record</h3>
+<div id="outline-container-orgc3f0462" class="outline-3">
+<h3 id="Record"><a href="#Record">Record</a></h3>
 <div class="outline-text-3" id="text-Record">
 <p>
 <i>Compound objects with programmer-defined types.</i>
@@ -2240,8 +2277,8 @@ A record is considered a constant for evaulation: Evaluating it yields itself.
 </div>
 </div>
 
-<div id="outline-container-org3019e65" class="outline-2">
-<h2 id="typing-via-macros">Typing via Macros &amp; Advice</h2>
+<div id="outline-container-orgb01077c" class="outline-2">
+<h2 id="typing-via-macros"><a href="#typing-via-macros">Typing via Macros &amp; Advice</a></h2>
 <div class="outline-text-2" id="text-typing-via-macros">
 <p>
 Checking the type of inputs is tedious and so I <a href="https://www.reddit.com/r/emacs/comments/cct5hp/functional_type_declarations_in_elisp/">guessed</a> it could be done using
@@ -2263,7 +2300,7 @@ approach is to <a href="https://www.gnu.org/software/emacs/manual/html_node/elis
 </p>
 
 <p>
-Below is my attempt: <a id="org406042c"><code>declare-type</code></a>. Before you get scared or think it's horrendous, be charitable and
+Below is my attempt: <a id="orgf0a7b81"><code>declare-type</code></a>. Before you get scared or think it's horrendous, be charitable and
 note that about a third of the following is documentation and a third is local declarations.
 </p>
 <div class="org-src-container">
@@ -2340,6 +2377,11 @@ note that about a third of the following is documentation and a third is local d
       ,notify-user )))
 </pre>
 </div>
+
+<pre class="example">
+declare-type
+</pre>
+
 
 <p>
 There are some notable shortcomings: Lack of support for type variables and, for now, no support for
@@ -2511,7 +2553,7 @@ this is a constructive proof that \(∀ n • n > 5 ⇒ n > 2\).
 <p>
 As it currently stands we cannot make any explicit references between the inputs
 and the output, but that's an easy fix: Simply add a local function <code>old</code> to the
-<a href="#org406042c"><code>declare-type</code></a> macro which is intentionally exposed so that it can be used in the
+<a href="#orgf0a7b81"><code>declare-type</code></a> macro which is intentionally exposed so that it can be used in the
 type declarations to refer to the ‘old’, or initial, values provided to the function.
 Additionally, one could also add keyword arguments <code>:requires</code> and <code>:ensures</code>
 for a more sophisticated pre- and post-condition framework.
@@ -2520,13 +2562,13 @@ for a more sophisticated pre- and post-condition framework.
 
 <p>
 Here's a fun exercise: Recast the <a href="https://liquid.kosmikus.org/01-intro.html#/what-is-liquid-haskell">Liquid Haskell</a> examples in Lisp using this
-<a href="#org406042c"><code>declare-type</code></a> form.
+<a href="#orgf0a7b81"><code>declare-type</code></a> form.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org93e9b48" class="outline-2">
-<h2 id="Closing">Closing</h2>
+<div id="outline-container-org819c61a" class="outline-2">
+<h2 id="Closing"><a href="#Closing">Closing</a></h2>
 <div class="outline-text-2" id="text-Closing">
 <blockquote>
 <p>
@@ -2544,8 +2586,8 @@ I learned a lot of stuff, hope you did too ^_^
 </div>
 </div>
 
-<div id="outline-container-orgc1d19af" class="outline-2">
-<h2 id="references">References</h2>
+<div id="outline-container-org3485688" class="outline-2">
+<h2 id="references"><a href="#references">References</a></h2>
 <div class="outline-text-2" id="text-references">
 <p>
 Neato web articles:
@@ -2594,7 +2636,7 @@ and using the   programming language Common Lisp.</li>
 Lisps attract a certain kind of personality.</li>
 </ul></li>
 
-<li>A <a id="org7569494">bunch of papers</a> on <a href="#org130e1c5">polymorphic</a> (modal) type systems
+<li>A <a id="org8258270">bunch of papers</a> on <a href="#org89e564c">polymorphic</a> (modal) type systems
 for Lisp-like multi-staged languages:
 <a href="http://ropas.snu.ac.kr/lib/dock/KiYiCa2005.pdf">This</a> is generic, <a href="https://www.iro.umontreal.ca/~monnier/typer-jfla2019.pdf">this</a> is ML + Scheme, <a href="https://link.springer.com/chapter/10.1007/978-1-4615-2836-4_8">this</a> for compile-time typing,
 and <a href="https://hal.archives-ouvertes.fr/hal-01380792/document">this</a> one “allows the programmer to declaratively express the types of
@@ -2603,7 +2645,7 @@ and <a href="https://hal.archives-ouvertes.fr/hal-01380792/document">this</a> on
 <li><a href="http://lambda-the-ultimate.org/node/5426">Type Systems as Macros</a>
 <ul class="org-ul">
 <li><p>
-After defining <a href="#org406042c"><code>declare-type</code></a> I thought the slogan “types by macros” sounded nifty;
+After defining <a href="#orgf0a7b81"><code>declare-type</code></a> I thought the slogan “types by macros” sounded nifty;
 Googling it led me to this paper where the Racket is endowed with types.
 </p>
 
