@@ -1,8 +1,8 @@
-#+title: AlBasmala ^_^
+#+title: AlBasmala: <br> Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 # +DATE: 2018-06-01
 #+date: <1991-08-20 19:29>
 #+filetags: emacs
-#+fileimage: org_logo.png 150 150
+#+fileimage: org_logo.png 150 150 no-border
 #+options: d:nil
 #+PROPERTY: header-args  :exports code
 #+OPTIONS: toc:nil html-postamble:nil d:nil
@@ -66,6 +66,138 @@ Here are some notable features of my blog.
 # + The resulting elisp file is then used to actually produce this webpage.
 
 # The remainder of this article discusses the elisp utilities that made the second point possible.
+
+#+begin_details
+:title: Super Simple Intro to Org-mode
+
+Org-mode syntax is very /natural/; e.g., the following is Org-mode!
+#+begin_src org :noeval
++ Numbered and bulleted lists are as expected.
+  - Do the things:
+    1.  This first
+    2.  This second
+    44. [@44] This forty-fourth
+  - =[@𝓃]= at the beginning of an iterm forces
+    list numbering to start at 𝓃
+  - =[ ]= or =[X]= at the beginning for checkbox lists
+  - Use =Alt ↑, ↓= to move items up and down lists;
+    renumbering happens automatically.
+
++ Definitions lists:
+   ~- term :: def~
++ Use a comment, such as =# separator=, between two lists
+  to communicate that these are two lists that /happen/ to be
+  one after the other. Or use any /non-indented/ text to split
+  a list into two.
+
+,* My top heading, section
+  words
+,** Child heading, subsection
+  more words
+,*** Grandchild heading, subsubsection
+    even more!
+#+END_SRC
+
+You make a heading by writing =* heading= at the start of a line, then you can
+‘TAB’ to fold/unfold its contents. A table of contents, figures, tables can
+be requested as follows:
+#+BEGIN_SRC org
+# figures not implemented in the HTML backend
+# The 𝓃 is optional and denotes headline depth
+,#+toc: headlines 𝓃
+,#+toc: figures
+,#+toc: tables
+#+END_SRC
+
++ *Markup* elements can be nested.
+
+  | Syntax                             | Result           |
+  |------------------------------------+------------------|
+  | ~/Emphasise/~, italics               | /Emphasise/        |
+  | ~*Strong*~, bold                     | *Strong*           |
+  | ~*/very strongly/*~, bold italics    | */very strongly/*  |
+  | ~=verbatim=~, monospaced typewriter  | =verbatim=         |
+  | ~+deleted+~                          | +deleted+          |
+  | ~_inserted_~                         | _inserted_         |
+  | ~super^{script}ed~                   | super^{script}ed |
+  | ~sub_{scripted}ed~                   | sub_{scripted}ed |
+
+  * Markup can span across multiple lines, by default no more than 2.
+  * In general, markup cannot be ‘in the middle’ of a word.
++ New lines demarcate paragraphs
++ Use =\\= to force line breaks without starting a new paragraph
++ Use /at least/ 5 dashes, =-----=, to form a horizontal rule
+
+*Export* In Emacs, press =C-c C-e h o= to obtain an HTML format of the Org-mode
+markup; use ~C-c C-e l o~ to obtain a PDF rendition.
+
+*Working with tables*
+#+BEGIN_SRC org
+#+ATTR_HTML: :width 100%
+#+name: my-tbl
+#+caption: Example table
+| Who? | What? |
+|------+-------|
+| me   | Emacs |
+| you  | Org   |
+#+END_SRC
+
+Note the horizontal rule makes a header row and is formed by typing =|-= then
+pressing =TAB=. You can =TAB= between cells.
+
+*Working with links*
+
+Link syntax is =[[source url][description]]=; e.g., we can refer to the above
+table with =[[my-tbl][woah]]=.
+Likewise for images: =file:path-to-image.=
+
+# The HTML has Up/Home on the right now ;-)
+# +HTML_LINK_HOME: http://www.google.com
+# +HTML_LINK_UP: http://www.bing.com
+
+*Source code*
+#+begin_src org -n
+,#+begin_src C
+int tot = 1;                    (ref:start)
+for (int i = 0; i != 10; i++)   (ref:loop)
+   tot *= i;                    (ref:next)
+printf("The factorial of 10 is %d", tot);
+,#+end_src
+#+end_src
+
+The labels =(ref:name)= refer to the lines in the source code and can be
+referenced with link syntax: ~[[(name)]]~. Hovering over the link, in the HTML
+export, will dynamically highlight the corresponding line of code.  To strip-out
+the labels from the displayed block, use ~-r -n~ in the header so it becomes
+=#+begin_src C -r -n=, now the references become line numbers.
+
+*Mathematics*
+
+#+BEGIN_SRC org
+$\sin^2 x + \cos^2 x = \int_\pi^{\pi + 1} 1 dx = {1 \over 1} = 1$
+#+END_SRC
+\[ ⇒ \quad \sin^2 x + \cos^2 x = \int_\pi^{\pi + 1} 1 dx = {1 \over 1} = 1 \]
+
+- Instead of =$=, use ~\[...\]~ to display a formula on its own line, centred.
+- Captioned equations are numbered and can be referenced via links
+
+#+BEGIN_SRC org
+#+name: euler
+\begin{equation}
+e ^ {i \pi} + 1 = 0
+\end{equation}
+
+See equation =[[euler]]=.
+#+END_SRC
+⇒
+#+name: euler
+\begin{equation}
+e ^ {i \pi} + 1 = 0
+\end{equation}
+
+See equation [[euler]].
+
+#+end_details
 
 * Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
   :PROPERTIES:
@@ -536,21 +668,24 @@ Every article declaratively has an associated image ^_^
 
 #+begin_src emacs-lisp
 (cl-defun my/org-static-blog-assemble-image (file)
-"Assemble the value of ‘#+fileimage:’ as an HTML form."
+"Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form."
 (with-temp-buffer
   (insert-file-contents file)
   (goto-char 0)
   (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
-  (-let [(image width height)
+  (-let [(image width height no-border?)
          (s-split " " (substring-no-properties
                        (or (match-string 1)
                            "emacs-birthday-present.png")))]
     (setq width (or width 350))
     (setq height (or height 350))
+    (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
     (format "<center> <img src=\"images/%s\" alt=\"Article image\"
-            width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
-            image width height))))
+            %s width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
+            image no-border? width height))))
 #+end_src
+
+#+attr_html: :width 300 :
 
 To make use of =org-notes-style=, I need the title to use the =title= class
 but =org-static-blog= uses the =post-title= blog, so I'll override the
@@ -723,7 +858,7 @@ Posts are sorted in descending time."
     (org-html-export-to-html)))
 #+end_src
 
-* =my/blog=/new-article=
+* =my/blog/new-article=
 <<new-article>>
 
 Helper function to make a new article.
