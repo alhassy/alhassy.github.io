@@ -4,9 +4,8 @@
 #+filetags: emacs
 #+fileimage: org_logo.png 150 150 no-border
 #+options: d:nil
-#+PROPERTY: header-args  :exports code
 #+OPTIONS: toc:nil html-postamble:nil d:nil
-#+PROPERTY: header-args :tangle "~/blog/AlBasmala.el" :results silent
+#+PROPERTY: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code
 
 # C-c C-v C-b ⇒ Evaluate all src blocks
 
@@ -36,6 +35,10 @@
 How my blog is setup (•̀ᴗ•́)و
 
 * Features :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: Features
+  :header-args:  :tangle no
+  :END:
 Here are some notable features of my blog.
 
 + ✓ A nice blog banner --- §[[blog-banner]]
@@ -49,7 +52,7 @@ Here are some notable features of my blog.
 + ✓ Articles have dedicated images, §[[Images]], which are displayed
   on the blog's welcome page along with the article's abstract, §[[Index]]
   - Useful index/sitemap that shows an image and short abstract of each article
-+ ✓ Tooltips, folded regions, and badges --- [[badge:org-special-block-extras|1.0|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs][org-special-block-extras badge]]
++ ✓ Tooltips, folded regions, and badges --- [[badge:org-special-block-extras|1.2|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs][org-special-block-extras badge]]
 
 # + Org-mode unicorn as faveicon!
 
@@ -71,6 +74,8 @@ Here are some notable features of my blog.
 :title: Super Simple Intro to Org-mode
 
 Org-mode syntax is very /natural/; e.g., the following is Org-mode!
+- You can try Org-mode notation and see how it renders live
+  at: http://mooz.github.io/org-js/
 #+begin_src org :noeval
 + Numbered and bulleted lists are as expected.
   - Do the things:
@@ -99,8 +104,8 @@ Org-mode syntax is very /natural/; e.g., the following is Org-mode!
 #+END_SRC
 
 You make a heading by writing =* heading= at the start of a line, then you can
-‘TAB’ to fold/unfold its contents. A table of contents, figures, tables can
-be requested as follows:
+kbd:TAB to fold/unfold its contents. A table of contents, figures, tables can be
+requested as follows:
 #+BEGIN_SRC org
 # figures not implemented in the HTML backend
 # The 𝓃 is optional and denotes headline depth
@@ -128,8 +133,8 @@ be requested as follows:
 + Use =\\= to force line breaks without starting a new paragraph
 + Use /at least/ 5 dashes, =-----=, to form a horizontal rule
 
-*Export* In Emacs, press =C-c C-e h o= to obtain an HTML format of the Org-mode
-markup; use ~C-c C-e l o~ to obtain a PDF rendition.
+*Export* In Emacs, press kbd:C-c_C-e_h_o to obtain an HTML format of the Org-mode
+markup; use kbd:C-c_C-e_l_o to obtain a PDF rendition.
 
 *Working with tables*
 #+BEGIN_SRC org
@@ -142,8 +147,8 @@ markup; use ~C-c C-e l o~ to obtain a PDF rendition.
 | you  | Org   |
 #+END_SRC
 
-Note the horizontal rule makes a header row and is formed by typing =|-= then
-pressing =TAB=. You can =TAB= between cells.
+Note the horizontal rule makes a header row and is formed by typing [[kbd:doit][| -]] then
+pressing kbd:TAB. You can kbd:TAB between cells.
 
 *Working with links*
 
@@ -171,12 +176,24 @@ export, will dynamically highlight the corresponding line of code.  To strip-out
 the labels from the displayed block, use ~-r -n~ in the header so it becomes
 =#+begin_src C -r -n=, now the references become line numbers.
 
+Another reason to use Org:
+If you use =:results raw=, you obtain *dynamic templates* that may use Org-markup:
+#+BEGIN_SRC C :results raw replace
+printf("*bold* +%d+ (strikethrough) /slanted/", 12345);
+#+END_SRC
+
+#+RESULTS:
+*bold* +12345+ (strikethrough) /slanted/
+*bold* +12345+ (strikethrough) /slanted/
+
+Also: Notice that a C program can be run without a =main= ;-)
+
 *Mathematics*
 
 #+BEGIN_SRC org
-$\sin^2 x + \cos^2 x = \int_\pi^{\pi + 1} 1 dx = {1 \over 1} = 1$
+$\sin^2 x + \cos^2 x = \int_\pi^{\pi + 1} 1 dx = {3 \over 3}$
 #+END_SRC
-\[ ⇒ \quad \sin^2 x + \cos^2 x = \int_\pi^{\pi + 1} 1 dx = {1 \over 1} = 1 \]
+\[ ⇒ \quad \sin^2 x + \cos^2 x = \int_\pi^{\pi + 1} 1 dx = {3 \over 3} \]
 
 - Instead of =$=, use ~\[...\]~ to display a formula on its own line, centred.
 - Captioned equations are numbered and can be referenced via links
@@ -212,7 +229,7 @@ Let's use [[https://github.com/bastibe/org-static-blog][org-static-block]] to ma
   using the [[https://github.com/bastibe/org-static-blog#examples][given example]].
 
 Let's declare the necessary basic facts of our blog.
-  #+begin_src emacs-lisp :exports code
+  #+begin_src emacs-lisp -n :exports code
 (setq org-static-blog-publish-title "Life & Computing Science")
 (setq org-static-blog-publish-url "https://alhassy.github.io/")
 (setq org-static-blog-publish-directory "~/blog/")
@@ -250,7 +267,7 @@ Firstly, we want some styling rules to be loaded.
 
 + [[(usualCSS)][usual-org-front-matter.css]] badge:||success|usual-org-front-matter.css|css3 ::
   Org-static-blog ignores any styling exported by Org, so let's bring that back
-  in. I just exported this file with the usual =C-c C-e h o=, then saved the CSS
+  in. I just exported this file with the usual kbd:C-c_C-e_h_o, then saved the CSS
   it produced.
 
 + [[(orgNotesCSS)][org-notes-style.css]] badge:||success|org-notes-style.css|css3 ::
@@ -272,7 +289,7 @@ In addition, we have two more pieces we would like to add to the header: Support
 for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
 LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
 [[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
-#+begin_src emacs-lisp :noweb yes :results raw
+#+begin_src emacs-lisp :noweb yes :results raw -n
  (setq org-static-blog-page-header
   (concat
    org-html-head-extra  ;; Alterd by ‘org-special-block-extras’
@@ -306,7 +323,7 @@ Where the =𝓍ᵢ= are the lines referenced by =𝓍𝓈=.
 
 I want to have a nice banner at the top of every page, which should link
 to useful parts of my blog.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp -n
 (setq org-static-blog-page-preamble
 "<div class=\"header\">
   <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
@@ -335,7 +352,7 @@ I want to style it as follows:
 + Line [[(headerAnchor)]]: All links in the banner are black
 + Line [[(headerHover)]]: When you hover over a link, it becomes blue
 
-#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval
+#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval -n
 .header { (ref:headerHeader)
   /* Try to load ‘fantasy’ if possible, else try to load the others. */
   font-family: fantasy, monospace, Times;
@@ -373,7 +390,7 @@ to enable references via line numbers, then declares ~(ref:name)~ on line
 and refers to it by =[[(name)][description]]=. Org-mode by default styles
 such highlighting.
 #+begin_details
-#+begin_src emacs-lisp :noweb-ref my-html-header :tangle no
+#+begin_src emacs-lisp :noweb-ref my-html-header :tangle no -n
 "<script type=\"text/javascript\">
 /*
 @licstart  The following is the entire license notice for the
@@ -427,7 +444,7 @@ for the JavaScript code in this tag.
 :ed: Remark
 orange:TODO
 Before we move on, I'd like to have heavy red font for links.
-#+begin_src css :tangle ~/blog/blog-banner.css :noeval :tangle no
+#+begin_src css :tangle ~/blog/blog-banner.css :noeval :tangle no -n
 a {color:#DD514C;text-decoration:none;font-weight:700}
 #+end_src
 But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
@@ -445,7 +462,7 @@ write LaTeX-style math delimited by ~$...$~ or by =\[...\]=. Here is an example.
 
 #+begin_details org
 This is the CSS that Org loads by default.
-#+begin_src emacs-lisp :noweb-ref my-html-header :tangle no
+#+begin_src emacs-lisp :noweb-ref my-html-header :tangle no -n
 "<script type=\"text/x-mathjax-config\">
     MathJax.Hub.Config({
         displayAlign: \"center\",
@@ -512,7 +529,7 @@ the reader in case they want to jump elsewhere in the document quickly
 ---possibly going to the top of the document.
 
 When we write =#+toc: headlines 2= in our Org, HTML export produces the following.
-#+begin_src html :exports code :tangle no :noeval
+#+begin_src html -n  :exports code :tangle no :noeval
 <div id="table-of-contents">
   <h2>Table of Contents</h2>
   <div id="text-table-of-contents">
@@ -526,7 +543,7 @@ When we write =#+toc: headlines 2= in our Org, HTML export produces the followin
 #+end_src
 Hence, we can style the table of contents by writing rules that target those
 =id='s. We use the following rules, adapted from [[https://orgmode.org/worg/][the Worg community]].
-#+begin_src css :tangle ~/blog/floating-toc.css :noeval
+#+begin_src css -n  :tangle ~/blog/floating-toc.css :noeval
 /*TOC inspired by https://orgmode.org/worg/ */
 #table-of-contents {
     position: fixed; right: 0em; top: 0em;
@@ -572,9 +589,14 @@ Hence, we can style the table of contents by writing rules that target those
     margin-top: -1.5em; }
 #+end_src
 
+#+begin_edcomm org
+:ed: Strange
+If I zoom in over 100% in my browser, the toc disappears until I zoom out.
+#+end_edcomm
+
 Since the table of contents floats, the phrase /Table of Contents/ is rather
 ‘in your face’, so let's use the more subtle Greek [[https://en.wikipedia.org/wiki/Xi_(letter)][letter]] =Ξ=.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp -n
 (advice-add 'org-html--translate :before-until 'display-toc-as-Ξ)
 
 ;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
@@ -607,7 +629,7 @@ How did I get here?
 
 At the bottom of every page, let's have a licensing stub
 and a [[https://disqus.com/][Disqus]]-powered comments section.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp -n
 (setq org-static-blog-page-postamble
 (s-collapse-whitespace (s-replace "\n" ""
 "
@@ -666,7 +688,7 @@ Every article declaratively has an associated image ^_^
 - If none declared, we use =emacs-birthday-present.png= :-)
 - Images are loaded from the =~/blog/images/= directory.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp -n
 (cl-defun my/org-static-blog-assemble-image (file)
 "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form."
 (with-temp-buffer
@@ -685,15 +707,15 @@ Every article declaratively has an associated image ^_^
             image no-border? width height))))
 #+end_src
 
-#+attr_html: :width 300 :
-
 To make use of =org-notes-style=, I need the title to use the =title= class
 but =org-static-blog= uses the =post-title= blog, so I'll override the
 =org-static-blog= preamble method to simply use an auxiliary div.
 - Along the way, I'll position the article image under the article's title.
 - Line [[(fixTitle)]]: =org-notes-style= has too much vertical space after the title,
   let's reduce it so that the article's data can follow it smoothly.
-#+begin_src emacs-lisp -r -n
+# - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
+#  just dumps the title in-place; here I provide a support for just =<br>=.
+#+begin_src emacs-lisp -r -n -n
 (defun org-static-blog-post-preamble (post-filename)
   "Returns the formatted date and headline of the post.
 This function is called for every post and prepended to the post body.
@@ -703,7 +725,8 @@ Modify this function if you want to change a posts headline."
    "<h1 class=\"post-title\">"
    "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
    "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename) "</a>"
+   (org-static-blog-get-title post-filename)
+   "</a>"
    "</h1></div>"
    ;; Move to the footer? Near the ‘Tags’ of the article?
    ;; The date
@@ -735,27 +758,13 @@ Modify this function if you want to change a posts headline."
 
 I'd like to be able to quickly change the blurb on the index page, so we make a
 variable for that ---consisting of Org-markup.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp -n
 (setq index-content-header
   (concat
    "Here are some of my latest thoughts..."
    " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
    " tweet:https://alhassy.github.io/"))
 #+end_src
-
-#+begin_details org
-:title: OctoIcons
-#+begin_src emacs-lisp
-(defvar octoicon:tag
-"@@html:<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 15 16\" width=\"15\" height=\"16\"><path fill-rule=\"evenodd\" d=\"M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z\"></path></svg>@@"
-
-"See:
-https://alhassy.github.io/org-special-block-extras/README.html#Link-Here-OctoIcons")
-
-(defvar octoicon:clock
-"@@html:<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 14 16\" width=\"14\" height=\"16\"><path fill-rule=\"evenodd\" d=\"M8 8h3v2H7c-.55 0-1-.45-1-1V4h2v4zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 011.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"></path></svg>@@")
-#+end_src
-#+end_details
 
 # The existing org-static-blog-assemble-index is really fast,
 # since it just dumps articles wholesale into the landing page; not ideal.
@@ -766,7 +775,7 @@ The index page is a multipost page, so I'll override the
 summarised by their title, data & image, ‘abstract’, and a read-more badge.
 - Every article is intended to have a section named =Abstract=, whose contents
   are used as the preview of the article. See §[[new-article]] for a template.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp -n
 (setq show-reading-time nil)
 
 (defun org-static-blog-assemble-multipost-page
@@ -858,11 +867,43 @@ Posts are sorted in descending time."
     (org-html-export-to-html)))
 #+end_src
 
+* Curvy Source Blocks
+
+The =border-radius= property defines the radius of an
+element's corners, we use it to make curvy looking source blocks.
+Its behaviour [[https://www.w3schools.com/cssref/css3_pr_border-radius.asp][changes]] depending on how many arguments it is given.
+- We also style the code block's label to be curvy.
+- Both =.src= and =pre.src:before= are defined by Org.
+
+#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval -n
+.src {
+  border: 0px !important;
+  /* 50px for top-left and bottom-right corners;
+     20px for top-right and bottom-left cornerns. */
+  border-radius: 50px 20px !important;
+}
+
+pre.src:before {
+    /* border: 0px !important; */
+    /* background-color: inherit !important; */
+    padding: 3px !important;
+    border-radius: 20px 50px !important;
+    font-weight:700
+}
+
+ /* wrap lengthy lines for code blocks */
+ pre{white-space:pre-wrap}
+#+end_src
+
+# For the line wrapping, it may be useful to have
+# =#+PROPERTY: header-args -n= at the top of the file
+# to have all blocks displayed with line numbers.
+
 * =my/blog/new-article=
 <<new-article>>
 
 Helper function to make a new article.
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp -n
 (defvar my/blog/tags
   '(emacs faith category-theory order-theory
     lisp types packages haskell agda
@@ -909,7 +950,7 @@ The user notices this and picks a new name."
   :CUSTOM_ID: Publishing-with-C-u-C-u-C-c-C-b
   :END:
 :Hide_fornow:
-  #+begin_src emacs-lisp :tangle no
+  #+begin_src emacs-lisp :tangle no -n
 ;; No lock files, for now
 ;; The “.#file” files
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Interlocking.html#Interlocking

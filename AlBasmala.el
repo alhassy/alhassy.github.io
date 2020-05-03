@@ -17,18 +17,18 @@
    (concat
    "<meta name=\"author\" content=\"Musa Al-hassy ??? \">
     <meta name=\"referrer\" content=\"no-referrer\">"
-   "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:usualCSS)
+   "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
+   "<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
+   "<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
    "<link rel=\"icon\" href=\"images/favicon.png\">")
    "<script type=\"text/javascript\">
    /*
    @licstart  The following is the entire license notice for the
    JavaScript code in this tag.
-
+   
    Copyright (C) 2012-2020 Free Software Foundation, Inc.
-
+   
    The JavaScript code in this tag is free software: you can
    redistribute it and/or modify it under the terms of the GNU
    General Public License (GNU GPL) as published by the Free Software
@@ -36,14 +36,14 @@
    any later version.  The code is distributed WITHOUT ANY WARRANTY;
    without even the implied warranty of MERCHANTABILITY or FITNESS
    FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
+   
    As additional permission under GNU GPL version 3 section 7, you
    may distribute non-source (e.g., minimized or compacted) forms of
    that code without the copy of the GNU GPL normally required by
    section 4, provided you include this license notice and a URL
    through which recipients can access the Corresponding Source.
-
-
+   
+   
    @licend  The above is the entire license notice
    for the JavaScript code in this tag.
    */
@@ -72,7 +72,7 @@
        MathJax.Hub.Config({
            displayAlign: \"center\",
            displayIndent: \"0em\",
-
+   
            \"HTML-CSS\": { scale: 100,
                            linebreaks: { automatic: \"false\" },
                            webFont: \"TeX\"
@@ -165,20 +165,21 @@ var disqus_shortname = 'life-and-computing-science';
 <a href=\"http://disqus.com\" class=\"dsq-brlink\">comments powered by <span class=\"logo-disqus\">Disqus</span></a>")))
 
 (cl-defun my/org-static-blog-assemble-image (file)
-"Assemble the value of ‘#+fileimage:’ as an HTML form."
+"Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form."
 (with-temp-buffer
   (insert-file-contents file)
   (goto-char 0)
   (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
-  (-let [(image width height)
+  (-let [(image width height no-border?)
          (s-split " " (substring-no-properties
                        (or (match-string 1)
                            "emacs-birthday-present.png")))]
     (setq width (or width 350))
     (setq height (or height 350))
+    (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
     (format "<center> <img src=\"images/%s\" alt=\"Article image\"
-            width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
-            image width height))))
+            %s width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
+            image no-border? width height))))
 
 (defun org-static-blog-post-preamble (post-filename)
   "Returns the formatted date and headline of the post.
@@ -187,9 +188,10 @@ Modify this function if you want to change a posts headline."
   (concat
    ;; The title
    "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"
+   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  
    "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename) "</a>"
+   (org-static-blog-get-title post-filename)
+   "</a>"
    "</h1></div>"
    ;; Move to the footer? Near the ‘Tags’ of the article?
    ;; The date
@@ -206,15 +208,6 @@ Modify this function if you want to change a posts headline."
    "Here are some of my latest thoughts..."
    " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
    " tweet:https://alhassy.github.io/"))
-
-(defvar octoicon:tag
-"@@html:<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 15 16\" width=\"15\" height=\"16\"><path fill-rule=\"evenodd\" d=\"M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z\"></path></svg>@@"
-
-"See:
-https://alhassy.github.io/org-special-block-extras/README.html#Link-Here-OctoIcons")
-
-(defvar octoicon:clock
-"@@html:<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 14 16\" width=\"14\" height=\"16\"><path fill-rule=\"evenodd\" d=\"M8 8h3v2H7c-.55 0-1-.45-1-1V4h2v4zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 011.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"></path></svg>@@")
 
 (setq show-reading-time nil)
 
@@ -242,7 +235,8 @@ Posts are sorted in descending time."
 
       "\n\n"
       (if (equal "index" (f-base pub-filename))
-          (concat org-static-blog-page-header index-content-header)
+          (format "#+begin_export html\n%s\n#+end_export\n%s"
+                  org-static-blog-page-header index-content-header)
         "")
 
       "\n\n" ;; abstracts of posts
@@ -367,7 +361,7 @@ C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts
            (thread-last (f-entries "~/blog/")
              (--filter (and (equal (f-ext it) "html")
                             (not (member (f-base it) '("about")))))
-             (--map (f-delete it)))
+             (--map (f-delete it))) 
            ;; Publish as usual
            (org-static-blog-publish-file (f-full (buffer-name)))
            (org-static-blog-publish)))))
