@@ -1,32 +1,185 @@
-#+title: AlBasmala: <br> Blogging with Emacs & Org-mode (•̀ᴗ•́)و
+# -*- eval: (org-babel-load-file "AlBasmala.org") -*-
+#+title: AlBasmala: @@html:<br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 # +DATE: 2018-06-01
-#+date: <1991-08-20 19:29>
+#+date: <2020-05-03 19:29>
 #+filetags: emacs
 #+fileimage: org_logo.png 150 150 no-border
-#+options: d:nil
+#+options: d:results
 #+OPTIONS: toc:nil html-postamble:nil d:nil
-#+PROPERTY: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code
+#+PROPERTY: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code  :noeval
 #+description: How my blog is setup (•̀ᴗ•́)و
 
-# C-c C-v C-b ⇒ Evaluate all src blocks
+# TODO: Automate the insertation of HTML Premable/postable for statics like about/AlBasmala
 
-# It seems that one should publish a single file before
-# attempting to publish the project.
 # (maybe-clone "https://github.com/alhassy/alhassy.github.io.git" "~/blog")
-
-# (cl-defun not-currently-working-with (&optional z) t)
-# (cl-defun currently-working-with (&optional y) )
 
 # (org-static-blog-assemble-index)
 
-# Idea: Make Ξ clickable: It goes to the top of the page ^_^
-# Idea: Make the tags at the bottom be badges, alter/advice the corresponding
-# function
-# Idea: Add “last updated” date to footer?
+# MA: I want to avoid the <br> from appearing in the browser frame's title
+# +begin_export html
+# <script> window.parent.document.title = "AlBasmala: Blogging with Emacs & Org-mode (•̀ᴗ•́)و"; </script>
+# +end_export
 
-# (setq org-html-format-headline-function #'org-html-format-headline-default-function)
+* HTML Preamble :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: HTML-Preamble
+  :END:
+#+BEGIN_SRC emacs-lisp :exports results :results raw replace drawer
+(s-join "\n" (--map (concat "#+HTML_HEAD: " it)
+  (s-split "\n" (concat
+               org-static-blog-page-preamble
+               org-static-blog-page-header))))
+#+END_SRC
 
-* Abstract                                                           :ignore:
+#+RESULTS:
+:results:
+#+HTML_HEAD: <div class="header">
+#+HTML_HEAD:   <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+#+HTML_HEAD:   <br>
+#+HTML_HEAD:     <a href="https://alhassy.github.io/AlBasmala">AlBasmala</a>
+#+HTML_HEAD:     <a href="https://alhassy.github.io/archive">Archive</a>
+#+HTML_HEAD:     <a href="https://alhassy.github.io/tags">Tags</a>
+#+HTML_HEAD:     <a href="https://alhassy.github.io/rss.xml">RSS</a>
+#+HTML_HEAD:     <a href="https://alhassy.github.io/about">About</a>
+#+HTML_HEAD: </div>
+#+HTML_HEAD:         <style>
+#+HTML_HEAD:         /* From: https://endlessparentheses.com/public/css/endless.css */
+#+HTML_HEAD:         /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+#+HTML_HEAD:         kbd
+#+HTML_HEAD:         {
+#+HTML_HEAD:           -moz-border-radius: 6px;
+#+HTML_HEAD:           -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+#+HTML_HEAD:           -webkit-border-radius: 6px;
+#+HTML_HEAD:           -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+#+HTML_HEAD:           background-color: #f7f7f7;
+#+HTML_HEAD:           border: 1px solid #ccc;
+#+HTML_HEAD:           border-radius: 6px;
+#+HTML_HEAD:           box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+#+HTML_HEAD:           color: #333;
+#+HTML_HEAD:           display: inline-block;
+#+HTML_HEAD:           font-family: 'Droid Sans Mono', monospace;
+#+HTML_HEAD:           font-size: 80%;
+#+HTML_HEAD:           font-weight: normal;
+#+HTML_HEAD:           line-height: inherit;
+#+HTML_HEAD:           margin: 0 .1em;
+#+HTML_HEAD:           padding: .08em .4em;
+#+HTML_HEAD:           text-shadow: 0 1px 0 #fff;
+#+HTML_HEAD:           word-spacing: -4px;
+#+HTML_HEAD:
+#+HTML_HEAD:           box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+#+HTML_HEAD:         }
+#+HTML_HEAD:         </style>
+#+HTML_HEAD:         <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+#+HTML_HEAD:
+#+HTML_HEAD:         <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+#+HTML_HEAD:
+#+HTML_HEAD:         <script type="text/javascript">
+#+HTML_HEAD:             if (typeof jQuery == 'undefined') {
+#+HTML_HEAD:                 document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+#+HTML_HEAD:             }
+#+HTML_HEAD:         </script>
+#+HTML_HEAD:
+#+HTML_HEAD:          <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+#+HTML_HEAD:
+#+HTML_HEAD:           <script>
+#+HTML_HEAD:                  $(document).ready(function() {
+#+HTML_HEAD:                      $('.tooltip').tooltipster({
+#+HTML_HEAD:                          theme: 'tooltipster-punk',
+#+HTML_HEAD:                          contentAsHTML: true,
+#+HTML_HEAD:                          animation: 'grow',
+#+HTML_HEAD:                          delay: [100,500],
+#+HTML_HEAD:                          // trigger: 'click'
+#+HTML_HEAD:                          trigger: 'custom',
+#+HTML_HEAD:                          triggerOpen: {
+#+HTML_HEAD:                              mouseenter: true
+#+HTML_HEAD:                          },
+#+HTML_HEAD:                          triggerClose: {
+#+HTML_HEAD:                              originClick: true,
+#+HTML_HEAD:                              scroll: true
+#+HTML_HEAD:                          }
+#+HTML_HEAD:          });
+#+HTML_HEAD:                  });
+#+HTML_HEAD:              </script>
+#+HTML_HEAD:
+#+HTML_HEAD:         <style>
+#+HTML_HEAD:            abbr {color: red;}
+#+HTML_HEAD:
+#+HTML_HEAD:            .tooltip { border-bottom: 1px dotted #000;
+#+HTML_HEAD:                       color:red;
+#+HTML_HEAD:                       text-decoration: none;}
+#+HTML_HEAD:         </style>
+#+HTML_HEAD:         <meta name="author" content="Musa Al-hassy">
+#+HTML_HEAD:     <meta name="referrer" content="no-referrer"><link href="usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="org-notes-style.css" rel="stylesheet" type="text/css" /><link href="floating-toc.css" rel="stylesheet" type="text/css" /><link href="blog-banner.css" rel="stylesheet" type="text/css" /><link rel="icon" href="images/favicon.png"><script type="text/javascript">
+#+HTML_HEAD:    /*
+#+HTML_HEAD:    @licstart  The following is the entire license notice for the
+#+HTML_HEAD:    JavaScript code in this tag.
+#+HTML_HEAD:
+#+HTML_HEAD:    Copyright (C) 2012-2020 Free Software Foundation, Inc.
+#+HTML_HEAD:
+#+HTML_HEAD:    The JavaScript code in this tag is free software: you can
+#+HTML_HEAD:    redistribute it and/or modify it under the terms of the GNU
+#+HTML_HEAD:    General Public License (GNU GPL) as published by the Free Software
+#+HTML_HEAD:    Foundation, either version 3 of the License, or (at your option)
+#+HTML_HEAD:    any later version.  The code is distributed WITHOUT ANY WARRANTY;
+#+HTML_HEAD:    without even the implied warranty of MERCHANTABILITY or FITNESS
+#+HTML_HEAD:    FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+#+HTML_HEAD:
+#+HTML_HEAD:    As additional permission under GNU GPL version 3 section 7, you
+#+HTML_HEAD:    may distribute non-source (e.g., minimized or compacted) forms of
+#+HTML_HEAD:    that code without the copy of the GNU GPL normally required by
+#+HTML_HEAD:    section 4, provided you include this license notice and a URL
+#+HTML_HEAD:    through which recipients can access the Corresponding Source.
+#+HTML_HEAD:
+#+HTML_HEAD:
+#+HTML_HEAD:    @licend  The above is the entire license notice
+#+HTML_HEAD:    for the JavaScript code in this tag.
+#+HTML_HEAD:    */
+#+HTML_HEAD:    <!--/*--><![CDATA[/*><!--*/
+#+HTML_HEAD:     function CodeHighlightOn(elem, id)
+#+HTML_HEAD:     {
+#+HTML_HEAD:       var target = document.getElementById(id);
+#+HTML_HEAD:       if(null != target) {
+#+HTML_HEAD:         elem.cacheClassElem = elem.className;
+#+HTML_HEAD:         elem.cacheClassTarget = target.className;
+#+HTML_HEAD:         target.className = "code-highlighted";
+#+HTML_HEAD:         elem.className   = "code-highlighted";
+#+HTML_HEAD:       }
+#+HTML_HEAD:     }
+#+HTML_HEAD:     function CodeHighlightOff(elem, id)
+#+HTML_HEAD:     {
+#+HTML_HEAD:       var target = document.getElementById(id);
+#+HTML_HEAD:       if(elem.cacheClassElem)
+#+HTML_HEAD:         elem.className = elem.cacheClassElem;
+#+HTML_HEAD:       if(elem.cacheClassTarget)
+#+HTML_HEAD:         target.className = elem.cacheClassTarget;
+#+HTML_HEAD:     }
+#+HTML_HEAD:    /*]]>*///-->
+#+HTML_HEAD:    </script><script type="text/x-mathjax-config">
+#+HTML_HEAD:        MathJax.Hub.Config({
+#+HTML_HEAD:            displayAlign: "center",
+#+HTML_HEAD:            displayIndent: "0em",
+#+HTML_HEAD:
+#+HTML_HEAD:            "HTML-CSS": { scale: 100,
+#+HTML_HEAD:                            linebreaks: { automatic: "false" },
+#+HTML_HEAD:                            webFont: "TeX"
+#+HTML_HEAD:                           },
+#+HTML_HEAD:            SVG: {scale: 100,
+#+HTML_HEAD:                  linebreaks: { automatic: "false" },
+#+HTML_HEAD:                  font: "TeX"},
+#+HTML_HEAD:            NativeMML: {scale: 100},
+#+HTML_HEAD:            TeX: { equationNumbers: {autoNumber: "AMS"},
+#+HTML_HEAD:                   MultLineWidth: "85%",
+#+HTML_HEAD:                   TagSide: "right",
+#+HTML_HEAD:                   TagIndent: ".8em"
+#+HTML_HEAD:                 }
+#+HTML_HEAD:    });
+#+HTML_HEAD:    </script>
+#+HTML_HEAD:    <script type="text/javascript"
+#+HTML_HEAD:            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+#+HTML_HEAD:
+:end:
+
+* Abstract                                         :ignore:
   :PROPERTIES:
   :CUSTOM_ID: Abstract
   :END:
@@ -35,6 +188,9 @@
 
 How my blog is setup (•̀ᴗ•́)و
 
+# This article is a literate [[https://orgmode.org/][Org]] file that when loaded executes
+# all source blocks and produces an Elisp file containing them.
+
 * Features :ignore:
   :PROPERTIES:
   :CUSTOM_ID: Features
@@ -42,23 +198,27 @@ How my blog is setup (•̀ᴗ•́)و
   :END:
 Here are some notable features of my blog.
 
++ ✓ Org-mode, a rich markup, to write articles ♥‿♥
++ ✓ Tags and RSS feed for blog articles --- §[[initial-setup]]
 + ✓ A nice blog banner --- §[[blog-banner]]
-+ ✓ Overall nice looking HTML style --- [[http://taopeng.me/org-notes-style/][org-notes-style]]
 + /✓ Dynamically/ highlighting code from references in prose --- §[[blog-banner]]
-+ ✓ A floating, yet unobtrusive, table of contents --- §[[floating-toc]]
++ ✓ Tooltips, folded regions, and badges --- [[badge:org-special-block-extras|1.2|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs][org-special-block-extras badge]]
++ ✓ Overall nice looking HTML style --- [[http://taopeng.me/org-notes-style/][org-notes-style]]
 + ✓ Beautiful math using LaTeX notation, $\forall \phi ⇒ \exists \phi$ ---
   §[[MathJax-Support]]
++ ✓ A floating, yet unobtrusive, table of contents --- §[[floating-toc]]
++ ✓ Headings are clickable links with the resulting anchors being
+  Github-like --- §[[ensuring-useful-html-anchors]] and §[[clickable-headlines]]
 + ✓ Comments for blog readers --- §[[Comments]]
-+ ✓ Tags and RSS feed for blog articles --- §[[initial-setup]]
 + ✓ Articles have dedicated images, §[[Images]], which are displayed
   on the blog's welcome page along with the article's abstract, §[[Index]]
   - Auto-generated index/sitemap that shows an image and short abstract of each article
-+ ✓ Tooltips, folded regions, and badges --- [[badge:org-special-block-extras|1.2|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs][org-special-block-extras badge]]
-+ ✓ Org-mode, a rich markup, to write articles ♥‿♥
-+ ✓ Style inline code and tables --- §[[curvy-blocks]]
 + ✓ Augment article footers to link to the Org source and to the Github history
   --- §[[footers]]
   - Org source is colourised!
++ ✓ /Dynamically/ adjust amount of time left until user finishes reading the
+    article --- §[[footers]]
++ ✓ Style inline code and tables --- §[[curvy-blocks]]
 + ✓ Unfurling links --- §[[unfurling]]
 
 #
@@ -69,16 +229,6 @@ Here are some notable features of my blog.
 # This, like the upcoming articles, is intended to be a living document.
 # The date serves to be date of the first release and the repo contains
 # the history of any alterations.
-
-
-# Briefly,
-
-# + This article is a literate [[https://orgmode.org/][Org]] file that when loaded executes ~(org-babel-tangle)~ to produce
-#   an elisp file which is then loaded locally.
-
-# + The resulting elisp file is then used to actually produce this webpage.
-
-# The remainder of this article discusses the elisp utilities that made the second point possible.
 
 #+begin_details
 :title: Super Simple Intro to Org-mode
@@ -270,7 +420,7 @@ What do we want to be inserted into the head of every page?
 Firstly, we want some styling rules to be loaded.
 #+begin_src emacs-lisp -r -n :noweb-ref my-html-header :tangle no
 (concat
-"<meta name=\"author\" content=\"Musa Al-hassy ??? \">
+"<meta name=\"author\" content=\"Musa Al-hassy\">
  <meta name=\"referrer\" content=\"no-referrer\">"
 "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:usualCSS)
 "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
@@ -303,7 +453,7 @@ In addition, we have two more pieces we would like to add to the header: Support
 for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
 LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
 [[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
-#+begin_src emacs-lisp :noweb yes :results raw -n
+#+begin_src emacs-lisp -r :noweb yes :results raw -n
  (setq org-static-blog-page-header
   (concat
    org-html-head-extra  ;; Alterd by ‘org-special-block-extras’
@@ -464,7 +614,7 @@ a {color:#DD514C;text-decoration:none;font-weight:700}
 But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
 #+end_edcomm
 
-* $e^{i \cdot \pi} + 1 = 0$ ---MathJax Support
+* MathJax Support --- $e^{i \cdot \pi} + 1 = 0$
   :PROPERTIES:
   :CUSTOM_ID: MathJax-Support
   :END:
@@ -624,12 +774,12 @@ Since the table of contents floats, the phrase /Table of Contents/ is rather
 (defun display-toc-as-Ξ (phrase info)
   (when (equal phrase "Table of Contents")
     (s-collapse-whitespace
-    "<a href=\"javascript:window.scrollTo(0,0)\"
+    " <a href=\"javascript:window.scrollTo(0,0)\"
         style=\"color: black !important; border-bottom: none !important;\"
         class=\"tooltip\"
         title=\"Go to the top of the page\">
       Ξ
-    </a>")))
+    </a> ")))
 #+end_src
 
 How did I get here?
@@ -639,6 +789,35 @@ How did I get here?
 3. Let's advise it, with doc:advice-add, to return /Ξ/
    /only/ on that particular input string.
 4. Joy ♥‿♥
+
+( The Unicode whitespace ‘ ’ before and after =Ξ= is to
+appease the [[clickable-headlines][clickable headlines utility]], below. )
+
+* Ensuring Useful HTML Anchors
+  :PROPERTIES:
+  :CUSTOM_ID: Ensuring-Useful-HTML-Anchors
+  :END:
+
+<<ensuring-useful-html-anchors>>
+#+INCLUDE: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
+
+| /This section has been =#+include='d from my init.org/ |
+#+begin_center
+badge:A_Life_Configuring|Emacs|green|https://github.com/alhassy/emacs.d|gnu-emacs
+#+end_center
+
+* Clickable Headlines
+  :PROPERTIES:
+  :CUSTOM_ID: Clickable-Headlines
+  :END:
+
+<<clickable-headlines>>
+#+INCLUDE: "~/.emacs.d/init.org::*Clickable Headlines" :only-contents t
+
+| /This section has been =#+include='d from my init.org/ |
+#+begin_center
+badge:A_Life_Configuring|Emacs|green|https://github.com/alhassy/emacs.d|gnu-emacs
+#+end_center
 
 * HTML Footer: Comments
   :PROPERTIES:
@@ -817,8 +996,32 @@ followed by the HTML code for comments."
        ""
      (concat "\n<div id=\"comments\">"
              org-static-blog-post-comments
-             "</div>"))))
+             "</div>"))
+
+   ;; ReadRemaining.js ∷ How much time is left to finish reading this article?
+   ;;
+  ;; jQuery already loaded by org-special-block-extras.
+  ;; "<script
+  ;; src=\
+  ;; "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>"
+ "<link rel=\"stylesheet\" href=\"readremaining.js-readremainingjs/css/rr_light.css\"
+     type='text/css'/>
+  <script
+     src=\"readremaining.js-readremainingjs/src/readremaining.jquery.js\"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type=\"text/javascript\"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script>"))
 #+end_src
+
+[[https://aerolab.github.io/readremaining.js/][ReadRemaining.js]] gives us a little floating clock on the bottom left of the
+screen which says, e.g., /4m 9s left/ when reading an article.
++ It tells us how much time is left before the article is done.
++ The time adjusts /dynamically/ as the user scrolls down ---but not up.
++ Apparently it has to be at the end of the HTML =<body>=, otherwise it wont work
+  for me.
+  - It may be best to avoid loading jQuery multiple times;
+    see [[https://alhassy.github.io/org-special-block-extras/#tooltipster][here]] for the necessary conditional.
 
 #+begin_edcomm
 :ed: ლ(ಠ益ಠ)ლ
@@ -949,6 +1152,9 @@ Posts are sorted in descending time."
 #+end_src
 
 * Curvy Source Blocks
+  :PROPERTIES:
+  :CUSTOM_ID: Curvy-Source-Blocks
+  :END:
 
 <<curvy-blocks>>
 
@@ -979,7 +1185,8 @@ pre.src:before {
 
  /* Also curvy inline code with ~ ⋯ ~ and = ⋯ = */
  code {
-     background: Cyan !important;
+     /* background: Cyan !important; */
+     background: pink !important;
      border-radius: 7px;
      /* border: 1px solid lightgrey; background: #FFFFE9; padding: 2px */
  }
@@ -1033,7 +1240,28 @@ Code such as ~(= 2 (+ 1 1))~ now sticks out with a cyan background ♥‿♥
       org-export-latex-table-caption-above nil)
 #+end_src
 
-* =my/blog/new-article=
+#+begin_details org
+:title: Let's show folded, details, regions with a nice greenish colour
+
+MA: Relocate the following to =org-special-block-extras=.
+#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
+details {
+  padding: 1em;
+  background-color: #e5f5e5;
+  /* background-color: pink; */
+  border-radius: 15px;
+  color: hsl(157 75% 20%);
+  font-size: 0.9em;
+  box-shadow: 0.05em 0.1em 5px 0.01em  #00000057;
+}
+#+end_src
+
+#+end_details
+
+* Getting Started: =my/blog/new-article=
+  :PROPERTIES:
+  :CUSTOM_ID: my-blog-new-article
+  :END:
 <<new-article>>
 
 Helper function to make a new article.
@@ -1075,11 +1303,22 @@ The user notices this and picks a new name."
             "\n#+fileimage: " (completing-read
                                "Image: "
                                (mapcar #'f-filename (f-entries "~/blog/images/")))
+            "\n#+include: ../MathJaxPreamble.org"
             "\n#+description: "
                (setq desc (read-string "Article Purpose: "))
             "\n\n* Abstract :ignore: \n" desc
             "\n\n* ???")))
 #+END_SRC
+
+# *Photograph Credit                                                  :ignore:
+# #+HTML: <small> <center>
+# ( Photo by ??? on [[https://unsplash.com/][Unsplash]] )
+# #+HTML: </center> </small>
+# "Download free do whatever you want high-resolution photos from Unsplash."
+
+# +OPTIONS: html-postamble:nil toc:nil d:nil
+# +SOURCE: alterntive sources for articles from other repos?
+
 
 <<unfurling>>
 
@@ -1090,6 +1329,29 @@ some information about the link, such as its image, description, and author.
 - For long descriptions, one can use multiple =#+description= lines;
   I'd like to have a terse one-liner with a longer description in the
   =Abstract= heading.
+
+** COMMENT Example calculation from that MathJax Setup?
+   :PROPERTIES:
+   :CUSTOM_ID: COMMENT-Example-calculation-from-that-MathJax-Setup
+   :END:
+
+Maybe move the MathJax setup into AlBasmala directly, then include it?
+Or, maybe incorporate the MathJax setup via Emacs directly ♥‿♥
+Such as org-html-head-extra
+
+\begin{calc}
+   x \;⊓\; ¬ x \quad=\quad ⊥
+\step{ \ref{⊑-antisymmetric} }
+   (x \;⊓\; ¬ x) \sqleqs ⊥
+   \landS ⊥ \sqleqs (x \;⊓\; ¬ x)
+\step{ \ref{Bottom Element} }
+   x \;⊓\; ¬ x \sqleqS ⊥
+\step{ \ref{Modus Ponens} }
+   \mathsf{true}
+\end{calc}
+
+Then,
+\[\eqn{Constructive De Morgan}{¬(x \;⊔\; y) \quad=\quad ¬ x \;⊓\; ¬ y}\]
 
 * Publishing with =[C-u C-u] C-c C-b=
   :PROPERTIES:
@@ -1140,8 +1402,16 @@ Line [[(delAll)]]: To re-render an article, just remove its corresponding .html 
   :CUSTOM_ID: COMMENT-todo
   :END:
 
+
+# teal:TODO: Make C-u C-c C-b switch to a particular theme so all exported html stuffs
+# look the same ^_^
+
+
+# Idea: Make the tags at the bottom be badges, alter/advice the corresponding
+# function
+# Idea: Add “last updated” date to footer?
+
 + in the index, under each article's name:
-  - reading length ;-)
   - twitter link ;-)
     - per article via advice
 
@@ -1170,7 +1440,6 @@ Line [[(delAll)]]: To re-render an article, just remove its corresponding .html 
    - buy-me-a-coffee
 
 #+html: <hr>
-
 
 * The name: [[https://en.wikipedia.org/wiki/Basmala][al-bas-mala]]
   :PROPERTIES:
@@ -1981,3 +2250,26 @@ src: https://ogbe.net/blog/blogging_with_org.html
           (end (progn (re-search-forward "^#\\+END_PREVIEW$")
                       (match-beginning 0))))
       (buffer-substring beg end))))
+* HTML Postamble                                                     :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: HTML-Postamble
+  :END:
+#+BEGIN_SRC emacs-lisp :exports results :results raw replace drawer
+(s-join "\n" (--map (concat "#+HTML: " it)
+  (s-split "\n" (concat
+               org-static-blog-page-postamble
+               (org-static-blog-post-postamble "~/blog/AlBasmala.org")))))
+#+END_SRC
+
+#+RESULTS:
+
+#+HTML: <center> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License. </a></center><div id="disqus_thread"></div><script type="text/javascript">/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */var disqus_shortname = 'life-and-computing-science';/* * * DON'T EDIT BELOW THIS LINE * * */(function() { var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true; dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq); })();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a><div class="taglist"><a href="https://alhassy.github.io/tags.html">Tags</a>: <a href="https://alhassy.github.io/tag-emacs.html">emacs</a> </div><center><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong></center><center><a href="AlBasmala.org.html"><img
+#+HTML:    src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&emsp;<a href="https://github.com/alhassy/alhassy.github.io/commits/master/posts/AlBasmala.org"><img
+#+HTML:    src="https://img.shields.io/badge/-History-informational?logo=github"></a><br><a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a></center><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+#+HTML:      type='text/css'/>
+#+HTML:   <script
+#+HTML:      src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+#+HTML:   <script src='readremaining.js/src/readremaining.jquery.js'
+#+HTML:      type='text/javascript'></script>
+#+HTML:   <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+#+HTML:      showGaugeOnStart : true}); </script>
