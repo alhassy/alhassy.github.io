@@ -1,59 +1,3 @@
-(cl-defun blog/git (cmd &rest args)
-  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
-  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
-
-(cl-defun blog/publish-current-article ()
-  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
-  (interactive)
-    (blog/git "add %s" (buffer-file-name))
-  ;; Placed article html into the published blog directory
-  (blog/preview)
-  (save-buffer)
-  (-let [article (concat (f-base (buffer-file-name)) ".html")]
-    (shell-command (concat "mv " article " ~/blog/"))
-    (blog/git "add %s %s" (buffer-file-name) article))
-
-  ;; Updated index.html, tags, archive, and rss to now include this new article
-
-  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
-  (my/blog/style-setup/disable)
-  (view-echo-area-messages)
-
-  (message "⇒ HTMLizing article...")
-  (blog/htmlize-file (buffer-file-name))
-
-  (message "⇒ Assembling tags...")
-  (org-static-blog-assemble-tags)
-  (blog/git "add tag*")
-
-  (message "⇒ Assembling archive...")
-  (org-static-blog-assemble-archive)
-  (blog/git "add archive.html")
-
-  (message "⇒ Assembling RSS feed...")
-  (org-static-blog-assemble-rss)
-  (blog/git "add rss.xml")
-
-  (message "⇒ Assembling landing page...")
-  (org-static-blog-assemble-index)
-  (blog/git "add index.html")
-
-  (shell-command (format "git commit -m \"Publish: Article %s.org\"; git push" (f-base (buffer-file-name))))
-  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
-
-(org-defblock abstract (main) nil
-  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
-
-   Supported backends: HTML. "
-   (format (concat
-            "<div class=\"abstract\" style=\"border: 1px solid black;"
-            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
-            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
-            "<center> <strong class=\"tooltip\""
-            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
-            "%s </div>")
-           contents))
-
  (setq org-static-blog-page-header
   (concat
    org-html-head-extra  ;; Altered by ‘org-special-block-extras’
@@ -140,7 +84,11 @@
   "Provide the styles for “www.alhassy.com”'s “header” and “footer”.
 
 The use of “blog:footer” aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
-and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function."
+and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function.
+
+Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
+We accomplish this with the help of some handy-dandy JavaScript: Just use “blog:sanitise-title”.
+"
       (pcase o-label
         ("header" (concat
                    org-static-blog-page-preamble
@@ -149,14 +97,25 @@ and provides a Disqus comments sections. For details, consult the `org-static-bl
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    ;; The use of the “post-title” class is so that the org-static-blog-assemble-rss method can work as intended.
-                   (or (ignore-errors (format "<br><center><h1 class=\"post-title\">%s</h1></center>" (org-static-blog-get-title (buffer-file-name)))) "")))
+                   (thread-last (org-static-blog-get-title (buffer-file-name))
+                                (s-replace-regexp "@@html:" "")
+                                (s-replace-regexp "@@" "")
+                                (format "<br><center><h1 class=\"post-title\">%s</h1></center>"))))
         ("footer" (org-static-blog-post-postamble (buffer-file-name)))
+        ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
         (_ "")))
 
 (defun blog/style-setup (_backend)
-  "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags)."
+  "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags).
+
+There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
+Notice that if you explicitly provide options to change the toc, or show drawers, etc;
+then your options will be honoured. (Since they will technically come /after/ the default options,
+which I place below at the top of the page.)
+"
     (goto-char (point-min))
-    (insert "\n blog:header \n"
+    (insert "#+options: toc:2 html-postamble:nil d:nil"
+            "\n blog:header \n"
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
             "<center>"
@@ -200,6 +159,19 @@ and provides a Disqus comments sections. For details, consult the `org-static-bl
   (interactive)
   (remove-hook 'org-export-before-processing-hook #'blog/style-setup)
   (org-preview-html-mode -1))
+
+(org-defblock abstract (main) nil
+  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
+
+   Supported backends: HTML. "
+   (format (concat
+            "<div class=\"abstract\" style=\"border: 1px solid black;"
+            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
+            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
+            "<center> <strong class=\"tooltip\""
+            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
+            "%s </div>")
+           contents))
 
 (advice-add 'org-html--translate :before-until 'display-toc-as-Ξ)
 ;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
@@ -273,6 +245,7 @@ Here are 4 example uses:
              %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
              href title src no-border? width height)))))
 
+;; MA: This can be deleted?? Do a search for post-title in this article to see why?
 (defun org-static-blog-post-preamble (post-filename)
   "Returns the formatted date and headline of the post.
 This function is called for every post and prepended to the post body.
@@ -332,6 +305,8 @@ This function is called for every post and the returned string is appended to th
    (blog/license)
    ;; (blog/comments) ;; TODO. Not working as intended; low priority.
    "</center>"
+   ;; The next line is required to make the org-static-blog-assemble-rss method work.
+   "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
    (blog/read-remaining-js)))
 
 (defun blog/tags-of-file (file-name)
@@ -552,19 +527,72 @@ You can view the generated ~/blog/index.html by invoking:
       (org-mode)
       (org-html-export-to-html))))
 
-(defvar my/blog/tags
+(cl-defun blog/git (cmd &rest args)
+  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
+  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
+
+(cl-defun blog/publish-current-article ()
+  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
+  (interactive)
+    (blog/git "add %s" (buffer-file-name))
+  ;; Placed article html into the published blog directory
+  (blog/preview)
+  (save-buffer)
+  (-let [article (concat (f-base (buffer-file-name)) ".html")]
+    (shell-command (concat "mv " article " ~/blog/"))
+    (blog/git "add %s %s" (buffer-file-name) article))
+
+  ;; Updated index.html, tags, archive, and rss to now include this new article
+
+  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
+  (blog/preview/disable)
+  (view-echo-area-messages)
+
+  (message "⇒ HTMLizing article...")
+  (blog/htmlize-file (buffer-file-name))
+  (blog/git "add %s.org.html" (f-base (buffer-file-name)))
+
+  (message "⇒ Assembling tags...")
+  (org-static-blog-assemble-tags)
+  (blog/git "add tag*")
+
+  (message "⇒ Assembling archive...")
+  (org-static-blog-assemble-archive)
+  (blog/git "add archive.html")
+
+  (message "⇒ Assembling RSS feed...")
+  (org-static-blog-assemble-rss)
+  (blog/git "add rss.xml")
+
+  (message "⇒ Assembling landing page...")
+  (org-static-blog-assemble-index)
+  (blog/git "add index.html")
+
+  (blog/git "commit -m \"%s\"; git push"
+            (if current-prefix-arg
+                (read-string "Commit message: ")
+              (format "Publish: Article %s.org" (f-base (buffer-file-name)))))
+
+  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
+
+(defvar blog/tags
   '(emacs faith category-theory order-theory
     lisp types packages haskell agda
     c frama-c program-proving)
   "Tags for my blog articles.")
 
-;; Use C-SPC to select multiple items
-
-(defun my/blog/new-article ()
-  "Make a new article for my blog; prompting for the necessary ingredients.
+(defun blog/new-article ()
+"Make a new article for my blog; prompting for the necessary ingredients.
 
 If the filename entered already exists, we simply write to it.
-The user notices this and picks a new name."
+The user notices this and picks a new name.
+
+This sets up a new article based on existing tags and posts.
++ Use C-SPC to select multiple tag items
+
+Moreover it also enables `org-preview-html-mode' so that on every alteration,
+followed by a save, C-x C-s, will result in a live preview of the blog article,
+nearly instantaneously."
   (interactive)
   (let (file desc)
 
@@ -584,7 +612,7 @@ The user notices this and picks a new name."
             "\n#+email: "  user-mail-address
             "\n#+date: " (format-time-string "<%Y-%m-%d %H:%M>")
             "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
-                                                         my/blog/tags
+                                                         blog/tags
                                                          :marked-candidates t))
             "\n#+fileimage: " (completing-read
                                "Image: "
@@ -594,4 +622,5 @@ The user notices this and picks a new name."
                (setq desc (read-string "Article Purpose: "))
             "\n\n* Abstract :ignore: \n #+begin_abstract\n" desc
             "\n#+end_abstract"
-            "\n\n* ???")))
+            "\n\n* ???")
+    (blog/preview)))
