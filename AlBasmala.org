@@ -8,8 +8,6 @@
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 #+options: broken-links:t
 
-blog:sanitise-title
-
 # Use checkmarks instead of boring bullet points
 #+html: <style> ul {list-style-type: " ✓"} </style>
 
@@ -50,6 +48,8 @@ Here are some notable features of my blog.
 + Augment article footers to link to the Org source and to the Github history
   --- §[[footers]]
   - Org source is colourised!
++ Article titles may contain arbitrary ~@@html: ...@@~ /yet/ still render nicely in both the frame tab and page title,
+  thanks to doc:org-link/blog.
 + /Dynamically/ adjust amount of time left until user finishes reading the
     article --- §[[footers]]
 + Style inline code and tables --- §[[curvy-blocks]]
@@ -248,7 +248,7 @@ which I place below at the top of the page.)
 "
     (goto-char (point-min))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
-            "\n blog:header \n"
+            "\n blog:header blog:sanitise-title \n"
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
             "<center>"
@@ -265,12 +265,20 @@ which I place below at the top of the page.)
     ;;
     ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
     ;; (In case we are narrowed, we only act when we can find the Abstract.)
+
     (when (re-search-forward "^\* Abstract" nil t)
-      (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
-      (forward-line)
-      (insert "\n#+begin_abstract\n")
-      (call-interactively #'org-forward-heading-same-level)
-    (insert "\n#+end_abstract\n"))
+      (beginning-of-line)
+      (-let [start (point)]
+        (org-narrow-to-subtree)
+        (org-show-entry)
+        (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+        (forward-line)
+        (insert "\n#+begin_abstract\n")
+        (call-interactively #'org-forward-heading-same-level)
+        ;; In case there is no next section, just go to end of file.
+        (when (equal start (point)) (goto-char (point-max)))
+        (insert "\n#+end_abstract\n")
+        (widen)))
 
     (goto-char (point-max))
     ;; The Org file's title is already shown via blog:header, above, so we disable it in the preview.
@@ -278,8 +286,6 @@ which I place below at the top of the page.)
 #+end_src
 
 Note: doc:my/org-static-blog-assemble-image is defined later on in this article.
-
-
 ** Inserting doc:org-link/blog /seamlessly/ via the export process; /then/ preview with every save
 
 #+begin_src emacs-lisp
@@ -741,7 +747,7 @@ Here are 4 example uses:
 
 + Notice that the second indicates explicit width and height.
 + (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'.)
+   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'. This requires a slash at the end.)
 + The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
 "
  (with-temp-buffer
@@ -757,7 +763,7 @@ Here are 4 example uses:
      (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
      (cond
       ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
-      (explicit-image-path-prefix (setq image (format "%s/%s"  explicit-image-path-prefix image)))
+      (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
       ((not (s-contains? "/" image)) (setq image (format "images/%s" image)))
        )
 
