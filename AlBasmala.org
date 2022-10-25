@@ -53,25 +53,49 @@ Otherwise, I could make a nice wrapper that invokes the following:
 (buffer-file-name)
 
 #+begin_src emacs-lisp
+(cl-defun blog/git (cmd &rest args)
+  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
+  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
+
 (cl-defun blog/publish-current-article ()
+  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
   (interactive)
+    (blog/git "add %s" (buffer-file-name))
+  ;; Placed article html into the published blog directory
   (blog/preview)
   (save-buffer)
   (-let [article (concat (f-base (buffer-file-name)) ".html")]
     (shell-command (concat "mv " article " ~/blog/"))
-  ;; (shell-command (format "cd ~/blog; git add %s %s" (buffer-file-name) article))
-  (message "Placed article html into the published blog directory")
-  ;; (update-index-and-things)
-  ;; (message "Updated index.html, tags, archive, and rss to now include this new article")
-  ))
+    (blog/git "add %s %s" (buffer-file-name) article))
 
-(cl-defun update-index-and-things ()
-  "Invoke this when happy with an article (preview) and you're about to git commit."
-  (interactive)
-  (org-static-blog-assemble-index)
-  (org-static-blog-assemble-rss)
+  ;; Updated index.html, tags, archive, and rss to now include this new article
+
+  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
+  (blog/preview/disable)
+  (view-echo-area-messages)
+
+  (message "⇒ HTMLizing article...")
+  (blog/htmlize-file (buffer-file-name))
+  (blog/git "add %s.org.html" (f-base (buffer-file-name)))
+
+  (message "⇒ Assembling tags...")
+  (org-static-blog-assemble-tags)
+  (blog/git "add tag*")
+
+  (message "⇒ Assembling archive...")
   (org-static-blog-assemble-archive)
-  (org-static-blog-assemble-tags))
+  (blog/git "add archive.html")
+
+  (message "⇒ Assembling RSS feed...")
+  (org-static-blog-assemble-rss)
+  (blog/git "add rss.xml")
+
+  (message "⇒ Assembling landing page...")
+  (org-static-blog-assemble-index)
+  (blog/git "add index.html")
+
+  (shell-command (format "git commit -m \"Publish: Article %s.org\"; git push" (f-base (buffer-file-name))))
+  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
 #+end_src
 
 
@@ -333,7 +357,8 @@ and provides a Disqus comments sections. For details, consult the `org-static-bl
                    "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   (or (ignore-errors (format "<br><center><h1>%s</h1></center>" (org-static-blog-get-title (buffer-file-name)))) "")))
+                   ;; The use of the “post-title” class is so that the org-static-blog-assemble-rss method can work as intended.
+                   (or (ignore-errors (format "<br><center><h1 class=\"post-title\">%s</h1></center>" (org-static-blog-get-title (buffer-file-name)))) "")))
         ("footer" (org-static-blog-post-postamble (buffer-file-name)))
         (_ "")))
 #+end_src
@@ -345,10 +370,11 @@ See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a 
 :CUSTOM_ID: A-function-to-insert-doc-org-link-blog-into-a-buffer
 :END:
 #+begin_src emacs-lisp
-(defun my/blog/style-setup (_backend)
+(defun blog/style-setup (_backend)
   "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags)."
     (goto-char (point-min))
-    (insert "\n blog:header \n"
+    (insert "#+options: toc:2 html-postamble:nil d:nil"
+            "\n blog:header \n"
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
             "<center>"
@@ -358,19 +384,19 @@ See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a 
             (s-collapse-whitespace (my/org-static-blog-assemble-image (buffer-file-name) (f-full "~/blog/images")))
             "\n")
 
-    ;; For now, I must explicitly write #+begin_abstract...#+end_abstract, due to how I've defined
-    ;; org-static-blog-post-preamble. (See also org-static-blog-assemble-multipost-page for how I handle the abstract there.)
     ;; It seems I have essentially 3 different ways to handle things: Preview, Publish, Index. Consider brining those closer
-    ;; together.
+    ;; together. If I decided to switch to the org-static-blog-publish-file approach, then I would need to
+    ;; explicitly write #+begin_abstract...#+end_abstract, due to how I've defined
+    ;; org-static-blog-post-preamble. (See also org-static-blog-assemble-multipost-page for how I handle the abstract there.)
     ;;
-    ;; ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
-    ;; ;; (In case we are narrowed, we only act when we can find the Abstract.)
-    ;; (when (re-search-forward "^\* Abstract" nil t)
-    ;;   (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
-    ;;   (forward-line)
-    ;;   (insert "\n#+begin_abstract\n")
-    ;;   (call-interactively #'org-forward-heading-same-level)
-    ;; (insert "\n#+end_abstract\n"))
+    ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
+    ;; (In case we are narrowed, we only act when we can find the Abstract.)
+    (when (re-search-forward "^\* Abstract" nil t)
+      (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+      (forward-line)
+      (insert "\n#+begin_abstract\n")
+      (call-interactively #'org-forward-heading-same-level)
+    (insert "\n#+end_abstract\n"))
 
     (goto-char (point-max))
     ;; The Org file's title is already shown via blog:header, above, so we disable it in the preview.
@@ -380,38 +406,25 @@ See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a 
 Note: doc:my/org-static-blog-assemble-image is defined later on in this article.
 
 
-** Inserting doc:org-link/blog /seamlessly/ via the export process
-:PROPERTIES:
-:CUSTOM_ID: Inserting-doc-org-link-blog-seamlessly-via-the-export-process
-:END:
+** Inserting doc:org-link/blog /seamlessly/ via the export process; /then/ preview with every save
 
-#+begin_src emacs-lisp
-(defun my/blog/style-setup/disable ()
-  (interactive)
-  (remove-hook 'org-export-before-processing-hook #'my/blog/style-setup))
-
-(defun my/blog/style-setup/enable ()
-  (interactive)
-  (add-hook 'org-export-before-processing-hook  #'my/blog/style-setup))
-
-;; In AlBasmala.el, I'll do the following as a default.
-(my/blog/style-setup/enable)
-#+end_src
-
-** Finally, preview with every save
-:PROPERTIES:
-:CUSTOM_ID: Finally-preview-with-every-save
-:END:
 #+begin_src emacs-lisp
 (cl-defun blog/preview ()
+  "Enable preview-on-save, and add blog/style-setup from Org's export hook."
   (interactive)
-
   ;; Let's ensure we have no xwidget buffer lying around, otherwise Emacs might hang.
   (-let [kill-buffer-query-functions nil]
     (mapcar #'kill-buffer (--filter (equal 'xwidget-webkit-mode (buffer-local-value 'major-mode it)) (buffer-list))))
-
-  (my/blog/style-setup/enable)
+  ;; Inserting doc:org-link/blog /seamlessly/ via the export process
+  (add-hook 'org-export-before-processing-hook  #'blog/style-setup)
+  ;; Preview with every save
   (org-preview-html-mode))
+
+(cl-defun blog/preview/disable ()
+  "Disable preview-on-save, and remove blog/style-setup from Org's export hook."
+  (interactive)
+  (remove-hook 'org-export-before-processing-hook #'blog/style-setup)
+  (org-preview-html-mode -1))
 #+end_src
 
 Upon a save, kbd:C-x_C-s, a new HTML file is created ---bearing the same name as the Org file. It seems an /incremental/
@@ -704,7 +717,7 @@ org-static-blog-publish-title
 I want to style it as follows:
 
 + Line [[(headerHeader)]]: The banner is in a box at the top with some shadowing and
-  centred text using the =fantasy= font
+  centerd text using the =fantasy= font
 + Line [[(headerLogo)]]: The blog's title is large and bold
 + Line [[(headerAnchor)]]: All links in the banner are black
 + Line [[(headerHover)]]: When you hover over a link, it becomes blue
@@ -747,7 +760,7 @@ to enable references via line numbers, then declares ~(ref:name)~ on line
 and refers to it by =[[(name)][description]]=. Org-mode by default styles
 such highlighting.
 #+begin_details Dynamic Code Highlighting
-#+begin_src emacs-lisp :noweb-ref my-html-header :tangle no -n
+#+begin_src emacs-lisp -n :noweb-ref my-html-header :tangle no
 "<script type=\"text/javascript\">
 /*
 @licstart  The following is the entire license notice for the
@@ -800,7 +813,7 @@ for the JavaScript code in this tag.
 #+html: <br>
 #+begin_remark
 Before we move on, I'd like to have heavy red font for links.
-# +begin_src css :tangle ~/blog/blog-banner.css :noeval :tangle no -n
+# +begin_src css :tangle ~/blog/blog-banner.css :noeval -n :tangle no
 HERE PLS
 # +end_src
 But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
@@ -917,7 +930,7 @@ Org loads the [[https://math.meta.stackexchange.com/questions/5020/mathjax-basic
 =\[...\]=. Here is an example.
 
 #+begin_details "The CSS that Org loads by default"
-#+begin_src emacs-lisp :noweb-ref my-html-header :tangle no -n
+#+begin_src emacs-lisp -n :noweb-ref my-html-header :tangle no
 "<script type=\"text/x-mathjax-config\">
     MathJax.Hub.Config({
         displayAlign: \"center\",
@@ -1077,6 +1090,8 @@ This function is called for every post and the returned string is appended to th
    (blog/license)
    ;; (blog/comments) ;; TODO. Not working as intended; low priority.
    "</center>"
+   ;; The next line is required to make the org-static-blog-assemble-rss method work.
+   "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
    (blog/read-remaining-js)))
 #+end_src
 
@@ -1302,7 +1317,11 @@ You can view the generated ~/blog/index.html by invoking:
                             org-static-blog-page-preamble
                             org-static-blog-page-header
                             (if front-matter front-matter "")
-                            "\n#+end_export"))
+                            "\n#+end_export"
+                            ;; Extra styling of abstracts.
+                            ;; Works; but not needed.
+                            ;; "\n#+HTML_HEAD_EXTRA: <style> div.abstract {background-color: pink !important;} </style>"
+                            ))
         (index-header (if (equal "index" (f-base pub-filename))
                           (format "#+begin_export html\n%s\n#+end_export\n%s"
                                   org-static-blog-page-header index-content-header)
@@ -1337,8 +1356,7 @@ You can view the generated ~/blog/index.html by invoking:
                               ;; ⟨2⟩ Article image
                               (format "\n@@html:%s@@\n" (my/org-static-blog-assemble-image it))
 
-                              ;; ⟨3⟩ Preview (and disable how abstracts look)
-                              "\n#+HTML: <style> div.abstract {background-color: pink} <style>\n"
+                              ;; ⟨3⟩ Preview
                               (format "\n#+INCLUDE: \"%s::*Abstract\" :only-contents t" it)
 
                               ;; ⟨4⟩ “Read more” link
@@ -1363,10 +1381,6 @@ You can view the generated ~/blog/index.html by invoking:
                                    show-older-posts)))
       (org-mode)
       (org-html-export-to-html))))
-
-
-
-
 #+end_src
 #+end_details
 * Getting Started:  =my/blog/new-article=
@@ -1460,7 +1474,7 @@ Then,
   :CUSTOM_ID: Publishing-with-C-u-C-u-C-c-C-b
   :END:
 :Hide_fornow:
-  #+begin_src emacs-lisp :tangle no -n
+  #+begin_src emacs-lisp -n :tangle no
 ;; No lock files, for now
 ;; The “.#file” files
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Interlocking.html#Interlocking
