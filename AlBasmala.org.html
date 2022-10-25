@@ -136,6 +136,10 @@
         /* font-lock-function-name-face */
         color: #076678;
       }
+      .helm-swoop-target-word {
+        /* helm-swoop-target-word-face */
+        color: #d3869b;
+      }
       .italic {
         /* italic */
         font-style: italic;
@@ -332,8 +336,6 @@
 <span class="org-meta-line">#+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval</span>
 <span class="org-meta-line">#+options: broken-links:t</span>
 
-<a href="blog:sanitise-title">blog:sanitise-title</a>
-
 <span class="comment"># Use checkmarks instead of boring bullet points</span>
 <span class="org-meta-line">#+html: &lt;style&gt; ul {list-style-type: " &#10003;"} &lt;/style&gt;</span>
 
@@ -374,6 +376,8 @@ Here are <span class="writegood-weasels">some</span> notable features of my blog
 + Augment article footers to link to the Org source and to the Github history
   --- &#167;<span class="org-link"><a href="footers">footers</a></span>
   - Org source <span class="writegood-passive-voice">is colourised</span>!
++ Article titles may contain arbitrary <span class="comment">@@</span><span class="org-tag">html:</span><span class="org-code"> ...</span><span class="comment">@@</span> /yet/ still render nicely in both the frame tab and page title,
+  thanks to <span class="custom-button"><a href="doc:org-link/blog">doc:org-link/blog</a></span>.
 + <span class="italic">Dynamically</span> adjust amount of time left until user finishes reading the
     article --- &#167;<span class="org-link"><a href="footers">footers</a></span>
 + Style inline code and tables --- &#167;<span class="org-link"><a href="curvy-blocks">curvy-blocks</a></span>
@@ -572,7 +576,7 @@ which I place below at the top of the page.)
 "</span></span><span class="org-block">
     (goto-char (point-min))
     (insert </span><span class="org-block"><span class="string">"#+options: toc:2 html-postamble:nil d:nil"</span></span><span class="org-block">
-            </span><span class="org-block"><span class="string">"\n <a href="blog:header">blog:header</a> \n"</span></span><span class="org-block">
+            </span><span class="org-block"><span class="string">"\n <a href="blog:header">blog:header</a> <a href="blog:sanitise-title">blog:sanitise-title</a><a href="blog:sanitise-title\n"> \n</a>"</span></span><span class="org-block">
             </span><span class="org-block"><span class="string">"\n* Tags, then Image :ignore:"</span></span><span class="org-block">
             </span><span class="org-block"><span class="string">"\n#+html: "</span></span><span class="org-block">
             </span><span class="org-block"><span class="string">"&lt;center&gt;"</span></span><span class="org-block">
@@ -584,17 +588,25 @@ which I place below at the top of the page.)
 
     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">It seems I have essentially 3 different ways to handle things: Preview, Publish, Index. Consider brining those closer
 </span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">together. If I decided to switch to the org-static-blog-publish-file approach, then I would need to
-</span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">explicitly write #+begin_abstract...#+end_abstract, due to how I've defined
+</span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">explicitly write #+begin</span></span><span class="org-block"><span class="comment"><span class="helm-swoop-target-word">_abstract</span></span></span><span class="org-block"><span class="comment">...#+end_abstract, due to how I've defined
 </span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">org-static-blog-post-preamble. (See also org-static-blog-assemble-multipost-page for how I handle the abstract there.)
 </span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;;</span></span><span class="org-block"><span class="comment">
 </span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Wrap contents of &#8220;* Abstract&#8221; section in the &#8220;abstract&#8221; Org-special-block
 </span></span><span class="org-block">    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(In case we </span></span><span class="org-block"><span class="comment"><span class="writegood-passive-voice">are narrowed</span></span></span><span class="org-block"><span class="comment">, we only act when we can find the Abstract.)
-</span></span><span class="org-block">    (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (re-search-forward </span><span class="org-block"><span class="string">"^</span></span><span class="org-block"><span class="string"><span class="warning">\</span></span></span><span class="org-block"><span class="string">* Abstract"</span></span><span class="org-block"> nil t)
-      (re-search-forward </span><span class="org-block"><span class="string">"^ * :END:"</span></span><span class="org-block"> nil t) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Ignore :PROPERTIES: drawer, if any.
-</span></span><span class="org-block">      (forward-line)
-      (insert </span><span class="org-block"><span class="string">"\n#+begin_abstract\n"</span></span><span class="org-block">)
-      (call-interactively #'org-forward-heading-same-level)
-    (insert </span><span class="org-block"><span class="string">"\n#+end_abstract\n"</span></span><span class="org-block">))
+</span></span><span class="org-block">
+    (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (re-search-forward </span><span class="org-block"><span class="string">"^</span></span><span class="org-block"><span class="string"><span class="warning">\</span></span></span><span class="org-block"><span class="string">* Abstract"</span></span><span class="org-block"> nil t)
+      (beginning-of-line)
+      (</span><span class="org-block"><span class="keyword">-let</span></span><span class="org-block"> [start (point)]
+        (org-narrow-to-subtree)
+        (org-show-entry)
+        (re-search-forward </span><span class="org-block"><span class="string">"^ * :END:"</span></span><span class="org-block"> nil t) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Ignore :PROPERTIES: drawer, if any.
+</span></span><span class="org-block">        (forward-line)
+        (insert </span><span class="org-block"><span class="string">"\n#+begin_abstract\n"</span></span><span class="org-block">)
+        (call-interactively #'org-forward-heading-same-level)
+        </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">In case there is no next section, just go to end of file.
+</span></span><span class="org-block">        (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (equal start (point)) (goto-char (point-max)))
+        (insert </span><span class="org-block"><span class="string">"\n#+end_abstract\n"</span></span><span class="org-block">)
+        (widen)))
 
     (goto-char (point-max))
     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">The Org file's title is already shown via <a href="blog:header">blog:header</a>, above, so we disable it in the preview.
@@ -602,8 +614,6 @@ which I place below at the top of the page.)
 </span><span class="org-block-end-line">#+end_src
 </span>
 Note: <span class="custom-button"><a href="doc:my/org-static-blog-assemble-image">doc:my/org-static-blog-assemble-image</a></span> <span class="writegood-passive-voice">is defined</span> later on in this article.
-
-
 <span class="org-hide">*</span><span class="org-level-2">* Inserting </span><span class="org-level-2"><span class="custom-button"><a href="doc:org-link/blog">doc:org-link/blo</a><a href="doc:org-link/blog">g</a></span></span><span class="org-level-2"> </span><span class="org-level-2"><span class="italic">seamlessly</span></span><span class="org-level-2"> via the export process; </span><span class="org-level-2"><span class="italic">then</span></span><span class="org-level-2"> preview with every save</span>
 
 <span class="org-block-begin-line">#+begin_src emacs-lisp
@@ -1065,7 +1075,7 @@ Here are 4 example uses:
 
 + Notice that the second indicates explicit width and height.
 + (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which </span></span><span class="org-block"><span class="doc"><span class="writegood-passive-voice">is used</span></span></span><span class="org-block"><span class="doc"> for local previews in `</span></span><span class="org-block"><span class="doc"><span class="constant">my/blog/style-setup</span></span></span><span class="org-block"><span class="doc">'.)
+   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which </span></span><span class="org-block"><span class="doc"><span class="writegood-passive-voice">is used</span></span></span><span class="org-block"><span class="doc"> for local previews in `</span></span><span class="org-block"><span class="doc"><span class="constant">my/blog/style-setup</span></span></span><span class="org-block"><span class="doc">'. This requires a slash at the end.)
 + The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
 "</span></span><span class="org-block">
  (</span><span class="org-block"><span class="keyword">with-temp-buffer</span></span><span class="org-block">
@@ -1081,7 +1091,7 @@ Here are 4 example uses:
      (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> no-border? (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> no-border? </span><span class="org-block"><span class="string">""</span></span><span class="org-block"> </span><span class="org-block"><span class="string">"style=\"border: 2px solid black;\""</span></span><span class="org-block">))
      (</span><span class="org-block"><span class="keyword">cond</span></span><span class="org-block">
       ((s-contains? </span><span class="org-block"><span class="string">"/"</span></span><span class="org-block"> image) t) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">It's a URL, or explicit path, do nothing to it.
-</span></span><span class="org-block">      (explicit-image-path-prefix (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> image (format </span><span class="org-block"><span class="string">"%s/%s"</span></span><span class="org-block">  explicit-image-path-prefix image)))
+</span></span><span class="org-block">      (explicit-image-path-prefix (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> image (format </span><span class="org-block"><span class="string">"%s%s"</span></span><span class="org-block">  explicit-image-path-prefix image)))
       ((not (s-contains? </span><span class="org-block"><span class="string">"/"</span></span><span class="org-block"> image)) (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> image (format </span><span class="org-block"><span class="string">"images/%s"</span></span><span class="org-block"> image)))
        )
 
