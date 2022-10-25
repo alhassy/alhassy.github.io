@@ -1,0 +1,927 @@
+#+title: Arabic Roots: The Power of Patterns
+#+description: Learning the Arabic language
+#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+#+date: <2022-10-21 Fri 11:20>
+#+fileimage: https://unsplash.com/photos/Ejdemp9O7Po
+#+filetags: family arabic javascript
+
+1. M-x my/blog/style-setup/disable
+2. M-x org-static-blog-publish
+
+* Abstract :ignore:
+#+begin_abstract
+#+begin_center
+?? What is the goal of this article?
+
+To quickly introduce the Arabic language, through its “root system” ---i.e., most words have 3-letters at their core---
+and how these roots can be placed in “patterns” to obtain new words. Namely, a glance at Arabic's Verb Forms: These give
+you 10 words for each root!  Some *red:advanced* concepts will also be mentioned, for those curious, but should be ignored
+on a first reading.  These are notes of things that I'm learning; there's likely errors.
+#+end_center
+#+end_abstract
+* COMMENT Preview :move_to_init:Mention_in_AlBasmala:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Preview
+:END:
+#+begin_src emacs-lisp
+
+;; Nearly instanteous preview: Just Save and it'll rebuild, and pop-up the preview to the side!
+(setq org-preview-html-viewer 'xwidget)
+(org-preview-html-mode) ;; TODO. Need to advise this to turn off doom-modeline first!
+;; Why? Since xwidget does not work well with doom-modeline.
+;;
+TODO. Something in my init.el breaks this package!?!
+;;
+;; Mention this in my AlBasmala.org as a way to preview my articles ^_^
+
+;; Turn off doom-modeline when previewing.
+;; (advice-add #'org-preview-html-mode :before (lambda (&rest _) (doom-modeline-mode 0)))
+;;
+;; The following suffices.
+;;
+(xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
+(advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
+;; Make the modeline minimal, otherwise it's super ugly.
+(advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
+;;
+;; Make an Issue on both doom-modeline github and on org-preview-html Github. Link these issues to each other.
+;; Maybe instead make a README PRs that have the above advice-add clause; I think that might be best ---along with MWE init.el in the PR description to justify these additions.
+;;
+;; Along with a MWE init.el to substanitate my claim.
+
+;; Conversely, when we start doom-modeline let's ensure we have no xwidget buffer lying around, otherwise Emacs will hang.
+(advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
+                                                              (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
+                                                              )))
+#+end_src
+
+
+* COMMENT unsplash link setup
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-unsplash-link-setup
+:END:
+#+begin_src emacs-lisp :exports code
+;; If you download images, from unspash, you'll have to host them somewhere!
+;; An alternative is just to provide direct links to the unsplash images themselves!
+;;
+;; Example usage:
+;;   unsplash:gySMaocSdqs
+;;
+;; This shows an image along with a useful tooltip; image size is 200x200 by default.
+;; The image is also a link, redirecting to the source, including whomever took the original photo.
+(org-link-set-parameters
+   ;; The name of the new link type, usage: “blog:label”
+   "unsplash"
+
+   ;; When you click on such links, nothing happens
+   :follow (lambda (label) (browse-url (concat "https://unsplash.com/photos/" (s-trim label))))
+
+   ;; Upon export, yield blog pre/post-amble
+   :export (lambda (label description backend)
+             (if (equal backend 'html)
+                 (format
+                        "<center><a href=\"https://unsplash.com/photos/%s\" class=\"tooltip\" title=\"Photo from Unsplash\"><img src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
+                        (s-trim label)                        (s-trim label))
+               "")))
+#+end_src
+
+(-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" "https://unsplash.com/photos/Vc2dD4l57og"))]
+(if unsplash
+  (format "<center><a href=\"https://unsplash.com/photos/%s\" class=\"tooltip\" title=\"Photo from Unsplash\"><img
+src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
+unsplash unsplash)))
+
+unsplash:XXX0GQfgMy8
+
+* Arabic Docs                                                        :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Docs
+:END:
+
+#+begin_documentation arabic-root
+
+The Arabic language is based on “roots” that link words of related meanings.
+
+An Arabic “root” is the sequence of (usually 3) Arabic letters that carry the underlying meaning of a word, for example
+ش−ر−ب “to drink” and ح−م−ل “to carry”.
+
+Vowels and consonants are added around the roots to create related words.
+/Roots are the building blocks of the Arabic language and are helpful for guessing the meaning of vocabulary./
+
+Generally foreign loan words, such as /internet/ انترنت, fall outside the root system.
+#+end_documentation
+
+#+begin_documentation arabic-vowels
+Arabs /infer/ vowels from context, otherwise words alone such as حمل are ambigious: It could mean حَمَلَ “he carried” or حُمِلْ
+“he was carried”.
+
+As an example sentence with vowels written, Prophet Muhammad is known to have said:
+| أنَا مَدِينَةُ الْعِلْمِ وَعَلَيٌ بَابُهَا                                |
+| /I am the city of knowledge and Ali is its gate/ |
+
+Incidentally, Ali was the one who commissioned the system of vowels.
+https://blogs.transparent.com/arabic/the-beginning-of-dotting-and-diacritics-in-arabic/
+
+------------------------------------------------------------------------------------------------------------------------
+Arabic has only three short vowels, or حركات (literally: “movements”), which are written as small symbols above/below
+letters.
+
+| Vowel name  | Vowel sound | Arabic | English example |
+| Fatha;  فتحة  | /a/           | ـَ       | /mat/             |
+| Dhamma; ظمّة  | /u/           | ـُ       | /sugar/           |
+| Kasra; كسرة  | /i/           | ـِ       | /bit/             |
+
+The “no vowel” marker is suukun/سكون: While هههه has its vowels guessed to be هَهَهَهَ “hahahah”, we obtain “hhhh” by using
+sukkun, هْهْهْهْ. It is important for consonant-vowel-consonant syllables, such as بَابْ “bab” which means /door./
+
+Incidentally, when a sound needs to be repeated twice, it is usually written once with a /Shadda/ ـّـ to indicate the
+doubling.  For example, فَهِمَ /fahima/ “he understood” but فَهَّمَ /fahhama/ “he explained”. Shadda is used with الـ + ‘sun
+letters’. Unlike the other short vowels, the Shadda is usually written even in informal Arabic, to avoid ambiguity.
+
+
+Arabic has 3 long vowels, which are formed using specific letters /after/ the short vowels:
+ | Long vowel  sound | Arabic | English example |
+ | /aa/                | ـَا      | /far/             |
+ | /ii/                | ـِي      | /meet/            |
+ | /uu/                | ـُو      | /boot/            |
+
+Since short vowels are normally not written, letters ا ي و play two roles: They behave as long vowels /aa,ii,uu/ (when
+preceded by short vowels) and also behave as consonant sounds /a,y,w/.
+ + For example, as a consonant, [[https://arabic.fi/letters/74][ي]] makes an English “y” sound; but as a long vowel it makes an “ii” sound.
+ + Occasionally, /aa/ is written using ی (which is like ي but without the dots) rather than an
+   /alif/. This always happens at the end of a word and is called /alif maqsuura/
+   “broken alif”; for example علی “on” and موسی “Musa”.
+
+The following video reads all Arabic letters, where each letter is vowelised by one of the 3 short vowels. It's a really
+nice video: https://www.youtube.com/embed/U1Cl6W8EEBQ?start=6.
+#+end_documentation
+
+#+begin_documentation arabic-passive
+A “passive” verb is one where the subject undergoes the action of the verb rather than carries out the action, for
+example حُملت “she was carried” and يُستخدم “it is used”.
+#+end_documentation
+
+#+begin_documentation arabic-transitive
+A “transitive” verb is a verb that requires an object to express a complete thought, otherwise it is “intransitive”.
+Some verbs are both transitive and intransitive.
+
+A “transitive” verb needs to /transfer its action/ to something or someone ---the object.
+In essence, transitive means “to affect something else.”
+
+For example, “Please bring coffee.” would not be a complete thought without the object “coffee”.
+That is, “Please bring.” is an incomplete thought: What or whom should we bring? As such, “bring” is a transitive verb.
+In contrast, “Please sing.” is a complete thought, and so “sing” is an intransitive verb ---actually, it's also transitive.
+
+In Arabic, the Form-4 أفْعَلَ pattern turns intransitive verbs into transitive ones; and turns transitive verbs into
+doubly-transitive verbs ---which means it takes two objects: E.g., “I gave the boy the ball”, here “gave” is
+doubly-transitive. E.g., in Form-4, ر−س−ل “to send” gives the transitive verb أرْسَلَ which means it can be followed by two
+objects: أرْسَلَ الولد لكتاب “The boy sent the book”.
+#+end_documentation
+
+** COMMENT Basic Terminology                                     :doc_blocks:
+:PROPERTIES:
+:CUSTOM_ID: Basic-Terminology
+:END:
+
++ Root :: The sequence of (usually 3) Arabic letters that carry the underlying
+  meaning of a word, for example ش−ر−ب “to drink” and ح−م−ل “to carry”.
++ Noun :: A word naming a person, object, or idea; for example: House, boy, freedom.
++ Pronoun :: A word replacing a noun, for example هيَ “she” or أنتَ “you”.
++ Verb :: A word describing an action or a state of being, for example سأكون “I will be”.
++ Compound tense :: A tense made by combining two different verbs.
++ Conjugation :: Changing the verb to agree with the subject, for
+  example ازور “I visit” and یزور “he visits”.
+
++ Derived Form :: Variation of the Arabic verbal root that modifies the meaning.
++ Tense :: The tense of a verb tells you when the action takes place.
++ Past tense :: A verb form showing something has happened in the past.
++ Present/Future tense :: A verb form showing something is happening now, routinely, or in the future.
++ Imperative :: A /mood/, or variation, of the present tense verb used for commands or instructions.
++ Subjunctive :: A /mood/, or variation, of the present tense verb used after certain particles (short words).
++ Jussive :: A /mood/, or variation, of the present tesne verb used in certain structures.
+
+* The Arabic Root System
+:PROPERTIES:
+:CUSTOM_ID: The-Arabic-Root-System
+:END:
+
+Most Arabic words are derived from a three-letter [[doc:arabic-root][root]] ---notable exceptions are words like “and” وَ
+and “on” علی.  A root, or مصدر “masdar”, refers to the core meaning of a word.  Simply put, roots are identified by
+ignoring all non-vowel letters, resulting in usually 3 letters ---and, rarely, 4 letters.  /Roots are the building
+blocks of the Arabic language and are helpful for guessing the meaning of vocabulary./
+
+For example, the sequence of letters س−ف−ر (read right-to-left as s-f-r) carries the meaning of “travel”.
+Any word containing these letters, in this order, likely has something to do with travel. For example:
+
+   | English    | Arabic | Transliteration |
+   |------------+--------+------------ |
+   | journey    | سفر     | safar           |
+   | he travels | يسافر    | yusafir         |
+   | amabassdor | سفير    | safeer          |
+   | traveller  | مسافر    | musafir         |
+   | embassy    | سفارة    | sifara          |
+
+All of these words are derived from the root س−ف−ر, s-f-r, in this order.
+/Much of Arabic grammar is concerned with how the root is manipulated to create different related meanings:
+Additional letters, or vowels, modify the meaning according to different general patterns./
+card:Yes
+
+Likewise, ك−ت−ب is a root regarding “writing”, from which we can obtain numerous words:
+#+html: <center><a href="http://oerabic.llc.ed.ac.uk/"><img src="http://roots.oerabic.llc.ed.ac.uk/wp-content/uploads/sites/8/2020/02/1a1.png" height=500></a></center>
+
+# *The emphasis on root consonants means that vowels, especially short vowels, are of secondary importance.*
+
+#+begin_details "Can't we simply just stick the roots together?"
+*No.*
+
+For example the letters ح−م−ل have the meaning of “to carry” but naively connecting the letters gives us حمل, which,
+without any context, could be read as
+- حَمَلَ “he carried”, or
+- حُمِلْ “he was carried”!
+  - ([[doc:arabic-vowels][Vowel signs ـْ ـَ ـِ ـُ]] are discussed below.)
+
+Both of these words are specific to
+1. a male person,
+2. in the past, and
+3. it's not clear whether the person is doing the carrying or the one being carried.
+
+Thus حمل is far more specific than the general meaning of ح−م−ل “to carry” ---which is not itself a word, but an abstract
+sequence of letters.
+
+#+end_details
+
+#+begin_details Irregular Roots
+Irregular roots do not consist of 3 different consonants; instead, they fall into three categories:
+
++ Doubled roots :: where the second and third root letters are the
+  same.
+
+  − If a doubled verb is put into a form involving a sukkun ـْـ
+    on the 3rd root, then the 2nd and 3rd letters are written
+    separately; otherwise, the 2nd and 3rd letters are written together
+    with a shadda ـّـ.
+
+  − For example, ر−د−د “to reply” becomes رَدَّ “he replied” when placed in the
+    masculine-second-person-past-tense form فَعَلَ, but becomes رَدَدْتُ “I replied” when placed in the
+    first-person-past-tense form فَعَلْتُ. [[red:More on forms below!]]
+
+  - In doubt: Doubled roots are usually written together.
+
++ Weak roots :: where one of the three root letters is و or ي; for example ق−و−ل “to speak”.
+  - These letters are “so weak” that they change from the constant sounds و/w and ي/y to vowel
+    sounds or disappear entirely, depending on the pattern the root is placed in.
+  − If و‌/ي is the first root, then it almost always drops out in the present tense.
+    For example, و−ص−ل “to arrive” becomes أَصِلُ “I arrive” in the first-person-present-tense
+    أَفْعُلُ form. Contrast this with the regular root ك−ت−ب “to write” becoming أَكْتُبُ “I write”.
+
+  # - If و/ي is the second root, it becomes a /short vowel/ if the form places a sukuun on the 3rd root, and otherwise it becomes a /long vowel/.
+
++ Hamzated roots :: where one of the root letters is hamza ء; for example ق−ر−ء “to read”.
+#+end_details
+
+** Meanings of roots :Interactive:
+:PROPERTIES:
+:CUSTOM_ID: Meanings-of-roots
+:END:
+
+[[card:Let's take a break]]
+Enter 3 letters to get a link to Arabic words that are derived from that root:
+#+begin_export html
+<p hidden> See: https://alhassy.github.io/AngularJSCheatSheet/ </p>
+<center ng-app> <!-- ⟨0⟩ AngularJS is active for this div -->
+    <!-- ⟨1⟩ Actually load AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"> </script>
+
+      <!-- ⟨2⟩ The *value* of these text boxes are named “first, second, third” -->
+      <input type="text" maxlength="1" size="1" ng-model="third" ng-init="third ='ب'">
+      <input type="text" maxlength="1" size="1" ng-model="second" ng-init="second ='ت'">
+      <input type="text" maxlength="1" size="1" ng-model="first" ng-init="first ='ك'">
+      ⇨
+      <!-- ⟨3⟩ Actually use the “first, second, third” values here, *whenever* they are updated! -->
+      <a href="https://en.wiktionary.org/wiki/{{first}}_{{second}}_{{third}}#Derived_terms">Derived words from {{first}}-{{second}}-{{third}}</a>
+</center>
+#+end_export
+
+Alternatively, [[https://arabic.fi/roots/67-42-40][this link]] provides more information, but has less roots.
+* Arabic has 112 symbols and 112 sounds
+:PROPERTIES:
+:CUSTOM_ID: Arabic-has-112-symbols-and-112-sounds
+:END:
+
+# Vowels and consonants are added around the roots to create related words.
+#
+# What are Arabic's vowels?
+
+
+/What are the vowels that can be added to roots to make new words?/
+
+Arabic has 28 letters, and like cursive English, it is written with letters connected.
+
+Each letter has 4 forms: The isolated form, the form where the letter starts a word, the form where the letter is in the
+middle of a word, and the form where a letter is at the end of a word. So, Arabic has 28 * 4 = 112 distinct shapes for
+its alphabet.  (Since some letters do not connect forwards, the isolated form actually does appear in written text.  For
+example, او means “or” and it consists of two isolated letters.)  For example, the letter /ha/ has the following forms:
+| isolated | initial | medial | final |
+|----------+---------+--------+-------|
+| ه        | هـ       | ـهـ     | ـه     |
+
+If a friend texts you something funny, you reply with ههههه −−− “hahaha”.
+
+[[card:I have a question]]
+But, where are the short vowels “a”? *Arabic short vowels are generally not written!*
+
+There are only three short vowels in Arabic: /a/, /i/ and /u/.
+They are denoted by small symbols above/below letters, for example:
+     | Vowel | Example | English reading |
+     |-------+---------+-----------------|
+     | ـَـ     | هَهَهَهَ    | hahahaha        |
+     | ـُـ     | هُهُهُهُ    | huhuhuhu        |
+     | ـِـ     | هِهِهِهِ    | hihihihi        |
+
+Incidentally, the sound “h” is obtained by using the “no vowel” marker: هْـ.  So with the 3 short vowels and the fourth
+symbol to indicate the absence of a vowel, there are a total of 4 * 28 = 112 sounds in Arabic.
+
+#+begin_details Tell me more about Arabic Vowels!
+Arabs /infer/ vowels from context, otherwise words alone such as حمل are ambigious: It could mean حَمَلَ “he carried” or حُمِلْ
+“he was carried”.
+
+As an example sentence with vowels written, Prophet Muhammad is known to have said:
+| أنَا مَدِينَةُ الْعِلْمِ وَعَلَيٌ بَابُهَا                                |
+| /I am the city of knowledge and Ali is its gate/ |
+
+
+------------------------------------------------------------------------------------------------------------------------
+Arabic has only three short vowels, or حركات (literally: “movements”), which are written as small symbols above/below
+letters.
+
+| Vowel name  | Vowel sound | Arabic | English example |
+|-------------+-------------+--------+-----------------|
+| Fatha / فتحة  | /a/           | ـَ       | /mat/             |
+| Dhamma / ظمّة | /u/           | ـُ       | /sugar/           |
+| Kasra / كسرة | /i/           | ـِ       | /bit/             |
+
+The “no vowel” marker is suukun/سكون: While هههه has its vowels guessed to be هَهَهَهَ “hahahah”, we obtain “hhhh” by using
+sukkun, هْهْهْهْ.
+
+Arabic has 3 long vowels, which are formed using specific letters /after/ the short vowels:
+ | Long vowel  sound | Arabic | English example |
+ |-------------------+--------+-----------------|
+ | /aa/                | ـَا      | /far/             |
+ | /ii/                | ـِي      | /meet/            |
+ | /uu/                | ـُو      | /boot/            |
+
+Since short vowels are normally not written, letters ا ي و play two roles: They behave as long vowels /aa,ii,uu/ (when
+preceded by short vowels) and also behave as consonant sounds /a,y,w/.
+ + For example, as a consonant, [[https://arabic.fi/letters/74][ي]] makes an English “y” sound; but as a long vowel it makes an “ii” sound.
+ + Occasionally, /aa/ is written using ی (which is like ي but without the dots) rather than an
+   /alif/. This always happens at the end of a word and is called /alif maqsuura/
+   “broken alif”; for example علی “on” and موسی “Musa”.
+
+The following video reads all Arabic letters, where each letter is vowelised by one of the 3 short vowels. It's a really
+nice video: https://www.youtube.com/embed/U1Cl6W8EEBQ?start=6.
+#+end_details
+
+card:Disagree
+/Of-course, there is more to the story!/ There is the “glottal stop”, Hamza ـٔ , and other special characters and symbols
+above/below letters.  So the counts of 112 are not exact.  For example, some letters, like alif ا, have the same shape
+for different forms, but sometimes it can be written as ی such as علی “on” and موسی “Musa”.
+
+#+begin_details "The Arabic Hamza ـٔ is like the English Apostrophe ـ'"
+# /Hamza/ ء is a “half” letter; it can be written in a variety of ways: By itself on the line ء or carried by an /alif/
+# أ or by /ya/ یٔ/ـٔـ or by /waw/ ؤ.
+
+     1. In both cases there is uncertaininty as to when and how to use it, even among native speakers.
+     2. Whereas in English we ask ourselves: /Should the apostrophe come before the “s” or after the “s”?/, in Arabic the
+        question becomes: /Which letter should carry the hamza?/.
+     3. The hamza itself is considered a consonant, not a vowel, pronounced as a short pause.
+     4. Like the apostrophe, the rules for hamza are more concerned with where to place it than how to pronounce it.
+     5. General rules:
+        - At the start of a word, hamza is written on an alif: أ
+        - This might result in two alifs side-by-side, if so then merge them
+          into /alif madda/ آ, which is read as a long /aa/ sound.
+        - Otherwise, the letter carrying the hamza tends to relate to the vowel /before/ the hamza:
+          If we have ـُـ ، ـِـ ، ـَـ before the hamza, then the hamza is written ؤ ، یٔ/ـٔـ ، أ respectively.
+          - If we have ـْـ before the hamza, we write ؤ ، یٔ/ـٔـ ، أ
+            depending on the vowel the hamza root should be taking.
+            For example, س−ء−ل “to ask” becomes يسْأَل “he asks” in the
+            masculine-second-person-present-tense (يَفْعَلُ form, for this
+            particular root).
+#+end_details
+
+The following video reads all Arabic letters, where each letter is vowelised by one of the 3 short vowels. It's a really
+nice video.
+#+html: <center><iframe width="560" height="315" src="https://www.youtube.com/embed/U1Cl6W8EEBQ?start=6" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+* ف−ع−ل : The template for any 3 core root letters
+:PROPERTIES:
+:CUSTOM_ID: ف-ع-ل-The-template-for-any-3-core-root-letters
+:END:
+
+As a symbol to represent the three root letters of any word, Arabic grammars uses the roots of the prototypical verb فعل
+“to do”, read /fa'al/.
+
+For example, the root ك−ت−ب is associated with “writing”.  The word for “office” مَكْتَب is the مَفْعَل-pattern: The root
+letters have مَـ before them, a sukkun ـْـ over the first root letter, and a fatha ـَـ over the second root letter. In the
+same way, “books” كُتُب is the فُعُل-pattern.
+
+
+[[card:Let's take a break]]
+Below are some example patterns.  /If you are faced with an Arabic word that you never heard before, you can guess
+the meaning by its root and pattern./
+
+** The فَعَّال-pattern: “the person whose job is X”
+:PROPERTIES:
+:CUSTOM_ID: The-فَعَّال-pattern-the-person-whose-job-is-X
+:END:
+This pattern gives the profession associated with a core root. Here's some examples:
+
+| Profession     | Core meaning   |
+|----------------+----------------|
+| كَتَّاب            | ك−ت−ب        |
+| Scribe         | to write       |
+|----------------+----------------|
+| فَنَّان             | ف−ن−ن         |
+| Artist         | to be artistic |
+|----------------+----------------|
+| خَبَّاز            | خ−ب−ز         |
+| Baker          | to bake        |
+|----------------+----------------|
+| عَطَّار            | ع−ط−ر          |
+| Perfume vendor | to perfume     |
+|----------------+----------------|
+| رَكَّاض           | ر−ك−ظ          |
+| Runner         | to run         |
+|----------------+----------------|
+| جَرَّاح            | ج−ر−ح          |
+| Surgeon        | to cut         |
+|----------------+----------------|
+
+** The مَفعَل-pattern: “the place where X is done”
+:PROPERTIES:
+:CUSTOM_ID: The-مَفعَل-pattern-the-place-where-X-is-done
+:END:
+
+This pattern gives the place associated with a core root. Here's some examples:
+
+| Place          | Core meaning |
+|----------------+--------------|
+| مَسكَن           | س−ك−ن       |
+| home           | to live      |
+|----------------+--------------|
+| مَكتَب           | ك−ت−ب      |
+| office         | to write     |
+|----------------+--------------|
+| مَدخَل           | د−خ−ل        |
+| entrance       | to enter     |
+|----------------+--------------|
+| مَخبَز             | خ−ب−ز       |
+| bakery         | to bake      |
+|----------------+--------------|
+| مَعبَر             | ع−ب−ر       |
+| crossing point | to cross     |
+|----------------+--------------|
+| مَسبَح            | س−ب−ح      |
+| swimming pool  | to swim      |
+
+** TODO COMMENT The مِفعَال-pattern: “the tool used to do X” :Not_Urgent:
+:PROPERTIES:
+:CUSTOM_ID: The-مِفعَال-pattern-the-tool-used-to-do-X
+:END:
+
+Arabic words with the pattern Instrument noun.
+
+| Tool | Core meaning  |
+|------+---------------|
+| مِنشَار  | ن−ش−ر −      |
+| Saw  | to distribute | <--- Maybe not a great example.
+
+** TODO COMMENT The فَعَيْل-pattern: “the cute, small, X”  :Not_Urgent:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-The-فَعَيْل-pattern-the-cute-small-X
+:END:
+
+This is known as the dimunative. For example, in English we say /ducky/ to refer to a small duck ---whereas /duckling/ also
+means a small duck, but it is more formal.
+
+| Dimunative | Original word |
+|------------+---------------|
+
+
+* Verb Forms: The True Power of Arabic's Form System
+:PROPERTIES:
+:CUSTOM_ID: Verb-Forms-Page-38-chapter-7
+:END:
+
+# If you see a word, you can guess at its meaning by recognising which form it is in and what its root is.
+
+The richness of Arabic is based on its system of word roots, and nowhere is this more evident than in the verb system. card:Agree
+
+In English we can add extra letters to form different but connected meanings ---for example: /value, revalue, validate/.
+Arabic takes this principle much farther with many different patterns that add meaning to the origninal root form.
+These /derived/ forms are the major way in which Arabic achieves its richness of vocabulary. For example, from ق−ت−ل “to
+kill”, we can obtain
+| he killed                         | قتل  | qatala     |
+| he massacred (“killed intensely”) | قتّل  | qattala    |
+| he battled (“tried to kill”)      | قاتل  | qaatala    |
+| they fought each other            | تقاتلوا | taqaataluu |
+
+Here are the significant verb forms. For simplicitly, I'm presenting them in the /past tense/ using the root ف−ع−ل “to
+do”.
+| Form      | Common Meanings                                       | Example                                                      |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 1.  [[https://arabic.tripod.com/Verbs01.htm#:~:text=or%20has%20done.-,1)%20Fa%22al(a),-The%20first%20structure][فَعَلَ]]    | “doing an action X”; (this is the most basic form)    | كَتَبَ “he wrote” from ك−ت−ب “to write”                       |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 2.  [[https://arabic.tripod.com/VerbForms1.htm#:~:text=Form%20II%20of%20Arabic%20Verbs][فَعَّلَ]]    | “doing X to another”; “making another do X”           | خَرّجَ “he made someone go-out/graduate” from خ−ر−ج “to go out” |
+|           | “doing X intensely/repeatedly”                        | كَسَّرَ “he smashed” from ك−س−ر “to break”                      |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 3.  [[https://arabic.tripod.com/VerbForms1.htm#:~:text=Form%20III%20of%20Arabic%20Verbs][فَاعَلَ]]   | “doing X with someone else”                           | جَالَسَ “he sat with (someone)” from ج−ل−س “to sit”            |
+|           | “trying to do X”                                      | سَابَقَ “he raced” from س−ب−ق “to come before”                 |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 4.  [[https://arabic.tripod.com/VerbForms2.htm#:~:text=Form%20IV%20of%20Arabic%20Verbs][أَفْعَلَ]]   | [[doc:arabic-transitive][Transitive]] meaning: “doing X to another”; like Form-2 | أَسْخَنَ “he heated (something)” from س−خ−ن “to be hot”          |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 5.  [[https://arabic.tripod.com/VerbForms4.htm#:~:text=Form%20V%20of%20Arabic%20Verbs][تَفَعَّلَ]]   | “doing X to yourself”; this is Form-2 + تَـ             | تَذَكَّرَ “he remembered” from ذ−ك−ر “to remind”                   |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 6.  [[https://arabic.tripod.com/VerbForms4.htm#:~:text=Form%20VI%20of%20Arabic%20Verbs][تَفَاعَلَ]]   | “doing X together (as a group)”; this is Form-3 + تَـ   | تَعَاوَنَ “he cooperated” from ع−و−ن “to help”                     |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 7.  [[https://arabic.tripod.com/VerbForms2.htm#:~:text=Form%20VII%20of%20Arabic%20Verbs][اِنْفَعَلَ]]   | [[doc:arabic-passive][Passive]] meaning: “to be X-ed”. This is Form-1 + اِنْـ     | اِنْحَمَلَ “he was carried” from ح−م−ل “to carry”                   |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 8.  [[https://arabic.tripod.com/VerbForms3.htm][اِفْتَعَلَ]]   | No consistent meaning;  “to make yourself do X”       | اِفْتَعَلَ “he incited” from ف−ع−ل “to do”                         |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 9.  [[https://arabic.tripod.com/VerbForms5.htm#:~:text=Form%20IX%20of%20Arabic%20Verbs][اِفْعَلَّ]]   | ‌used for changing colours: “to turn colour X”         | اِحْمَرَّ “he blushed / turned-red” from أحمر “red”                   |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+| 10.  [[https://arabic.tripod.com/VerbForms5.htm#:~:text=Form%20X%20of%20Arabic%20Verbs][اِسْتَفْعَلَ]] | “asking for X”; this is nearly Form-1 + اِسْتَـ            | اِسْتَعْلَمَ “he inquired” from ع−ل−م “to know”                      |
+|           | “to consider or find something to have quality X”     | اِسْتَحْسَنَ “he admired” from ح−س−ن “to be beautiful”             |
+|-----------+-------------------------------------------------------+--------------------------------------------------------------|
+
+- *Exercise!* Place the roots ع−م−ل into all of these patterns, except form-9; then guess their meanings!  ( [[https://en.wiktionary.org/wiki/%D8%B9_%D9%85_%D9%84#Derived_terms][Solution]] )
+- [[https://www.almaany.com/en/dict/ar-en/%D8%AC%D9%8E%D8%A7%D9%84%D9%8E%D8%B3%D9%8E][AlManny.com]] is an excellent online dictionary to finding out the meanings of words when placing them in these forms.
+
+#+begin_details "All the derived forms do not exist for all roots, but most roots have at least one or two forms in general circulation."
+
+1. You'll need to look in a dictionary, or the above root-meaning tool, to know exactly which forms exist.
+
+2. There are an additional 5 forms, but they are super rare in usage.
+
+3. In addition, Arabic speakers will sometimes make up new verbs from existing roots, either as a joke or in an
+   effort to be creative or /✨poetic💐/.
+#+end_details
+* COMMENT Closing & useful resource: https://arabic.fi/
+:PROPERTIES:
+:CUSTOM_ID: useful-resource-https-arabic-fi
+:END:
+
+Almost every word in every sentence and phrase on this website is
+clickable, and takes you to a page with generous information about the
+word, along with audio clips. It's a free, beautiful, interactive website.
+
+
+
+http://allthearabicyouneverlearnedthefirsttimearound.com/wp-content/uploads/2014/03/All-The-Arabic-Searchable-PDF.pdf
+Very good book.
+
+
+http://oerabic.llc.ed.ac.uk/?p=2756
+OERabic is an ambitious initiative that aims to enhance the mastering of Arabic by creating bespoke creative learning
+(and teaching) resources. OERabic encompasses several projects which have been in development over the course of the
+last year and a half and have involved a number of students of Arabic from the University of Edinburgh, as well as
+colleagues from Edinburgh and universities across the UK.
+
+* Appendix: Arabic Input Setup & touchtyping
+:PROPERTIES:
+:CUSTOM_ID: Arabic-Input-Setup
+:END:
+
+[[card:I have a question]] How was this article written?  [[https://www.spacemacs.org/][Emacs]]!
+
+On the /left/ below is what I type, and on the /right/ is what you see in this article (which include hover/tooltips for the
+cards).
+
+--------------------------------------------------------------------------------
+#+begin_org-demo :result-color "white" :source-color "white"
+[[card:I have a question]] How was this article written? green:Emacs!
+
+card:Yes With Emacs, I type /phonetically/ (based on sounds) to get Arabic; e.g.,
+typing  *musy alHsaIY* gives me *موسی الحسائي*, my name /Musa Al-hassy/.
+#+end_org-demo
+
+red:TODO. Moreover, this is how Arabic looks like within Emacs:
+- Turn off my grammar checker to remove the blue squiggly below.
+-  Add a picture of how this looks in my Emacs:
+
+  Prophet Muhammad is known to have said:
+                أنَا مَدِينَةُ الْعِلْمِ وَعَلَيٌ بَابُهَا
+  /I am the city of knowledge and Ali is its gate/
+
+
+--------------------------------------------------------------------------------
+
+The rest of this section details my [[https://www.spacemacs.org/][Emacs]] setup.
+
+
+
+# Hello, my name is موسی الحسائي, and I love Emacs!
+# − (In Emacs, typing *musy alHsaIY* gives me *موسی الحسائي*!)
+
+
+;; Press C-q on a word to quote it with nice unicode quotes.
+(bind-key* "C-q" (lambda () (interactive) (insert (format "“%s”" (thing-at-point 'word))) (kill-word 1)))
+
+
+(set-fontset-font "fontset-default" '(#x600 . #x6ff) "Amiri Quran Colored") ;; Makes all dots, hamza, diadiract marks colored!
+;;
+;; How did I find this font?
+;;
+;; 1. Look for a font I like on  https://fonts.google.com/?subset=arabic
+;; 2. brew search amiri         # Look to see if there is a font associated with it
+;; 3. brew install  font-amiri  # Install what the likely candidate
+;; 4. (set-fontset-font "fontset-default" '(#x600 . #x6ff) "Amiri Quran Colored") ;; Get the full name by: Emacs -> Options -> Set Default Font
+
+;; Note: "arabic" input method just changes my English query keyboard into an Arabic keyboard ---useful if one's mastered touch typing in Arabic!
+;; In contrast, the Perso-Arabic input method uses a system of transliteration: Ascii keys are phonetically mapped to Arabic letters.
+(bind-key* "M-SPC" (lambda () (interactive)
+   (message (if (not current-input-method)
+      (progn (set-input-method "farsi-transliterate-banan" t) "Perso-Arabic! Hint: M-x describe-input-method")
+      (progn (set-input-method nil) "English!")))))
+;;
+;; C-\ already does this!? Neato!
+
+;;
+;; See also: Perso-Arabic Input Methods And BIDI Aware Apps
+;; https://emacsconf.org/2021/talks/bidi/
+;; Also at: https://www.youtube.com/watch?v=kqIZb80OIKE&ab_channel=EmacsConfandEmacshangouts
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+
+Hello, my name is موسی الحسائی, and I am from Iraq!
+
+/Note!/ On Lam-Alif, لا, I cannot get the fatha tanween, ـــً, to render *within* Emacs.
+However, if you export to HTML, C-c C-e h o, then لاً will render with a taneween!
+- This is an issue with my specific Emacs build; e.g., using Aquamacs
+  (which has seemless MacOS look & feel) does not result in this issue
+  at all.
+  + Actually, they only show when the cursor is at the tanween and otehrwise also do not render.
+  - "Noto Nastaliq Urdu" --this makes lam-alif tanween appear in my emacs! This is clearly not Arabic.
+  - NotoKufiArabic is super ugly, but will also render it.
+
+"Noto Sans Arabic" Also good! -- brew install  font-noto-sans-arabic  --cask
+
+             "Sana" is super fun!
+
+| fatha   | fathaTan | kasrah | kasrahTan | dhama | dhamTan | sukun | hamza | alif | madda | shadda |
+| بَ      | بً       | بِ     | بٍ        | بُ    | بٌ      | بْ    | بٔ    | بٰ   | بٓ    | بّ     |
+| (s+6) ^ | #        | e      | E         | o     | O       | @     | `     | $    | U     | ~      |
+
+
+
+
+ARABIC TATWEEL:  مــــــــــوســـــی
+(Just press underscore!)
+
+
+عرب == wrb
+العربية == alwrbYTh
+
+
+(setq arabs '(
+"Times New Roman" ;; default?
+
+"Noto Nastaliq Urdu" ;; this makes lam-alif tanween appear in my emacs!
+
+"Noto Sans Arabic" ;; Also good! -- brew install  font-noto-sans-arabic  --cask
+
+             "Sana" ;; is super fun!
+
+ "Libian SC" ;; Default ????
+
+ "Al Bayan"
+ "Baghdad"
+ "Damascus" ;; Thin
+  "Beirut" ;; Super thick!
+ "KufiStandardGK" ;; Reasonable bold
+
+  "Diwan Kufi" ;; fancy, almost calligraphic
+
+
+  "DecoType Naskh" ;; Tight; looks like handwritten; does not support `___` elongations.
+  "Farah" ;; sloppy handwritten
+
+"Waseem" ;; handwritten
+
+ "Farisi" ;; Persian-style: Super thin and on an angle
+ "Noto Nastaliq Urdu" ;; Like Farisi, but a bit larger & thicker
+
+ "Noto Kufi Arabic UI"
+
+ "Geeza Pro" ;; nice and thick
+
+ "DecoType Naskh"
+ ))
+(set-fontset-font "fontset-default" '(#x600 . #x6ff) (nth 0 arabs))
+
+;; brew install  font-amiri
+(set-fontset-font "fontset-default" '(#x600 . #x6ff) "Amiri")
+(set-fontset-font "fontset-default" '(#x600 . #x6ff) "Amiri Quran Colored") ;; Makes all dots, hamza, diadiract marks colored!
+اهـــــلاًوســــهـــلاً
+ولما كان تناسي حقوق الإنسان وازدراؤها قد أفضيا إلى أعمال همجية
+
+For more, see https://fonts.google.com/?subset=arabic
+
+اهل الخير
+
+
+لـاً
+اهـــــلاًوســــهـــلاً
+
+لً لاً؟
+
+
+جد\وزىلالالالا
+
+ h a
+
+اهلان  وسهلان
+
+بِ بٍ
+
+بُ بٌ
+
+بَيُتٌ
+
+م
+ب
+
+موسی الحسائی
+
+** COMMENT arabic cards link setup                             :Include_this:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-unsplash-link-setup
+:END:
+
+They're intentionally small, so that they can more-or-less be used inline within sentences.
++ When you click on them, they take you to the actual image source.
++ When you hover over them, you see the translation.
+
+#+begin_src emacs-lisp :exports code
+;; If you download images, you'll have to host them somewhere!
+;; An alternative is just to provide direct links to the images themselves!
+;;
+;; Example usage:
+;;   unsplash:gySMaocSdqs
+;;
+;; This shows an image along with a useful tooltip; image size is 200x200 by default.
+;; The image is also a link, redirecting to the source, including whomever took the original photo.
+(org-link-set-parameters
+   ;; The name of the new link type, usage: “blog:label”
+   "card"
+
+   ;; When you click on such links, nothing happens
+   :follow (lambda (label) ())
+
+   ;; Upon export, yield blog pre/post-amble
+   :export (lambda (label description backend)
+             (if (not (equal backend 'html))
+                 ""
+               (-let [url
+               (pcase label
+                 ("Let's take a break" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png")
+                 ("Yes" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png")
+                 ("No" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png")
+                 ("Agree" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png")
+                 ("Disagree" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png")
+                 ("I have a question" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png"))]
+             (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url label url)))))
+#+end_src
+
+
+Example usage:
+[[card:Let's take a break]]
+[[card:Yes]]
+[[card:No]]
+[[card:Agree]]
+[[card:Disagree]]
+[[card:I have a question]]
+
+unsplash:XXX0GQfgMy8
+
+* Footer :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Footer
+:END:
+
+
+#+HTML: <center> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License. </a></center><div id="disqus_thread"></div><script type="text/javascript">/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */var disqus_shortname = 'life-and-computing-science';/* * * DON'T EDIT BELOW THIS LINE * * */(function() { var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true; dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq); })();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a><div class="taglist"><a href="https://alhassy.github.io/tags.html">Tags</a>: <a href="https://alhassy.github.io/tag-emacs.html">emacs</a> </div><center><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong></center><center><a href="AlBasmala.org.html"><img
+#+HTML:    src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&emsp;<a href="https://github.com/alhassy/alhassy.github.io/commits/master/posts/AlBasmala.org"><img
+#+HTML:    src="https://img.shields.io/badge/-History-informational?logo=github"></a><br><a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a></center><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+#+HTML:      type='text/css'/>
+#+HTML:   <script
+#+HTML:      src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+#+HTML:   <script src='readremaining.js/src/readremaining.jquery.js'
+#+HTML:      type='text/javascript'></script>
+#+HTML:   <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+#+HTML:      showGaugeOnStart : true}); </script>
+* COMMENT --------------------------------------------------------------------------------
+:PROPERTIES:
+:CUSTOM_ID: COMMENT
+:END:
+* COMMENT Al-I'rab: Case Endings  −−− الاعراب :future_article_maybe:
+:PROPERTIES:
+:CUSTOM_ID: Al-I'rab-Case-Endings-الاعراب
+:END:
+
+English relies on /word order/ for meaning; for example, /Jim hit Bob/ is a sentence where the person doing the action is
+/Jim/ and we know it has to be /Jim/, and not /Bob/, since /Jim/ is the word /before/ the action /hit/. However, in Arabic words can
+be ordered in almost any way you like! Then how do we identifiy who does an action? We use case markings: We add small
+symbols to the end of words to indiciate the role they play in a sentence.
+
+--------------------------------------------------------------------------------
+
+
+One day, my wife and I were looking at the word خبز, and we each read
+it differently: I read it as خَبَزَ “he baked”, but she read it as خُبْز
+“bread”. Without a context, we each guessed different short vowels!
+
+Here's another one!
+
+What does حملت mean? Since ح−م−ل means “carrying”, and ـت is the past tense suffix, we have /at least/ the following meanings:
+| حَمَلْتُ | I carried               |
+| حَمَلْتَ | You (masculine) carried |
+| حَمَلْتِ | You (feminine) carried  |
+| حَمَلَتْ | She carried             |
+| حُمَِلتْ | She was carried         |
+
+Without the short symbols, the only way to distinuigh the intended
+meaning is for the word to be contextually located within a sentence
+---and even then, this would require experience.
+
+Likewise, what does نصرت فاطمة mean? Does it mean “Fatimah helped (someone)”? Or does it mean “Fatimah was helped (by
+someone)”?
+
+
+One English sentence can be written a number of ways in Arabic:
+
+| Fatima helped Zaynab |
+|----------------------|
+| نصرت فاطمةُ  زينبَ         |
+| نصرت زينبَ فاطمةُ          |
+| فاطمةُ نصرت زینبَ          |
+The way the listener knows what’s the subject and what’s the object is quite literally carried around with the nouns themselves. The endings make all the difference.
+
+The second instance above might seem weird at first, since the object comes before the subject, but it is more common
+when the object is an attached pronoun:
+| نصرتْها فطمةُ | Fatima helped her. |
+This is a common example of verb-object-subject!
+
+
+
+1. Just as people dress according to roles or occassions (such as a
+   suit at work and pajamas in bed), so too Arabic words have
+   different case endings, التشكيلُ, to show their roles within a
+   sentence.
+
+   Roles are indicated by the vowel sign on the final letter of a word.
+   |----------------------------------+--------------+-------------------------|
+   | Role                             | Ending Vowel | Case (Grammatical Name) |
+   |----------------------------------+--------------+-------------------------|
+   | Subject; the one doing an action | ـُــ            | مارفوع / Nominative      |
+   | Object; the one being acted upon | ـَــ            | منصوب / Accusative     |
+   | Owner of a thing                 | ـِــ            | مجرور / Genetive         |
+
+
+2. *Nunation*: When the word is indefinite, one “doubles” the symbols,
+   which causes an extra /-n/ sound to each vowel: u ـُـ, a ـَـ, i ـِـ
+   are replaced by un ـٌـ, an ـًـ, in ـٍـ.
+
+   https://www.madinaharabic.com/blog/the-story-of-irab-in-arabic-language.html
+
+https://www.madinaharabic.com/arabic-language-course/lessons/L025_002.html
+
+https://understand-arabic.com/2016/03/23/case-endings-of-arabic-nouns/
+
+https://en.wikipedia.org/wiki/%CA%BEI%CA%BFrab#:~:text=8%20External%20links-,Etymology,to%20the%20word%20Arab%20itself.
+
+https://en.wiktionary.org/wiki/%D8%B9_%D8%B1_%D8%A8#Arabic
+
+https://blogs.transparent.com/arabic/al-irab-al-binaa-%D8%A7%D9%84%D8%A5%D8%B9%D8%B1%D8%A7%D8%A8-%D9%88-%D8%A7%D9%84%D8%A8%D9%86%D8%A7%D8%A1/
+
+https://www.fluentarabic.net/ajrumiyyah-arabic-grammar-2/
+* DONE COMMENT How to blog to hashnode?
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-How-to-blog-to-hashnode
+:END:
+
++ Get markup :: C-c c-e C-b h h
++ Copy then Paste :: that into hashnode
++ Profit :: ^_^
+
+Hashnode does not respect my CSS, unless I advertise/recruit for them (via their 'ambassador' program. Super lame!)
+
+Likewise my inline JS ---a small root-meaning program--- is not honored by hasnode.
+
+TODO. Consider moving back to my own personal blog setup?!
+- But need a way to streamline *quick* article publishing!
+  - My blog does provide a local-WYSIWYG: Just C-c C-e h o, or use one of those org-preview packages! <3
+    - I like working on my blog, so that's fun for me.
+      - However, my *current* goal is to learn arabic!
+        - So maybe learn arabic, then migrate back to my personal blogging platform!

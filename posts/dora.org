@@ -1,0 +1,80 @@
+#+title: Dora, The Arab Explorer
+#+description: A simple interface to watch the engaging children's show “Dora the Explorer” in Arabic
+#+date: <2022-10-21 Fri 11:20>
+#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
+#+filetags: family arabic javascript
+
+* Abstract :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: Abstract
+  :END:
+
+#+begin_abstract
+A simple interface to watch the engaging children's show “Dora the Explorer” in Arabic
+#+end_abstract
+
+   (progn
+   (my/blog/style-setup/disable)
+   (org-static-blog-publish-file (f-full (buffer-file-name)))
+           (browse-url-of-file (format "file://%s%s.html" (file-truename org-static-blog-publish-directory)(f-base (buffer-file-name)))))
+
+
+           THEN??
+* مغامرات دورا :ignore:
+:PROPERTIES:
+:CUSTOM_ID: مغامرات-دورا
+:END:
+
+#+html: <p style="margin-bottom: 1cm;"></p>
+#+begin_export html
+<p hidden> See: https://alhassy.github.io/AngularJSCheatSheet/ </p>
+
+<center ng-app="myGreetingApp">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js">
+    </script>
+
+  <div ng-controller="PromptController">
+    <h1>  مغامرات دورا  </h1>
+    <p><input type=number ng-model="episode" min=1 max=85 value="{{episode}}"> الحلقة</p>
+
+      <iframe src="{{ episodeURL() | trustAsResourceUrl}}" allowfullscreen="true" width="100%" height="500"></iframe>
+
+    <script>
+      var app = angular.module("myGreetingApp", [])
+
+      app.filter('trustAsResourceUrl', ['$sce', function ($sce) {
+            return function (val) {
+                return $sce.trustAsResourceUrl(val);
+            };
+        }]);
+
+       app.controller("PromptController",
+         function($scope){
+           $scope.episode = Math.floor(Math.random() * 85) + 1
+           $scope.episodeURL = () =>
+`https://www.arteenz.com/plugins/server8/embed.php?url=V1hWQjUxdHdlMTRINWdrS3plMkdhZz09&amp;id=${25879 + $scope.episode}`
+       })
+    </script>
+    </div>
+  </center>
+#+end_export
+
+
+#+html: <p style="margin-bottom: 3cm;"></p>
+
+#+begin_details "What is this page for?"
+I found a [[https://www.arteenz.com/cartooncat-718.html][website]] that lets us watch Dora in Arabic.
+
++ Sadly, it is “too busy” for use with a child ---and, actually “too busy” for me as a parent. It has too much content:
+  Other shows, comments, ads, etc.
++ As such, I've made this little Web App to use for my kids when watching Dora.
+
+Every time you refresh this page, a random episode from 1-85 is selected. Moreover, there's also an episode selector for use.
+#+end_details
+
+#+begin_details "This page has too much text; I'd like a more minimal one!"
+An even more minimal page, with only the episode-selector and video player, is [[https://dora-for-yusuf.netlify.app/][here]].
+#+end_details
