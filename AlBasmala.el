@@ -1,31 +1,69 @@
-(s-join "\n" (--map (concat "#+HTML_HEAD: " it)
-  (s-split "\n" (concat
-               org-static-blog-page-preamble
-               org-static-blog-page-header))))
+(cl-defun blog/git (cmd &rest args)
+  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
+  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
 
-(setq org-static-blog-publish-title "Life & Computing Science")
-(setq org-static-blog-publish-url "https://alhassy.github.io/")
-(setq org-static-blog-publish-directory "~/blog/")
-(setq org-static-blog-posts-directory "~/blog/posts/")
-(setq org-static-blog-drafts-directory "~/blog/drafts/")
+(cl-defun blog/publish-current-article ()
+  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
+  (interactive)
+    (blog/git "add %s" (buffer-file-name))
+  ;; Placed article html into the published blog directory
+  (blog/preview)
+  (save-buffer)
+  (-let [article (concat (f-base (buffer-file-name)) ".html")]
+    (shell-command (concat "mv " article " ~/blog/"))
+    (blog/git "add %s %s" (buffer-file-name) article))
 
-;; Use “#+filetags: τ₁ τ₂ … τₙ”
-(setq org-static-blog-enable-tags t)
+  ;; Updated index.html, tags, archive, and rss to now include this new article
 
-;; I'd like to have tocs and numbered headings
-(setq org-export-with-toc t)
-(setq org-export-with-section-numbers t)
+  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
+  (my/blog/style-setup/disable)
+  (view-echo-area-messages)
+
+  (message "⇒ HTMLizing article...")
+  (blog/htmlize-file (buffer-file-name))
+
+  (message "⇒ Assembling tags...")
+  (org-static-blog-assemble-tags)
+  (blog/git "add tag*")
+
+  (message "⇒ Assembling archive...")
+  (org-static-blog-assemble-archive)
+  (blog/git "add archive.html")
+
+  (message "⇒ Assembling RSS feed...")
+  (org-static-blog-assemble-rss)
+  (blog/git "add rss.xml")
+
+  (message "⇒ Assembling landing page...")
+  (org-static-blog-assemble-index)
+  (blog/git "add index.html")
+
+  (shell-command (format "git commit -m \"Publish: Article %s.org\"; git push" (f-base (buffer-file-name))))
+  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
+
+(org-defblock abstract (main) nil
+  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
+
+   Supported backends: HTML. "
+   (format (concat
+            "<div class=\"abstract\" style=\"border: 1px solid black;"
+            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
+            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
+            "<center> <strong class=\"tooltip\""
+            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
+            "%s </div>")
+           contents))
 
  (setq org-static-blog-page-header
   (concat
-   org-html-head-extra  ;; Alterd by ‘org-special-block-extras’
+   org-html-head-extra  ;; Altered by ‘org-special-block-extras’
    (concat
    "<meta name=\"author\" content=\"Musa Al-hassy\">
     <meta name=\"referrer\" content=\"no-referrer\">"
-   "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" 
-   "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" 
-   "<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" 
-   "<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" 
+   "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
    "<link rel=\"icon\" href=\"images/favicon.png\">")
    "<script type=\"text/javascript\">
    /*
@@ -98,19 +136,72 @@
    "
    ))
 
-(setq org-static-blog-page-preamble
-"<div class=\"header\">
-  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
-  <br>
-    <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
-    <a href=\"https://alhassy.github.io/archive\">Archive</a>
-    <a href=\"https://alhassy.github.io/tags\">Tags</a>
-    <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
-    <a href=\"https://alhassy.github.io/about\">About</a>
-</div>")
+(org-deflink blog
+  "Provide the styles for “www.alhassy.com”'s “header” and “footer”.
+
+The use of “blog:footer” aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
+and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function."
+      (pcase o-label
+        ("header" (concat
+                   org-static-blog-page-preamble
+                   org-static-blog-page-header
+                   "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
+                   "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
+                   "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
+                   ;; The use of the “post-title” class is so that the org-static-blog-assemble-rss method can work as intended.
+                   (or (ignore-errors (format "<br><center><h1 class=\"post-title\">%s</h1></center>" (org-static-blog-get-title (buffer-file-name)))) "")))
+        ("footer" (org-static-blog-post-postamble (buffer-file-name)))
+        (_ "")))
+
+(defun blog/style-setup (_backend)
+  "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags)."
+    (goto-char (point-min))
+    (insert "\n blog:header \n"
+            "\n* Tags, then Image :ignore:"
+            "\n#+html: "
+            "<center>"
+            (blog/tags-of-file (buffer-file-name))
+            "</center>"
+            "\n#+html: "
+            (s-collapse-whitespace (my/org-static-blog-assemble-image (buffer-file-name) (f-full "~/blog/images")))
+            "\n")
+
+    ;; It seems I have essentially 3 different ways to handle things: Preview, Publish, Index. Consider brining those closer
+    ;; together. If I decided to switch to the org-static-blog-publish-file approach, then I would need to
+    ;; explicitly write #+begin_abstract...#+end_abstract, due to how I've defined
+    ;; org-static-blog-post-preamble. (See also org-static-blog-assemble-multipost-page for how I handle the abstract there.)
+    ;;
+    ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
+    ;; (In case we are narrowed, we only act when we can find the Abstract.)
+    (when (re-search-forward "^\* Abstract" nil t)
+      (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+      (forward-line)
+      (insert "\n#+begin_abstract\n")
+      (call-interactively #'org-forward-heading-same-level)
+    (insert "\n#+end_abstract\n"))
+
+    (goto-char (point-max))
+    ;; The Org file's title is already shown via blog:header, above, so we disable it in the preview.
+    (insert (format "\n* footer :ignore: \n blog:footer \n #+options: title:nil \n")))
+
+(cl-defun blog/preview ()
+  "Enable preview-on-save, and add blog/style-setup from Org's export hook."
+  (interactive)
+  ;; Let's ensure we have no xwidget buffer lying around, otherwise Emacs might hang.
+  (-let [kill-buffer-query-functions nil]
+    (mapcar #'kill-buffer (--filter (equal 'xwidget-webkit-mode (buffer-local-value 'major-mode it)) (buffer-list))))
+  ;; Inserting doc:org-link/blog /seamlessly/ via the export process
+  (add-hook 'org-export-before-processing-hook  #'blog/style-setup)
+  ;; Preview with every save
+  (org-preview-html-mode))
+
+(cl-defun blog/preview/disable ()
+  "Disable preview-on-save, and remove blog/style-setup from Org's export hook."
+  (interactive)
+  (remove-hook 'org-export-before-processing-hook #'blog/style-setup)
+  (org-preview-html-mode -1))
 
 (advice-add 'org-html--translate :before-until 'display-toc-as-Ξ)
-
 ;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
 
 (defun display-toc-as-Ξ (phrase info)
@@ -123,10 +214,180 @@
       Ξ
     </a> ")))
 
-(setq org-static-blog-page-postamble
+;; Table captions should be below the tables
+(setq org-html-table-caption-above nil
+      org-export-latex-table-caption-above nil)
+
+(setq org-static-blog-page-preamble
+"<div class=\"header\">
+  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
+  <br>
+    <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
+    <a href=\"https://alhassy.github.io/archive\">Archive</a>
+    <a href=\"https://alhassy.github.io/tags\">Tags</a>
+    <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
+    <a href=\"https://alhassy.github.io/about\">About</a>
+</div>")
+
+(cl-defun my/org-static-blog-assemble-image (file &optional explicit-image-path-prefix)
+  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
+
+By default, the image should be located in the top-level `images/' directory.
+If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
+in the image path.
+
+Here are 4 example uses:
+
+#+fileimage: emacs-birthday-present.png
+#+fileimage: ../images/emacs-birthday-present.png
+#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
+#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
+
++ Notice that the second indicates explicit width and height.
++ (To make the first approach work with local previews,
+   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'.)
++ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
+"
+ (with-temp-buffer
+   (insert-file-contents file)
+   (goto-char 0)
+   (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
+   (-let [(image width height no-border?)
+          (s-split " " (substring-no-properties
+                        (or (match-string 1)
+                            "emacs-birthday-present.png")))]
+     (setq width (or width 350))
+     (setq height (or height 350))
+     (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
+     (cond
+      ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
+      (explicit-image-path-prefix (setq image (format "%s/%s"  explicit-image-path-prefix image)))
+      ((not (s-contains? "/" image)) (setq image (format "images/%s" image)))
+       )
+
+     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
+       (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+       (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
+       (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+       (format "<center><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
+             href title src no-border? width height)))))
+
+(defun org-static-blog-post-preamble (post-filename)
+  "Returns the formatted date and headline of the post.
+This function is called for every post and prepended to the post body.
+Modify this function if you want to change a posts headline."
+  (concat
+   ;; The title
+   "<h1 class=\"post-title\">"
+   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"
+   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
+   (org-static-blog-get-title post-filename)
+   "</a>"
+   "</h1></div>"
+   ;; The date
+   "<div style=\"text-align: center;\">"
+   (format-time-string (org-static-blog-gettext 'date-format)
+                       (org-static-blog-get-date post-filename))
+   "</div>"
+   ;; The article's image
+   (my/org-static-blog-assemble-image post-filename)
+   "<br><center><strong>Abstract</strong></center>"))
+
+(use-package org-static-blog)
+(use-package lf) ;; So we can use `lf-string' for multi-line strings supporting interpolation:
+;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
+
+(setq org-static-blog-publish-title "Life & Computing Science")
+(setq org-static-blog-publish-url "https://alhassy.github.io/")
+(setq org-static-blog-publish-directory "~/blog/")
+(setq org-static-blog-posts-directory "~/blog/posts/")
+(setq org-static-blog-drafts-directory "~/blog/drafts/")
+
+;; Use “#+filetags: τ₁ τ₂ … τₙ”
+(setq org-static-blog-enable-tags t)
+
+;; I'd like to have tocs and numbered headings
+(setq org-export-with-toc t)
+(setq org-export-with-section-numbers t)
+
+(defun org-static-blog-post-postamble (post-file-name)
+  "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
+
+This function is called for every post and the returned string is appended to the post body."
+  (concat
+   "<hr>"
+   "<center>"
+   (blog/htmlize-file post-file-name)
+   "&ensp;"
+   (blog/history-of-file post-file-name)
+   ;;
+   "<br>"
+   "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
+   "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
+   "</a>"
+   ;;
+   "<br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
+   ;; org-static-blog-page-postamble
+   (blog/license)
+   ;; (blog/comments) ;; TODO. Not working as intended; low priority.
+   "</center>"
+   (blog/read-remaining-js)))
+
+(defun blog/tags-of-file (file-name)
+  "Get an HTML listing of tags, as shields.io bages, associated with the given file."
+          (concat
+   ;; Straightforward implementation.
+   ;; "<div class=\"taglist\">"
+   ;; (org-static-blog-post-taglist file-name)
+   ;; "</div>"
+
+  ;; Badges implementation
+   (if (not file-name)
+       ""
+     (concat
+      (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
+              (org-link/octoicon "tag" nil 'html))
+      (s-join " "
+              (--map  (org-link/badge
+                       (format "|%s|grey|%stag-%s.html"
+                               (s-replace "-" "_" it)
+                               org-static-blog-publish-url it)
+                       nil 'html)
+                      (org-static-blog-get-tags file-name)))))))
+
+(defun blog/history-of-file (file-name)
+  "Get an HTML badge that points to the Github history of a given file name, in my blog."
+  (concat
+     "<a class=\"tooltip\" title=\"See the various edits to this article over time\""
+     "href=\"https://github.com/alhassy/alhassy.github.io/commits/master/"
+   "posts/" (f-base file-name) ".org\"><img
+   src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
+
+(defun blog/htmlize-file (file-name)
+  "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file.
+
+We do not take the extra time to produce a colourised file when we are previewing an article."
+  (unless org-preview-html-mode
+(let ((org-hide-block-startup nil))
+  (with-temp-buffer
+    (find-file file-name)
+    ;; (insert "\n#+HTML_HEAD: <link href=\"../doom-solarized-light.css\" rel=\"stylesheet\">\n")
+    (org-mode)
+    (outline-show-all)
+    (switch-to-buffer (htmlize-buffer))
+    (write-file (concat "~/blog/" (f-base file-name) ".org.html"))
+    (kill-buffer))))
+(concat
+"<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
+   (f-base file-name) ".org.html\"><img
+   src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"))
+
+(defun blog/license ()
+  "Get HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License."
 (s-collapse-whitespace (s-replace "\n" ""
 "
-<center>
+<center style=\"font-size: 12px\">
   <a rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/3.0/\">
      <img alt=\"Creative Commons License\" style=\"border-width:0\"
           src=\"https://i.creativecommons.org/l/by-sa/3.0/88x31.png\"/>
@@ -148,10 +409,14 @@
 
   is licensed under a
   <a rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/3.0/\">
-    Creative Commons Attribution-ShareAlike 3.0 Unported License.
+    Creative Commons Attribution-ShareAlike 3.0 Unported License
   </a>
-</center>
+</center>")))
 
+(defun blog/comments ()
+  "Embed Disqus Comments for my blog"
+(s-collapse-whitespace (s-replace "\n" ""
+"
 <div id=\"disqus_thread\"></div>
 <script type=\"text/javascript\">
 /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
@@ -169,89 +434,12 @@ var disqus_shortname = 'life-and-computing-science';
     <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
 <a href=\"http://disqus.com\" class=\"dsq-brlink\">comments powered by <span class=\"logo-disqus\">Disqus</span></a>")))
 
-(cl-defun my/org-static-blog-assemble-image (file)
-"Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form."
-(with-temp-buffer
-  (insert-file-contents file)
-  (goto-char 0)
-  (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
-  (-let [(image width height no-border?)
-         (s-split " " (substring-no-properties
-                       (or (match-string 1)
-                           "emacs-birthday-present.png")))]
-    (setq width (or width 350))
-    (setq height (or height 350))
-    (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
-    (format "<center> <img src=\"images/%s\" alt=\"Article image\"
-            %s width=\"%s\" height=\"%s\" align=\"top\" /> </center>"
-            image no-border? width height))))
+(defun blog/read-remaining-js ()
+  "Get the HTML required to make use of ReadRemaining.js"
 
-(defun org-static-blog-post-preamble (post-filename)
-  "Returns the formatted date and headline of the post.
-This function is called for every post and prepended to the post body.
-Modify this function if you want to change a posts headline."
-  (concat
-   ;; The title
-   "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  
-   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename)
-   "</a>"
-   "</h1></div>"
-   ;; Move to the footer? Near the ‘Tags’ of the article?
-   ;; The date
-   "<div style=\"text-align: center;\">"
-   (format-time-string (org-static-blog-gettext 'date-format)
-                       (org-static-blog-get-date post-filename))
-   "</div>"
-   ;; The article's image
-   (my/org-static-blog-assemble-image post-filename)
-   "<br><center><strong>Abstract</strong></center>"))
-
-(defun org-static-blog-post-postamble (post-filename)
-  "Returns the tag list and comment box at the end of a post.
-This function is called for every post and the returned string is
-appended to the post body, and includes the tag list generated by
-followed by the HTML code for comments."
-;; Generate an htmlized version of the source file
-(let ((org-hide-block-startup nil))
-  (with-temp-buffer
-    (find-file post-filename)
-    ;; (insert "\n#+HTML_HEAD: <link href=\"../doom-solarized-light.css\" rel=\"stylesheet\">\n")
-    (org-mode)
-    (outline-show-all)
-    (switch-to-buffer (htmlize-buffer))
-    (write-file (concat "~/blog/" (f-base post-filename) ".org.html"))
-    (kill-buffer)))
-  ;; Actual bottom matter
-  (concat
-   ;; Tags
-   "<div class=\"taglist\">"
-   (org-static-blog-post-taglist post-filename)
-   "</div>"
-   ;;
-   "<center><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong></center>"
-   ;; Link to source and history
-   "<center>"
-   ;; "<a href=\"https://raw.githubusercontent.com/alhassy/alhassy.github.io/master/posts/"
-   "<a href=\""
-   (f-base post-filename) ".org.html\"><img
-   src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"
-   "&emsp;"
-   "<a href=\"https://github.com/alhassy/alhassy.github.io/commits/master/"
-   "posts/" (f-base post-filename) ".org\"><img
-   src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"
-   "<br>"
-   "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
-   "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
-   "</a>"
-   "</center>"
-   ;; Comments
-   (if (string= org-static-blog-post-comments "")
-       ""
-     (concat "\n<div id=\"comments\">"
-             org-static-blog-post-comments
-             "</div>"))
+  ;; [Maybe Not True] ReadReamining.js does not work well with xWidget browser within Emacs
+  (if (equal org-preview-html-viewer 'xwidget)
+      ""
 
    ;; ReadRemaining.js ∷ How much time is left to finish reading this article?
    ;;
@@ -274,100 +462,95 @@ followed by the HTML code for comments."
    " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
    " tweet:https://alhassy.github.io/"))
 
-(setq show-reading-time nil)
-
 (defun org-static-blog-assemble-multipost-page
     (pub-filename post-filenames &optional front-matter)
-  "Assemble a page that contains multiple posts one after another.
-Posts are sorted in descending time."
+  "Assemble a page that contains multiple posts “previews” one after another.
+
+- Each “preview” consists of a post's title, tags, image, and abstract.
+- Previews are sorted in descending time.
+
+You can view the generated ~/blog/index.html by invoking:
+   (progn (my/blog/style-setup/disable) (org-static-blog-assemble-index))
+"
+  (setq show-reading-time nil) ;; Experimental.
   (setq post-filenames
         (sort post-filenames (lambda (x y)
                                (time-less-p (org-static-blog-get-date y)
                                             (org-static-blog-get-date x)))))
-  (with-temp-buffer
-    (insert
-     (concat
-      "#+EXPORT_FILE_NAME: " pub-filename
-      "\n#+options: toc:nil title:nil html-postamble:nil"
-      "\n#+title: " (if (equal "index" (f-base pub-filename))
-                        org-static-blog-publish-title
-                        (f-base pub-filename))
-      "\n#+begin_export html\n "
-        org-static-blog-page-preamble
-        org-static-blog-page-header
-        (if front-matter front-matter "")
-      "\n#+end_export"
 
-      "\n\n"
-      (if (equal "index" (f-base pub-filename))
-          (format "#+begin_export html\n%s\n#+end_export\n%s"
-                  org-static-blog-page-header index-content-header)
-        "")
+  (let ((org-header (concat "#+EXPORT_FILE_NAME: " pub-filename
+                            "\n#+options: toc:nil title:nil html-postamble:nil"
+                            "\n#+title: " (if (equal "index" (f-base pub-filename))
+                                              org-static-blog-publish-title
+                                            (f-base pub-filename))
+                            "\n#+begin_export html\n "
+                            org-static-blog-page-preamble
+                            org-static-blog-page-header
+                            (if front-matter front-matter "")
+                            "\n#+end_export"
+                            ;; Extra styling of abstracts.
+                            ;; Works; but not needed.
+                            ;; "\n#+HTML_HEAD_EXTRA: <style> div.abstract {background-color: pink !important;} </style>"
+                            ))
+        (index-header (if (equal "index" (f-base pub-filename))
+                          (format "#+begin_export html\n%s\n#+end_export\n%s"
+                                  org-static-blog-page-header index-content-header)
+                        ""))
+        (_ (view-echo-area-messages))
+        (abstracts-of-posts (--map
+                             (concat
+                              (progn (message "Processing %s..." it) "") ;; Progress indicator
 
-      "\n\n" ;; abstracts of posts
-      (thread-last post-filenames
-        (--map
-         (format
-          (concat
-           ;; ⟨0⟩ Title and link to article
-           "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>"
-           ;; ⟨1⟩ Tags and reading time
-           "\n#+begin_center\n%s\n%s\n#+end_center"
-           ;; ⟨2⟩ Article image
-           "\n@@html:%s@@"
-           ;; ⟨3⟩ Preview
-           "\n#+INCLUDE: \"%s::*Abstract\" :only-contents t"
-           ;; ⟨4⟩ “Read more” link
-           "\n@@html:<p style=\"text-align:right\">@@"
-           " badge:Read|more|green|%s|read-the-docs @@html:</p>@@")
-          ;; ⟨0⟩ Title and link to article
-          (concat org-static-blog-publish-url (f-base it))
-          (org-static-blog-get-title it)
-          ;; ⟨1⟩ Tags and reading time
-          (concat octoicon:tag " "
-                  (s-join " "
-                          (--map (format "badge:|%s|grey|%stag-%s.html"
-                                         (s-replace "-" "_" it)
-                                         org-static-blog-publish-url it)
-                                 (org-static-blog-get-tags it))))
-          (if (not show-reading-time)
-              ""
-            (format "\n%s %s mins read"
-                    octoicon:clock
-                    (with-temp-buffer (insert-file-contents it)
-                                      (org-ascii-export-as-ascii)
-                                      (setq __x
-                                            (count-words (point-min) (point-max)))
-                                      (kill-buffer "*Org ASCII Export*")
-                                      (delete-other-windows)
-                                      (/ __x 200)))) ;; 200 words per minute reading
-          ;; ⟨2⟩ Article image
-          (my/org-static-blog-assemble-image it)
-          ;; ⟨3⟩ Preview
-          it
-          ;; ⟨4⟩ “Read more” link
-          (concat org-static-blog-publish-url (f-base it))))
-        (s-join "\n\n"))
+                              ;; ⟨0⟩ Title and link to article
+                              (format "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>"
+                                      (concat org-static-blog-publish-url (f-base it))
+                                      (org-static-blog-get-title it))
 
-      ;; bottom matter
-      "\n#+begin_export html:\n"
-      "<hr><hr> <div id=\"archive\">"
-      "<a href=\""
-      (org-static-blog-get-absolute-url org-static-blog-archive-file)
-      "\">" (org-static-blog-gettext 'other-posts) "</a>"
-      "</div>"
-      "</div>"
-      "<div id=\"postamble\" class=\"status\">"
-      org-static-blog-page-postamble
-      "</div>"
-      "\n#+end_export"))
-    (org-mode)
-    (org-html-export-to-html)))
+                              ;; ⟨1⟩ Tags and reading time
+                              (format "\n#+begin_export html\n<center>%s\n%s</center>\n#+end_export"
+                                      (blog/tags-of-file it)
+                                      ;; Experimenting.
+                                      (if (not show-reading-time)
+                                          ""
+                                        (format "\n%s %s mins read"
+                                                "octoicon:clock"
+                                                (with-temp-buffer (insert-file-contents it)
+                                                                  (org-ascii-export-as-ascii)
+                                                                  (setq __x
+                                                                        (count-words (point-min) (point-max)))
+                                                                  (kill-buffer "*Org ASCII Export*")
+                                                                  (delete-other-windows)
+                                                                  (/ __x 200)))) ;; 200 words per minute reading
+                                      )
 
-;; MA: Relocate this to my init.
-;; Table captions should be below the tables
-(setq org-html-table-caption-above nil
-      org-export-latex-table-caption-above nil)
+                              ;; ⟨2⟩ Article image
+                              (format "\n@@html:%s@@\n" (my/org-static-blog-assemble-image it))
+
+                              ;; ⟨3⟩ Preview
+                              (format "\n#+INCLUDE: \"%s::*Abstract\" :only-contents t" it)
+
+                              ;; ⟨4⟩ “Read more” link
+                              (format (concat "\n@@html:<p style=\"text-align:right\">@@"
+                                              " badge:Read|more|green|%s|read-the-docs @@html:</p>@@")
+                                      (concat org-static-blog-publish-url (f-base it))))
+                             post-filenames))
+        ;; This is the bottom-most matter in the index.html page
+        (show-older-posts (concat  "\n#+begin_export html\n"
+                                   "<hr> <div id=\"archive\">"
+                                   "<a href=\""
+                                   (org-static-blog-get-absolute-url org-static-blog-archive-file)
+                                   "\">" (org-static-blog-gettext 'other-posts) "</a>"
+                                   "</div>"
+                                   "</div>"
+                                   (blog/license)
+                                   "\n#+end_export")))
+    (with-temp-buffer
+      (insert (s-join "\n\n" (list org-header
+                                   index-header
+                                   (s-join "\n\n" abstracts-of-posts)
+                                   show-older-posts)))
+      (org-mode)
+      (org-html-export-to-html))))
 
 (defvar my/blog/tags
   '(emacs faith category-theory order-theory
@@ -406,40 +589,9 @@ The user notices this and picks a new name."
             "\n#+fileimage: " (completing-read
                                "Image: "
                                (mapcar #'f-filename (f-entries "~/blog/images/")))
-            "\n#+include: ../MathJaxPreamble.org"
+            "\n#+include: ../MathJaxPreamble.org" ;; TODO. Is this someting I actually want here? If so, then consider tangling it from AlBasmala! (and add the whitespace-MathJax setup from above!)
             "\n#+description: "
                (setq desc (read-string "Article Purpose: "))
-            "\n\n* Abstract :ignore: \n" desc
+            "\n\n* Abstract :ignore: \n #+begin_abstract\n" desc
+            "\n#+end_abstract"
             "\n\n* ???")))
-
-;; Override all minor modes that use this binding.
-(bind-key* (kbd "C-c C-b")
-  (lambda (&optional prefix)
-"C-c C-b        ⇒ Publish current buffer
-C-u C-c C-b     ⇒ Publish entire blog
-C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts
-                  (This will take time!)
-"
-     (interactive "P")
-     (pcase (or (car prefix) 0)
-       (0  (org-static-blog-publish-file (f-full (buffer-name))))
-           ;; (browse-url-of-file (format "%s%s.html" org-static-blog-posts-directory
-           ;;                            (f-base (buffer-name))))
-       ;; Apparently I have to publish the current buffer before trying
-       ;; to publish the blog; otherwise I got some errors.
-       (4  (org-static-blog-publish-file (f-full (buffer-name)))
-           (org-static-blog-publish))
-       (16 ;; (org-static-blog-publish t) ⇒ Crashes.
-           ;; Delete all .html files, except “about”
-           (thread-last (f-entries "~/blog/")
-             (--filter (and (equal (f-ext it) "html")
-                            (not (member (f-base it) '("about")))))
-             (--map (f-delete it))) 
-           ;; Publish as usual
-           (org-static-blog-publish-file (f-full (buffer-name)))
-           (org-static-blog-publish)))))
-
-(s-join "\n" (--map (concat "#+HTML: " it)
-  (s-split "\n" (concat
-               org-static-blog-page-postamble
-               (org-static-blog-post-postamble "~/blog/AlBasmala.org")))))
