@@ -1,169 +1,21 @@
 # -*- eval: (org-babel-load-file "AlBasmala.org") -*-
-#+title: AlBasmala: Blogging with Emacs & Org-mode (•̀ᴗ•́)و
+#+title: AlBasmala: @@html: <br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 #+description: How my blog is setup (•̀ᴗ•́)و
 #+date: <2020-05-03 19:29>
 # +DATE: 2018-06-01 ~ date of very first AlBasmala, for a Jekyll-basked blog
-
 #+filetags: emacs org html css javascript git
-# For publishing:
 #+fileimage: org_logo.png 150 150 no-border
-# For local testing:
-# +fileimage: ./images/org_logo.png 150 150 no-border
-#+options: d:results
-#+options: toc:2 html-postamble:nil d:nil
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 #+options: broken-links:t
 
-# TODO. This seems important!
-# (org-static-blog-assemble-index)
-
-# # I want to avoid any @@backend:...@@ from appearing in the browser frame's title
-# #+begin_export html
-# <script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script>
-# #+end_export
-#
+blog:sanitise-title
 
 # Use checkmarks instead of boring bullet points
 #+html: <style> ul {list-style-type: " ✓"} </style>
 
-# TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move  them to my todo.org::Blog::Ideas section!
-
-:Publish:
-
-   ;; Disable htmlizsation. Nice to have, but not urgent.
-   (defun org-static-blog-post-postamble (post-filename) "N/A" "N/A")
-
-   (progn
-   (my/blog/style-setup/disable)
-   (org-static-blog-publish-file (f-full (buffer-file-name)))
-           (browse-url-of-file (format "file://%s%s.html" (file-truename org-static-blog-publish-directory)(f-base (buffer-file-name)))))
-
-
-:end:
-
-*MA: TODO. Something to think about.*
-- The preview does a great job at "publishing" my articles, as such, do I even want to use org-static-blog-publish-file ?
-- [ ] Using my preview approach, Publish & commit & push my dora.org and see how well that works.
-
-
-(I would need org-static-blog-publish-file if I were to republish the entire blog, say via
-org-static-blog-publish)
-Otherwise, I could make a nice wrapper that invokes the following:
-
-(buffer-file-name)
-
-#+begin_src emacs-lisp
-(cl-defun blog/git (cmd &rest args)
-  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
-  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
-
-(cl-defun blog/publish-current-article ()
-  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
-  (interactive)
-    (blog/git "add %s" (buffer-file-name))
-  ;; Placed article html into the published blog directory
-  (blog/preview)
-  (save-buffer)
-  (-let [article (concat (f-base (buffer-file-name)) ".html")]
-    (shell-command (concat "mv " article " ~/blog/"))
-    (blog/git "add %s %s" (buffer-file-name) article))
-
-  ;; Updated index.html, tags, archive, and rss to now include this new article
-
-  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
-  (blog/preview/disable)
-  (view-echo-area-messages)
-
-  (message "⇒ HTMLizing article...")
-  (blog/htmlize-file (buffer-file-name))
-  (blog/git "add %s.org.html" (f-base (buffer-file-name)))
-
-  (message "⇒ Assembling tags...")
-  (org-static-blog-assemble-tags)
-  (blog/git "add tag*")
-
-  (message "⇒ Assembling archive...")
-  (org-static-blog-assemble-archive)
-  (blog/git "add archive.html")
-
-  (message "⇒ Assembling RSS feed...")
-  (org-static-blog-assemble-rss)
-  (blog/git "add rss.xml")
-
-  (message "⇒ Assembling landing page...")
-  (org-static-blog-assemble-index)
-  (blog/git "add index.html")
-
-  (shell-command (format "git commit -m \"Publish: Article %s.org\"; git push" (f-base (buffer-file-name))))
-  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
-#+end_src
-
-
-* TODO COMMENT Instructions
-:PROPERTIES:
-:CUSTOM_ID: COMMENT
-:END:
-
-1. (org-babel-load-file "~/blog/AlBasmala.org")
-
-(cl-defun my/org-static-blog-assemble-image (file &optional explicit-image-path-prefix) "N/A" "HACK: No image")
-a
-(defun org-static-blog-post-postamble (post-filename) "N/A" "N/A")
-
-
-3.    (progn
-   (my/blog/style-setup/disable)
-   (org-static-blog-publish-file (f-full (buffer-file-name)))
-           (browse-url-of-file (format "file://%s%s.html" (file-truename org-static-blog-publish-directory)(f-base (buffer-file-name)))))
-
-
-
-1. (my/blog/style-setup/disable)
-   ;; Disable htmlizsation. Nice to have, but not urgent.
-   (defun org-static-blog-post-postamble (post-filename) "N/A" "N/A")
-
-
-2. (org-static-blog-publish-file (buffer-file-name))
-# 3. (org-static-blog-publish (buffer-file-name))
-
-Finally, produce an index with:
-- (progn (my/blog/style-setup/disable) (org-static-blog-assemble-index))
-
-
-
-** DONE COMMENT Typical workflow: How do I publish an article?       :ignore:
-CLOSED: [2022-10-21 Fri 15:50]
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-Typical-workflow-How-do-I-publish-an-article
-:END:
-# TODO. ? +include: ~/.emacs.d/init.org::#Mini-tutorial-on-Org-mode
-#+begin_details "Typical workflow: How do I publish an article?"
-1. src_emacs-lisp[:exports code]{(load-file "~/blog/AlBasmala.el")}
-
-2. Invoke TODO doc ?my/blog/new-article
-
-   [TODO. Make this part of my/blog/new-article; but still leave the instructions here as a precautionary measure]
-   This sets up a new article based on existing tags and posts. Moreover it also does: (TODO, to implement!)
-   1. Do =M-x org-preview-html-mode=
-   2. Now every alteration, followed by a save =C-x C-s= will result in a live preview of the blog article, nearly instantaneous.
-
-4. Until content:
-   1. Write, write, and write!
-   2. kbd:C-x_C-s, TODO doc ?save-buffer
-   3. Preview
-
-   +4. kbd:C-c_C-e_h_o, or a bit slower, kbd:C-c_C-b+ +(TODO doc ?org-static-blog-publish-file)+ +For the first option, you could
-   stick ~blog/header~ at the very top and ~blog/footer~ at the very bottom to get a similar setup.+ ++ The Disqus
-   discussion won't show, that's OK since it'll show when the article is published, in the final step.+
-5. Get this new article showing up in index, RSS, etc, with kbd:C-u_C-c_C-b.
-6. Push with TODO doc ?magit-status.
-7. NOTE: It takes about. 20secs ~ 1min for the changes to be live on github pages.
-#+end_details
+# TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
 
 * COMMENT Presentation Order
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-Presentation-Order
-:END:
 We start off with
 1. the styling I'd like to have,
 2. then move on to grouping those styles togther,
@@ -176,11 +28,6 @@ We start off with
 7. .
 
 * Abstract                                                           :ignore:
-:PROPERTIES:
-:CUSTOM_ID: Abstract
-:END:
-
-#+begin_abstract
 How my blog is setup (•̀ᴗ•́)و
 
 Here are some notable features of my blog.
@@ -207,25 +54,37 @@ Here are some notable features of my blog.
     article --- §[[footers]]
 + Style inline code and tables --- §[[curvy-blocks]]
 + Unfurling links --- §[[unfurling]]
-#+end_abstract
 
+* Typical workflow: How do I publish an article?                     :ignore:
+CLOSED: [2022-10-21 Fri 15:50]
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Typical-workflow-How-do-I-publish-an-article
+:END:
+# TODO. ? +include: ~/.emacs.d/init.org::#Mini-tutorial-on-Org-mode
 
-#+begin_details "The above “Abstract” is an Org-mode Special Block"
-Below is an alteration from the examples of the docstring of doc:org-defblock.
-#+begin_src emacs-lisp
-(org-defblock abstract (main) nil
-  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
+#+begin_details "Typical workflow: How do I publish an article?" :title-color red
+1. src_emacs-lisp[:exports code]{(org-babel-load-file "~/blog/AlBasmala.org")}
 
-   Supported backends: HTML. "
-   (format (concat
-            "<div class=\"abstract\" style=\"border: 1px solid black;"
-            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
-            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
-            "<center> <strong class=\"tooltip\""
-            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
-            "%s </div>")
-           contents))
-#+end_src
+2. Invoke doc:blog/new-article
+
+   This sets up a new article based on existing tags and posts. Moreover it also does:
+   1. Do =M-x org-preview-html-mode=
+   2. Now every alteration, followed by a save kbd:C-x_C-s will result in a live preview of the blog article, nearly
+      instantaneous.
+   # [This is part of blog/new-article; but left the instructions here as a precautionary measure]
+
+3. Until content:
+   1. Write, write, and write!
+   2. kbd:C-x_C-s
+   3. Preview
+
+   Consider using kbd:C-x_n_s, or kbd:C-x_n_n, to focus your attention on a
+   particular section, /thereby/ dramatically
+   increasing the speed at which the preview renders.
+
+4. Execute doc:blog/publish-current-article when you're done.
+   - This gets the new article showing up in index, RSS, archive, and updates the tags.
+5. NOTE: It takes about. 20secs ~ 1min for the changes to be live on github pages.
 #+end_details
 
 * /Style/! ✨ What do we want to be inserted into the head of every page?
@@ -349,7 +208,11 @@ This is a minor alteration from the examples within the docstring of doc:org-def
   "Provide the styles for “www.alhassy.com”'s “header” and “footer”.
 
 The use of “blog:footer” aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
-and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function."
+and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function.
+
+Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
+We accomplish this with the help of some handy-dandy JavaScript: Just use “blog:sanitise-title”.
+"
       (pcase o-label
         ("header" (concat
                    org-static-blog-page-preamble
@@ -358,20 +221,31 @@ and provides a Disqus comments sections. For details, consult the `org-static-bl
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    ;; The use of the “post-title” class is so that the org-static-blog-assemble-rss method can work as intended.
-                   (or (ignore-errors (format "<br><center><h1 class=\"post-title\">%s</h1></center>" (org-static-blog-get-title (buffer-file-name)))) "")))
+                   (thread-last (org-static-blog-get-title (buffer-file-name))
+                                (s-replace-regexp "@@html:" "")
+                                (s-replace-regexp "@@" "")
+                                (format "<br><center><h1 class=\"post-title\">%s</h1></center>"))))
         ("footer" (org-static-blog-post-postamble (buffer-file-name)))
+        ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
         (_ "")))
 #+end_src
 
 See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 #+end_details
+
 ** A function to insert doc:org-link/blog into a buffer
 :PROPERTIES:
 :CUSTOM_ID: A-function-to-insert-doc-org-link-blog-into-a-buffer
 :END:
 #+begin_src emacs-lisp
 (defun blog/style-setup (_backend)
-  "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags)."
+  "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags).
+
+There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
+Notice that if you explicitly provide options to change the toc, or show drawers, etc;
+then your options will be honoured. (Since they will technically come /after/ the default options,
+which I place below at the top of the page.)
+"
     (goto-char (point-min))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
             "\n blog:header \n"
@@ -429,6 +303,25 @@ Note: doc:my/org-static-blog-assemble-image is defined later on in this article.
 
 Upon a save, kbd:C-x_C-s, a new HTML file is created ---bearing the same name as the Org file. It seems an /incremental/
 export is performed and so this is rather fast ---at least much faster than manually invoking kbd:C-c_C-e_h_o.
+
+** Abstract Special Block                   :Relocate_near_blog_setup:
+#+begin_details "The above “Abstract” is an Org-mode Special Block" :title-color "orange"
+Below is an alteration from the examples of the docstring of doc:org-defblock.
+#+begin_src emacs-lisp
+(org-defblock abstract (main) nil
+  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
+
+   Supported backends: HTML. "
+   (format (concat
+            "<div class=\"abstract\" style=\"border: 1px solid black;"
+            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
+            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
+            "<center> <strong class=\"tooltip\""
+            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
+            "%s </div>")
+           contents))
+#+end_src
+#+end_details
 
 * Ξ: Floating /Table of Contents/
   :PROPERTIES:
@@ -558,7 +451,7 @@ How did I get here?
 #+macro: from-my-init-text /This section has been =#+include='d from my init.org/, {{{init}}}
 #+macro: from-my-init @@html: <center class="tiny" style="font-size: 15px">@@ {{{from-my-init-text}}} @@html: </center>@@
 
-* COMMENT Ensuring Useful HTML Anchors
+* Ensuring Useful HTML Anchors
 CLOSED: [2022-10-22 Sat 22:08]
   :PROPERTIES:
   :CUSTOM_ID: Ensuring-Useful-HTML-Anchors
@@ -568,7 +461,7 @@ CLOSED: [2022-10-22 Sat 22:08]
 <<ensuring-useful-html-anchors>>
 #+include: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
 
-* COMMENT Clickable Headlines
+* Clickable Headlines
 CLOSED: [2022-10-22 Sat 22:08]
   :PROPERTIES:
   :CUSTOM_ID: Clickable-Headlines
@@ -890,6 +783,7 @@ but =org-static-blog= uses the =post-title= blog, so I'll override the
 # - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
 #  just dumps the title in-place; here I provide a support for just =<br>=.
 #+begin_src emacs-lisp -r -n -n
+;; MA: This can be deleted?? Do a search for post-title in this article to see why?
 (defun org-static-blog-post-preamble (post-filename)
   "Returns the formatted date and headline of the post.
 This function is called for every post and prepended to the post body.
@@ -1383,27 +1277,90 @@ You can view the generated ~/blog/index.html by invoking:
       (org-html-export-to-html))))
 #+end_src
 #+end_details
-* Getting Started:  =my/blog/new-article=
+* Actually publishing an article
+
+# My preview setup does a great job at "publishing" my articles, as such, it seems I don't really need use org-static-blog-publish-file.
+
+# (I would need org-static-blog-publish-file if I were to republish the entire blog, say via org-static-blog-publish)
+
+#+begin_src emacs-lisp
+(cl-defun blog/git (cmd &rest args)
+  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
+  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
+
+(cl-defun blog/publish-current-article ()
+  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
+  (interactive)
+    (blog/git "add %s" (buffer-file-name))
+  ;; Placed article html into the published blog directory
+  (blog/preview)
+  (save-buffer)
+  (-let [article (concat (f-base (buffer-file-name)) ".html")]
+    (shell-command (concat "mv " article " ~/blog/"))
+    (blog/git "add %s %s" (buffer-file-name) article))
+
+  ;; Updated index.html, tags, archive, and rss to now include this new article
+
+  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
+  (blog/preview/disable)
+  (view-echo-area-messages)
+
+  (message "⇒ HTMLizing article...")
+  (blog/htmlize-file (buffer-file-name))
+  (blog/git "add %s.org.html" (f-base (buffer-file-name)))
+
+  (message "⇒ Assembling tags...")
+  (org-static-blog-assemble-tags)
+  (blog/git "add tag*")
+
+  (message "⇒ Assembling archive...")
+  (org-static-blog-assemble-archive)
+  (blog/git "add archive.html")
+
+  (message "⇒ Assembling RSS feed...")
+  (org-static-blog-assemble-rss)
+  (blog/git "add rss.xml")
+
+  (message "⇒ Assembling landing page...")
+  (org-static-blog-assemble-index)
+  (blog/git "add index.html")
+
+  (blog/git "commit -m \"%s\"; git push"
+            (if current-prefix-arg
+                (read-string "Commit message: ")
+              (format "Publish: Article %s.org" (f-base (buffer-file-name)))))
+
+  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
+
+
+#+end_src
+
+* Getting Started:  =blog/new-article=
   :PROPERTIES:
-  :CUSTOM_ID: my-blog-new-article
+  :CUSTOM_ID: blog-new-article
   :END:
 <<new-article>>
 
 Helper function to make a new article.
 #+BEGIN_SRC emacs-lisp -n
-(defvar my/blog/tags
+(defvar blog/tags
   '(emacs faith category-theory order-theory
     lisp types packages haskell agda
     c frama-c program-proving)
   "Tags for my blog articles.")
 
-;; Use C-SPC to select multiple items
-
-(defun my/blog/new-article ()
-  "Make a new article for my blog; prompting for the necessary ingredients.
+(defun blog/new-article ()
+"Make a new article for my blog; prompting for the necessary ingredients.
 
 If the filename entered already exists, we simply write to it.
-The user notices this and picks a new name."
+The user notices this and picks a new name.
+
+This sets up a new article based on existing tags and posts.
++ Use C-SPC to select multiple tag items
+
+Moreover it also enables `org-preview-html-mode' so that on every alteration,
+followed by a save, C-x C-s, will result in a live preview of the blog article,
+nearly instantaneously."
   (interactive)
   (let (file desc)
 
@@ -1423,7 +1380,7 @@ The user notices this and picks a new name."
             "\n#+email: "  user-mail-address
             "\n#+date: " (format-time-string "<%Y-%m-%d %H:%M>")
             "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
-                                                         my/blog/tags
+                                                         blog/tags
                                                          :marked-candidates t))
             "\n#+fileimage: " (completing-read
                                "Image: "
@@ -1433,7 +1390,8 @@ The user notices this and picks a new name."
                (setq desc (read-string "Article Purpose: "))
             "\n\n* Abstract :ignore: \n #+begin_abstract\n" desc
             "\n#+end_abstract"
-            "\n\n* ???")))
+            "\n\n* ???")
+    (blog/preview)))
 #+END_SRC
 
 <<unfurling>>
