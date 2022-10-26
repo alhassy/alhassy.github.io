@@ -122,7 +122,12 @@ which I place below at the top of the page.)
             (blog/tags-of-file (buffer-file-name))
             "</center>"
             "\n#+html: "
-            (s-collapse-whitespace (my/org-static-blog-assemble-image (buffer-file-name) (f-full "~/blog/images")))
+            (-let [art (buffer-file-name)]
+              ;; Need this conditional since AlBasmala lives in ~/blog whereas usually articles live in ~/blog/posts.
+              ;; TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think there's any real reason for breaking consistency.
+              (thread-last (if (equal (f-base art) "AlBasmala") "./images/" "../images/")
+                           (my/org-static-blog-assemble-image art)
+                           s-collapse-whitespace))
             "\n")
 
     ;; It seems I have essentially 3 different ways to handle things: Preview, Publish, Index. Consider brining those closer
@@ -548,7 +553,9 @@ You can view the generated ~/blog/index.html by invoking:
   (save-buffer)
   (-let [article (concat (f-base (buffer-file-name)) ".html")]
     (shell-command (concat "mv " article " ~/blog/"))
-    (blog/git "add %s %s" (buffer-file-name) article))
+    (blog/git "add %s %s" (buffer-file-name) article)
+    (when (equal (f-base (buffer-file-name)) "AlBasmala")
+      (blog/git "add AlBasmala.el")))
 
   ;; Updated index.html, tags, archive, and rss to now include this new article
 
