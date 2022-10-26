@@ -47,4 +47,5 @@ nearly instantaneously."
             "\n\n* Abstract :ignore: \n #+begin_abstract\n" desc
             "\n#+end_abstract"
             "\n\n* ???")
+    (save-buffer)
     (blog/preview)))
