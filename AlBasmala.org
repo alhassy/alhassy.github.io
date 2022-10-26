@@ -296,17 +296,19 @@ See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a 
 :PROPERTIES:
 :CUSTOM_ID: A-function-to-insert-doc-org-link-blog-into-a-buffer
 :END:
+
 #+begin_src emacs-lisp
 (defun blog/style-setup (_backend)
   "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags).
 
 There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
-Notice that if you explicitly provide options to change the toc, or show drawers, etc;
+Notice that if you explicitly provide options to change the toc, date, or show drawers, etc;
 then your options will be honoured. (Since they will technically come /after/ the default options,
 which I place below at the top of the page.)
 "
     (goto-char (point-min))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
+            "\n#+date: " (format-time-string "%Y-%m-%d" (current-time))
             "\n blog:header blog:sanitise-title \n"
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
