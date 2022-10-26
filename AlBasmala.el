@@ -132,16 +132,20 @@ which I place below at the top of the page.)
     ;;
     ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
     ;; (In case we are narrowed, we only act when we can find the Abstract.)
+
     (when (re-search-forward "^\* Abstract" nil t)
       (beginning-of-line)
       (-let [start (point)]
+        (org-narrow-to-subtree)
+        (org-show-entry)
         (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
         (forward-line)
         (insert "\n#+begin_abstract\n")
         (call-interactively #'org-forward-heading-same-level)
         ;; In case there is no next section, just go to end of file.
         (when (equal start (point)) (goto-char (point-max)))
-        (insert "\n#+end_abstract\n")))
+        (insert "\n#+end_abstract\n")
+        (widen)))
 
     (goto-char (point-max))
     ;; The Org file's title is already shown via blog:header, above, so we disable it in the preview.
