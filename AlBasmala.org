@@ -7,9 +7,8 @@
 #+fileimage: org_logo.png 150 150 no-border
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 #+options: broken-links:t
-
 # Use checkmarks instead of boring bullet points
-#+html: <style> ul {list-style-type: " ✓"} </style>
+#+html_head: <style> ul {list-style-type: " ✓"} </style>
 
 # TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
 
@@ -255,7 +254,12 @@ which I place below at the top of the page.)
             (blog/tags-of-file (buffer-file-name))
             "</center>"
             "\n#+html: "
-            (s-collapse-whitespace (my/org-static-blog-assemble-image (buffer-file-name) (f-full "~/blog/images")))
+            (-let [art (buffer-file-name)]
+              ;; Need this conditional since AlBasmala lives in ~/blog whereas usually articles live in ~/blog/posts.
+              ;; TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think there's any real reason for breaking consistency.
+              (thread-last (if (equal (f-base art) "AlBasmala") "./images/" "../images/")
+                           (my/org-static-blog-assemble-image art)
+                           s-collapse-whitespace))
             "\n")
 
     ;; It seems I have essentially 3 different ways to handle things: Preview, Publish, Index. Consider brining those closer
