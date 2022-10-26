@@ -29,6 +29,40 @@ We start off with
    - Which I use since it provides me with a nice index.html to showcase my posts,
      a tagging mechanism, an RSS mechanism, etc.
 
+* COMMENT Preview :move_to_init:Mention_in_AlBasmala:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Preview
+:END:
+#+begin_src emacs-lisp
+;; Nearly instanteous preview: Just Save and it'll rebuild, and pop-up the preview to the side!
+(setq org-preview-html-viewer 'xwidget)
+(org-preview-html-mode) ;; TODO. Need to advise this to turn off doom-modeline first!
+;; Why? Since xwidget does not work well with doom-modeline.
+;;
+TODO. Something in my init.el breaks this package!?!
+;;
+;; Mention this in my AlBasmala.org as a way to preview my articles ^_^
+
+;; Turn off doom-modeline when previewing.
+;; (advice-add #'org-preview-html-mode :before (lambda (&rest _) (doom-modeline-mode 0)))
+;;
+;; The following suffices.
+;;
+(xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
+(advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
+;; Make the modeline minimal, otherwise it's super ugly.
+(advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
+;;
+;; Make an Issue on both doom-modeline github and on org-preview-html Github. Link these issues to each other.
+;; Maybe instead make a README PRs that have the above advice-add clause; I think that might be best ---along with MWE init.el in the PR description to justify these additions.
+;;
+;; Along with a MWE init.el to substanitate my claim.
+
+;; Conversely, when we start doom-modeline let's ensure we have no xwidget buffer lying around, otherwise Emacs will hang.
+(advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
+                                                              (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
+                                                              )))
+#+end_src
 * Abstract                                                           :ignore:
 How my blog is setup (•̀ᴗ•́)و
 
@@ -59,6 +93,27 @@ Here are some notable features of my blog.
 + Style inline code and tables --- §[[curvy-blocks]]
 + Unfurling links --- §[[unfurling]]
 
+* Why not use an existing blogging platform?
+I dislike coding in any website's primitive textarea, likewise for general writing.
+** DONE COMMENT How to blog to hashnode?
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-How-to-blog-to-hashnode
+:END:
+
++ Get markup :: C-c c-e C-b h h
++ Copy then Paste :: that into hashnode
++ Profit :: ^_^
+
+Hashnode does not respect my CSS, unless I advertise/recruit for them (via their 'ambassador' program. Super lame!)
+
+Likewise my inline JS ---a small root-meaning program--- is not honored by hashnode.
+
+TODO. Consider moving back to my own personal blog setup?!
+- But need a way to streamline *quick* article publishing!
+  - My blog does provide a local-WYSIWYG: Just C-c C-e h o, or use one of those org-preview packages! <3
+    - I like working on my blog, so that's fun for me.
+      - However, my *current* goal is to learn arabic!
+        - So maybe learn arabic, then migrate back to my personal blogging platform!
 * Typical workflow: How do I publish an article?                     :ignore:
 CLOSED: [2022-10-21 Fri 15:50]
 :PROPERTIES:
@@ -827,6 +882,29 @@ Modify this function if you want to change a posts headline."
 # #+begin_src css :tangle ~/blog/blog-banner.css :noeval
 #  .title { margin: 0 0 0 0 !important; }
 # #+end_src
+
+** COMMENT unsplash link setup                         :Leave_as_cute_remark:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-unsplash-link-setup
+:END:
+#+begin_src emacs-lisp :exports code
+;; If you download images, from unspash, you'll have to host them somewhere!
+;; An alternative is just to provide direct links to the unsplash images themselves!
+;;
+;; Example usage:
+;;   unsplash:gySMaocSdqs
+;;
+;; This shows an image along with a useful tooltip; image size is 200x200 by default.
+;; The image is also a link, redirecting to the source, including whomever took the original photo.
+#+end_src
+
+(-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" "https://unsplash.com/photos/Vc2dD4l57og"))]
+(if unsplash
+  (format "<center><a href=\"https://unsplash.com/photos/%s\" class=\"tooltip\" title=\"Photo from Unsplash\"><img
+src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
+unsplash unsplash)))
+
+unsplash:XXX0GQfgMy8
 
 * MathJax Support --- $e^{i \cdot \pi} + 1 = 0$
   :PROPERTIES:
