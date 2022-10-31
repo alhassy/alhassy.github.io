@@ -18,6 +18,7 @@
 # In-particular, besides some extra code in blog/style-setup, by breaking consistency, AlBasmala does not produce tag
 # pages /not/ contribute to them! This is probably a good enough reason to have it live alongside the other posts!
 
+
 * COMMENT Presentation Order
 We start off with
 1. the styling I'd like to have,
@@ -1069,6 +1070,8 @@ This function is called for every post and the returned string is appended to th
    "&ensp;"
    (blog/history-of-file post-file-name)
    ;;
+   (blog/css/arabic-font-setup)
+   ;;
    "<br>"
    "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
    "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
@@ -1231,8 +1234,6 @@ var disqus_shortname = 'life-and-computing-science';
 #+end_src
 
 
-#+end_details
-
 [[https://aerolab.github.io/readremaining.js/][ReadRemaining.js]] gives us a little floating clock on the bottom left of the
 screen which says, e.g., /4m 9s left/ when reading an article.
 + It tells us how much time is left before the article is done.
@@ -1241,9 +1242,49 @@ screen which says, e.g., /4m 9s left/ when reading an article.
   for me.
   - It may be best to avoid loading jQuery multiple times; see [[https://alhassy.github.io/org-special-block-extras/#tooltipster][here]] for the necessary conditional.
 
+#+end_details
+
 #+begin_remark "ლ(ಠ益ಠ)ლ"
 I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
 #+end_remark
+
+
+** Arabic Font Setup
+I'd like /inline/ Arabic to be displayed using [[https://www.amirifont.org/][الخط الأمیری]] since that's [[http://alhassy.com/arabic-roots#Arabic-Input-Setup][how it looks /within/ Emacs for me.]]  But, Arabic
+within tables should be displayed in a more formal font, Scheherazade, that makes it really clear where letters start
+and end, and where the vowels above/below letters are positioned.
+
+#+begin_details
+#+begin_src emacs-lisp
+(defun blog/css/arabic-font-setup ()
+  "Setup the CSS/HTML required to make my Arabic writing look nice.
+
+For a one-off use in an article, just place an “#+html:” in front of the result
+of this function."
+
+  "
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style>")
+#+end_src
+
+To understand /why/ these styling rules work, see this website:
+[[https://rtlstyling.com/posts/rtl-styling#handling-fonts][Right-to-left Styling]].
+#+end_details
+
+#+html: <br>
+#+begin_org-demo :source-color white :result-color white
+For example,
++ Inline: اهلاً وسهلاً
++ Within a table:
+    |  اهلاً وسهلاً |
+#+end_org-demo
+# Yuck! + Inline code: =اهلاً وسهلاً=
+
+As the above left source demonstrates, unless some explicit action is taken, Arabic fonts are by default rendered
+hideously small.
 
 ** The Index Page
   :PROPERTIES:
@@ -1486,8 +1527,7 @@ nearly instantaneously."
             ;; "\n#+include: ../MathJaxPreamble.org" ;; TODO. Is this someting I actually want here? If so, then consider tangling it from AlBasmala! (and add the whitespace-MathJax setup from above!)
             "\n#+description: "
                (setq desc (read-string "Article Purpose: "))
-            "\n\n* Abstract :ignore: \n #+begin_abstract\n" desc
-            "\n#+end_abstract"
+            "\n\n* Abstract :ignore: \n" desc
             "\n\n* ???")
     (save-buffer)
     (blog/preview)))
