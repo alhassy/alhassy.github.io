@@ -6,7 +6,6 @@
 #+filetags: emacs org html css javascript git
 #+fileimage: org_logo.png 150 150 no-border
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
-#+options: broken-links:t
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
 
@@ -24,6 +23,139 @@
 TODO:
 Find-replace all px with percentages, then ensure things look good!
 
+
+Since I'm producing /massive/ HTML files for each post, trying to review changes with the default Magit buffer /which shows
+all changes in the repository/ can be painfully slow. As such, when I'm blogging, let's change my ~C-x g~ binding from
+doc:magit-status to doc:magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
+~C-x g D u~ to see the “u”nstaged “d”ifferences for the file, then stage what I like with ~s~, then ~C-x g c~ to “c”ommit whatever differences I have staged.
+#+begin_src emacs-lisp
+(bind-key "C-x g" #'magit-file-dispatch)
+#+end_src
+
+
+When blogging, I see live HTML previews whenever I save thanks to
+doc:blog/preview.  As such, I cannot have my lines being too wide. I'll settle
+for a modest 80 columns.  Then kbd:M-q will format my paragraphs to wrap nicely
+into this 80-column width.
+#+begin_src emacs-lisp
+(setq-default fill-column 80)
+#+end_src
+
+(When I'm coding with a single open window, I usually use a comfortable 120 columns.)
+
+* TODO Redefining Org Section for purposes of blocks           :details_#F47174:
+:PROPERTIES:
+:CUSTOM_ID: Redefining-section-for-purposes-of-blocks
+:END:
+
+#+BEGIN_SRC emacs-lisp :export none
+(org-deftag details (color)
+   "HTML export a heading as if it were a <details> block; COLOR is an optional
+   argument indicating the background colour of the resulting block.
+
+For example, in my blog, I would use :details_#F47174: to mark a section as
+friendly-soft-red to denote it as an “advanced” content that could be ignored
+on a first reading of my article.
+Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
+   (insert "\n#+html:"
+           (format "<details style=\"background-color: %s\">" color)
+           "<summary>" (s-replace-regexp "^\** " "" o-heading) "</summary>")
+   (org-next-visible-heading 1)
+   (insert "#+html: </details>"))
+
+
+(defmacro org-deftag (name args docstring &rest body)
+  "Re-render an Org section in any way you like, by tagging the section with NAME.
+
+That is to say, we essentially treat tags as functions that act on Org headings:
+We redefine Org sections for the same purposes as Org special blocks.
+
+Anyhow:
+ARGS are the sequence of items seperated by underscores after the NAME of the new tag.
+BODY is a form that may anaphorically mention:
+- O-BACKEND: The backend we are exporting to, such as `latex' or `html'.
+- O-HEADING: The string denoting the title of the tagged section heading.
+
+DOCSTRING is mandatory; everything should be documented for future maintainability.
+
+The result of this anaphoric macro is a symbolic function name `org-deftag/NAME',
+which is added to `org-export-before-parsing-hook'.
+
+----------------------------------------------------------------------
+
+Below is the motivating reason for inventing this macro. It is used:
+
+     ,** Interesting, but low-priority, content   :details_red:
+     Blah blah blah blah blah blah blah blah blah blah blah.
+     Blah blah blah blah blah blah blah blah blah blah blah.
+
+Here is the actual implementation:
+
+(org-deftag details (color)
+   \"HTML export a heading as if it were a <details> block; COLOR is an optional
+   argument indicating the background colour of the resulting block.\"
+   (insert \"\n#+html:\"
+           (format \"<details style=\\\"background-color: %s\\\">\" color)
+           \"<summary>\" (s-replace-regexp \"^\** \" \"\" heading) \"</summary>\")
+   (org-next-visible-heading 1)
+   (insert \"#+html: </details>\"))
+
+"
+  (let ((func-name (intern (format "org-deftag/%s" name))))
+    `(progn
+       (cl-defun ,func-name (o-backend)
+         ,docstring
+         (outline-show-all)
+         (org-map-entries
+          (lambda ()
+            (kill-line)
+            (let ((o-heading (car kill-ring)))
+              (if (not (s-contains? (format ":%s" (quote ,name)) o-heading 'ignoring-case))
+                  (insert o-heading)
+                (-let [,args (cdr (s-split "_" (car (s-match (format "%s[^:]*" (quote ,name)) o-heading))))]
+                  (setq o-heading (s-replace-regexp (format ":%s[^:]*:" (quote ,name)) "" o-heading))
+                  ,@body)
+                ;; Otherwise we impede on the auto-inserted “* footer :ignore:”
+                (insert "\n"))))))
+       (add-hook 'org-export-before-parsing-hook (quote ,func-name))
+       (quote ,func-name))))
+#+END_SRC
+** COMMENT Posterity :Delete_when_things_settle:
+#+BEGIN_SRC emacs-lisp :export none
+(defun my-headline-alteration (backend)
+  "BACKEND is the export back-end being used, as a symbol."
+  (setq first-heading t)
+  (outline-show-all)
+  (org-map-entries
+   (lambda ()
+    (kill-line)
+    ;; (thing-at-point 'line)
+    (let ((heading (car kill-ring)))
+
+      (if (not (s-contains? ":NOPE:" heading 'ignoring-case))
+          (insert heading)
+
+          (insert heading) (insert "NIIIIICE")
+          ;; (if first-heading (setq first-heading nil)
+          ;;                 (insert "+latex:\\end\{alertblock\}"))
+        ;; (insert "\n\n+latex: \\begin\{alertblock\}\{")
+
+          (org-next-visible-heading 1)
+        (insert "WOW :: " (s-chop-prefix "\** " heading))
+
+        (insert "\n") ;; Otherwise we impede on the auto-inserted “* footer :ignore:”
+        ;; (insert "\}")
+      )
+    )
+)))
+
+(add-hook 'org-export-before-parsing-hook 'my-headline-alteration)
+(remove-hook 'org-export-before-parsing-hook 'my-headline-alteration)
+#+END_SRC
+
+
+
+(org-next-visible-heading 1)
 
 * Glossary Library of Arabic Linguistic Jargon
 
@@ -308,10 +440,15 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
 See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 #+end_details
 
-** A function to insert doc:org-link/blog into a buffer
+**   ~blog/style-setup~: A function to insert doc:org-link/blog into a buffer
 :PROPERTIES:
 :CUSTOM_ID: A-function-to-insert-doc-org-link-blog-into-a-buffer
 :END:
+
+
+
+
+
 
 #+begin_src emacs-lisp
 (defun blog/style-setup (_backend)
@@ -325,6 +462,7 @@ which I place below at the top of the page.)
     (goto-char (point-min))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
             "\n#+date: " (format-time-string "%Y-%m-%d" (current-time))
+            (if (buffer-narrowed-p) "\n#+options: broken-links:t" "")
             "\n blog:header blog:sanitise-title \n"
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
@@ -402,8 +540,8 @@ Below is an alteration from the examples of the docstring of doc:org-defblock.
    Supported backends: HTML. "
    (format (concat
             "<div class=\"abstract\" style=\"border: 1px solid black;"
-            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
-            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
+            "padding: 1%%; margin-top: 1%%; margin-bottom: 1%%;"
+            "margin-right: 10%%; margin-left: 10%%; background-color: lightblue;\">"
             "<center> <strong class=\"tooltip\""
             "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
             "%s </div>")
@@ -411,6 +549,10 @@ Below is an alteration from the examples of the docstring of doc:org-defblock.
 #+end_src
 #+end_details
 
+Look:
+#+begin_abstract
+words
+#+end_abstract
 * Ξ: Floating /Table of Contents/
   :PROPERTIES:
   :CUSTOM_ID: Floating-TOC
