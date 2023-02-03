@@ -1,0 +1,695 @@
+#+title: A Brisk Introduction to Karate
+#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+#+filetags: karate
+#+fileimage: https://www.usadojo.com/wp-content/uploads/2013/08/Goju-Ryu-Karate-600x300.png 88% 88%
+#+description: Discovering what be ka-ra-te
+
+#+begin_src emacs-lisp :exports none
+(org-deflink image
+             "Provide a quick way to insert images along with credits via tooltips.
+
+Example usage:
+
+image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100
+
+image:URL|WIDTH|HEIGHT
+"
+;;             (upcase (or o-description o-label))
+  (-let [(image width height no-border?) (s-split "|" o-label)]
+    (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
+      (let ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+            (title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
+            (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image)))
+        (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             width=\"%s\" height=\"%s\" align=\"top\"/></a>"
+                href title src width height)))))
+#+end_src
+
+*  Abstract                                                          :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Abstract
+:END:
+
+#+begin_center
+badge:Warning|Incomplete_DRAFT|red||codeigniter
+#+end_center
+
+What be this “Karate”?
+
+The Gekisai kata are taught as the first kata in the Goju Ryu Karate
+syllabus. They were created by Chojun Miyagi Sensei in 1940 as a way of
+introducing the basic karate forms to a wider audience.
+
+#+begin_center
+image:https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/saifa.gif
+#+end_center
+#
+#  The Geki Sai Katas were developed by Chojun Miyagi Sensei in 1940 as a form of physical exercise for high school boys and to help popularize Goju-Ryu among the public of Okinawa. It contains powerful, basic movements that are quite easy to interpret and learn; however many of the techniques have multiple applications. Most the movements are done with a closed fist and with full power.
+#
+#  In 1948, after WWII, Miyagi Sensei began to teach the Geki Sai Kata in depth as a regular part of Goju-Ryu in his own dojo. Until this time, Sanchin was the first Kata taught in Goju-Ryu. Sanchin Kata is physically and mentally a demanding Kata and requires a great deal of time and patience to learn and perform properly. The Geki Sai Katas however are easier to learn and perform, and contain dynamic techniques which are more attractive to young people.
+
+* COMMENT Reasons for Kata
+
+Forms are known as kata in Japanese martial arts,
+
+Many Goju-Ryu Karate schools use these katas in order to help students practice
+certain moves (i.e. kicking techniques, self-defense techniques and various
+strikes). In addition, kata is used to improve a student’s physical
+conditioning, muscle memory, focus/concentration, balance, etc.
+
+{ Note the use of kata in coding and software engineering!! }
+
+** Benefits of Kata – According to kata proponents
+
+
+
++ Solo practice. The ability to practice martial arts techniques without a partner.
++ Ability to practice dangerous techniques without injuring a partner (i.e. practicing to break an elbow joint).
++ Teaches students how to use a variety of techniques (i.e. kicks, strikes and blocks) in different combinations.
++ Reinforces the knowledge of basic techniques and stances via repetition.
++ Muscle memory of different self-defense techniques due to repetition.
++ Concentration.
++ Balance training.
++ Improved fitness & conditioning.
++ Bunkai (kata training with a partner) reinforces the lessons learned in solo kata and shows how kata techniques are applied against a “real” opponent.
++ Safe practice of weapon-based training (as you are striking an imaginary opponent).
++ Slow kata can be used a form of “moving meditation” or “dynamic mediation”.
++ According to USA Taekwondo, benefits include “You don’t get kicked in the
+  face. You don’t have to make weight. People are nice to each other. Families
+  can take part. Older people can compete”.
+
+
+[[https://www.youtube.com/watch?v=QL02OKsQgVY&feature=youtu.be&ab_channel=ShotokanSensei][Karate Kata: Why do we study kata? - YouTube]]
+
+** Perceived Negatives of Kata – According to kata opponents
+
++ Too stilted & scripted.
++ Imaginary opponents “don’t hit back” (paraphrasing a famous Bruce Lee saying).
++ Too slow. Live opponents move much faster than the actions in kata.
++ Teaches some questionable or “antique” techniques.
++ Many instructors do not teach the self-defense aspects of kata. Therefore, kata can be perceived as a martial arts “dance” needed just to pass a belt test.
++ Difficult to practice grappling techniques with kata.
++ Can be boring for beginners.
++ Some styles require students to learn multiple katas. This can be difficult to
+  remember, especially as you progress in your martial arts training and you
+  must remember all of the past kata that you were taught.
+  - Lol this is like going to school; e.g., higher maths require low-level
+    maths!
+
+
+
+** Is Kata Useful or Useless?
+
+Some martial arts value and use kata & forms extensively (i.e. Shotokan Karate & Taekwondo). Other martial arts find very little value in kata (i.e. Boxing and BJJ).
+
+Many martial artists think kata is useful because it teaches things such as memorization, balance, basic techniques, visualization, etc. Moreover, they think it is especially useful for younger color belts and/or when used as bunkai (practicing kata attacks and defenses with a partner). Others are in the middle. They think sparring with a partner is much more useful. However, they see solo kata as useful if you have to train alone (i.e. outside the dojo). Similar to using a kicking dummy, solo kata is seen as a way of practicing techniques without a live partner. In contrast, there are many martial artists who feel that kata is a waste of time. They believe it is impractical because it does not teach students how to deal with a live and unpredictable opponent. For more information, you should visit the wiki section on the pros & cons of kata.
+
+** responses
+
+i used to enjoy kata as a
+workout.
+
+i “rediscovered” kata
+after retiring from pro fighting and saw the value of having a foundation for
+your fighting system.
+
+some solid paterns to practice specific technique as well
+as the all round health benefits of doing kata.
+
+it is also good to look into the
+practical application(s) of the movements and techniques.
+
+it also gives the
+practisioner a syllabus to work to when not at the dojo…or on holiday etc.
+
+
+--------------------------------------------------------------------------------
+
+Another way to look at kata is to consider the following supposed you were in
+the far East in the 1800’s and you came upon a martial art master who was
+willing to teach you techniques from his style. You spent some time with him and
+learned many techniques. How would you remember what he has taught you you
+ask. He says to you within the katas I have taught you there are all the
+techniques you have learned from me.
+
+There are techniques within katas that are very useful. If we look at basic blocks such as a high defend open hand. We know that it is useful. Basic front kicks, side kicks and round house are useful as well. These type of moves are incorporated into our katas, or at least some them.
+
+
+
+Every move you have learned has within it both defensive and offensive
+techniques.
+So keeping this in mind take a kata that you have learned and see how many self defense applications you can find. You will be amazed,
+
+** healthy workout, interpretation of moves: Don't practice something if you cant use it!
+
+I help out with training children in my local dojo, and the way I teach new starts kata is using bunkai. Kata can be boring, but add some imaginary ninjas to it and the kids start wanting to learn (then you have that one kid who wants to fight frogs). In my opinion as we inevitably get older, the constant repetitive motions of kata can become a way of warding off senile dementia/alzheimers. Plus if you go perform every kata you know (for me it’s a miniscule 12) sequentially, given it ‘speed and power’, my instructor likes to make us do this, it can help with weight loss (or gain if you decide to stuff your face after a hard lesson).
+
+** ingenious
+
+kata are an ingenious way of learning techniques. The very essence of a fighting
+method has been over centuries (in some cases) distilled into a set pattern of
+techniques that if learned correctly will become ingrained in both mind and
+muscle memory. I think the key to understanding kata lies in actually focusing
+and correct visualization. If you are just going through the motions because
+your Sensei has told you to while thinking to yourself ‘I can’t wait to get
+through this and spar’ then you are missing the point and also missing an
+essential element of the art you are supposed to be learning.
+
+** useful for what?
+
+When asking if kata is useful, you must ask useful for what. Kata it is useful for exercise, developing balance, and practicing certain techniques. This is my experience from doing Taekwondo forms for three plus years. Kata is useless for fighting. In Taekwondo sparring I never used anything from forms. My kicks, defenses, counters, and footwork came from constant drilling done in fighting stance, not a kata stance. As a kickboxer as well I think something like shadow boxing is much better, because you can practice all the things I did in forms, but in a realistic fighting stance. *Though today many people take martial arts for various reasons, and have no intention on ever fighting in competition.*
+
+** shadow boxing
+
+Shadow boxing is exactly like a kata. It keeps you sharp and alert at all times. Please !!! Do not underestimate the use of a kata or any imaginary fighting practices , they all work. I’m still an active boxer and shadow boxing is the most important tool for me today.
+
+[[https://www.youtube.com/watch?v=QL02OKsQgVY&feature=youtu.be&ab_channel=ShotokanSensei][Karate Kata: Why do we study kata? - YouTube]]
+** Kata functions
+
+
+- Kata teach the martial artist to focus her or his techniques on specific striking and blocking points with special emphasis on follow-up techniques.
+- Kata practise strengthens muscles and sinews while increasing fitness and improving flexibility.
+- Spatial awareness is improved by visualizing imaginary attacks from a number of directions enabling the practitioner to handle more than one attacker at a time.
+- Footwork and agility are prompted by warding off "attacks" and delivering counterattacks from all angles.
+- Balance is improved by maintaining one's centre-of-gravity while changing into different stances.
+- Correct breathing is learned and controlled by the constant stopping and starting, fast and slow movements of the kata performed.
+- Kata act as an encyclopedia of kumite scenarios (attacks and defences) which can then be practised with a partner. These kata applications are known as bunkai and can include tenchin (body evasion movements), punching, striking, kicking and qin-na (grappling, seizing and throwing).
+- Kata has been called "meditation in motion" and in the endless striving for perfection epitomizes the concept of a martial art. When a kata is performed well all the above points should be apparent in the execution of the form. Conversely, a kata can often look pretty but lack all understanding. Kata is therefore the cornerstone to becoming a good martial artist.
+
+* Succession of Miyagi :The:Five:Taikyokus:
+
+Following the death of Chojun Miyagi Sensei in 1953, four main schools teaching Goju Ryu emerged.
+
+| School                                                       | Founder           |
+|--------------------------------------------------------------+-------------------|
+| Meibukan, /The House of the pure-minded warrior/               | Meitoku Yagi      |
+| Jundokan, /House in which we follow in the master’s footsteps/ | Eiichi   Miyazato |
+| Shoreikan, /House of politeness and respect/                 | Seikichi Toguchi  |
+| Goju Kai, /The Japanese Goju Association/                      | Gogen Yamaguchi   |
+
+The graphic of this article, the closed fist, is the symbol of Goju Kai which
+was popularised in Ontario, Canada, by [[https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/][Don Warrener]]. This school starts with the
+“Taikyoku Katas”, /First-course formations/, which consists of 6 formations all
+making an “I”-shape in movement: The student starts at the bottom-middle of the
+“I”, moves left, then right, then up, and eventually back down to the starting
+position. Each formation reinforces basic principles, such as a certain block
+and stance.
+
+#+begin_center
+1. badge:Taikyoku_Gedan|First-course_Low_Block|green|https://youtu.be/5dCu6C6pTF0|youtube
+2. badge:Taikyoku_Chudan|First-course_Middle_Block|green|https://youtu.be/C08R9PEQRqY|youtube
+3. badge:Taikyoku_Jodan|First-course_High_Block|green|https://youtu.be/g_ggx2Ywwrc|youtube
+4. badge:Taikyoku_Kake_Uke|First-course_Hooking_Block|blue|https://youtu.be/FSeGrXQs3sI|youtube
+5. badge:Taikyoku_Mawashi_Uke|First-course_Roundhose_Block|blue|https://youtu.be/gDaWBIfs-G8|youtube
+#+end_center
+
+# TODO: ??? Both were developed as beginner kata because the more traditional kata were
+# seen to be too difficult for beginners.  ???
+
+Other schools skip these “school-children” fundamentals and start-off with
+Gekisai Ich, /Attack and Destroy/, which is known as Goju Karate's first Kata.
+However, the Jundokan school works up to this Kata a different way...
+
+* From Standing to Destroying :TeshiWaza:FukyuKata:Gekisai:
+
+Jundokan starts with these
+
+| TeshiWaza, /Stances, or Formation-11/                  |
+| Fukyu Kata 1, /to Spread or to Make Popular formation/ |
+| Fukyu Kata 2, /to Spread or to Make Popular formation/ |
+
+The Fukyu Kata were made to popularise Karate and make it accessible.
+Miyagi renamed Fukyu Kata to /Gekisai Dai Ichi/, “Attach and Destroy 1”
+---of-course the second kata of Goju Karate is known as “Attack and Destroy 2”
+or /Gekisai Dai Ni/.
++ /Geki/ ≈ /to attack/
++ /Sai/ ≈ /to smash, break, crush/
++ /Gekisai/ ≈ /to pulverise, to attack and destroy/
+
+The aggressive renaming of the ‘popularising’ kata, in the 1940s, may have been due
+to Japan's war-time efforts.
+
+
+#+BEGIN_SRC dot :file ../images/fukyu-kata.png :exports results
+digraph {
+ A [label = "Dachi Waza Kata \n {No hands!} \n ⟅Teruo Chinen⟆", color = red]
+ B [label = "Fukyu Kata Ichi \n {No kicks!} \n ⟅Hanshi Shoshin Nagamine⟆", color = blue]
+ C [label = "Gekai Sai Ichi \n ⟅Chojun Miyagi⟆", color = green]
+
+ A -> B [label=" Add hand movements:\n Each step now becomes a \n block-and-punch scenario "];
+ B -> C [label=" Add kick movements "];
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:../images/fukyu-kata.png]]
+
+* Dachi-Waza Kata
+
+#+html: <iframe width="560" height="315" src="https://www.youtube.com/embed/5EjMpsPv99k" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+Above is “Formation 11”, a slight variation of “Dachi-Waza Kata” which is
+performed as follows.
+
+Starting with heels touching, toes pointing out, and hands to the side.
+
+1. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-musubi-dachi-Copy.jpg|50|50
+   image:https://upload.wikimedia.org/wikipedia/commons/5/5c/Musubidachi.svg|50|50
+   Musubi-dachi, /Joining/United stance; Formal Attention stance/
+   - Heels together, toes open at about 45 degrees;
+   - Hands move up to waist: *Hands remain on the sides of the waist through-out!*
+   - In this stance, the body should be straight, knees are slightly bent, heels are touching and feet are pointing out making a 45° angle.
+
+2. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heiko-dachi-Copy.jpg|50|50
+   image:https://upload.wikimedia.org/wikipedia/commons/3/32/Heikoudachi.svg|50|50
+   Heiko-dachi, /Parallel stance; Attention Stance/
+   - The feet open to shoulder width apart, and their outer edges are parallel.
+   - In this stance, the feet are shoulder-width apart, the big toes and the
+     second toes should face forward, the inner edges of the feet are parallel,
+     and the center of gravity is at the mid-point between the two feet.
+
+3. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sagiashi-dachi-Copy.jpg|50|50
+   Sagi-ashi-dachi, /Heron-foot stance/
+   - left leg steps to the left, right leg follows then upward with the knee
+   - In this stance, one leg is raised and bent while the other leg is slightly
+     bent and supports the whole body weight The toe of the raised leg points
+     downward.
+     # - This is the stance on one leg, where the other leg is raised and bent so that its foot touches the knee of the base leg.
+   - This is also known as Tsuru-ashi-dachi, /Crane-foot stance/.
+
+4. Sagi-ashi-dachi - to the right
+
+5. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-zenkutsu-dachi.jpg|50|50
+   image:https://upload.wikimedia.org/wikipedia/commons/9/96/Zenkutsudachi.svg|50|50
+   Zenkutsu-dachi, /forward stance/ - to the left
+
+   - This is a long frontal stance where the weight is mostly on the front leg.
+   - It has exactly the same height as shiko-dachi (below), but the rear leg is
+     completely straight at the knee and extended back.
+   - The front foot is placed frontal (toes facing forward), the rear foot is
+     turned out 30 degrees, but never 90 degrees as seems natural to new practitioners
+     because this precludes any forward motion.
+   - The heel of the rear foot rests on the ground.
+
+   Zenkutsu is performed as follows:
+   1. From the natural stance, step forward so that the distance between the back foot and the front foot is roughly about one and a half to two shoulder width
+   2. The feet are one shoulder width apart
+   3. The front foot points forward and the back foot points diagonally at about 30 degree angle
+   4. The front knee is bent, turned slightly inward, and should be forward enough that you are not able to see the toes
+   5. The back leg is naturally straight but not locked
+   6. Most of the body weight is placed on the front leg
+   7. The heel of the back leg should be placed firmly on the ground.
+
+6. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-kokutsu-dachi-Copy.jpg|50|50
+   image:https://upload.wikimedia.org/wikipedia/commons/2/2a/Koukutsudachi.svg|50|50
+   Kokutsu-dachi, /Back Long stance/ - to the right, but head still facing to the left
+
+   - This is a back stance derived from the zenkutsu dachi stance.
+   - Start with zenkutsu dachi, move your back leg across so that the front leg
+     and the back leg are on the same line.
+     # You will also look backward in this stance.
+
+   :More:
+   Kōkutsu-dachi (後屈立, back long stance) This is a mirror image of
+    zenkutsu-dachi, where the rear leg is bent strongly at the knee and the
+    front leg is either straight or slightly bent, depending on the style. The
+    rear foot is turned 90 degrees to the side. The body is turned 90 degrees or
+    more away, except for the head which looks to the front. Kokutsu-dachi is a
+    great defensive stance because of the amount of energy stored in the rear
+    leg, ready for a counter-attack.
+   :End:
+
+7. Zenkustu Dachi - back to the left
+
+8. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sanchin-dachi-Copy.jpg|50|50
+   image:https://upload.wikimedia.org/wikipedia/commons/7/78/Sanchindachi.svg|50|50
+   Sanchin-dachi, /Three Battle stance/ - take a step into sanchin, facing leftwards
+
+   This is the most difficult stance to master and probably the most important
+   stance in Goju Ryu.  It is performed as follows:
+   1. Begin with heiko dachi, step one foot forward
+   2. The heel of the front foot should be on the same line as the toes of the back foot
+   3. The toes of both feet should turn inward slightly
+   4. The front foot is turned inward at about 20° angle
+   5. Tense your tandien, buttocks and thigh muscles and then pull the hips upwards
+   6. The knees should bend and turn inward
+   7. The feet should be placed firmly on the ground with the toes gripping the ground
+   8. The center of gravity should be at the midpoint between the two feet
+   9. Keep your back straight and your chin tucked in.
+
+   Sanchin kata, considered the core and most difficult kata in Goju Ryu is done entirely in the sanchin dachi stance.
+
+9. Zenkusti Dachi - Look right, then with right leg move into Zenkutsu, then
+   end-up facing rightwards with right leg at the front. Through-out the left
+   remains in-place, just pivoting.
+
+10. Kokustu Dachi - to the left, but head still facing to the right
+
+11. Zenkustu dachi - back to the right
+
+12. Sanchin Dachi - take a step into sanchin, facing rightwards
+
+13. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heisoku-dachi-Copy.jpg|50|50
+    image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100
+    Hesoku-dachi, /feet together stance; informal attention stance/ - right moves up to touch the left, then head faces to the
+    front center
+
+    In this stance, your back is straight and relaxed, your feet are placed
+    together, and the weight is equally distributed between the two feet.
+
+14. Zenkustu dachi - to the front center, with left leg leading
+
+15. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-hachiji-dachi-Copy.jpg|50|50
+    Hachiji-dachi, /Natural stance/ - right leg takes a step forward, left follows, to end-up in a
+    should-width stance
+
+     # Hachiji dachi (八字立)
+     # Hachiji dachi means “character eight stance”) because the feet in this stance resemble the character eight (八) in Japanese.
+
+    - This stance is close to the natural way people stand.
+    - The feet are shoulder width apart, the toes point out at about 45°, the
+      body is relaxed and the knees are slightly bent.
+
+16. Zenkustu Dachi - look over the left-shoulder, turn with left leg; end-up in
+   left leading zenkustu facing the back right corner
+
+17. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-neko-ashi-dachi-Copy.jpg|50|50
+    image:https://upload.wikimedia.org/wikipedia/commons/a/a5/Nekoashidachi.svg|50|50
+    Neko Ashi Dachi, /Cat stance/ - Bring the left back, with toes on ground, heel up.
+
+    To assume neko ashi dachi:
+    1. Start with musubi dachi (formal attention stance) and step forward for a distance of about one foot
+    2. Lower the hips deeply and transfer most of the body weight to the back leg
+    3. The front leg is bent and the heel of the front leg is raised slightly with only the toes and the ball of the front foot touches the ground
+    4. The back foot points outward at about 30 to 45 degree angle
+    5. About 90% of the body weight is placed on the back foot.
+
+    Note:
+    - All weight rests on the back leg, which is bent at the knee.
+    - The rear foot is turned at about 20-30 degrees out and the knee sits at
+      the same angle.
+    - Only the toes of the front foot rest on the ground, positioned in front of
+      the back heel.
+    - There is no weight on the front foot, and there is no bent in the ankle
+      joint - front knee, front shin, and the rise of the foot (but not the
+      toes) form a single line.
+
+18. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-bensoku-dachi-Copy.jpg|50|50
+    Bensoku-dachi, /Cross-legged stance/ - Drop the left down, toes pointing to the right. Right steps
+    towards the back right corner of the room. Finally, left leg slides behind
+    the right leg, ending with the heel up and the toes planted and facing the
+    right leg.
+
+    To assume bensoku dachi:
+    1. Cross one leg behind the other
+    2. Bend both knees
+    3. The front foot is placed firmly on the ground but only the ball of the back foot touches the ground
+    4. The knee of the back foot is nested against the back of the front knee.
+
+    Bensoku dachi is a transitional stance that is used when one needs to change
+    direction. It appears in kata like Seiyunchin and Sepai.
+
+19. Zenkustu with the right leg towards the back left of the room; the left leg
+    only pivots.
+
+20. Neko Ashi Dachi - Bring the right leg back into a cat stance
+
+21. Drop the right down and do a Bensoku Dachi
+
+22. image:https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-shiko-dachi-Copy.jpg|50|50
+    image:https://upload.wikimedia.org/wikipedia/commons/b/b0/Shikodachi.svg|50|50
+    Shiko-dachi, /Square Stance, Horse Stance, Straddle Leg Stance/
+
+    The left leg moves towards the back of the room, ending in a shiko dachi;
+    right leg remains where it is.
+
+    The toes face out at about 45 degrees. Knees point outward, and stance is often low.
+
+    To assume shiko dachi, start with hachiji dachi stance, turn the heels to
+    point the toes outward at about 45 degrees and lower the hips.
+
+    In this stance:
+    + The feet are about two shoulder width apart
+    + The big toes point outward diagonally at about 45 degrees
+    + The knees are turned outward
+    + The back is straight
+    + The hips are lower than in kiba dachi and the thighs are almost parallel to the ground
+    + The body weight is evenly distributed between the two legs
+    + The soles of the feet are firmly in contact with the ground.
+
+    Shiko dachi is a great stance for developing lower body strength and stability.
+
+23. Look rightwards towards the center of the room, then do a shiko dachi
+    ---ending with body facing the right side of the room; i.e., right leg is in
+    the back.
+
+24. Bring the back leg, the right leg, up to the front leg into a Musubu Dachi.
+
+* Fukyu Kata Ichi
+
+#+html: <iframe width="560" height="315" src="https://www.youtube.com/embed/xmCz7F06DLs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+#+begin_center
+badge:Fukyu_Kata_Ichi|Step-by-Step_Instructions|green|https://youtu.be/UpfuGcwRYzI|youtube
+
+badge:Fukyu_Kata_Ichi|With_Japanese_Names|green|https://youtu.be/M-VC1BGtRYM|youtube
+
+badge:Fukyu_Kata_Ichi|Kids_Instructional|green|https://youtu.be/-eBWPK45q1w|youtube
+
++ [[https://www.youtube.com/watch?v=-vekmSkNOGw][Done slowly]]
++ [[https://www.youtube.com/watch?v=GmQGY10xID4&ab_channel=GojuRyuKarateCentre][Learn Fukyu Kata for Goju Ryu]]
++ [[https://www.youtube.com/watch?v=FFEgCWfelE0][Walkthrough]]
++ [[https://youtu.be/g32NRLwZEsA][Kids Class - Fukyu Kata Dai Ichi walkthrough - Joey Jackson]]
+#+end_center
+
+# Foot Movement & Placement / Direction Hands
+0. [@0] /Kyotsukei/, Attention: Palms at sides, arms straight
+0. [@0] /Rei/, Bow: Eyes slightly down, hands still at sides
+0. [@0] /Kamae/, Ready stance: heels together Palms down in front of body, L hand over R hand
+
+1. Turn left into a left forward stance; down-block with left-hand
+
+2. Step forward with right foot into Right forward stance;
+   right middle (solar plexus) punch
+
+3. Turn around into a right forward stance, while doing a right down-block
+
+   1. Move right foot behind body and to the left
+   2. Extend left arm and chamber with right fist at left elbow
+   3. Pivot 180°-rigtwards, on the left-foot, into right forward stance
+   4. Right down block
+
+4. Step forward with left foot into left forward stance;
+   left middle (solar plexus) punch
+
+5. Turn 90°-leftward, pivoting on the right foot, to face the front;
+   enter into a left Zenkustu; down-block with left
+
+6. 6 Step forward with R foot into R forward stance (R foot straight, L foot diagonal)
+   - R middle (solar plexus) punch
+
+7. 7 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+   - L middle (solar plexus) punch
+
+8. 8 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+   - R middle (solar plexus) punch
+
+9. 9a Move L foot behind body and to the R (move beyond where you extended in step 3 - this time you will end up 225 degrees from start)
+   - Keeping R arm extended, chamber with L fist on R elbow
+
+10. 9b Pivot (on R foot) 225 L into L forward stance -
+    you are now facing 45 L from back of dojo
+    - Down block L
+
+11. 10 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+    - High block R
+
+12. 11 Pivot 90 R (on L foot) into R forward stance -
+    you are now facing 45 R from back of dojo
+    1. Down block R
+
+13. 12 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+    - High block L
+
+14. 13 Pivot 45 L (on R foot) into L forward stance - you are now facing back of dojo
+    - R reverse middle punch
+
+15. 14 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+    - L reverse middle punch
+
+16. 15 Step forward with L foot into L forward stance
+    (L foot straight, R foot 45 diagonal)
+    - R reverse middle punch
+
+17. 16 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+    - L reverse middle punch
+
+18. 17a Move L foot behind body and to the R (move beyond where you extended in step 3 - you will end up turning 225 degrees to the left)
+    - Extend R arm and chamber with L fist at R elbow
+
+19. 17b Pivot 225 L (both feet) into L forward stance, facing 45 L of dojo front
+    - Down block L
+
+20. 18 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+    - High punch R
+
+21. 19a Pivot 90 R (on L foot) into R forward stance Extend L arm and chamber with R fist at L elbow
+
+22. 19b Facing 45 R of dojo front Down block R
+
+23. 20 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+    - High punch L
+
+24. 21 L foot pulls back to starting position, heels together
+    - Palms down in front of body, L hand over R hand
+
+
+Note: This is also known as “Kihon Kata Ichi”, /Basics Form One/.
+- https://www.youtube.com/watch?v=tgdIVEmnwdc&ab_channel=EastlakeDojo
+* COMMENT FukyuKata
+
+[[https://www.youtube.com/watch?v=935L1AIHBJ4&t=4s&ab_channel=renshi84][Shorin Ryu Karate. Shihan Anthony Ferguson 6TH Dan Black Belt performs kata
+Fukyugata Ichi. - YouTube]]
+
+* Gekisai Dai Ichi ---“Attack & Destroy One”
+
+#+begin_center
+badge:Gekisai_Dai_Ichi|Attack_&_Destroy_One|green|https://youtu.be/xtOl_XULS48|youtube
+(Side View)
+
+badge:Gekisai_Dai_Ichi|Attack_&_Destroy_One|green|https://youtu.be/YtcRO7zceIg|youtube
+(Front View)
+
++ [[https://youtu.be/i7LyUfjiT3g][Powerful! By Sandra Sanchez]]
++ [[https://www.youtube.com/shorts/yqEDJ8lKrlg][#shorts]]
+#+end_center
+
+
+#+html: <iframe width="560" height="315" src="https://www.youtube.com/embed/sZ86wr2WT0w" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+1. Attention stance
+
+2. Left foot steps out into Yoi (ready stance) shoulder width apart
+
+   1. Alternatively: Yoi with feet together at attention left hand over right several inches away from the groin
+   2. the left hand pushes down while the right hand pushes up creating
+      (explosive) tension
+
+3. From either Yoi right foot steps forward and you turn left 90 degrees into hourglass stance
+   1. High block with left hand
+   2. If feet are apart in Yoi when the right foot steps forward you pivot on the center (ball and heel) of the foot so that the stance is even
+   3. If feet are together in Yoi left foot pivots on the heel and the right on the ball so the stance is even
+   4. if hands and feet are together in Yoi the right arm explodes from underneath almost like a fanning block before turning
+
+4. Step forward into hourglass stance with the right foot
+   + High punch with the right hand
+
+5. Step back into square/horse stance so that the body is facing the direction of the attention stance
+   + Low block with the left
+
+6. Turn the body 90 degrees and left foot slides behind the right into hourglass stance
+   + High block with the right hand
+
+7. Step forward into hourglass stance with the left leg
+   + High punch with the left hand
+
+8. Step back into square/horse stance so that the body is facing the direction of the attention stance
+   + Low block with the right
+
+9. Left leg steps in and then forward into hourglass stance
+   + Middle block with the left
+
+10. Step forward into hourglass stance with the right
+    + Middle block with the right
+
+11. Left front kick and land in a front stance
+    1. Left elbow strike as blocking right hand pulls back into chamber
+    2. Left downward back fist face level
+    3. Left hand transitions to low block
+    4. And right hand punches with a “Kiai”
+
+12. Turn right 90 degrees into a ready stance (with head facing to right)
+    1. Right knife hand strike to the side of the temple
+    2. Alternatively: during this transition the back leg of the previous front stance lifts up as if avoiding a sweep
+
+13. Turn right 90 degrees to right, step forward with the left into hourglass stance
+    + Left hand middle block
+
+14. Right front kick and land in a front stance
+    1. Right elbow strike as blocking left hand pulls back into chamber
+    2. Right downward back fist face level
+    3. Right hand transitions to low block
+    4. Left hand punches with a “Kiai”
+
+15. Turn left 90 degrees into a ready stance (with head facing to left)
+    1. Left knife hand strike to the side of the temple
+    2. Alternatively: during this transition the back leg of the previous front stance lifts up as if avoiding a sweep
+
+16. Turn left 90 degrees and left leg steps back into front stance
+    1. As stepping back left hand pulls back as if pulling the arm of an opponent
+    2. Left hand in chamber palm down, right in chamber palm up
+    3. Double punch with left hand to the lungs and right to the stomach
+    4. Alternatively: when stepping back the left hand turns in like an open handed fanning block
+    5. Right hand in chamber comes out and performs a middle block
+    6. Then both hands pull back to chamber with left palm down and right palm up
+    7. Then double punch
+
+17. Step forward into ready stance
+    1. Reverse fist orientation
+    2. Alternatively: Step forward feet together, both knees bent
+    3. Right arm turns in as if for a fanning block
+    4. Left arm arcs around in front for a middle block
+    5. Then both hands are pulled back into chamber in the revers orientation they were before in the prior step
+
+18. Step back with the right leg into front stance
+    + Double punch, right hand to the heart and left to the liver
+
+19. Step forward into attention stance
+    1. Alternatively: open left hand
+    2. Turn right fist to palm facing up and place it in the open hand
+    3. Open the right hand
+    4. Step forward to attention as the hands turn staying left over right and
+       return to the beginning position
+
+20. Bow
+
+Geki Sai Ni is very similar...
+#+begin_center
+image:https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/gekisai_ni.gif
+#+end_center
+
+* COMMENT SANCHIN (THREE BATTLES)
+Sanchin was brought back from China by Kanryo Higaonna. It translates as “3 Battles” or “3 Conflicts”, the three generally accepted as being: the body, mind and spirit. It is the fundamental kata of GoJu Ryu. Sanchin develops discipline, determination, focus, perseverance and other mental attributes.
+
+Sanchin is probably the most misunderstood Kata in all of Karate. In contrast, it is probably the single most valuable training exercise in Goju Ryu. Sanchin has such aspects as deep, diaphragmatic breathing found in many internal arts as well as external attributes like mechanical alignment and muscular strength.
+* COMMENT Eiichi Miyazato and the Jundokan
+
+Eiichi Miyazato was a senior student of Chojun Miyagi and founder of the Jundokan branch of Okinawan Goju-Ryu. Miyazato was born in 1922 in Naha. In 1938, at the age of 15 he would meet Chojun Miyagi and begin studying Goju-Ryu. In addition to his Goju-Ryu training Miyazato was also a Judo practitioner. Miyazato would often assist Miyagi in instructing at the police academy as well as in the Garden Dojo.
+
+Following Chojun Miyagi's death, Miyazato succeeded him as the police instructor as well as the instructor at the garden dojo. Soon Goju-Ryu was becoming very popular and the garden dojo was no longer sufficient. In 1957 the Jundokan dojo would finally be built. Most of the hojo undo equipment used by the Jundokan was the same equipment that was used in Miyagi's garden dojo. Miyazato had inherited the equipment from Miyagi.
+
+For a long time Miyazato was the all Japan-Police Judo champion as well as the Okinawan Judo champion. He served as the vice-president and later president of the Okinawan Judo Federation. Miyazato took his responsibilities seriously, and was determined to pass on Miyagi's legacy. Jundokan literally means "House of Father's Way" or "House for Following in the Father's Footsteps".
+
+Miyazato taught many students, both from Okinawa and from around the world. A few of the more famous ones include Teruo Chinen, Morio Higaonna, Taira Masaji, Yoshio Hichiya and Tetsu Gima. Classes at the Jundokan were reported to be fairly informal, with students generally practicing on their own and more senior students assisting the newer ones. Miyazato passed away in 1999. He held the rank of 10th Dan in Goju-Ryu and 7th Dan in Kodokan Judo. Today the Jundokan is one of the largest and most recognized branches of Goju-Ryu. The organisation is run by his senior students that are there.
+
+References/Sources for additional reading:
+http://www.ogkk.eu/historymaster/masters/eiichi_miyazato.htm
+http://okinawakan.weebly.com/masters-biography-karate...
+Entering Through the Gateway of Gojuryu pg 32-35.
+
+* Closing: Possibly Interesting Reads
+
+#+begin_center
+image:https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/seipai.gif
+#+end_center
+
++ [[https://www.usadojo.com/goju-ryu-karate/][Goju-ryu Karate - USAdojo.com]]
++ [[https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/][Don Warrener - Warrener Entertainment]]
++ [[https://www.jundokan-international.org/publications][Publications — Jundokan International]]
++ [[https://jundokannz.org/the-jundokan][Jundokan So-Honbu — Jundokan New Zeland]]
++ [[http://www.jundokan-hb.jp/english/declaration.htm][JUNDOKAN -]]
++ [[https://www.google.com/search?q=what+does+JUNDOKAN+mean&oq=what+does+JUNDOKAN+mean&aqs=chrome..69i57j33i160l2j33i21.2954j0j4&sourceid=chrome&ie=UTF-8][what does JUNDOKAN mean - Google Search]]
++ [[https://blackbeltwiki.com/goju-ryu-katas][List of Goju-Ryu Katas - Black Belt Wiki]]
++ [[https://youtu.be/B0KJ1GLUH6I][Jundokan Volume 4 - YouTube]] [Goju documentary]
++ [[https://www.youtube.com/watch?v=jolyGrH447g&ab_channel=ArtofOneDojo][The History of Goju Ryu Karate | ART OF ONE DOJO - YouTube]]

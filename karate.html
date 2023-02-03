@@ -1,0 +1,1203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2023-02-02 Thu 21:44 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>A Brisk Introduction to Karate</title>
+<meta name="author" content="Musa Al-hassy" />
+<meta name="description" content="Discovering what be ka-ra-te" />
+<meta name="generator" content="Org Mode" />
+<style>
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+</style>
+<style>  summary:hover {background:pink;} </style>
+        <style>
+        /* From: https://endlessparentheses.com/public/css/endless.css */
+        /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+        kbd
+        {
+          -moz-border-radius: 6px;
+          -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          -webkit-border-radius: 6px;
+          -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          background-color: #f7f7f7;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          color: #333;
+          display: inline-block;
+          font-family: 'Droid Sans Mono', monospace;
+          font-size: 80%;
+          font-weight: normal;
+          line-height: inherit;
+          margin: 0 .1em;
+          padding: .08em .4em;
+          text-shadow: 0 1px 0 #fff;
+          word-spacing: -4px;
+
+          box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+        }
+        </style>
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+        <script type="text/javascript">
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+            }
+        </script>
+
+         <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+          <script>
+                 $(document).ready(function() {
+                     $('.tooltip').tooltipster({
+                         theme: 'tooltipster-punk',
+                         contentAsHTML: true,
+                         animation: 'grow',
+                         delay: [100,500],
+                         // trigger: 'click'
+                         trigger: 'custom',
+                         triggerOpen: {
+                             mouseenter: true
+                         },
+                         triggerClose: {
+                             originClick: true,
+                             scroll: true
+                         }
+         });
+                 });
+             </script>
+
+        <style>
+           abbr {color: red;}
+
+           .tooltip { border-bottom: 1px dotted #000;
+                      color:red;
+                      text-decoration: none;}
+        </style>
+</head>
+<body>
+<div id="content" class="content">
+<div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orgd8ab784">1. Succession of Miyagi&#xa0;&#xa0;&#xa0;<span class="tag"><span class="The">The</span>&#xa0;<span class="Five">Five</span>&#xa0;<span class="Taikyokus">Taikyokus</span></span></a></li>
+<li><a href="#org8b06ae1">2. From Standing to Destroying&#xa0;&#xa0;&#xa0;<span class="tag"><span class="TeshiWaza">TeshiWaza</span>&#xa0;<span class="FukyuKata">FukyuKata</span>&#xa0;<span class="Gekisai">Gekisai</span></span></a></li>
+<li><a href="#orgfca820f">3. Dachi-Waza Kata</a></li>
+<li><a href="#org41d1dd7">4. Fukyu Kata Ichi</a></li>
+<li><a href="#org8af886b">5. Gekisai Dai Ichi &#x2014;“Attack &amp; Destroy One”</a></li>
+<li><a href="#org1225b9a">6. Closing: Possibly Interesting Reads</a></li>
+</ul>
+</div>
+</div>
+<p>
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br>
+    <a href="https://alhassy.github.io/AlBasmala">AlBasmala</a>
+    <a href="https://alhassy.github.io/archive">Archive</a>
+    <a href="https://alhassy.github.io/tags">Tags</a>
+    <a href="https://alhassy.github.io/rss.xml">RSS</a>
+    <a href="https://alhassy.github.io/about">About</a>
+</div><style>  summary:hover {background:pink;} </style>
+        <style>
+        /* From: https://endlessparentheses.com/public/css/endless.css */
+        /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+        kbd
+        {
+          -moz-border-radius: 6px;
+          -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          -webkit-border-radius: 6px;
+          -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          background-color: #f7f7f7;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          color: #333;
+          display: inline-block;
+          font-family: 'Droid Sans Mono', monospace;
+          font-size: 80%;
+          font-weight: normal;
+          line-height: inherit;
+          margin: 0 .1em;
+          padding: .08em .4em;
+          text-shadow: 0 1px 0 #fff;
+          word-spacing: -4px;
+
+          box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+        }
+        </style>
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+        <script type="text/javascript">
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+            }
+        </script>
+
+         <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+          <script>
+                 $(document).ready(function() {
+                     $('.tooltip').tooltipster({
+                         theme: 'tooltipster-punk',
+                         contentAsHTML: true,
+                         animation: 'grow',
+                         delay: [100,500],
+                         // trigger: 'click'
+                         trigger: 'custom',
+                         triggerOpen: {
+                             mouseenter: true
+                         },
+                         triggerClose: {
+                             originClick: true,
+                             scroll: true
+                         }
+         });
+                 });
+             </script>
+
+        <style>
+           abbr {color: red;}
+
+           .tooltip { border-bottom: 1px dotted #000;
+                      color:red;
+                      text-decoration: none;}
+        </style>
+        <meta name="author" content="Musa Al-hassy">
+    <meta name="referrer" content="no-referrer"><link href="usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="org-notes-style.css" rel="stylesheet" type="text/css" /><link href="floating-toc.css" rel="stylesheet" type="text/css" /><link href="blog-banner.css" rel="stylesheet" type="text/css" /><link rel="icon" href="images/favicon.png"><script type="text/javascript">
+   /*
+   @licstart  The following is the entire license notice for the
+   JavaScript code in this tag.
+
+   Copyright (C) 2012-2020 Free Software Foundation, Inc.
+
+   The JavaScript code in this tag is free software: you can
+   redistribute it and/or modify it under the terms of the GNU
+   General Public License (GNU GPL) as published by the Free Software
+   Foundation, either version 3 of the License, or (at your option)
+   any later version.  The code is distributed WITHOUT ANY WARRANTY;
+   without even the implied warranty of MERCHANTABILITY or FITNESS
+   FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+   As additional permission under GNU GPL version 3 section 7, you
+   may distribute non-source (e.g., minimized or compacted) forms of
+   that code without the copy of the GNU GPL normally required by
+   section 4, provided you include this license notice and a URL
+   through which recipients can access the Corresponding Source.
+
+
+   @licend  The above is the entire license notice
+   for the JavaScript code in this tag.
+   */
+   <!--/*--><![CDATA[/*><!--*/
+    function CodeHighlightOn(elem, id)
+    {
+      var target = document.getElementById(id);
+      if(null != target) {
+        elem.cacheClassElem = elem.className;
+        elem.cacheClassTarget = target.className;
+        target.className = "code-highlighted";
+        elem.className   = "code-highlighted";
+      }
+    }
+    function CodeHighlightOff(elem, id)
+    {
+      var target = document.getElementById(id);
+      if(elem.cacheClassElem)
+        elem.className = elem.cacheClassElem;
+      if(elem.cacheClassTarget)
+        target.className = elem.cacheClassTarget;
+    }
+   /*]]>*///-->
+   </script><script type="text/x-mathjax-config">
+       MathJax.Hub.Config({
+           displayAlign: "center",
+           displayIndent: "0em",
+
+           "HTML-CSS": { scale: 100,
+                           linebreaks: { automatic: "false" },
+                           webFont: "TeX"
+                          },
+           SVG: {scale: 100,
+                 linebreaks: { automatic: "false" },
+                 font: "TeX"},
+           NativeMML: {scale: 100},
+           TeX: { equationNumbers: {autoNumber: "AMS"},
+                  MultLineWidth: "85%",
+                  TagSide: "right",
+                  TagIndent: ".8em"
+                }
+   });
+   </script>
+   <script type="text/javascript"
+           src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+   <link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">A Brisk Introduction to Karate</h1></center> <script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script>
+</p>
+
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.github.io/tag-karate.html"><img src="https://img.shields.io/badge/-karate-grey?logo=nil"></a></center>
+<center><a href="https://www.usadojo.com/wp-content/uploads/2013/08/Goju-Ryu-Karate-600x300.png" class="tooltip" title="Image credit “https://www.usadojo.com/wp-content/uploads/2013/08/Goju-Ryu-Karate-600x300.png”"><img src="https://www.usadojo.com/wp-content/uploads/2013/08/Goju-Ryu-Karate-600x300.png" alt="Article image" style="border: 2px solid black;" width="88%" height="88%" align="top"/></a></center>
+
+<div class="org-center">
+<p>
+<img src="https://img.shields.io/badge/Warning-Incomplete_DRAFT-red?logo=codeigniter">
+</p>
+</div>
+
+<p>
+What be this “Karate”?
+</p>
+
+<p>
+The Gekisai kata are taught as the first kata in the Goju Ryu Karate
+syllabus. They were created by Chojun Miyagi Sensei in 1940 as a way of
+introducing the basic karate forms to a wider audience.
+</p>
+
+<div class="org-center">
+<p>
+<a href="https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/saifa.gif" class="tooltip" title="Image credit “https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/saifa.gif”"><img src="https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/saifa.gif" alt="Article image"
+             width="nil" height="nil" align="top"/></a>
+</p>
+</div>
+
+<div id="outline-container-orgd8ab784" class="outline-2">
+<h2 id="orgd8ab784"><span class="section-number-2">1.</span> <a href="#orgd8ab784">Succession of Miyagi</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="The">The</span>&#xa0;<span class="Five">Five</span>&#xa0;<span class="Taikyokus">Taikyokus</span></span></h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Following the death of Chojun Miyagi Sensei in 1953, four main schools teaching Goju Ryu emerged.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">School</th>
+<th scope="col" class="org-left">Founder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Meibukan, <i>The House of the pure-minded warrior</i></td>
+<td class="org-left">Meitoku Yagi</td>
+</tr>
+
+<tr>
+<td class="org-left">Jundokan, <i>House in which we follow in the master’s footsteps</i></td>
+<td class="org-left">Eiichi   Miyazato</td>
+</tr>
+
+<tr>
+<td class="org-left">Shoreikan, <i>House of politeness and respect</i></td>
+<td class="org-left">Seikichi Toguchi</td>
+</tr>
+
+<tr>
+<td class="org-left">Goju Kai, <i>The Japanese Goju Association</i></td>
+<td class="org-left">Gogen Yamaguchi</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+The graphic of this article, the closed fist, is the symbol of Goju Kai which
+was popularised in Ontario, Canada, by <a href="https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/">Don Warrener</a>. This school starts with the
+“Taikyoku Katas”, <i>First-course formations</i>, which consists of 6 formations all
+making an “I”-shape in movement: The student starts at the bottom-middle of the
+“I”, moves left, then right, then up, and eventually back down to the starting
+position. Each formation reinforces basic principles, such as a certain block
+and stance.
+</p>
+
+<div class="org-center">
+<ol class="org-ol">
+<li><a href="https://youtu.be/5dCu6C6pTF0"><img src="https://img.shields.io/badge/Taikyoku_Gedan-First--course_Low_Block-green?logo=youtube"></a></li>
+<li><a href="https://youtu.be/C08R9PEQRqY"><img src="https://img.shields.io/badge/Taikyoku_Chudan-First--course_Middle_Block-green?logo=youtube"></a></li>
+<li><a href="https://youtu.be/g_ggx2Ywwrc"><img src="https://img.shields.io/badge/Taikyoku_Jodan-First--course_High_Block-green?logo=youtube"></a></li>
+<li><a href="https://youtu.be/FSeGrXQs3sI"><img src="https://img.shields.io/badge/Taikyoku_Kake_Uke-First--course_Hooking_Block-blue?logo=youtube"></a></li>
+<li><a href="https://youtu.be/gDaWBIfs-G8"><img src="https://img.shields.io/badge/Taikyoku_Mawashi_Uke-First--course_Roundhose_Block-blue?logo=youtube"></a></li>
+</ol>
+</div>
+
+<p>
+Other schools skip these “school-children” fundamentals and start-off with
+Gekisai Ich, <i>Attack and Destroy</i>, which is known as Goju Karate's first Kata.
+However, the Jundokan school works up to this Kata a different way&#x2026;
+</p>
+</div>
+</div>
+
+<div id="outline-container-org8b06ae1" class="outline-2">
+<h2 id="org8b06ae1"><span class="section-number-2">2.</span> <a href="#org8b06ae1">From Standing to Destroying</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="TeshiWaza">TeshiWaza</span>&#xa0;<span class="FukyuKata">FukyuKata</span>&#xa0;<span class="Gekisai">Gekisai</span></span></h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Jundokan starts with these
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">TeshiWaza, <i>Stances, or Formation-11</i></td>
+</tr>
+
+<tr>
+<td class="org-left">Fukyu Kata 1, <i>to Spread or to Make Popular formation</i></td>
+</tr>
+
+<tr>
+<td class="org-left">Fukyu Kata 2, <i>to Spread or to Make Popular formation</i></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+The Fukyu Kata were made to popularise Karate and make it accessible.
+Miyagi renamed Fukyu Kata to <i>Gekisai Dai Ichi</i>, “Attach and Destroy 1”
+&#x2014;of-course the second kata of Goju Karate is known as “Attack and Destroy 2”
+or <i>Gekisai Dai Ni</i>.
+</p>
+<ul class="org-ul">
+<li><i>Geki</i> ≈ <i>to attack</i></li>
+<li><i>Sai</i> ≈ <i>to smash, break, crush</i></li>
+<li><i>Gekisai</i> ≈ <i>to pulverise, to attack and destroy</i></li>
+</ul>
+
+<p>
+The aggressive renaming of the ‘popularising’ kata, in the 1940s, may have been due
+to Japan's war-time efforts.
+</p>
+
+
+
+<div id="orgd4a1837" class="figure">
+<p><img src="../images/fukyu-kata.png" alt="fukyu-kata.png" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfca820f" class="outline-2">
+<h2 id="orgfca820f"><span class="section-number-2">3.</span> <a href="#orgfca820f">Dachi-Waza Kata</a></h2>
+<div class="outline-text-2" id="text-3">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/5EjMpsPv99k" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+<p>
+Above is “Formation 11”, a slight variation of “Dachi-Waza Kata” which is
+performed as follows.
+</p>
+
+<p>
+Starting with heels touching, toes pointing out, and hands to the side.
+</p>
+
+<ol class="org-ol">
+<li><a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-musubi-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-musubi-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-musubi-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/5/5c/Musubidachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/5/5c/Musubidachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Musubidachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Musubi-dachi, <i>Joining/United stance; Formal Attention stance</i>
+<ul class="org-ul">
+<li>Heels together, toes open at about 45 degrees;</li>
+<li>Hands move up to waist: <b>Hands remain on the sides of the waist through-out!</b></li>
+<li>In this stance, the body should be straight, knees are slightly bent, heels are touching and feet are pointing out making a 45° angle.</li>
+</ul></li>
+
+<li><a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heiko-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heiko-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heiko-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/3/32/Heikoudachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/3/32/Heikoudachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/3/32/Heikoudachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Heiko-dachi, <i>Parallel stance; Attention Stance</i>
+<ul class="org-ul">
+<li>The feet open to shoulder width apart, and their outer edges are parallel.</li>
+<li>In this stance, the feet are shoulder-width apart, the big toes and the
+second toes should face forward, the inner edges of the feet are parallel,
+and the center of gravity is at the mid-point between the two feet.</li>
+</ul></li>
+
+<li><a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sagiashi-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sagiashi-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sagiashi-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Sagi-ashi-dachi, <i>Heron-foot stance</i>
+<ul class="org-ul">
+<li>left leg steps to the left, right leg follows then upward with the knee</li>
+<li>In this stance, one leg is raised and bent while the other leg is slightly
+bent and supports the whole body weight The toe of the raised leg points
+downward.</li>
+<li>This is also known as Tsuru-ashi-dachi, <i>Crane-foot stance</i>.</li>
+</ul></li>
+
+<li>Sagi-ashi-dachi - to the right</li>
+
+<li><p>
+<a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-zenkutsu-dachi.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-zenkutsu-dachi.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-zenkutsu-dachi.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/9/96/Zenkutsudachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/9/96/Zenkutsudachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/9/96/Zenkutsudachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Zenkutsu-dachi, <i>forward stance</i> - to the left
+</p>
+
+<ul class="org-ul">
+<li>This is a long frontal stance where the weight is mostly on the front leg.</li>
+<li>It has exactly the same height as shiko-dachi (below), but the rear leg is
+completely straight at the knee and extended back.</li>
+<li>The front foot is placed frontal (toes facing forward), the rear foot is
+turned out 30 degrees, but never 90 degrees as seems natural to new practitioners
+because this precludes any forward motion.</li>
+<li>The heel of the rear foot rests on the ground.</li>
+</ul>
+
+<p>
+Zenkutsu is performed as follows:
+</p>
+<ol class="org-ol">
+<li>From the natural stance, step forward so that the distance between the back foot and the front foot is roughly about one and a half to two shoulder width</li>
+<li>The feet are one shoulder width apart</li>
+<li>The front foot points forward and the back foot points diagonally at about 30 degree angle</li>
+<li>The front knee is bent, turned slightly inward, and should be forward enough that you are not able to see the toes</li>
+<li>The back leg is naturally straight but not locked</li>
+<li>Most of the body weight is placed on the front leg</li>
+<li>The heel of the back leg should be placed firmly on the ground.</li>
+</ol></li>
+
+<li><a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-kokutsu-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-kokutsu-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-kokutsu-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/2/2a/Koukutsudachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/2/2a/Koukutsudachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Koukutsudachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Kokutsu-dachi, <i>Back Long stance</i> - to the right, but head still facing to the left
+
+<ul class="org-ul">
+<li>This is a back stance derived from the zenkutsu dachi stance.</li>
+<li>Start with zenkutsu dachi, move your back leg across so that the front leg
+and the back leg are on the same line.</li>
+</ul></li>
+
+<li>Zenkustu Dachi - back to the left</li>
+
+<li><p>
+<a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sanchin-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sanchin-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-sanchin-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/7/78/Sanchindachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/7/78/Sanchindachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Sanchindachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Sanchin-dachi, <i>Three Battle stance</i> - take a step into sanchin, facing leftwards
+</p>
+
+<p>
+This is the most difficult stance to master and probably the most important
+stance in Goju Ryu.  It is performed as follows:
+</p>
+<ol class="org-ol">
+<li>Begin with heiko dachi, step one foot forward</li>
+<li>The heel of the front foot should be on the same line as the toes of the back foot</li>
+<li>The toes of both feet should turn inward slightly</li>
+<li>The front foot is turned inward at about 20° angle</li>
+<li>Tense your tandien, buttocks and thigh muscles and then pull the hips upwards</li>
+<li>The knees should bend and turn inward</li>
+<li>The feet should be placed firmly on the ground with the toes gripping the ground</li>
+<li>The center of gravity should be at the midpoint between the two feet</li>
+<li>Keep your back straight and your chin tucked in.</li>
+</ol>
+
+<p>
+Sanchin kata, considered the core and most difficult kata in Goju Ryu is done entirely in the sanchin dachi stance.
+</p></li>
+
+<li>Zenkusti Dachi - Look right, then with right leg move into Zenkutsu, then
+end-up facing rightwards with right leg at the front. Through-out the left
+remains in-place, just pivoting.</li>
+
+<li>Kokustu Dachi - to the left, but head still facing to the right</li>
+
+<li>Zenkustu dachi - back to the right</li>
+
+<li>Sanchin Dachi - take a step into sanchin, facing rightwards</li>
+
+<li><p>
+<a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heisoku-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heisoku-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-heisoku-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg" alt="Article image"
+             width="100" height="100" align="top"/></a>
+Hesoku-dachi, <i>feet together stance; informal attention stance</i> - right moves up to touch the left, then head faces to the
+front center
+</p>
+
+<p>
+In this stance, your back is straight and relaxed, your feet are placed
+together, and the weight is equally distributed between the two feet.
+</p></li>
+
+<li>Zenkustu dachi - to the front center, with left leg leading</li>
+
+<li><a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-hachiji-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-hachiji-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-hachiji-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Hachiji-dachi, <i>Natural stance</i> - right leg takes a step forward, left follows, to end-up in a
+should-width stance
+
+<ul class="org-ul">
+<li>This stance is close to the natural way people stand.</li>
+<li>The feet are shoulder width apart, the toes point out at about 45°, the
+body is relaxed and the knees are slightly bent.</li>
+</ul></li>
+
+<li>Zenkustu Dachi - look over the left-shoulder, turn with left leg; end-up in
+left leading zenkustu facing the back right corner</li>
+
+<li><p>
+<a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-neko-ashi-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-neko-ashi-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-neko-ashi-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/a/a5/Nekoashidachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/a/a5/Nekoashidachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Nekoashidachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Neko Ashi Dachi, <i>Cat stance</i> - Bring the left back, with toes on ground, heel up.
+</p>
+
+<p>
+To assume neko ashi dachi:
+</p>
+<ol class="org-ol">
+<li>Start with musubi dachi (formal attention stance) and step forward for a distance of about one foot</li>
+<li>Lower the hips deeply and transfer most of the body weight to the back leg</li>
+<li>The front leg is bent and the heel of the front leg is raised slightly with only the toes and the ball of the front foot touches the ground</li>
+<li>The back foot points outward at about 30 to 45 degree angle</li>
+<li>About 90% of the body weight is placed on the back foot.</li>
+</ol>
+
+<p>
+Note:
+</p>
+<ul class="org-ul">
+<li>All weight rests on the back leg, which is bent at the knee.</li>
+<li>The rear foot is turned at about 20-30 degrees out and the knee sits at
+the same angle.</li>
+<li>Only the toes of the front foot rest on the ground, positioned in front of
+the back heel.</li>
+<li>There is no weight on the front foot, and there is no bent in the ankle
+joint - front knee, front shin, and the rise of the foot (but not the
+toes) form a single line.</li>
+</ul></li>
+
+<li><p>
+<a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-bensoku-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-bensoku-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-bensoku-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Bensoku-dachi, <i>Cross-legged stance</i> - Drop the left down, toes pointing to the right. Right steps
+towards the back right corner of the room. Finally, left leg slides behind
+the right leg, ending with the heel up and the toes planted and facing the
+right leg.
+</p>
+
+<p>
+To assume bensoku dachi:
+</p>
+<ol class="org-ol">
+<li>Cross one leg behind the other</li>
+<li>Bend both knees</li>
+<li>The front foot is placed firmly on the ground but only the ball of the back foot touches the ground</li>
+<li>The knee of the back foot is nested against the back of the front knee.</li>
+</ol>
+
+<p>
+Bensoku dachi is a transitional stance that is used when one needs to change
+direction. It appears in kata like Seiyunchin and Sepai.
+</p></li>
+
+<li>Zenkustu with the right leg towards the back left of the room; the left leg
+only pivots.</li>
+
+<li>Neko Ashi Dachi - Bring the right leg back into a cat stance</li>
+
+<li>Drop the right down and do a Bensoku Dachi</li>
+
+<li><p>
+<a href="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-shiko-dachi-Copy.jpg" class="tooltip" title="Image credit “https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-shiko-dachi-Copy.jpg”"><img src="https://www.karatephilosophy.com/wp-content/uploads/2022/08/Goju-ryu-stance-shiko-dachi-Copy.jpg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+<a href="https://upload.wikimedia.org/wikipedia/commons/b/b0/Shikodachi.svg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/commons/b/b0/Shikodachi.svg”"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Shikodachi.svg" alt="Article image"
+             width="50" height="50" align="top"/></a>
+Shiko-dachi, <i>Square Stance, Horse Stance, Straddle Leg Stance</i>
+</p>
+
+<p>
+The left leg moves towards the back of the room, ending in a shiko dachi;
+right leg remains where it is.
+</p>
+
+<p>
+The toes face out at about 45 degrees. Knees point outward, and stance is often low.
+</p>
+
+<p>
+To assume shiko dachi, start with hachiji dachi stance, turn the heels to
+point the toes outward at about 45 degrees and lower the hips.
+</p>
+
+<p>
+In this stance:
+</p>
+<ul class="org-ul">
+<li>The feet are about two shoulder width apart</li>
+<li>The big toes point outward diagonally at about 45 degrees</li>
+<li>The knees are turned outward</li>
+<li>The back is straight</li>
+<li>The hips are lower than in kiba dachi and the thighs are almost parallel to the ground</li>
+<li>The body weight is evenly distributed between the two legs</li>
+<li>The soles of the feet are firmly in contact with the ground.</li>
+</ul>
+
+<p>
+Shiko dachi is a great stance for developing lower body strength and stability.
+</p></li>
+
+<li>Look rightwards towards the center of the room, then do a shiko dachi
+&#x2014;ending with body facing the right side of the room; i.e., right leg is in
+the back.</li>
+
+<li>Bring the back leg, the right leg, up to the front leg into a Musubu Dachi.</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org41d1dd7" class="outline-2">
+<h2 id="org41d1dd7"><span class="section-number-2">4.</span> <a href="#org41d1dd7">Fukyu Kata Ichi</a></h2>
+<div class="outline-text-2" id="text-4">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/xmCz7F06DLs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+<div class="org-center">
+<p>
+<a href="https://youtu.be/UpfuGcwRYzI"><img src="https://img.shields.io/badge/Fukyu_Kata_Ichi-Step--by--Step_Instructions-green?logo=youtube"></a>
+</p>
+
+<p>
+<a href="https://youtu.be/M-VC1BGtRYM"><img src="https://img.shields.io/badge/Fukyu_Kata_Ichi-With_Japanese_Names-green?logo=youtube"></a>
+</p>
+
+<p>
+<a href="https://youtu.be/-eBWPK45q1w"><img src="https://img.shields.io/badge/Fukyu_Kata_Ichi-Kids_Instructional-green?logo=youtube"></a>
+</p>
+
+<ul class="org-ul">
+<li><a href="https://www.youtube.com/watch?v=-vekmSkNOGw">Done slowly</a></li>
+<li><a href="https://www.youtube.com/watch?v=GmQGY10xID4&amp;ab_channel=GojuRyuKarateCentre">Learn Fukyu Kata for Goju Ryu</a></li>
+<li><a href="https://www.youtube.com/watch?v=FFEgCWfelE0">Walkthrough</a></li>
+<li><a href="https://youtu.be/g32NRLwZEsA">Kids Class - Fukyu Kata Dai Ichi walkthrough - Joey Jackson</a></li>
+</ul>
+</div>
+
+<ol class="org-ol">
+<li value="0"><i>Kyotsukei</i>, Attention: Palms at sides, arms straight</li>
+<li value="0"><i>Rei</i>, Bow: Eyes slightly down, hands still at sides</li>
+<li value="0"><i>Kamae</i>, Ready stance: heels together Palms down in front of body, L hand over R hand</li>
+
+<li>Turn left into a left forward stance; down-block with left-hand</li>
+
+<li>Step forward with right foot into Right forward stance;
+right middle (solar plexus) punch</li>
+
+<li>Turn around into a right forward stance, while doing a right down-block
+
+<ol class="org-ol">
+<li>Move right foot behind body and to the left</li>
+<li>Extend left arm and chamber with right fist at left elbow</li>
+<li>Pivot 180°-rigtwards, on the left-foot, into right forward stance</li>
+<li>Right down block</li>
+</ol></li>
+
+<li>Step forward with left foot into left forward stance;
+left middle (solar plexus) punch</li>
+
+<li>Turn 90°-leftward, pivoting on the right foot, to face the front;
+enter into a left Zenkustu; down-block with left</li>
+
+<li>6 Step forward with R foot into R forward stance (R foot straight, L foot diagonal)
+<ul class="org-ul">
+<li>R middle (solar plexus) punch</li>
+</ul></li>
+
+<li>7 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+<ul class="org-ul">
+<li>L middle (solar plexus) punch</li>
+</ul></li>
+
+<li>8 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+<ul class="org-ul">
+<li>R middle (solar plexus) punch</li>
+</ul></li>
+
+<li>9a Move L foot behind body and to the R (move beyond where you extended in step 3 - this time you will end up 225 degrees from start)
+<ul class="org-ul">
+<li>Keeping R arm extended, chamber with L fist on R elbow</li>
+</ul></li>
+
+<li>9b Pivot (on R foot) 225 L into L forward stance -
+you are now facing 45 L from back of dojo
+<ul class="org-ul">
+<li>Down block L</li>
+</ul></li>
+
+<li>10 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+<ul class="org-ul">
+<li>High block R</li>
+</ul></li>
+
+<li>11 Pivot 90 R (on L foot) into R forward stance -
+you are now facing 45 R from back of dojo
+<ol class="org-ol">
+<li>Down block R</li>
+</ol></li>
+
+<li>12 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+<ul class="org-ul">
+<li>High block L</li>
+</ul></li>
+
+<li>13 Pivot 45 L (on R foot) into L forward stance - you are now facing back of dojo
+<ul class="org-ul">
+<li>R reverse middle punch</li>
+</ul></li>
+
+<li>14 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+<ul class="org-ul">
+<li>L reverse middle punch</li>
+</ul></li>
+
+<li>15 Step forward with L foot into L forward stance
+(L foot straight, R foot 45 diagonal)
+<ul class="org-ul">
+<li>R reverse middle punch</li>
+</ul></li>
+
+<li>16 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+<ul class="org-ul">
+<li>L reverse middle punch</li>
+</ul></li>
+
+<li>17a Move L foot behind body and to the R (move beyond where you extended in step 3 - you will end up turning 225 degrees to the left)
+<ul class="org-ul">
+<li>Extend R arm and chamber with L fist at R elbow</li>
+</ul></li>
+
+<li>17b Pivot 225 L (both feet) into L forward stance, facing 45 L of dojo front
+<ul class="org-ul">
+<li>Down block L</li>
+</ul></li>
+
+<li>18 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+<ul class="org-ul">
+<li>High punch R</li>
+</ul></li>
+
+<li>19a Pivot 90 R (on L foot) into R forward stance Extend L arm and chamber with R fist at L elbow</li>
+
+<li>19b Facing 45 R of dojo front Down block R</li>
+
+<li>20 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+<ul class="org-ul">
+<li>High punch L</li>
+</ul></li>
+
+<li>21 L foot pulls back to starting position, heels together
+<ul class="org-ul">
+<li>Palms down in front of body, L hand over R hand</li>
+</ul></li>
+</ol>
+
+
+<p>
+Note: This is also known as “Kihon Kata Ichi”, <i>Basics Form One</i>.
+</p>
+<ul class="org-ul">
+<li><a href="https://www.youtube.com/watch?v=tgdIVEmnwdc&amp;ab_channel=EastlakeDojo">https://www.youtube.com/watch?v=tgdIVEmnwdc&amp;ab_channel=EastlakeDojo</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8af886b" class="outline-2">
+<h2 id="org8af886b"><span class="section-number-2">5.</span> <a href="#org8af886b">Gekisai Dai Ichi &#x2014;“Attack &amp; Destroy One”</a></h2>
+<div class="outline-text-2" id="text-5">
+<div class="org-center">
+<p>
+<a href="https://youtu.be/xtOl_XULS48"><img src="https://img.shields.io/badge/Gekisai_Dai_Ichi-Attack_%26_Destroy_One-green?logo=youtube"></a>
+(Side View)
+</p>
+
+<p>
+<a href="https://youtu.be/YtcRO7zceIg"><img src="https://img.shields.io/badge/Gekisai_Dai_Ichi-Attack_%26_Destroy_One-green?logo=youtube"></a>
+(Front View)
+</p>
+
+<ul class="org-ul">
+<li><a href="https://youtu.be/i7LyUfjiT3g">Powerful! By Sandra Sanchez</a></li>
+<li><a href="https://www.youtube.com/shorts/yqEDJ8lKrlg">#shorts</a></li>
+</ul>
+</div>
+
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/sZ86wr2WT0w" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+<ol class="org-ol">
+<li>Attention stance</li>
+
+<li>Left foot steps out into Yoi (ready stance) shoulder width apart
+
+<ol class="org-ol">
+<li>Alternatively: Yoi with feet together at attention left hand over right several inches away from the groin</li>
+<li>the left hand pushes down while the right hand pushes up creating
+(explosive) tension</li>
+</ol></li>
+
+<li>From either Yoi right foot steps forward and you turn left 90 degrees into hourglass stance
+<ol class="org-ol">
+<li>High block with left hand</li>
+<li>If feet are apart in Yoi when the right foot steps forward you pivot on the center (ball and heel) of the foot so that the stance is even</li>
+<li>If feet are together in Yoi left foot pivots on the heel and the right on the ball so the stance is even</li>
+<li>if hands and feet are together in Yoi the right arm explodes from underneath almost like a fanning block before turning</li>
+</ol></li>
+
+<li>Step forward into hourglass stance with the right foot
+<ul class="org-ul">
+<li>High punch with the right hand</li>
+</ul></li>
+
+<li>Step back into square/horse stance so that the body is facing the direction of the attention stance
+<ul class="org-ul">
+<li>Low block with the left</li>
+</ul></li>
+
+<li>Turn the body 90 degrees and left foot slides behind the right into hourglass stance
+<ul class="org-ul">
+<li>High block with the right hand</li>
+</ul></li>
+
+<li>Step forward into hourglass stance with the left leg
+<ul class="org-ul">
+<li>High punch with the left hand</li>
+</ul></li>
+
+<li>Step back into square/horse stance so that the body is facing the direction of the attention stance
+<ul class="org-ul">
+<li>Low block with the right</li>
+</ul></li>
+
+<li>Left leg steps in and then forward into hourglass stance
+<ul class="org-ul">
+<li>Middle block with the left</li>
+</ul></li>
+
+<li>Step forward into hourglass stance with the right
+<ul class="org-ul">
+<li>Middle block with the right</li>
+</ul></li>
+
+<li>Left front kick and land in a front stance
+<ol class="org-ol">
+<li>Left elbow strike as blocking right hand pulls back into chamber</li>
+<li>Left downward back fist face level</li>
+<li>Left hand transitions to low block</li>
+<li>And right hand punches with a “Kiai”</li>
+</ol></li>
+
+<li>Turn right 90 degrees into a ready stance (with head facing to right)
+<ol class="org-ol">
+<li>Right knife hand strike to the side of the temple</li>
+<li>Alternatively: during this transition the back leg of the previous front stance lifts up as if avoiding a sweep</li>
+</ol></li>
+
+<li>Turn right 90 degrees to right, step forward with the left into hourglass stance
+<ul class="org-ul">
+<li>Left hand middle block</li>
+</ul></li>
+
+<li>Right front kick and land in a front stance
+<ol class="org-ol">
+<li>Right elbow strike as blocking left hand pulls back into chamber</li>
+<li>Right downward back fist face level</li>
+<li>Right hand transitions to low block</li>
+<li>Left hand punches with a “Kiai”</li>
+</ol></li>
+
+<li>Turn left 90 degrees into a ready stance (with head facing to left)
+<ol class="org-ol">
+<li>Left knife hand strike to the side of the temple</li>
+<li>Alternatively: during this transition the back leg of the previous front stance lifts up as if avoiding a sweep</li>
+</ol></li>
+
+<li>Turn left 90 degrees and left leg steps back into front stance
+<ol class="org-ol">
+<li>As stepping back left hand pulls back as if pulling the arm of an opponent</li>
+<li>Left hand in chamber palm down, right in chamber palm up</li>
+<li>Double punch with left hand to the lungs and right to the stomach</li>
+<li>Alternatively: when stepping back the left hand turns in like an open handed fanning block</li>
+<li>Right hand in chamber comes out and performs a middle block</li>
+<li>Then both hands pull back to chamber with left palm down and right palm up</li>
+<li>Then double punch</li>
+</ol></li>
+
+<li>Step forward into ready stance
+<ol class="org-ol">
+<li>Reverse fist orientation</li>
+<li>Alternatively: Step forward feet together, both knees bent</li>
+<li>Right arm turns in as if for a fanning block</li>
+<li>Left arm arcs around in front for a middle block</li>
+<li>Then both hands are pulled back into chamber in the revers orientation they were before in the prior step</li>
+</ol></li>
+
+<li>Step back with the right leg into front stance
+<ul class="org-ul">
+<li>Double punch, right hand to the heart and left to the liver</li>
+</ul></li>
+
+<li>Step forward into attention stance
+<ol class="org-ol">
+<li>Alternatively: open left hand</li>
+<li>Turn right fist to palm facing up and place it in the open hand</li>
+<li>Open the right hand</li>
+<li>Step forward to attention as the hands turn staying left over right and
+return to the beginning position</li>
+</ol></li>
+
+<li>Bow</li>
+</ol>
+
+<p>
+Geki Sai Ni is very similar&#x2026;
+</p>
+<div class="org-center">
+<p>
+<a href="https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/gekisai_ni.gif" class="tooltip" title="Image credit “https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/gekisai_ni.gif”"><img src="https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/gekisai_ni.gif" alt="Article image"
+             width="nil" height="nil" align="top"/></a>
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1225b9a" class="outline-2">
+<h2 id="org1225b9a"><span class="section-number-2">6.</span> <a href="#org1225b9a">Closing: Possibly Interesting Reads</a></h2>
+<div class="outline-text-2" id="text-6">
+<div class="org-center">
+<p>
+<a href="https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/seipai.gif" class="tooltip" title="Image credit “https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/seipai.gif”"><img src="https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/seipai.gif" alt="Article image"
+             width="nil" height="nil" align="top"/></a>
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a href="https://www.usadojo.com/goju-ryu-karate/">Goju-ryu Karate - USAdojo.com</a></li>
+<li><a href="https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/">Don Warrener - Warrener Entertainment</a></li>
+<li><a href="https://www.jundokan-international.org/publications">Publications — Jundokan International</a></li>
+<li><a href="https://jundokannz.org/the-jundokan">Jundokan So-Honbu — Jundokan New Zeland</a></li>
+<li><a href="http://www.jundokan-hb.jp/english/declaration.htm">JUNDOKAN -</a></li>
+<li><a href="https://www.google.com/search?q=what+does+JUNDOKAN+mean&amp;oq=what+does+JUNDOKAN+mean&amp;aqs=chrome..69i57j33i160l2j33i21.2954j0j4&amp;sourceid=chrome&amp;ie=UTF-8">what does JUNDOKAN mean - Google Search</a></li>
+<li><a href="https://blackbeltwiki.com/goju-ryu-katas">List of Goju-Ryu Katas - Black Belt Wiki</a></li>
+<li><a href="https://youtu.be/B0KJ1GLUH6I">Jundokan Volume 4 - YouTube</a> [Goju documentary]</li>
+<li><a href="https://www.youtube.com/watch?v=jolyGrH447g&amp;ab_channel=ArtofOneDojo">The History of Goju Ryu Karate | ART OF ONE DOJO - YouTube</a></li>
+</ul>
+</div>
+</div>
+
+<p>
+<hr><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="karate.org.html"><img
+   src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time"href="https://github.com/alhassy/alhassy.github.io/commits/master/posts/karate.org"><img
+   src="https://img.shields.io/badge/-History-informational?logo=github"></a>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><br><a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a><br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div>
+</p>
+</div>
+</body>
+</html>
