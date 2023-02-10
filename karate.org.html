@@ -143,6 +143,10 @@
         /* font-lock-string-face */
         color: #689d6a;
       }
+      .tex-math {
+        /* tex-math */
+        color: #689d6a;
+      }
       .underline {
         /* underline */
         text-decoration: underline;
@@ -195,20 +199,23 @@ Example usage:
 
 <a href="image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100">image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100</a>
 
-<a href="image:URL|WIDTH|HEIGHT">image:URL|WIDTH|HEIGHT</a>
+<a href="image:URL|WIDTH|HEIGHT|CENTER?|CREDIT">image:URL|WIDTH|HEIGHT|CENTER?|CREDIT</a>?
 "</span></span><span class="org-block">
 </span><span class="org-block"><span class="comment-delimiter">;;             </span></span><span class="org-block"><span class="comment">(upcase (or o-description o-label))
-</span></span><span class="org-block">  (</span><span class="org-block"><span class="keyword">-let</span></span><span class="org-block"> [(image width height no-border?) (s-split </span><span class="org-block"><span class="string">"|"</span></span><span class="org-block"> o-label)]
+</span></span><span class="org-block">  (</span><span class="org-block"><span class="keyword">-let</span></span><span class="org-block"> [(image width height center? credit?) (s-split </span><span class="org-block"><span class="string">"|"</span></span><span class="org-block"> o-label)]
     (</span><span class="org-block"><span class="keyword">-let</span></span><span class="org-block"> [unsplash (cl-second (s-match </span><span class="org-block"><span class="string">".*unsplash.com/photos/</span></span><span class="org-block"><span class="string"><span class="regexp-grouping-backslash">\\</span></span></span><span class="org-block"><span class="string"><span class="regexp-grouping-construct">(</span></span></span><span class="org-block"><span class="string">.*</span></span><span class="org-block"><span class="string"><span class="regexp-grouping-backslash">\\</span></span></span><span class="org-block"><span class="string"><span class="regexp-grouping-construct">)</span></span></span><span class="org-block"><span class="string">"</span></span><span class="org-block"> image))]
-      (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((href (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (concat </span><span class="org-block"><span class="string">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span></span><span class="org-block"> unsplash) image))
-            (title (format </span><span class="org-block"><span class="string">"Image credit &#8220;%s&#8221;"</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (concat </span><span class="org-block"><span class="string">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span></span><span class="org-block"> unsplash) image)))
-            (src (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (format </span><span class="org-block"><span class="string">"<a href="https://source.unsplash.com/%s/%sx%s">https://source.unsplash.com/%s/%sx%s</a>"</span></span><span class="org-block"> unsplash width height) image)))
-        (format </span><span class="org-block"><span class="string">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
+      (</span><span class="org-block"><span class="keyword">let*</span></span><span class="org-block"> ((href (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (concat </span><span class="org-block"><span class="string">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span></span><span class="org-block"> unsplash) image))
+            (title (format </span><span class="org-block"><span class="string">"Image credit &#8220;%s&#8221;"</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> credit? (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (concat </span><span class="org-block"><span class="string">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span></span><span class="org-block"> unsplash) image))))
+            (src (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (format </span><span class="org-block"><span class="string">"<a href="https://source.unsplash.com/%s/%sx%s">https://source.unsplash.com/%s/%sx%s</a>"</span></span><span class="org-block"> unsplash width height) image))
+            (it (format </span><span class="org-block"><span class="string">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;"</span></span><span class="org-block">
-                href title src width height)))))
+                        href title src width height)))
+        (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> center?
+            (format </span><span class="org-block"><span class="string">"&lt;center&gt; %s &lt;/center&gt;"</span></span><span class="org-block"> it)
+          it)))))
 </span><span class="org-block-end-line">#+end_src
 </span>
-<span class="org-level-1">*  Abstract                                                          </span><span class="org-level-1"><span class="org-tag">:ignore:</span></span>
+<span class="org-level-1">* Abstract                                                           </span><span class="org-level-1"><span class="org-tag">:ignore:</span></span>
 <span class="org-drawer">:PROPERTIES:</span>
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Abstract</span>
 <span class="org-drawer">:END:</span>
@@ -410,7 +417,7 @@ Shadow boxing is exactly like a kata. It keeps you sharp and alert at all times.
 - Kata has <span class="writegood-passive-voice">been called</span> "meditation in motion" and in the endless striving for perfection epitomizes the concept of a martial art. When a kata <span class="writegood-passive-voice">is performed</span> well all the above points should be apparent in the execution of the form. Conversely, a kata can <span class="writegood-weasels">often</span> look pretty but lack all understanding. Kata is therefore the cornerstone to becoming a good martial artist.
 
 <span class="org-level-1">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-1"> What Is the Meaning of Kata in Karate?</span>
-Kata, which means &#8220;form&#8221; in Japanese is the term used to describe specific sequences of motion that <span class="writegood-passive-voice">are used</span> to practice karate technique and execution. The interpretation and the process of analyzing, processing, and visualizing these techniques and their real-life use <span class="writegood-passive-voice">is called</span> Bunkai.
+<span class="flyspell-duplicate">Kata</span>, which means &#8220;form&#8221; in Japanese is the term used to describe specific sequences of motion that <span class="writegood-passive-voice">are used</span> to practice karate technique and execution. The interpretation and the process of analyzing, processing, and visualizing these techniques and their real-life use <span class="writegood-passive-voice">is called</span> <span class="flyspell-duplicate">Bunkai</span>.
 
 There is a saying which goes around dojos, which says: &#8220;In karate, Kata is grammar, Kihon is the vocabulary and Kumite is a conversation.&#8221; Within this analogy, Kata means a sort of set of rules which is both <span class="writegood-weasels">very</span> strict yet also can <span class="writegood-passive-voice">be analyzed</span>, once a practitioner reaches a certain level.
 
@@ -444,22 +451,27 @@ Goju-Ryu, one of the most effective martial arts types has 12 Katas traditionall
 Even though there are multiple different names for these in different countries, dojos, and styles, the basic form is <span class="writegood-weasels">mostly</span> the same.
 <span class="org-level-1">* Succession of </span><span class="org-level-1"><span class="flyspell-duplicate">Miyagi</span></span><span class="org-level-1"> </span><span class="org-level-1"><span class="org-tag">:The:Five:<a href="badge:Taikyoku_Mawashi_Uke|First-course_Roundhose_Block|blue|https://youtu.be/gDaWBIfs-G8|youtube">Taikyoku</a>s:</span></span>
 
-Following the death of Chojun Miyagi Sensei in 1953, four main schools teaching Goju Ryu emerged.
+Following the death of Chojun Miyagi Sensei in 1953, four main schools teaching Goju <span class="flyspell-duplicate">Ryu</span> emerged.
 
 <span class="org-table">| School                                                       | Founder           |</span>
 <span class="org-table">|--------------------------------------------------------------+-------------------|</span>
-<span class="org-table">| Meibukan, </span><span class="org-table"><span class="italic">The House of the pure-minded warrior</span></span><span class="org-table">               | Meitoku </span><span class="org-table"><span class="flyspell-incorrect">Yagi</span></span><span class="org-table">      |</span>
+<span class="org-table">| Meibukan, </span><span class="org-table"><span class="italic">The House of the pure-minded warrior</span></span><span class="org-table">               | Meitoku </span><span class="org-table"><span class="flyspell-duplicate">Yagi</span></span><span class="org-table">      |</span>
 <span class="org-table">| </span><span class="org-table"><span class="flyspell-duplicate">Jundokan</span></span><span class="org-table">, </span><span class="org-table"><span class="italic">House in which we follow in the master&#8217;s footsteps</span></span><span class="org-table"> | </span><span class="org-table"><span class="flyspell-duplicate">Eiichi</span></span><span class="org-table">   </span><span class="org-table"><span class="flyspell-duplicate">Miyazato </span></span><span class="org-table">|</span>
-<span class="org-table">| Shoreikan, </span><span class="org-table"><span class="italic">House of politeness and respect</span></span><span class="org-table">                 | </span><span class="org-table"><span class="flyspell-incorrect">Seikichi</span></span><span class="org-table"> </span><span class="org-table"><span class="flyspell-incorrect">Toguchi</span></span><span class="org-table">  |</span>
-<span class="org-table">| Goju Kai, </span><span class="org-table"><span class="italic">The Japanese Goju Association</span></span><span class="org-table">                      | </span><span class="org-table"><span class="flyspell-incorrect">Gogen</span></span><span class="org-table"> </span><span class="org-table"><span class="flyspell-incorrect">Yamaguchi</span></span><span class="org-table">   |</span>
+<span class="org-table">| Shoreikan, </span><span class="org-table"><span class="italic">House of politeness and respect</span></span><span class="org-table">                   | </span><span class="org-table"><span class="flyspell-incorrect">Seikichi</span></span><span class="org-table"> </span><span class="org-table"><span class="flyspell-incorrect">Toguchi</span></span><span class="org-table">  |</span>
+<span class="org-table">| Goju Kai, </span><span class="org-table"><span class="italic">The Japanese Goju Association</span></span><span class="org-table">                      | </span><span class="org-table"><span class="flyspell-incorrect">Gogen</span></span><span class="org-table"> </span><span class="org-table"><span class="flyspell-duplicate">Yamaguchi</span></span><span class="org-table">   |</span>
 
 The graphic of this article, the closed fist, is the symbol of Goju <span class="flyspell-duplicate">Kai</span> which
-<span class="writegood-passive-voice">was popularised</span> in Ontario, Canada, by <span class="org-link"><a href="https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/">Don Warrener</a></span>. This school starts with the
+<span class="writegood-passive-voice">was popularised</span> in Ontario, Canada, by <span class="org-link"><a href="https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/">Don Warrener</a></span>.  Initially, <span class="flyspell-duplicate">Miyagi</span> tasked
+<span class="org-link"><a href="https://blackbeltmag.com/black-belt-flashback-gogen-the-cat-yamaguchi-head-of-goju-karate">Gogen &#8220;The Cat&#8221; Yamaguchi</a></span> with spreading Goju <span class="flyspell-duplicate">Ryu</span> in mainland Japan, outside of
+Okinawa: <span class="flyspell-duplicate">Yamaguchi</span> designed the closed fist symbol, based on the right hand of
+<span class="flyspell-duplicate">Miyagi</span>; he unified all karate schools in Japan; he propagated Goju all over the
+world. Moreover, in this Goju <span class="flyspell-duplicate">Kai</span> style, <span class="flyspell-duplicate">Yamaguchi</span> added to the Goju system the
 &#8220;Taikyoku <span class="flyspell-incorrect">Katas</span>&#8221;, <span class="italic">First-course formations</span>, which consists of 5 formations all
 making an &#8220;I&#8221;-shape in movement: The student starts at the bottom-middle of the
 &#8220;I&#8221;, moves left, then right, then up, and eventually back down to the starting
 position. Each formation reinforces basic principles, such as a certain block
-and stance.
+and stance. These <span class="writegood-passive-voice">are intended</span> as training methods for the beginner students to
+prepare them for the more advanced <span class="flyspell-duplicate">kata</span>.
 
 <span class="org-block-begin-line">#+begin_center
 </span>1. <a href="badge:Taikyoku_Gedan|First-course_Low_Block|green|https://youtu.be/5dCu6C6pTF0|youtube">badge:Taikyoku_Gedan|First-course_Low_Block|green|https://youtu.be/5dCu6C6pTF0|youtube</a>
@@ -475,24 +487,6 @@ and stance.
 Other schools skip these &#8220;school-children&#8221; fundamentals and start-off with
 <span class="flyspell-duplicate">Gekisai</span> <span class="flyspell-incorrect">Ich</span>, <span class="italic">Attack and Destroy</span>, which <span class="writegood-passive-voice">is known</span> as Goju Karate's first <span class="flyspell-duplicate">Kata</span>.
 However, the <span class="flyspell-duplicate">Jundokan</span> school works up to this <span class="flyspell-duplicate">Kata</span> a different way...
-
-<span class="org-level-1">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-1"> Yamaguchi, &#8220;The Cat&#8221;, and the Taikoyo Forms</span>
-
-Ch&#333;jun Miyagi later gave G&#333;gen Yamaguchi the responsibility for spreading G&#333;j&#363;-ry&#363; in mainland Japan. In the early 1930s, G&#333;gen designed what would become the legendary signature G&#333;j&#363;-ry&#363; fist. It <span class="writegood-passive-voice">is said</span> to <span class="writegood-passive-voice">be modeled</span> after the right fist of Ch&#333;jun Miyagi.
-
-G&#333;gen Yamaguchi succeeded in unifying all the karate schools in Japan into a
-single union which resulted in the formation of The Federation of All Japan
-Karate-d&#333; Organization (F.A.J.K.O.) in 1964.
-
-<span class="bold">Yamaguchi added to the G&#333;j&#363; system the Taikyoku kata forms, - training methods for the beginner students to prepare them for the more advanced kata.</span>
-
-It has <span class="writegood-passive-voice">been argued</span> that 'never before has a single man had such profound effect on the development and propagation of karate-d&#333;'. (De Jong, Ingo, 1989). Goju-Kai Karate-do Hard and Soft in Harmony - Volume 1. Sweden, Jakobsbergs Tryckeri AB.
-
-
-He alone was primarily responsible for the spread of G&#333;j&#363;-ry&#363; throughout the
-world today whereby hundreds of thousands of practitioners have experienced <span class="writegood-weasels">some</span>
-form of training within traditional and non-traditional karate dojo.
-- Src: <span class="org-link"><a href="https://blackbeltmag.com/black-belt-flashback-gogen-the-cat-yamaguchi-head-of-goju-karate">https://blackbeltmag.com/black-belt-flashback-gogen-the-cat-yamaguchi-head-of-goju-karate</a></span>
 
 <span class="org-level-1">* From Standing to Destroying </span><span class="org-level-1"><span class="org-tag">:TeshiWaza:FukyuKata:Gekisai:</span></span>
 
@@ -528,10 +522,16 @@ to Japan's war-time efforts.
 <span class="org-meta-line">#+RESULTS:</span>
 <img src="../images/tachi-fukyu-gekai-sai.png" alt="file:../images/tachi-fukyu-gekai-sai.png" />
 
-<span class="org-level-1">* </span><span class="org-level-1"><span class="flyspell-duplicate">T</span></span><span class="org-level-1"><span class="flyspell-incorrect"><span class="flyspell-duplicate">achi</span></span></span><span class="org-level-1">-</span><span class="org-level-1"><span class="flyspell-duplicate">Waza</span></span><span class="org-level-1"> </span><span class="org-level-1"><span class="flyspell-duplicate">Kata</span></span>
+<span class="org-level-1">* </span><span class="org-level-1"><span class="flyspell-duplicate">Jundokan</span></span><span class="org-level-1">: Standing in Style                               </span><span class="org-level-1"><span class="org-tag">:Tachi_Waza_Kata:</span></span>
 <span class="org-drawer">:PROPERTIES:</span>
-<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Dachi-Waza-Kata</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Tachi-Waza-Kata</span>
 <span class="org-drawer">:END:</span>
+
+<span class="org-link"><a href="http://www.ogkk.eu/historymaster/masters/eiichi_miyazato.htm">Eiichi Miyazato</a></span> was a Judo champion and a student of <span class="flyspell-duplicate">Miyagi</span>; he wanted to pass
+on <span class="flyspell-duplicate">Miyagi's</span> legacy and so opened his own training-hall: The <span class="flyspell-duplicate">Jundokan</span> ---which
+<span class="writegood-weasels">literally</span> means <span class="italic">House of Father's Way</span> or <span class="italic">House for Following in the Father's
+Footsteps</span>. Among his famous students is <span class="flyspell-incorrect">Teruo</span> <span class="flyspell-incorrect">Chinen</span>, who introduced
+&#8220;<span class="flyspell-duplicate">Tachi</span>-<span class="flyspell-duplicate">Waza</span> <span class="flyspell-duplicate">Kata</span>&#8221; into the <span class="flyspell-duplicate">Jundokan</span> Goju <span class="flyspell-duplicate">Kata</span> syllabus.
 
 <span class="italic">Note:</span> <span class="flyspell-duplicate">Tachi</span> and Dachi are the same word, in Japanese, meaning <span class="italic">stance</span>. The sound
 changes depending on if the letter is the start of a word.
@@ -545,14 +545,13 @@ performed</span> as follows.
 <span class="comment"># ;; Always redisplay images after C-</span><span class="comment"><span class="writegood-duplicates">c C</span></span><span class="comment">-c (org-ctrl-c-ctrl-c)</span>
 <span class="comment"># (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)</span>
 <span class="comment">#</span>
-<span class="org-meta-line">#+property: header-args:latex-as-png :results raw value replace :resolution 2000</span>
-<span class="org-block-begin-line">#+begin_src latex-as-png :results (progn (shell-command "cp ob-latex-as-png.png ~/blog/images/teshi-waza.png") "none") :exports none
+<span class="org-meta-line">#+property: header-args:latex-as-png :results raw value replace :resolution "200"</span>
+<span class="org-block-begin-line">#+begin_src latex-as-png :results (progn (shell-command "cp ob-latex-as-png.png ~/blog/images/tachi-waza.png") "none") :exports none
 </span><span class="org-block"><span class="keyword">\begin</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">center</span></span><span class="org-block">}
-</span><span class="org-block"><span class="keyword">\,</span></span><span class="org-block"><span class="warning">\newline</span></span><span class="org-block"> {</span><span class="org-block"><span class="keyword">\large</span></span><span class="org-block"> Tachi-Waza Kata} </span><span class="org-block"><span class="warning">\\</span></span><span class="org-block"> {</span><span class="org-block"><span class="keyword">\sc</span></span><span class="org-block"> Goju Ryu Karate}
+</span><span class="org-block"><span class="keyword">\,</span></span><span class="org-block"><span class="warning">\newline</span></span><span class="org-block"> {</span><span class="org-block"><span class="keyword">\large</span></span><span class="org-block"> Tachi-Waza Kata} </span><span class="org-block"><span class="warning">\\</span></span><span class="org-block"> {</span><span class="org-block"><span class="keyword">\sc</span></span><span class="org-block"> Jundokan Goju Ryu Karate}
 </span><span class="org-block"><span class="keyword">\end</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">center</span></span><span class="org-block">}
 </span><span class="org-block"><span class="keyword">\begin</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">tikzpicture</span></span><span class="org-block">}
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, fill=red!40!yellow] (1) at (0,0) {Musubu};
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block"> (-1) at (0, -0.5) {</span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic">Start!</span></span><span class="org-block">}};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, fill=red!40!yellow, align=center] (1) at (0,0) {Musubu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic">Start!</span></span><span class="org-block">}};
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black] (2) at (-2,0) {SaigiAshi};
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black] (3) at (+2,0) {SaigiAshi};
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black] (4) at (-4,0) {Zenkutsu};
@@ -595,10 +594,12 @@ performed</span> as follows.
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, brown, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, dashed] (15) edge [bend left] node [left] {} (16);
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, brown, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick] (16) edge node {} (1);
 </span><span class="org-block"><span class="keyword">\end</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">tikzpicture</span></span><span class="org-block">}
+
+</span><span class="org-block"><span class="keyword">\definecolor</span></span><span class="org-block">{grey}{rgb}{0.5,0.5,0.5}
+</span><span class="org-block"><span class="keyword">\centerline</span></span><span class="org-block">{</span><span class="org-block"><span class="keyword">\color</span></span><span class="org-block">{grey}</span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic"><a href="http://alhassy.com/karate">alhassy.com/karate</a></span></span><span class="org-block">}}
 </span><span class="org-block-end-line">#+end_src
 </span>
-<img src="../images/teshi-waza.png" alt="file:../images/teshi-waza.png" />
-
+<a href="image:../images/tachi-waza.png|400|400|center|Musa Al-hassy">image:../images/tachi-waza.png|400|400|center|Musa Al-hassy</a>
 
 Starting with heels touching, toes pointing out, and hands to the side.
 
@@ -815,12 +816,16 @@ Starting with heels touching, toes pointing out, and hands to the side.
 <span class="org-block-end-line">#+end_center
 </span>
 <span class="org-drawer">:Personal_Graphic:</span>
-<span class="flyspell-duplicate">Fukyugata</span> Ichi looks like a tilted hour-glass, &#8987;!
-<span class="org-meta-line">#+property: header-args:latex-as-png :results raw value replace :resolution 2000</span>
+<span class="flyspell-incorrect">Fukyugata</span> Ichi looks like a tilted hour-glass, &#8987;!
+<span class="org-meta-line">#+property: header-args:latex-as-png :results raw value replace :resolution "2000"</span>
 <span class="org-block-begin-line">#+begin_src latex-as-png :results (progn (shell-command "cp ob-latex-as-png.png ~/blog/images/fukyu-kata.png") "none")
-</span><span class="org-block">Note: </span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic">Same leg, same hand</span></span><span class="org-block">}: If the left(/right) hand is out, then the left(/right) leg is in front.
-
-</span><span class="org-block"><span class="keyword">\begin</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">tikzpicture</span></span><span class="org-block">}[x = 1.3cm, y = 1.4cm]
+</span><span class="org-block"><span class="keyword">\begin</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">center</span></span><span class="org-block">}
+</span><span class="org-block"><span class="keyword">\,</span></span><span class="org-block"><span class="warning">\newline</span></span><span class="org-block"> {</span><span class="org-block"><span class="keyword">\large</span></span><span class="org-block"> Fukyugata} </span><span class="org-block"><span class="warning">\\</span></span><span class="org-block"> {</span><span class="org-block"><span class="keyword">\sc</span></span><span class="org-block"> Goju Ryu Karate </span><span class="org-block"><span class="tex-math">$\sim$</span></span><span class="org-block"> Jundokan}
+</span><span class="org-block"><span class="keyword">\end</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">center</span></span><span class="org-block">}
+</span><span class="org-block"><span class="comment-delimiter">%%</span></span><span class="org-block"><span class="comment">
+</span></span><span class="org-block"><span class="comment-delimiter">% </span></span><span class="org-block"><span class="comment">Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left(/right) leg is in front.
+</span></span><span class="org-block"><span class="comment-delimiter">%%</span></span><span class="org-block"><span class="comment">
+</span></span><span class="org-block"><span class="keyword">\begin</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">tikzpicture</span></span><span class="org-block">}[x = 1.3cm, y = 1.4cm]
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, fill=red!40!yellow, align=center] (0) at (0,0) {</span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic">Start!</span></span><span class="org-block">}</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic">End!</span></span><span class="org-block">}};
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (1) at (-2,0) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Gedan}; </span><span class="org-block"><span class="comment">% No space around &#8220;\\&#8221;!
 </span></span><span class="org-block">    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (2) at (-4,0) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
@@ -833,9 +838,9 @@ Starting with heels touching, toes pointing out, and hands to the side.
 
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (4) at (-0.3,+3) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Gedan};
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, brown, ultra thick, dashed] (3) edge [right] node [left] {} (4);
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (5) at (0,+5) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (6) at (0,+7) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (7) at (0,+9) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (5) at (0,+5) {Sanchin</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (6) at (0,+7) {Sanchin</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (7) at (0,+9) {Sanchin</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Oi Zuki};
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, brown] (4) edge node [left] {} (5);
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, brown] (5) edge node [left] {} (6);
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, brown] (6) edge node [left] {} (7);
@@ -852,9 +857,9 @@ Starting with heels touching, toes pointing out, and hands to the side.
 
     </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center, inner sep=0pt,minimum size=1pt] (12) at (+0,+1.5) {</span><span class="org-block"><span class="keyword">\small</span></span><span class="org-block"> Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block"><span class="keyword">\small</span></span><span class="org-block"> Yagi Zuki};
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, brown, ultra thick, dashed] (11) edge [bend left]  node [left] {</span><span class="org-block"><span class="keyword">\</span></span><span class="org-block"><span class="keyword"><span class="writegood-weasels"><span class="writegood-weasels">tiny</span></span></span></span><span class="org-block"> pivot } (12);
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (13) at (0,-2) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Yagi Zuki};
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (14) at (0,-4) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Yagi Zuki};
-    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (15) at (0,-6) {Zenkutsu</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Yagi Zuki};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (13) at (0,-2) {Sanchin</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Yagi Zuki};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (14) at (0,-4) {Sanchin</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Yagi Zuki};
+    </span><span class="org-block"><span class="keyword">\node</span></span><span class="org-block">[shape=circle,draw=black, align=center] (15) at (0,-6) {Sanchin</span><span class="org-block"><span class="warning">\\</span></span><span class="org-block">Yagi Zuki};
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, brown] (12) edge [bend left = 50] node [left] {} (13);
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, brown] (13) edge [left] node [left] {} (14);
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, brown] (14) edge [left] node [left] {} (15);
@@ -871,9 +876,12 @@ Starting with heels touching, toes pointing out, and hands to the side.
 
     </span><span class="org-block"><span class="keyword">\path</span></span><span class="org-block">[-&gt;, </span><span class="org-block"><span class="writegood-weasels"><span class="writegood-weasels">very</span></span></span><span class="org-block"> thick, black!60!green] (19) edge [bend right=7] node [left] {} (0);
 </span><span class="org-block"><span class="keyword">\end</span></span><span class="org-block">{</span><span class="org-block"><span class="function-name">tikzpicture</span></span><span class="org-block">}
+
+</span><span class="org-block"><span class="keyword">\definecolor</span></span><span class="org-block">{grey}{rgb}{0.5,0.5,0.5}
+</span><span class="org-block"><span class="keyword">\centerline</span></span><span class="org-block">{</span><span class="org-block"><span class="keyword">\color</span></span><span class="org-block">{grey}</span><span class="org-block"><span class="keyword">\emph</span></span><span class="org-block">{</span><span class="org-block"><span class="italic">Art by Musa Al-hassy</span></span><span class="org-block">}}
 </span><span class="org-block-end-line">#+end_src
 </span>
-<span class="org-meta-line">#+RESULTS:</span>
+
 <img src="../images/fukyu-kata.png" alt="file:../images/fukyu-kata.png" />
 <span class="org-drawer">:End:</span>
 
@@ -900,64 +908,63 @@ Starting with heels touching, toes pointing out, and hands to the side.
 5. Turn 90&#176;-leftward, pivoting on the right foot, to face the front;
    enter into a left Zenkustu; down-block with left
 
-6. 6 Step forward with R foot into R forward stance (R foot straight, L foot diagonal)
+6. Step forward with R foot into R forward stance (R foot straight, L foot diagonal)
    - R middle (solar plexus) punch
 
-7. 7 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+7. Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
    - L middle (solar plexus) punch
 
-8. 8 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+8. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
    - R middle (solar plexus) punch
 
-9. 9a Move L foot behind body and to the R (move beyond where you extended in step 3 - this time you will end up 225 degrees from start)
+9. Move L foot behind body and to the R (move beyond where you extended in step 3 - this time you will end up 225 degrees from start)
    - Keeping R arm extended, chamber with L fist on R elbow
 
-10. 9b Pivot (on R foot) 225 L into L forward stance -
+10. Pivot (on R foot) 225 L into L forward stance -
     you are now facing 45 L from back of <span class="flyspell-duplicate">dojo</span>
     - Down block L
 
-11. 10 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+11. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - High block R
 
-12. 11 Pivot 90 R (on L foot) into R forward stance -
+12. Pivot 90 R (on L foot) into R forward stance -
     you are now facing 45 R from back of <span class="flyspell-duplicate">dojo</span>
     1. Down block R
 
-13. 12 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+13. Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
     - High block L
 
-14. 13 Pivot 45 L (on R foot) into L forward stance - you are now facing back of <span class="flyspell-duplicate">dojo</span>
+14. Pivot 45 L (on R foot) into L forward stance - you are now facing back of <span class="flyspell-duplicate">dojo</span>
     - R reverse middle punch
 
-15. 14 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+15. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - L reverse middle punch
 
-16. 15 Step forward with L foot into L forward stance
+16. Step forward with L foot into L forward stance
     (L foot straight, R foot 45 diagonal)
     - R reverse middle punch
 
-17. 16 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+17. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - L reverse middle punch
 
-18. 17a Move L foot behind body and to the R (move beyond where you extended in step 3 - you will end up turning 225 degrees to the left)
+18. Move L foot behind body and to the R (move beyond where you extended in step 3 - you will end up turning 225 degrees to the left)
     - Extend R arm and chamber with L fist at R elbow
 
-19. 17b Pivot 225 L (both feet) into L forward stance, facing 45 L of dojo front
+19. Pivot 225 L (both feet) into L forward stance, facing 45 L of dojo front
     - Down block L
 
-20. 18 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+20. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - High punch R
 
-21. 19a Pivot 90 R (on L foot) into R forward stance Extend L arm and chamber with R fist at L elbow
+21. Pivot 90 R (on L foot) into R forward stance Extend L arm and chamber with R fist at L elbow
 
-22. 19b Facing 45 R of dojo front Down block R
+22. Facing 45 R of dojo front Down block R
 
-23. 20 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+23. Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
     - High punch L
 
-24. 21 L foot pulls back to starting position, heels together
+24. L foot pulls back to starting position, heels together
     - Palms down in front of body, L hand over R hand
-
 
 Note: This is also known as &#8220;<span class="flyspell-incorrect">Kihon</span> <span class="flyspell-duplicate">Kata</span> <span class="flyspell-duplicate">Ichi</span>&#8221;, <span class="italic">Basics Form One</span>.
 - <span class="org-link"><a href="https://www.youtube.com/watch?v=tgdIVEmnwdc&amp;ab_channel=EastlakeDojo">https://www.youtube.com/watch?v=tgdIVEmnwdc&amp;ab_channel=EastlakeDojo</a></span>
@@ -1076,21 +1083,6 @@ Fukyugata Ichi. - YouTube</a></span>
 <span class="flyspell-duplicate">Sanchin</span> <span class="writegood-passive-voice">was brought</span> back from China by Kanryo Higaonna. It translates as &#8220;3 Battles&#8221; or &#8220;3 Conflicts&#8221;, the three generally accepted as being: the body, mind and spirit. It is the fundamental <span class="flyspell-incorrect">kata</span> of GoJu Ryu. Sanchin develops discipline, determination, focus, perseverance and other mental attributes.
 
 Sanchin is <span class="writegood-weasels">probably</span> the most misunderstood Kata in all of Karate. In contrast, it is <span class="writegood-weasels">probably</span> the single most valuable training exercise in Goju Ryu. Sanchin has such aspects as deep, diaphragmatic breathing found in <span class="writegood-weasels">many</span> internal arts as well as external attributes like mechanical alignment and muscular strength.
-<span class="org-level-1">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-1"> </span><span class="org-level-1"><span class="flyspell-duplicate">Eiichi</span></span><span class="org-level-1"> Miyazato and the Jundokan</span>
-
-Eiichi Miyazato was a senior student of <span class="flyspell-duplicate">Chojun</span> Miyagi and founder of the Jundokan branch of Okinawan Goju-Ryu. Miyazato <span class="writegood-passive-voice">was born</span> in 1922 in Naha. In 1938, at the age of 15 he would meet Chojun Miyagi and begin studying Goju-Ryu. In addition to his Goju-Ryu training Miyazato was also a Judo practitioner. Miyazato would <span class="writegood-weasels">often</span> assist Miyagi in instructing at the police academy as well as in the Garden Dojo.
-
-Following Chojun Miyagi's death, Miyazato succeeded him as the police instructor as well as the instructor at the garden dojo. Soon Goju-Ryu was becoming <span class="writegood-weasels">very</span> popular and the garden dojo was no longer sufficient. In 1957 the Jundokan dojo would finally <span class="writegood-passive-voice">be built</span>. Most of the hojo undo equipment used by the Jundokan was the same equipment that <span class="writegood-passive-voice">was used</span> in Miyagi's garden dojo. Miyazato had inherited the equipment from Miyagi.
-
-For a long time Miyazato was the all Japan-Police Judo champion as well as the Okinawan Judo champion. He served as the vice-president and later president of the Okinawan Judo Federation. Miyazato took his responsibilities seriously, and <span class="writegood-passive-voice">was determined</span> to pass on Miyagi's legacy. Jundokan <span class="writegood-weasels">literally</span> means "House of Father's Way" or "House for Following in the Father's Footsteps".
-
-Miyazato taught <span class="writegood-weasels">many</span> students, both from Okinawa and from around the world. A <span class="writegood-weasels">few</span> of the more famous ones include Teruo Chinen, Morio Higaonna, Taira Masaji, Yoshio Hichiya and Tetsu Gima. Classes at the Jundokan <span class="writegood-passive-voice">were reported</span> to be <span class="writegood-weasels">fairly</span> informal, with students generally practicing on their own and more senior students assisting the newer ones. Miyazato passed away in 1999. He held the rank of 10th Dan in Goju-Ryu and 7th Dan in Kodokan Judo. Today the Jundokan is one of the largest and most recognized branches of Goju-Ryu. The organisation <span class="writegood-passive-voice">is run</span> by his senior students that are there.
-
-References/Sources for additional reading:
-<span class="org-link"><a href="http://www.ogkk.eu/historymaster/masters/eiichi_miyazato.htm">http://www.ogkk.eu/historymaster/masters/eiichi_miyazato.htm</a></span>
-<span class="org-link"><a href="http://okinawakan.weebly.com/masters-biography-karate">http://okinawakan.weebly.com/masters-biography-karate</a></span>...
-Entering Through the Gateway of Gojuryu pg 32-35.
-
 <span class="org-level-1">* Closing: Possibly Interesting Reads</span>
 
 <span class="org-block-begin-line">#+begin_center

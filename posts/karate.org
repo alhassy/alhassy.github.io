@@ -14,20 +14,23 @@ Example usage:
 
 image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100
 
-image:URL|WIDTH|HEIGHT
+image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
 "
 ;;             (upcase (or o-description o-label))
-  (-let [(image width height no-border?) (s-split "|" o-label)]
+  (-let [(image width height center? credit?) (s-split "|" o-label)]
     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
-      (let ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-            (title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
-            (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image)))
-        (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+      (let* ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+            (title (format "Image credit “%s”" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
+            (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+            (it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/></a>"
-                href title src width height)))))
+                        href title src width height)))
+        (if center?
+            (format "<center> %s </center>" it)
+          it)))))
 #+end_src
 
-*  Abstract                                                          :ignore:
+* Abstract                                                           :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Abstract
 :END:
@@ -269,16 +272,21 @@ Following the death of Chojun Miyagi Sensei in 1953, four main schools teaching 
 |--------------------------------------------------------------+-------------------|
 | Meibukan, /The House of the pure-minded warrior/               | Meitoku Yagi      |
 | Jundokan, /House in which we follow in the master’s footsteps/ | Eiichi   Miyazato |
-| Shoreikan, /House of politeness and respect/                 | Seikichi Toguchi  |
+| Shoreikan, /House of politeness and respect/                   | Seikichi Toguchi  |
 | Goju Kai, /The Japanese Goju Association/                      | Gogen Yamaguchi   |
 
 The graphic of this article, the closed fist, is the symbol of Goju Kai which
-was popularised in Ontario, Canada, by [[https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/][Don Warrener]]. This school starts with the
+was popularised in Ontario, Canada, by [[https://www.warrenerentertainment.com/fighting-spirit-blog/don-warrener/][Don Warrener]].  Initially, Miyagi tasked
+[[https://blackbeltmag.com/black-belt-flashback-gogen-the-cat-yamaguchi-head-of-goju-karate][Gogen “The Cat” Yamaguchi]] with spreading Goju Ryu in mainland Japan, outside of
+Okinawa: Yamaguchi designed the closed fist symbol, based on the right hand of
+Miyagi; he unified all karate schools in Japan; he propagated Goju all over the
+world. Moreover, in this Goju Kai style, Yamaguchi added to the Goju system the
 “Taikyoku Katas”, /First-course formations/, which consists of 5 formations all
 making an “I”-shape in movement: The student starts at the bottom-middle of the
 “I”, moves left, then right, then up, and eventually back down to the starting
 position. Each formation reinforces basic principles, such as a certain block
-and stance.
+and stance. These are intended as training methods for the beginner students to
+prepare them for the more advanced kata.
 
 #+begin_center
 1. badge:Taikyoku_Gedan|First-course_Low_Block|green|https://youtu.be/5dCu6C6pTF0|youtube
@@ -294,24 +302,6 @@ and stance.
 Other schools skip these “school-children” fundamentals and start-off with
 Gekisai Ich, /Attack and Destroy/, which is known as Goju Karate's first Kata.
 However, the Jundokan school works up to this Kata a different way...
-
-* COMMENT Yamaguchi, “The Cat”, and the Taikoyo Forms
-
-Chōjun Miyagi later gave Gōgen Yamaguchi the responsibility for spreading Gōjū-ryū in mainland Japan. In the early 1930s, Gōgen designed what would become the legendary signature Gōjū-ryū fist. It is said to be modeled after the right fist of Chōjun Miyagi.
-
-Gōgen Yamaguchi succeeded in unifying all the karate schools in Japan into a
-single union which resulted in the formation of The Federation of All Japan
-Karate-dō Organization (F.A.J.K.O.) in 1964.
-
-*Yamaguchi added to the Gōjū system the Taikyoku kata forms, - training methods for the beginner students to prepare them for the more advanced kata.*
-
-It has been argued that 'never before has a single man had such profound effect on the development and propagation of karate-dō'. (De Jong, Ingo, 1989). Goju-Kai Karate-do Hard and Soft in Harmony - Volume 1. Sweden, Jakobsbergs Tryckeri AB.
-
-
-He alone was primarily responsible for the spread of Gōjū-ryū throughout the
-world today whereby hundreds of thousands of practitioners have experienced some
-form of training within traditional and non-traditional karate dojo.
-- Src: https://blackbeltmag.com/black-belt-flashback-gogen-the-cat-yamaguchi-head-of-goju-karate
 
 * From Standing to Destroying :TeshiWaza:FukyuKata:Gekisai:
 
@@ -347,10 +337,16 @@ digraph {
 #+RESULTS:
 [[file:../images/tachi-fukyu-gekai-sai.png]]
 
-* Tachi-Waza Kata
+* Jundokan: Standing in Style                               :Tachi_Waza_Kata:
 :PROPERTIES:
-:CUSTOM_ID: Dachi-Waza-Kata
+:CUSTOM_ID: Tachi-Waza-Kata
 :END:
+
+[[http://www.ogkk.eu/historymaster/masters/eiichi_miyazato.htm][Eiichi Miyazato]] was a Judo champion and a student of Miyagi; he wanted to pass
+on Miyagi's legacy and so opened his own training-hall: The Jundokan ---which
+literally means /House of Father's Way/ or /House for Following in the Father's
+Footsteps/. Among his famous students is Teruo Chinen, who introduced
+“Tachi-Waza Kata” into the Jundokan Goju Kata syllabus.
 
 /Note:/ Tachi and Dachi are the same word, in Japanese, meaning /stance/. The sound
 changes depending on if the letter is the start of a word.
@@ -364,14 +360,13 @@ performed as follows.
 # ;; Always redisplay images after C-c C-c (org-ctrl-c-ctrl-c)
 # (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 #
-#+property: header-args:latex-as-png :results raw value replace :resolution 2000
-#+begin_src latex-as-png :results (progn (shell-command "cp ob-latex-as-png.png ~/blog/images/teshi-waza.png") "none") :exports none
+#+property: header-args:latex-as-png :results raw value replace :resolution "200"
+#+begin_src latex-as-png :results (progn (shell-command "cp ob-latex-as-png.png ~/blog/images/tachi-waza.png") "none") :exports none
 \begin{center}
-\,\newline {\large Tachi-Waza Kata} \\ {\sc Goju Ryu Karate}
+\,\newline {\large Tachi-Waza Kata} \\ {\sc Jundokan Goju Ryu Karate}
 \end{center}
 \begin{tikzpicture}
-    \node[shape=circle,draw=black, fill=red!40!yellow] (1) at (0,0) {Musubu};
-    \node (-1) at (0, -0.5) {\emph{Start!}};
+    \node[shape=circle,draw=black, fill=red!40!yellow, align=center] (1) at (0,0) {Musubu\\\emph{Start!}};
     \node[shape=circle,draw=black] (2) at (-2,0) {SaigiAshi};
     \node[shape=circle,draw=black] (3) at (+2,0) {SaigiAshi};
     \node[shape=circle,draw=black] (4) at (-4,0) {Zenkutsu};
@@ -414,10 +409,12 @@ performed as follows.
     \path[->, brown, very thick, dashed] (15) edge [bend left] node [left] {} (16);
     \path[->, brown, very thick] (16) edge node {} (1);
 \end{tikzpicture}
+
+\definecolor{grey}{rgb}{0.5,0.5,0.5}
+\centerline{\color{grey}\emph{alhassy.com/karate}}
 #+end_src
 
-[[file:../images/teshi-waza.png]]
-
+[[image:../images/tachi-waza.png|400|400|center|Musa Al-hassy]]
 
 Starting with heels touching, toes pointing out, and hands to the side.
 
@@ -635,10 +632,14 @@ badge:Fukyu_Kata_Ichi|Kids_Instructional|green|https://youtu.be/-eBWPK45q1w|yout
 
 :Personal_Graphic:
 Fukyugata Ichi looks like a tilted hour-glass, ⌛!
-#+property: header-args:latex-as-png :results raw value replace :resolution 2000
+#+property: header-args:latex-as-png :results raw value replace :resolution "2000"
 #+begin_src latex-as-png :results (progn (shell-command "cp ob-latex-as-png.png ~/blog/images/fukyu-kata.png") "none")
-Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left(/right) leg is in front.
-
+\begin{center}
+\,\newline {\large Fukyugata} \\ {\sc Goju Ryu Karate $\sim$ Jundokan}
+\end{center}
+%%
+% Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left(/right) leg is in front.
+%%
 \begin{tikzpicture}[x = 1.3cm, y = 1.4cm]
     \node[shape=circle,draw=black, fill=red!40!yellow, align=center] (0) at (0,0) {\emph{Start!}\\\emph{End!}};
     \node[shape=circle,draw=black, align=center] (1) at (-2,0) {Zenkutsu\\Gedan}; % No space around “\\”!
@@ -652,9 +653,9 @@ Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left
 
     \node[shape=circle,draw=black, align=center] (4) at (-0.3,+3) {Zenkutsu\\Gedan};
     \path[->, brown, ultra thick, dashed] (3) edge [right] node [left] {} (4);
-    \node[shape=circle,draw=black, align=center] (5) at (0,+5) {Zenkutsu\\Oi Zuki};
-    \node[shape=circle,draw=black, align=center] (6) at (0,+7) {Zenkutsu\\Oi Zuki};
-    \node[shape=circle,draw=black, align=center] (7) at (0,+9) {Zenkutsu\\Oi Zuki};
+    \node[shape=circle,draw=black, align=center] (5) at (0,+5) {Sanchin\\Oi Zuki};
+    \node[shape=circle,draw=black, align=center] (6) at (0,+7) {Sanchin\\Oi Zuki};
+    \node[shape=circle,draw=black, align=center] (7) at (0,+9) {Sanchin\\Oi Zuki};
     \path[->, very thick, brown] (4) edge node [left] {} (5);
     \path[->, very thick, brown] (5) edge node [left] {} (6);
     \path[->, very thick, brown] (6) edge node [left] {} (7);
@@ -671,9 +672,9 @@ Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left
 
     \node[shape=circle,draw=black, align=center, inner sep=0pt,minimum size=1pt] (12) at (+0,+1.5) {\small Zenkutsu\\\small Yagi Zuki};
     \path[->, brown, ultra thick, dashed] (11) edge [bend left]  node [left] {\tiny pivot } (12);
-    \node[shape=circle,draw=black, align=center] (13) at (0,-2) {Zenkutsu\\Yagi Zuki};
-    \node[shape=circle,draw=black, align=center] (14) at (0,-4) {Zenkutsu\\Yagi Zuki};
-    \node[shape=circle,draw=black, align=center] (15) at (0,-6) {Zenkutsu\\Yagi Zuki};
+    \node[shape=circle,draw=black, align=center] (13) at (0,-2) {Sanchin\\Yagi Zuki};
+    \node[shape=circle,draw=black, align=center] (14) at (0,-4) {Sanchin\\Yagi Zuki};
+    \node[shape=circle,draw=black, align=center] (15) at (0,-6) {Sanchin\\Yagi Zuki};
     \path[->, very thick, brown] (12) edge [bend left = 50] node [left] {} (13);
     \path[->, very thick, brown] (13) edge [left] node [left] {} (14);
     \path[->, very thick, brown] (14) edge [left] node [left] {} (15);
@@ -690,9 +691,12 @@ Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left
 
     \path[->, very thick, black!60!green] (19) edge [bend right=7] node [left] {} (0);
 \end{tikzpicture}
+
+\definecolor{grey}{rgb}{0.5,0.5,0.5}
+\centerline{\color{grey}\emph{Art by Musa Al-hassy}}
 #+end_src
 
-#+RESULTS:
+
 [[file:../images/fukyu-kata.png]]
 :End:
 
@@ -719,64 +723,63 @@ Note: \emph{Same leg, same hand}: If the left(/right) hand is out, then the left
 5. Turn 90°-leftward, pivoting on the right foot, to face the front;
    enter into a left Zenkustu; down-block with left
 
-6. 6 Step forward with R foot into R forward stance (R foot straight, L foot diagonal)
+6. Step forward with R foot into R forward stance (R foot straight, L foot diagonal)
    - R middle (solar plexus) punch
 
-7. 7 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+7. Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
    - L middle (solar plexus) punch
 
-8. 8 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+8. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
    - R middle (solar plexus) punch
 
-9. 9a Move L foot behind body and to the R (move beyond where you extended in step 3 - this time you will end up 225 degrees from start)
+9. Move L foot behind body and to the R (move beyond where you extended in step 3 - this time you will end up 225 degrees from start)
    - Keeping R arm extended, chamber with L fist on R elbow
 
-10. 9b Pivot (on R foot) 225 L into L forward stance -
+10. Pivot (on R foot) 225 L into L forward stance -
     you are now facing 45 L from back of dojo
     - Down block L
 
-11. 10 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+11. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - High block R
 
-12. 11 Pivot 90 R (on L foot) into R forward stance -
+12. Pivot 90 R (on L foot) into R forward stance -
     you are now facing 45 R from back of dojo
     1. Down block R
 
-13. 12 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+13. Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
     - High block L
 
-14. 13 Pivot 45 L (on R foot) into L forward stance - you are now facing back of dojo
+14. Pivot 45 L (on R foot) into L forward stance - you are now facing back of dojo
     - R reverse middle punch
 
-15. 14 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+15. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - L reverse middle punch
 
-16. 15 Step forward with L foot into L forward stance
+16. Step forward with L foot into L forward stance
     (L foot straight, R foot 45 diagonal)
     - R reverse middle punch
 
-17. 16 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+17. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - L reverse middle punch
 
-18. 17a Move L foot behind body and to the R (move beyond where you extended in step 3 - you will end up turning 225 degrees to the left)
+18. Move L foot behind body and to the R (move beyond where you extended in step 3 - you will end up turning 225 degrees to the left)
     - Extend R arm and chamber with L fist at R elbow
 
-19. 17b Pivot 225 L (both feet) into L forward stance, facing 45 L of dojo front
+19. Pivot 225 L (both feet) into L forward stance, facing 45 L of dojo front
     - Down block L
 
-20. 18 Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
+20. Step forward with R foot into R forward stance (R foot straight, L foot 45 diagonal)
     - High punch R
 
-21. 19a Pivot 90 R (on L foot) into R forward stance Extend L arm and chamber with R fist at L elbow
+21. Pivot 90 R (on L foot) into R forward stance Extend L arm and chamber with R fist at L elbow
 
-22. 19b Facing 45 R of dojo front Down block R
+22. Facing 45 R of dojo front Down block R
 
-23. 20 Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
+23. Step forward with L foot into L forward stance (L foot straight, R foot 45 diagonal)
     - High punch L
 
-24. 21 L foot pulls back to starting position, heels together
+24. L foot pulls back to starting position, heels together
     - Palms down in front of body, L hand over R hand
-
 
 Note: This is also known as “Kihon Kata Ichi”, /Basics Form One/.
 - https://www.youtube.com/watch?v=tgdIVEmnwdc&ab_channel=EastlakeDojo
@@ -895,21 +898,6 @@ image:https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/gekisai_n
 Sanchin was brought back from China by Kanryo Higaonna. It translates as “3 Battles” or “3 Conflicts”, the three generally accepted as being: the body, mind and spirit. It is the fundamental kata of GoJu Ryu. Sanchin develops discipline, determination, focus, perseverance and other mental attributes.
 
 Sanchin is probably the most misunderstood Kata in all of Karate. In contrast, it is probably the single most valuable training exercise in Goju Ryu. Sanchin has such aspects as deep, diaphragmatic breathing found in many internal arts as well as external attributes like mechanical alignment and muscular strength.
-* COMMENT Eiichi Miyazato and the Jundokan
-
-Eiichi Miyazato was a senior student of Chojun Miyagi and founder of the Jundokan branch of Okinawan Goju-Ryu. Miyazato was born in 1922 in Naha. In 1938, at the age of 15 he would meet Chojun Miyagi and begin studying Goju-Ryu. In addition to his Goju-Ryu training Miyazato was also a Judo practitioner. Miyazato would often assist Miyagi in instructing at the police academy as well as in the Garden Dojo.
-
-Following Chojun Miyagi's death, Miyazato succeeded him as the police instructor as well as the instructor at the garden dojo. Soon Goju-Ryu was becoming very popular and the garden dojo was no longer sufficient. In 1957 the Jundokan dojo would finally be built. Most of the hojo undo equipment used by the Jundokan was the same equipment that was used in Miyagi's garden dojo. Miyazato had inherited the equipment from Miyagi.
-
-For a long time Miyazato was the all Japan-Police Judo champion as well as the Okinawan Judo champion. He served as the vice-president and later president of the Okinawan Judo Federation. Miyazato took his responsibilities seriously, and was determined to pass on Miyagi's legacy. Jundokan literally means "House of Father's Way" or "House for Following in the Father's Footsteps".
-
-Miyazato taught many students, both from Okinawa and from around the world. A few of the more famous ones include Teruo Chinen, Morio Higaonna, Taira Masaji, Yoshio Hichiya and Tetsu Gima. Classes at the Jundokan were reported to be fairly informal, with students generally practicing on their own and more senior students assisting the newer ones. Miyazato passed away in 1999. He held the rank of 10th Dan in Goju-Ryu and 7th Dan in Kodokan Judo. Today the Jundokan is one of the largest and most recognized branches of Goju-Ryu. The organisation is run by his senior students that are there.
-
-References/Sources for additional reading:
-http://www.ogkk.eu/historymaster/masters/eiichi_miyazato.htm
-http://okinawakan.weebly.com/masters-biography-karate...
-Entering Through the Gateway of Gojuryu pg 32-35.
-
 * Closing: Possibly Interesting Reads
 
 #+begin_center
