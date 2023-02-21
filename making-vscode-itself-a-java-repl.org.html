@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.57 in css mode. -->
+<html>
+  <head>
+    <title>making-vscode-itself-a-java-repl.org</title>
+    <style type="text/css">
+    <!--
+      body {
+        color: #7c6f64;
+        background-color: #fbf1c7;
+      }
+      .comment {
+        /* font-lock-comment-face */
+        color: #a89984;
+      }
+      .comment-delimiter {
+        /* font-lock-comment-delimiter-face */
+        color: #a89984;
+      }
+      .flyspell-duplicate {
+        /* flyspell-duplicate */
+        text-decoration: underline;
+      }
+      .italic {
+        /* italic */
+        font-style: italic;
+      }
+      .org-block {
+      }
+      .org-block-begin-line {
+        /* org-block-begin-line */
+        color: #a89984;
+        font-style: italic;
+        text-decoration: underline;
+      }
+      .org-block-end-line {
+        /* org-block-end-line */
+        color: #a89984;
+        font-style: italic;
+        text-decoration: overline;
+      }
+      .org-document-info {
+        /* org-document-info */
+        color: #7c6f64;
+      }
+      .org-document-info-keyword {
+        /* org-document-info-keyword */
+        color: #a89984;
+      }
+      .org-document-title {
+        /* org-document-title */
+        color: #556b72;
+        background-color: #fbf1c7;
+        font-weight: bold;
+      }
+      .org-level-1 {
+        /* org-level-1 */
+        color: #556b72;
+        background-color: #fbf1c7;
+        font-weight: bold;
+      }
+      .org-link {
+        /* org-link */
+        color: #b57614;
+        font-weight: bold;
+        text-decoration: underline;
+      }
+      .org-meta-line {
+        /* org-meta-line */
+        color: #a89984;
+        font-style: italic;
+      }
+      .org-table {
+        /* org-table */
+        color: #98971a;
+      }
+      .org-tag {
+        /* org-tag */
+        font-weight: bold;
+      }
+      .org-verbatim {
+        /* org-verbatim */
+        color: #a89984;
+      }
+      .string {
+        /* font-lock-string-face */
+        color: #689d6a;
+      }
+      .writegood-duplicates {
+        /* writegood-duplicates-face */
+        text-decoration: underline;
+      }
+      .writegood-passive-voice {
+        /* writegood-passive-voice-face */
+        text-decoration: underline;
+      }
+      .writegood-weasels {
+        /* writegood-weasels-face */
+        text-decoration: underline;
+      }
+
+      a {
+        color: inherit;
+        background-color: inherit;
+        font: inherit;
+        text-decoration: inherit;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    -->
+    </style>
+  </head>
+  <body>
+    <pre>
+<span class="org-document-info-keyword">#+title:</span> <span class="org-document-title">&#128144; Making VSCode itself a Java </span><span class="org-document-title"><span class="flyspell-duplicate">REPL</span></span><span class="org-document-title"> &#128257;
+</span><span class="org-document-info-keyword">#+author:</span> <span class="org-document-info">Musa Al-hassy
+</span><span class="org-document-info-keyword">#+email:</span> <span class="org-document-info">alhassy@gmail.com
+</span><span class="org-document-info-keyword">#+date:</span> <span class="org-document-info">&lt;2022-09-05 Mon&gt;
+</span><span class="org-meta-line">#+filetags: repl-driven-development vscode emacs java javascript</span>
+<span class="org-meta-line">#+fileimage: <a href="https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true">https://github.com/alhassy/</a></span><span class="org-meta-line"><span class="writegood-weasels"><a href="https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true">easy</a></span></span><span class="org-meta-line"><a href="https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true">-extensibility/blob/main/graphics/repl-java.gif?raw=true</a> </span><span class="org-meta-line"><span class="writegood-duplicates">90% 90%</span></span>
+<span class="org-meta-line">#+description: VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a friendly way!</span>
+
+<span class="org-level-1">* Abstract </span><span class="org-level-1"><span class="org-tag">:ignore:</span></span>
+
+<span class="flyspell-duplicate">VSCode</span> evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a
+friendly way!
+
+This <span class="writegood-passive-voice">is achieved</span> with a <span class="org-link"><a href="https://github.com/alhassy/easy-extensibility">meta-extension for VSCode</a></span> that makes VSCode into a living, breathing, <span class="flyspell-duplicate">JS</span> interpreter: It can
+execute arbitrary JS that alters VSCode on-the-fly.
+
+<span class="org-table">| </span><span class="org-table"><span class="italic">(Inspired by using Emacs and Lisp!)</span></span><span class="org-table"> |</span>
+
+<span class="org-level-1">* How do people usually code?</span>
+
+Either you,
+
+1. Use a code editor and edit multiple lines, then jump into a console to try
+   out what you wrote&#9203;, or
+
+2. You use an interactive command line, and work with one line at a time
+   ---continuously editing &amp; evaluating &#128260;
+
+The first approach sucks because your code and its resulting behaviour occur in different places &#128546; The second is only
+realistic for small experimentation ---after all, you're in a constrained environment and don't generally have the same
+features that your code editor provides &#129503;&#8205;
+
+<span class="org-level-1">* If only we could have our cake, and eat it too! &#127856;</span>
+
+With a <span class="writegood-weasels">few</span> lines of JavaScript, to alter VSCode, we can get both approaches! No need to switch between the two anymore!
+Just select <span class="writegood-weasels">some</span> code and press <span class="org-verbatim">Ctrl+X Ctrl+E</span> ---<span class="italic">E for Evaluate!</span> &#128521;
+
+1. Install the meta-extension <span class="org-link"><span class="writegood-weasels"><a href="https://marketplace.visualstudio.com/items?itemName=alhassy.easy-extensibility">Easy</a></span></span><span class="org-link"><a href="https://marketplace.visualstudio.com/items?itemName=alhassy.easy-extensibility">-Extensibility</a></span>.
+
+   - <span class="writegood-weasels">Easy</span>-Extensibility makes VSCode into a living JavaScript interpreter; that can execute arbitrary JS to alter <span class="flyspell-duplicate">VSCode</span>
+     on-the-fly: Just press &#8220;&#8984;+E&#8221; to &#8220;E&#8221;valuate code! &#128562;
+
+   - You can save and reuse your code by placing it in an ~/init.js file.
+
+   - Video Intro to <span class="writegood-weasels">Easy</span>-Extensibility: <span class="org-link"><a href="https://youtu.be/HO2dFgisriQ">https://youtu.be/HO2dFgisriQ</a></span>
+
+2. Make a <span class="org-verbatim">~/init.js</span> file ---or just invoke <span class="org-verbatim">Cmd+h Find user's init.js file, or provide a template</span>.
+
+3. Stick the following code in there; this code will <span class="writegood-passive-voice">be run</span> every time you open <span class="flyspell-duplicate">VSCode</span>.
+
+   - Restart or run <span class="org-verbatim">Cmd+h Reload ~/init.js file</span>.
+
+<span class="org-block-begin-line">   #+begin_src javascript
+</span><span class="org-block">commands[</span><span class="org-block"><span class="string">'Evaluate: Java'</span></span><span class="org-block">] = {
+ </span><span class="org-block"><span class="string">'ctrl+x ctrl+e'</span></span><span class="org-block">: E.REPL({
+   command: </span><span class="org-block"><span class="string">'/usr/bin/jshell'</span></span><span class="org-block">,     </span><span class="org-block"><span class="comment-delimiter">// </span></span><span class="org-block"><span class="comment">Ensure this points to wherever you have JShell
+</span></span><span class="org-block">   prompt: </span><span class="org-block"><span class="string">'jshell&gt;'</span></span><span class="org-block">,
+   errorMarkers: [</span><span class="org-block"><span class="string">/Error:/</span></span><span class="org-block">, </span><span class="org-block"><span class="string">/\|\s*\^-*/</span></span><span class="org-block">, </span><span class="org-block"><span class="string">/\|\s+Exception/</span></span><span class="org-block">, </span><span class="org-block"><span class="string">/\|\s+at/</span></span><span class="org-block">, </span><span class="org-block"><span class="string">/cannot find symbol/</span></span><span class="org-block">, </span><span class="org-block"><span class="string">/symbol:/</span></span><span class="org-block">],
+   echo: E.overlay,   </span><span class="org-block"><span class="comment-delimiter">// </span></span><span class="org-block"><span class="comment">For notification-style output, change this to:  E.message
+</span></span><span class="org-block">   stdout: result =&gt; result.includes(</span><span class="org-block"><span class="string">' ==&gt; '</span></span><span class="org-block">) ? result.replace(</span><span class="org-block"><span class="string">'==&gt;'</span></span><span class="org-block">, </span><span class="org-block"><span class="string">'&#11157;'</span></span><span class="org-block">) : </span><span class="org-block"><span class="string">`&#11157; ${result} `</span></span><span class="org-block">
+ })}
+</span><span class="org-block-end-line">#+end_src
+</span>
+4. Now you can select any Java code and press Ctrl+X Ctrl+E to evaluate it! &#129395;
+
+   &#128064; Take another look at the above gif for what's possible &#128316;
+
+<span class="org-level-1">* Wait, how does the above JavaScript work?</span>
+
+Look at <span class="org-link"><a href="https://github.com/alhassy/easy-extensibility/blob/main/vscodejs/index.js#L1404-L1438">the docs</a></span>!
+
+<a href="image:https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg|700|600|center">image:https://raw.githubusercontent.com/alhassy/</a><span class="writegood-weasels"><a href="image:https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg|700|600|center">easy</a></span><a href="image:https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg|700|600|center">-extensibility/main/graphics/repl-docs.jpeg|700|600|center</a>
+
+<span class="org-table">| &#129327; The docs are longer than the code itself &#128572; |</span>
+
+<span class="comment"># Alternatively:</span>
+<span class="comment"># +html: &lt;script src="<a href="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Falhassy%2Feasy-extensibility%2Fblob%2Fmain%2Fvscodejs%2Findex.js%23L1404-L1438&amp;style=base16%2Fsolarized-light&amp;showBorder=off&amp;showLineNumbers=off&amp;showFileMeta=on&amp;showFullPath=on&amp;showCopy=on">https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Falhassy%2Feasy-extensibility%2Fblob%2Fmain%2Fvscodejs%2Findex.js%23L1404-L1438&amp;style=base16%2Fsolarized-light&amp;showBorder=off&amp;showLineNumbers=off&amp;showFileMeta=on&amp;showFullPath=on&amp;showCopy=on</a>"&gt;&lt;/script&gt;</span>
+
+<span class="org-level-1">* Technically speaking, how is VSCode </span><span class="org-level-1"><span class="italic">itself</span></span><span class="org-level-1"> the </span><span class="org-level-1"><span class="flyspell-duplicate">REPL</span></span><span class="org-level-1">?</span>
+
+Let's do what math-nerds call <span class="italic">proof by definition-chasing:</span>
+
+1. Definition: REPL, an alias for <span class="italic">command line</span>, stands for Read-Evaluate-Print-Loop
+
+2. <span class="org-verbatim">Ctrl+X Ctrl+E</span> will echo the results in an overlay at the end of the selection ---or at the end of the line, when no explicit selection <span class="writegood-passive-voice">is made</span>
+
+3. So it retains each of the read, eval, and print parts of the Read-Evaluate-Print-Loop
+
+4. Moreover, since the program doesn't terminate, you're still in the <span class="italic">loop part</span> until you close VSCode
+
+Bye! &#128075; &#129395;
+</pre>
+  </body>
+</html>

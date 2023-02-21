@@ -1,0 +1,91 @@
+#+title: 💐 Making VSCode itself a Java REPL 🔁
+#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+#+date: <2022-09-05 Mon>
+#+filetags: repl-driven-development vscode emacs java javascript
+#+fileimage: https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true 90% 90%
+#+description: VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a friendly way!
+
+* Abstract :ignore:
+
+VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a
+friendly way!
+
+This is achieved with a [[https://github.com/alhassy/easy-extensibility][meta-extension for VSCode]] that makes VSCode into a living, breathing, JS interpreter: It can
+execute arbitrary JS that alters VSCode on-the-fly.
+
+| /(Inspired by using Emacs and Lisp!)/ |
+
+* How do people usually code?
+
+Either you,
+
+1. Use a code editor and edit multiple lines, then jump into a console to try
+   out what you wrote⏳, or
+
+2. You use an interactive command line, and work with one line at a time
+   ---continuously editing & evaluating 🔄
+
+The first approach sucks because your code and its resulting behaviour occur in different places 😢 The second is only
+realistic for small experimentation ---after all, you're in a constrained environment and don't generally have the same
+features that your code editor provides 🧟‍
+
+* If only we could have our cake, and eat it too! 🍰
+
+With a few lines of JavaScript, to alter VSCode, we can get both approaches! No need to switch between the two anymore!
+Just select some code and press =Ctrl+X Ctrl+E= ---/E for Evaluate!/ 😉
+
+1. Install the meta-extension [[https://marketplace.visualstudio.com/items?itemName=alhassy.easy-extensibility][Easy-Extensibility]].
+
+   - Easy-Extensibility makes VSCode into a living JavaScript interpreter; that can execute arbitrary JS to alter VSCode
+     on-the-fly: Just press “⌘+E” to “E”valuate code! 😲
+
+   - You can save and reuse your code by placing it in an ~/init.js file.
+
+   - Video Intro to Easy-Extensibility: https://youtu.be/HO2dFgisriQ
+
+2. Make a =~/init.js= file ---or just invoke =Cmd+h Find user's init.js file, or provide a template=.
+
+3. Stick the following code in there; this code will be run every time you open VSCode.
+
+   - Restart or run =Cmd+h Reload ~/init.js file=.
+
+   #+begin_src javascript
+commands['Evaluate: Java'] = {
+ 'ctrl+x ctrl+e': E.REPL({
+   command: '/usr/bin/jshell',     // Ensure this points to wherever you have JShell
+   prompt: 'jshell>',
+   errorMarkers: [/Error:/, /\|\s*\^-*/, /\|\s+Exception/, /\|\s+at/, /cannot find symbol/, /symbol:/],
+   echo: E.overlay,   // For notification-style output, change this to:  E.message
+   stdout: result => result.includes(' ==> ') ? result.replace('==>', '⮕') : `⮕ ${result} `
+ })}
+#+end_src
+
+4. Now you can select any Java code and press Ctrl+X Ctrl+E to evaluate it! 🥳
+
+   👀 Take another look at the above gif for what's possible 🔼
+
+* Wait, how does the above JavaScript work?
+
+Look at [[https://github.com/alhassy/easy-extensibility/blob/main/vscodejs/index.js#L1404-L1438][the docs]]!
+
+[[image:https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg|700|600|center]]
+
+| 🤯 The docs are longer than the code itself 😼 |
+
+# Alternatively:
+# +html: <script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Falhassy%2Feasy-extensibility%2Fblob%2Fmain%2Fvscodejs%2Findex.js%23L1404-L1438&style=base16%2Fsolarized-light&showBorder=off&showLineNumbers=off&showFileMeta=on&showFullPath=on&showCopy=on"></script>
+
+* Technically speaking, how is VSCode /itself/ the REPL?
+
+Let's do what math-nerds call /proof by definition-chasing:/
+
+1. Definition: REPL, an alias for /command line/, stands for Read-Evaluate-Print-Loop
+
+2. =Ctrl+X Ctrl+E= will echo the results in an overlay at the end of the selection ---or at the end of the line, when no explicit selection is made
+
+3. So it retains each of the read, eval, and print parts of the Read-Evaluate-Print-Loop
+
+4. Moreover, since the program doesn't terminate, you're still in the /loop part/ until you close VSCode
+
+Bye! 👋 🥳

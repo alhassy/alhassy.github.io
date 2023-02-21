@@ -6,8 +6,9 @@
 <!-- 2023-02-20 Mon 20:54 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>tag-family</title>
+<title>💐 Making VSCode itself a Java REPL 🔁</title>
 <meta name="author" content="Musa Al-hassy" />
+<meta name="description" content="VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a friendly way!" />
 <meta name="generator" content="Org Mode" />
 <style>
   #content { max-width: 60em; margin: auto; }
@@ -263,7 +264,19 @@
 </head>
 <body>
 <div id="content" class="content">
- <div class="header">
+<div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orgeaae9f8">1. How do people usually code?</a></li>
+<li><a href="#orgd408cd9">2. If only we could have our cake, and eat it too! 🍰</a></li>
+<li><a href="#org106ab2a">3. Wait, how does the above JavaScript work?</a></li>
+<li><a href="#orga8826c1">4. Technically speaking, how is VSCode <i>itself</i> the REPL?</a></li>
+</ul>
+</div>
+</div>
+<p>
+<div class="header">
   <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
   <br>
     <a href="https://alhassy.github.io/AlBasmala">AlBasmala</a>
@@ -339,25 +352,176 @@
    </script>
    <script type="text/javascript"
            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
-   <h1 class="title">Posts tagged "family":</h1>
+   <link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">💐 Making VSCode itself a Java REPL 🔁</h1></center> <script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script>
+</p>
 
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.github.io/tag-repl-driven-development.html"><img src="https://img.shields.io/badge/-repl_driven_development-grey?logo=nil"></a> <a href="https://alhassy.github.io/tag-vscode.html"><img src="https://img.shields.io/badge/-vscode-grey?logo=nil"></a> <a href="https://alhassy.github.io/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey?logo=nil"></a> <a href="https://alhassy.github.io/tag-java.html"><img src="https://img.shields.io/badge/-java-grey?logo=nil"></a> <a href="https://alhassy.github.io/tag-javascript.html"><img src="https://img.shields.io/badge/-javascript-grey?logo=nil"></a></center>
+<center><a href="https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true" class="tooltip" title="Image credit “https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true”"><img src="https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true" alt="Article image" style="border: 2px solid black;" width="90%" height="90%" align="top"/></a></center>
 
+<div class="abstract" style="border: 1px solid black;padding: 1%; margin-top: 1%; margin-bottom: 1%;margin-right: 10%; margin-left: 10%; background-color: lightblue;"><center> <strong class="tooltip"title="What's the goal of this article?"> Abstract </strong> </center>
 
-<h2 class="title"><a href="https://alhassy.github.io/dora"> Dora, The Arab Explorer</a></h2>
-<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.github.io/tag-family.html"><img src="https://img.shields.io/badge/-family-grey?logo=nil"></a> <a href="https://alhassy.github.io/tag-arabic.html"><img src="https://img.shields.io/badge/-arabic-grey?logo=nil"></a> <a href="https://alhassy.github.io/tag-javascript.html"><img src="https://img.shields.io/badge/-javascript-grey?logo=nil"></a>
-</center>
 <p>
-<center><a href="https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg" class="tooltip" title="Image credit “https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg”"><img src="https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg" alt="Article image"
-             style="border: 2px solid black;" width="350" height="300" align="top"/></a></center>
+VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a
+friendly way!
 </p>
 
 <p>
-A simple interface to watch the engaging children's show “Dora the Explorer” in Arabic
-<p style="text-align:right"> <a href="https://alhassy.github.io/dora"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+This is achieved with a <a href="https://github.com/alhassy/easy-extensibility">meta-extension for VSCode</a> that makes VSCode into a living, breathing, JS interpreter: It can
+execute arbitrary JS that alters VSCode on-the-fly.
 </p>
 
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
-<hr> <div id="archive"><a href="https://alhassy.github.io/archive.html">Other posts</a></div></div><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center>
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><i>(Inspired by using Emacs and Lisp!)</i></td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+
+<div id="outline-container-orgeaae9f8" class="outline-2">
+<h2 id="orgeaae9f8"><span class="section-number-2">1.</span> <a href="#orgeaae9f8">How do people usually code?</a></h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Either you,
+</p>
+
+<ol class="org-ol">
+<li>Use a code editor and edit multiple lines, then jump into a console to try
+out what you wrote⏳, or</li>
+
+<li>You use an interactive command line, and work with one line at a time
+&#x2014;continuously editing &amp; evaluating 🔄</li>
+</ol>
+
+<p>
+The first approach sucks because your code and its resulting behaviour occur in different places 😢 The second is only
+realistic for small experimentation &#x2014;after all, you're in a constrained environment and don't generally have the same
+features that your code editor provides 🧟‍
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd408cd9" class="outline-2">
+<h2 id="orgd408cd9"><span class="section-number-2">2.</span> <a href="#orgd408cd9">If only we could have our cake, and eat it too! 🍰</a></h2>
+<div class="outline-text-2" id="text-2">
+<p>
+With a few lines of JavaScript, to alter VSCode, we can get both approaches! No need to switch between the two anymore!
+Just select some code and press <code>Ctrl+X Ctrl+E</code> ---<i>E for Evaluate!</i> 😉
+</p>
+
+<ol class="org-ol">
+<li>Install the meta-extension <a href="https://marketplace.visualstudio.com/items?itemName=alhassy.easy-extensibility">Easy-Extensibility</a>.
+
+<ul class="org-ul">
+<li>Easy-Extensibility makes VSCode into a living JavaScript interpreter; that can execute arbitrary JS to alter VSCode
+on-the-fly: Just press “⌘+E” to “E”valuate code! 😲</li>
+
+<li>You can save and reuse your code by placing it in an ~/init.js file.</li>
+
+<li>Video Intro to Easy-Extensibility: <a href="https://youtu.be/HO2dFgisriQ">https://youtu.be/HO2dFgisriQ</a></li>
+</ul></li>
+
+<li>Make a <code>~/init.js</code> file &#x2014;or just invoke <code>Cmd+h Find user's init.js file, or provide a template</code>.</li>
+
+<li><p>
+Stick the following code in there; this code will be run every time you open VSCode.
+</p>
+
+<ul class="org-ul">
+<li>Restart or run <code>Cmd+h Reload ~/init.js file</code>.</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-javascript">commands[<span style="color: #689d6a;">'Evaluate: Java'</span>] = {
+ <span style="color: #689d6a;">'ctrl+x ctrl+e'</span>: E.REPL({
+   command: <span style="color: #689d6a;">'/usr/bin/jshell'</span>,     <span style="color: #a89984;">// </span><span style="color: #a89984;">Ensure this points to wherever you have JShell</span>
+   prompt: <span style="color: #689d6a;">'jshell&gt;'</span>,
+   errorMarkers: [<span style="color: #689d6a;">/Error:/</span>, <span style="color: #689d6a;">/\|\s*\^-*/</span>, <span style="color: #689d6a;">/\|\s+Exception/</span>, <span style="color: #689d6a;">/\|\s+at/</span>, <span style="color: #689d6a;">/cannot find symbol/</span>, <span style="color: #689d6a;">/symbol:/</span>],
+   echo: E.overlay,   <span style="color: #a89984;">// </span><span style="color: #a89984;">For notification-style output, change this to:  E.message</span>
+   stdout: result =&gt; result.includes(<span style="color: #689d6a;">' ==&gt; '</span>) ? result.replace(<span style="color: #689d6a;">'==&gt;'</span>, <span style="color: #689d6a;">'&#11157;'</span>) : <span style="color: #689d6a;">`&#11157; ${result} `</span>
+ })}
+</pre>
+</div></li>
+
+<li><p>
+Now you can select any Java code and press Ctrl+X Ctrl+E to evaluate it! 🥳
+</p>
+
+<p>
+👀 Take another look at the above gif for what's possible 🔼
+</p></li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org106ab2a" class="outline-2">
+<h2 id="org106ab2a"><span class="section-number-2">3.</span> <a href="#org106ab2a">Wait, how does the above JavaScript work?</a></h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Look at <a href="https://github.com/alhassy/easy-extensibility/blob/main/vscodejs/index.js#L1404-L1438">the docs</a>!
+</p>
+
+<p>
+<center> <a href="https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg" class="tooltip" title="Image credit “https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg”"><img src="https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg" alt="Article image"
+             width="700" height="600" align="top"/></a> </center>
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">🤯 The docs are longer than the code itself 😼</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orga8826c1" class="outline-2">
+<h2 id="orga8826c1"><span class="section-number-2">4.</span> <a href="#orga8826c1">Technically speaking, how is VSCode <i>itself</i> the REPL?</a></h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Let's do what math-nerds call <i>proof by definition-chasing:</i>
+</p>
+
+<ol class="org-ol">
+<li>Definition: REPL, an alias for <i>command line</i>, stands for Read-Evaluate-Print-Loop</li>
+
+<li><code>Ctrl+X Ctrl+E</code> will echo the results in an overlay at the end of the selection &#x2014;or at the end of the line, when no explicit selection is made</li>
+
+<li>So it retains each of the read, eval, and print parts of the Read-Evaluate-Print-Loop</li>
+
+<li>Moreover, since the program doesn't terminate, you're still in the <i>loop part</i> until you close VSCode</li>
+</ol>
+
+<p>
+Bye! 👋 🥳
+</p>
+</div>
+</div>
+
+<p>
+<hr><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="making-vscode-itself-a-java-repl.org.html"><img
+   src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time"href="https://github.com/alhassy/alhassy.github.io/commits/master/posts/making-vscode-itself-a-java-repl.org"><img
+   src="https://img.shields.io/badge/-History-informational?logo=github"></a>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><br><a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a><br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div>
+</p>
 </div>
 </body>
 </html>
