@@ -1,3 +1,116 @@
+(defmacro org-deftag (name args docstring &rest body)
+  "Re-render an Org section in any way you like, by tagging the section with NAME.
+
+That is to say, we essentially treat tags as functions that act on Org headings:
+We redefine Org sections for the same purposes as Org special blocks.
+
+Anyhow:
+ARGS are the sequence of items seperated by underscores after the NAME of the new tag.
+BODY is a form that may anaphorically mention:
+- O-BACKEND: The backend we are exporting to, such as `latex' or `html'.
+- O-HEADING: The string denoting the title of the tagged section heading.
+
+DOCSTRING is mandatory; everything should be documented for future maintainability.
+
+The result of this anaphoric macro is a symbolic function name `org-deftag/NAME',
+which is added to `org-export-before-parsing-hook'.
+
+----------------------------------------------------------------------
+
+Below is the motivating reason for inventing this macro. It is used:
+
+     ** Interesting, but low-priority, content   :details_red:
+     Blah blah blah blah blah blah blah blah blah blah blah.
+     Blah blah blah blah blah blah blah blah blah blah blah.
+
+Here is the actual implementation:
+
+(org-deftag details (color)
+   \"HTML export a heading as if it were a <details> block; COLOR is an optional
+   argument indicating the background colour of the resulting block.\"
+   (insert \"\n#+html:\"
+           (format \"<details style=\\\"background-color: %s\\\">\" color)
+           \"<summary>\" (s-replace-regexp \"^\** \" \"\" heading) \"</summary>\")
+   (org-next-visible-heading 1)
+   (insert \"#+html: </details>\"))
+
+"
+  (let ((func-name (intern (format "org-deftag/%s" name))))
+    `(progn
+       (cl-defun ,func-name (o-backend)
+         ,docstring
+         (outline-show-all)
+         (org-map-entries
+          (lambda ()
+            (kill-line)
+            (let ((o-heading (car kill-ring)))
+              (if (not (s-contains? (format ":%s" (quote ,name)) o-heading 'ignoring-case))
+                  (insert o-heading)
+                (-let [,args (cdr (s-split "_" (car (s-match (format "%s[^:]*" (quote ,name)) o-heading))))]
+                  (setq o-heading (s-replace-regexp (format ":%s[^:]*:" (quote ,name)) "" o-heading))
+                  ,@body)
+                ;; Otherwise we impede on the auto-inserted “* footer :ignore:”
+                (insert "\n"))))))
+       (add-hook 'org-export-before-parsing-hook (quote ,func-name))
+       (quote ,func-name))))
+
+(org-deftag details (anchor color)
+   "HTML export a heading as if it were a <details> block; ANCHOR & COLOR are optional
+   arguments indicating the anchor for this block as well as the background colour of the resulting block.
+
+For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
+friendly-soft-red to denote it as an “advanced” content that could be ignored
+on a first reading of my article.
+Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
+   (insert "\n#+html:"
+           (format "<div>%s <details class=\"float-child\" style=\"background-color: %s\">"
+                   (if anchor (format "<a style=\"width: 1%%;float: left; padding: 0px\" id=\"%s\" href=\"#%s\">🔗</a>" anchor anchor) "")
+                   color)
+           "<summary> <strong> <font face=\"Courier\" size=\"3\" color=\"green\">"
+           (s-replace-regexp "^\** " "" o-heading)
+           "</font> </strong> </summary>")
+   (org-next-visible-heading 1)
+   (insert "#+html: </details> </div>"))
+
+(bind-key "C-x g" #'magit-file-dispatch)
+
+(setq-default fill-column 80)
+
+;; cl-lib was published as a better (namespaced!) alternative to cl, which has a deprecation warning in Emacs27.
+;; Yet some old pacakges require cl, and so the below setq silences the deprecation warning.
+(setq byte-compile-warnings '(cl-functions))
+(require 'cl-lib) ;; to get loop instead of cl-loop, etc.
+
+(require 'shortdoc) ;; Essentially "tldr" but for Emacs Lisp!
+;; (cl-defun define-short-documentation-group (&rest _))
+;; (cl-defun org-duration-to-minutes (&rest _) )
+;; (cl-defun org-id-find-id-file (&rest _))
+
+(ignore-errors
+  (use-package org-preview-html)
+  (setq org-preview-html-viewer 'xwidget)
+  ;; (xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
+  (advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
+  (advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
+  (advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
+                                                           (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
+                                                           )))
+  (use-package org-special-block-extras)
+  ;;(load-file "~/blog/AlBasmala.el")
+  ) ;; M-x blog/preview
+
+;; Required for Github Actions; i.e., testing.
+;; TODO Clean me!
+(defun quelpa-read-cache ()) ;; Used somewhere, but not defined.
+;; See: quelpa-persistent-cache-file
+(setq quelpa-cache nil)
+
+;; Eager macro-expansion failure: (void-function all-the-icons-faicon)
+;; Symbol’s function definition is void: all-the-icons-faicon
+
+;; Error in kill-emacs-hook (org-clock-save): (void-function org-clocking-buffer)
+(cl-defun org-clocking-buffer (&rest _))
+
  (setq org-static-blog-page-header
   (concat
    org-html-head-extra  ;; Altered by ‘org-special-block-extras’
@@ -116,6 +229,7 @@ which I place below at the top of the page.)
     (goto-char (point-min))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
             "\n#+date: " (format-time-string "%Y-%m-%d" (current-time))
+            (if (buffer-narrowed-p) "\n#+options: broken-links:t" "")
             "\n blog:header blog:sanitise-title \n"
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
@@ -180,8 +294,8 @@ which I place below at the top of the page.)
    Supported backends: HTML. "
    (format (concat
             "<div class=\"abstract\" style=\"border: 1px solid black;"
-            "padding: 10px; margin-top: 50px; margin-bottom: 50px;"
-            "margin-right: 150px; margin-left: 80px; background-color: lightblue;\">"
+            "padding: 1%%; margin-top: 1%%; margin-bottom: 1%%;"
+            "margin-right: 10%%; margin-left: 10%%; background-color: lightblue;\">"
             "<center> <strong class=\"tooltip\""
             "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
             "%s </div>")
