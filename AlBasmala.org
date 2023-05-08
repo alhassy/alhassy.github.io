@@ -3,7 +3,7 @@
 #+description: How my blog is setup (•̀ᴗ•́)و
 #+date: <2020-05-03 19:29>
 # +DATE: 2018-06-01 ~ date of very first AlBasmala, for a Jekyll-basked blog
-#+filetags: emacs org html css javascript git
+# +filetags: emacs org html css javascript git
 #+fileimage: org_logo.png 150 150 no-border
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 # Use checkmarks instead of boring bullet points
@@ -132,6 +132,44 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
    (insert "#+html: </details> </div>"))
 #+END_SRC
 
+
+* Demo
+See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/
+
+@@html: <div style="padding-bottom: 30cm;"></div>@@
+
+
+** Tags are functions of Org sections :quote_blue:
+  Just as a source block is a function on a region of text, so too a tag is
+  construable as a function operating on an Org section. Thanks to doc:org-deftag (•̀ᴗ•́)و
+
+  For instance, this tree is tagged =:quote:= with the single parameter =blue=.
+  Look to the buffer to the right for the resulting HTML rendition.
+
+** Here is the actual implementation :details_quoteSource:
+
+  The implementation is interesting, but it is of low-priority and so it is tagged
+  with =:details:= which folds it away via a ~<details>~ element, with an anchor.
+
+#+begin_src emacs-lisp
+(org-deftag quote (color)
+   "HTML export a section as if it were a <blockquote> block; COLOR is an optional
+   argument indicating the text colour of the resulting block."
+   (insert "\n#+html:" (format "<blockquote style=\"color: %s\">" color))
+   (org-next-visible-heading 1)
+   (insert "#+html: </blockquote>"))
+#+end_src
+
+See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
+
+** Bye! :ignore:
+
+/Have a great evening!/
+
+
+
+
+@@html: <div style="padding-bottom: 30cm;"></div>@@
 * TODO Misc                                                        :noexport:
 :PROPERTIES:
 :CUSTOM_ID: Misc
