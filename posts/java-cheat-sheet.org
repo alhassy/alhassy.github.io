@@ -11,28 +11,53 @@
 #+description: Quick reference for an old-school-cool high-level language ^_^
 #+options: toc:t
 
-* Abstract                                                           :ignore:
-:PROPERTIES:
-:CUSTOM_ID: Abstract
-:END:
+* Stuff to relocate to AlBasmal.org :noexport:
 
-#+begin_center
-This is a quick reference of concepts in modern Java.
+#+macro: begin-ignore-html #+html: <!--
+#+macro: end-ignore-html #+html: -->
 
-badge:PDF|colorful_cheat_sheet|success|https://alhassy.com/JavaCheatSheet/CheatSheet.pdf|read-the-docs
+:details: makes a <details> block in HTML, and produces no contents in LaTeX.
+#+begin_src emacs-lisp
+(org-deftag details (anchor color)
+   "HTML export a heading as if it were a <details> block; ANCHOR & COLOR are optional
+   arguments indicating the anchor for this block as well as the background colour of the resulting block.
 
-@@html: <br> @@
+For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
+friendly-soft-red to denote it as an “advanced” content that could be ignored
+on a first reading of my article.
+Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
+   (insert "\n#+html:"
+           (format "<div>%s <details class=\"float-child\" style=\"background-color: %s\">"
+                   (if anchor (format "<a style=\"width: 1%%;float: left; padding: 0px\" id=\"%s\" href=\"#%s\">🔗</a>" anchor anchor) "")
+                   color)
+           "<summary> <strong> <font face=\"Courier\" size=\"3\" color=\"green\">"
+           (s-replace-regexp "^\** " "" o-heading)
+           "</font> </strong> </summary>")
+   (org-next-visible-heading 1)
+   (insert "#+html: </details> </div>"))
+#+end_src
 
-badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs
-tweet:https://alhassy.com/java-cheat-sheet
-badge:contributions|welcome|green|https://github.com/alhassy/JavaCheatSheet/issues
-badge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
-# badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
 
-@@html: <br> @@
+:ignore_BACKEND: ignores a section's title for a given backend
+#+begin_src emacs-lisp
+(org-deftag myIgnore (backend)
+   "ignores a section's title for a given backend (defaulting to HTML)."
+   (unless backend (setq backend "html"))
+   (let (begin-ignore end-ignore)
+     (if (equal backend "pdf")
+         (setq begin-ignore "\\iffalse" end-ignore "\\fi"))
+     (if (equal backend "html")
+         (setq begin-ignore "<!--" end-ignore "-->"))
+   (insert (format "\n#+%s: %s\n" backend begin-ignore))
+   (insert o-heading)
+   (org-next-visible-heading 1)
+   (insert (format "\n#+%s: %s\n" backend end-ignore))))
+#+end_src
 
-badge:Warning|Incomplete_DRAFT|red||codeigniter
-#+end_center
+
+# Remove a org-deftag via
+# (pop org-export-before-parsing-hook)
+# Make this into a macro: org-deftag-remove
 
 * COMMENT Additions to AlBasmala
 :Add_to_AlBasmala:
@@ -81,7 +106,7 @@ which tries its best to produce a PDF
 ---which ignores typesetting errors altogether,
 and therefore is not necessarily ideal when using LaTeX.
 
-* COMMENT LaTeX Extra, Local, Setup  :ignore:
+* COMMENT LaTeX Extra, Local, Setup  :myIgnore:
 
 # Empty by default.
 #+LATEX_HEADER: \def\cheatsheeturl{https://github.com/alhassy/JavaCheatSheet}
@@ -108,7 +133,7 @@ and therefore is not necessarily ideal when using LaTeX.
 #+LATEX_HEADER: \newunicodechar{⁰}{\ensuremath{^0}}
 #+LATEX_HEADER: \newunicodechar{₌}{\ensuremath{_=}}
 
-* COMMENT Contents :TOC:QUOTE:ignore:
+* COMMENT Contents :TOC:QUOTE:myIgnore:
 #+BEGIN_QUOTE
 - [[#extra-local-setup][Extra, Local, Setup]]
 - [[#project-goal][Project Goal]]
@@ -185,7 +210,7 @@ and therefore is not necessarily ideal when using LaTeX.
 /To learn more, manipulating this source is the way to go!/
 #+end_center
 
-:Ignore:
+:myIgnore:
 #+latex: \vspace{1em}
 Also, opening this file produces a ~README.md~ ;-)
 Which can then be regenerated on-demand with ~f11~.
@@ -247,9 +272,9 @@ Press ~C-c C-c~ on the following incantation to produce a single column portrait
 )
 #+END_SRC
 
-** spacing break                                             :ignore:
+** spacing break                                             :myIgnore:
 #+latex: \columnbreak
-** spacing break               :accomodating_multiple_formats:ignore:
+** spacing break               :accomodating_multiple_formats:myIgnore:
 
 #+LATEX: \ifnum\cheatsheetcols=1 \newpage \else \columnbreak \fi
 
@@ -336,10 +361,10 @@ Any [[https://en.wikipedia.org/wiki/Monoid][monoid]] will do.
 
   Here is the sibling's content.
 
-** spacing COMMENT vfill                                             :ignore:
+** spacing COMMENT vfill                                             :myIgnore:
 \vfill
 
-** COMMENT Negative space                                            :ignore:
+** COMMENT Negative space                                            :myIgnore:
 #+latex: \vspace{-1em}
 * COMMENT Emacs Java Repl
 ;; Set “C­x C­j” to evaluate Java code in a background REPL.
@@ -357,12 +382,26 @@ JOptionPane.showMessageDialog(frame, "Super nice!");
 
 https://github.com/alhassy/repl-driven-development/blob/main/repl-driven-development.el#L31-L44
 
-* Intro                                                              :ignore:
+* Abstract                                                           :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Abstract
+:END:
 
-#+latex: \vspace{1em}
+#+begin_center
+This is a quick reference of concepts in modern Java.
 
-Java programs are made up of ‘classes’, classes contain methods, and methods contain commands.
-To just try out a snippet of code, we can
+badge:PDF|colorful_cheat_sheet|success|https://alhassy.com/JavaCheatSheet/CheatSheet.pdf|read-the-docs
+#+end_center
+
+# @@html: <br> @@
+
+Modern Java is a strongly-typed, eagery evaluated, case sensative, yet
+whitespace insensative language. It uses hierarchies of classes/types
+to structure data, but also has first-class support for
+functional-style algebraic datatypes.
+
+Java programs are made up of ‘classes’, classes contain methods, and methods contain commands.  To just try out a
+snippet of code, we can
 + Open a terminal and enter ~jshell~; then enter:
      #+begin_src java
 1 + 2 // The jshell lets you try things out!
@@ -378,9 +417,9 @@ JOptionPane.showMessageDialog(new JFrame(), "Hello, World!");
   in the background(!) and it echoes the result in a friendly way.
 
 # A program cannot consist of only commands. Java commands must be inside functions, and functions must be inside classes.
-# 
+#
 # Imagine a sofa. A sofa cannot exist on its own. It exist in a room somewhere. And a room also cannot exist on its own. A room is located in some house. Or, you could say that the house is divided into rooms, and those rooms contain things.
-# 
+#
 # Java programs are made up of classes, classes contain methods, and methods contain commands.
 
 # A minimal program must consist of at least one class, which must have at least
@@ -404,11 +443,15 @@ In order to run a java program, it must have a main method as an entry point.
 #+end_src
 :End:
 
+#+begin_center
 
-Modern Java is a strongly-typed, eagery evaluated, case sensative, yet
-whitespace insensative language. It uses hierarchies of classes/types
-to structure data, but also has first-class support for
-functional-style algebraic datatypes.
+# badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs
+tweet:https://alhassy.com/java-cheat-sheet
+badge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+badge:contributions|welcome|green|https://github.com/alhassy/JavaCheatSheet/issues
+# badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
+# badge:Warning|Incomplete_DRAFT|red||codeigniter
+#+end_center
 
 * The Philosophy of Classes & Interfaces
 
@@ -434,17 +477,13 @@ kinds of things have a feature in common, we “tag” them with an*
 *src_java[:exports code]{interface}.* (Real life tagging is a also known
 as /multi/-~class~-/ificiation/.)
 
-:Neat__yet_unhelpful:
-⟦Aside: 
-/What does a src_java[:exports code]{class} “mean”?/ Mathematically, a
-programming language (i.e., a model of computation with types and
-programs) is represented by a [[https://alhassy.com/PathCat][category]] ---see [[https://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/acmmpc-calcfp.pdf][Calculating Functional
-Programs]] §1.4.  In such a setting, /a class denotes a pointed
-[[https://stackoverflow.com/questions/16015020/what-does-coalgebra-mean-in-the-context-of-programming][co-algebra]]/ $(𝒪, ℴ₀, 𝒸 : 𝒪 → 𝒯(𝒪))$: “classes as modules” is captured
-by 𝒪 (“the set of objects”), “classes as structure” is captured by the
-co-algebra 𝒸, a “new object” is the point ℴ₀, and the functor 𝒯 is the
-‘signature/type’ of the class (i.e., its properties and methods).⟧
-:End:
+** Mathematically, what does <code>class</code> “mean”? :details_CategoryTheory:
+
+Mathematically, a programming language (i.e., a model of computation with types and programs) is represented by a
+[[https://alhassy.com/PathCat][category]] ---see [[https://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/acmmpc-calcfp.pdf][Calculating Functional Programs]] §1.4.  In such a setting, /a class denotes a pointed [[https://stackoverflow.com/questions/16015020/what-does-coalgebra-mean-in-the-context-of-programming][co-algebra]]/ $(𝒪, ℴ₀,
+𝒸 : 𝒪 → 𝒯(𝒪))$: “classes as modules” is captured by 𝒪 (“the set of objects”), “classes as structure” is captured by the
+co-algebra 𝒸, a “new object” is the point ℴ₀, and the functor 𝒯 is the ‘signature/type’ of the class (i.e., its
+properties and methods).
 
 ** COMMENT [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object][Objects]]
 
@@ -468,6 +507,17 @@ pairs.
 1. Almost all JavaScript /values/ have properties. The exceptions are ~null~ and
  ~undefined~. If you try to access a property on one of these nonvalues, you get
  an error. Properties are accessed using ~value.prop~, /dot notation/.
+* Null :details_null:
+
+There is a special value named src_java[:exports code]{null} that
+denotes the absence of a meaningful value.  Ironically, it is a value
+of every type (excluding the primitive types).  [[https://funcall.blogspot.com/2007/11/in-kingdom-of-nouns.html?m=1][Here]] is a neat story
+about =null=.
+
+
+# Many operations that don’t produce meaningful values yield void simply because they have to yield some value.
+
+* TODO COMMENT mention optional alongside null
 * Reads
 
 + [[https://www.mooc.fi/en/#courses][“MOOC” Massive Open Online Course - University of Helsinki]]
@@ -503,9 +553,9 @@ https://www.oracle.com/technical-resources/articles/java/ma14-java-se-8-streams.
   - [Enjoyable!] Massive Open Online Course - Java University of Helsinki
 
     oh my god i LOVE mooc. I only did the course to refresh my memory, but i learned so much more than i did in school.
-    
+
     I also finished it in four weeks. The course didnt burn me out which was surprising. I think its because the lessons were very clear and easy to understand.
-    
+
     probably the best beginner course ive ever taken
 
   - The university of helsinki (the guys behind mooc.fi) has a web dev
@@ -540,7 +590,7 @@ https://www.oracle.com/technical-resources/articles/java/ma14-java-se-8-streams.
   https://practiceit.cs.washington.edu/
 
 + https://cscx.org/
-  Computer Science by Example (cscx.org) is a collection of short programming exercises. 
+  Computer Science by Example (cscx.org) is a collection of short programming exercises.
 
 + Start with CodeWars. Select only level 8 problems and sort by most completed.
 
@@ -553,10 +603,10 @@ https://www.oracle.com/technical-resources/articles/java/ma14-java-se-8-streams.
 
   Hyperskill is a fairly new resource from Jetbrains (the maker of IntelliJ)
 
-   It is based on learning projects, then having prerequisite lessons that need to be learned to successfully complete the project. 
+   It is based on learning projects, then having prerequisite lessons that need to be learned to successfully complete the project.
 
 
-+ https://www.codility.com/        
++ https://www.codility.com/
 + https://exercism.org/tracks/java
 + https://www.youtube.com/playlist?list=PLE7E8B7F4856C9B19
 + https://docs.oracle.com/javase/tutorial/index.html
@@ -572,7 +622,7 @@ Java Performance - In-Depth Advice for Tuning and Programming Java 8, 11, and Be
 
 # Mention that JS, like Python, has decoraters with @-syntax and generators with yield-syntax.
 # The book Eloquent Javascript has useful stuff to revisit.
-# 
+#
 # http://es6-features.org/
 
 + https://eloquentjavascript.net/
@@ -589,7 +639,7 @@ Java Performance - In-Depth Advice for Tuning and Programming Java 8, 11, and Be
 + https://www.w3schools.com/js/
 
   /This tutorial will teach you JavaScript from basic to advanced./
- 
+
   Other bite-sized lessions can be found at: https://masteringjs.io/fundamentals
 
 + https://learnxinyminutes.com/docs/javascript/
@@ -602,31 +652,14 @@ Java Performance - In-Depth Advice for Tuning and Programming Java 8, 11, and Be
   language. The entire language is described here in detail./
 
 + https://github.com/you-dont-need/You-Dont-Need-Loops
-  
+
   /Avoid The One-off Problem, Infinite Loops, Statefulness and Hidden intent./
-* COMMENT Null, TODO: Mention Optional
-
-There is a special value named src_java[:exports code]{null} that
-denotes the absence of a meaningful value.  Ironically, it is a value
-of every type (excluding the primitive types).  [[https://funcall.blogspot.com/2007/11/in-kingdom-of-nouns.html?m=1][Here]] is a neat story
-about =null=.
-
-
-# Many operations that don’t produce meaningful values yield void simply because they have to yield some value.
-
-int x = 1, z;
-
-char d1 = 'c', d2;
-float c1 = 1, c2; // b2: 0.0
-int b1 = 1, b2; // b2: 0
-boolean a1 = true, a2; // a2: false
-
-
-String x = "", w;
-
 * Properties and methods have *separate namespaces*
-  
+
+{{{begin-ignore-html}}}
 Properties and methods have *separate namespaces* ---@@latex:{\tiny “Java is a Lisp-2 Language”.}@@
+{{{end-ignore-html}}}
+
   :Like_Lisp:
   + → :: Use ~funcall~ or ~apply~ to call functions bound to variables.
   + → :: Refer to functions outside of function calls by using a sharp quote, ~#'~.
@@ -653,7 +686,7 @@ class ElseWhere {
 The consequence of different namespaces @@meta: i.e. of being Lisp-2@@ are
 + → :: Use ~apply~ to call functions bound to variables.
 + → :: Refer to functions outside of function calls by using a double colon, ~::~.
-    
+
 # Function<Integer, Integer> increment = SameNameNoProblem::plus1;
 # tri(SameNameNoProblem::plus1, 100) // ⇒ 5150
 
@@ -662,7 +695,7 @@ Let's discuss both of these now...
 
 + A ~return~ keyword without an expression after it will cause the
   function to return ~undefined~.
-  
+
 + Functions that don’t have a ~return~ statement at all, similarly return
   ~undefined~.
 
@@ -672,11 +705,11 @@ Let's discuss both of these now...
   - If the body is a single expression, rather than a (multi-line) block in
     braces, that expression will be returned from the function.
 
-  So, these two definitions of square do the same thing:  
+  So, these two definitions of square do the same thing:
   #+BEGIN_SRC js
   const square1 = (x) => { return x * x; };
   const square2 =  x  => x * x;
-  #+END_SRC  
+  #+END_SRC
 * Anonymous /functions/: ~(arg₁, …, argₙ) → bodyHere~
 
 #+begin_src java
@@ -738,11 +771,11 @@ The phrase =Function<Integer, Integer>= is a bit of a mouthful to write each tim
 so the standard library provides a terser equivalent:
 * Lambdas are a shorthand for classes that implement functional interfaces
 
-# (Good read! https://www.baeldung.com/java-8-lambda-expressions-tips)
+# Good read! https://www.baeldung.com/java-8-lambda-expressions-tips
 
 Let's take a more theoretical look at anonymous functions.
 
-** Functional Interfaces :ignore:
+** Functional Interfaces :myIgnore_pdf:
 
 @@latex: \newline\newline\textbf{\centerline{Functional Interfaces}} @@
 
@@ -768,7 +801,7 @@ Optionally, to ensure that this is indeed a functional interface, i.e., it has
 only one abstract method, we can place =@FunctionalInterface= above its
 declaration. Then the complier will check our intention for us.
 
-** The Type of a Lambda :ignore:
+** The Type of a Lambda :myIgnore_pdf:
 
 @@latex: \newline\newline\textbf{\centerline{The Type of a Lambda}} @@
 
@@ -792,7 +825,7 @@ on the interface that the lambda is implementing. After-all, a lambda is an obje
 Moreover, ~Function~ has useful methods: Such as ~andThen~ for composing functions sequentially,
 and ~Function.identity~ for the do-nothing function.
 
-** Common Java Functional Types :ignore:
+** Common Java Functional Types :myIgnore_pdf:
 
 @@latex: \newline\newline\textbf{\centerline{Common Java Functional Types}} @@
 
@@ -822,7 +855,7 @@ same thing.
 - As another example, Java has a ~TriConsumer~ which is the type of functions that have 3 inputs and no outputs
   ---since ~Tri~ means 3, as in /tricycle/.
 
-** Eta Reduction: Writing Lambda Expressions as Method References :ignore:
+** Eta Reduction: Writing Lambda Expressions as Method References :myIgnore_pdf:
 
 @@latex: \textbf{\centerline{Eta Reduction: Writing Lambda Expressions as Method References}} @@
 
@@ -855,7 +888,8 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
     - Later we use ~xᵢ = wᵢ;~ to update the name ~xᵢ~ to refer to a new value
       ~wᵢ~.
 
-      
+
+      #+html: <hr>
       #+begin_parallel 2 :bar t
      There are a variety of update statements:
      #+latex: \vspace{.7em}
@@ -863,28 +897,29 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
         | Increment | ~x++~    | ≈ | ~x += 1~    |
         | Decrement | ~x--~    | ≈ | ~x -= 1~    |
 
-	\columnbreak
-	
-	The operators ~--~ and ~++~ can appear /before or after/ a name:
-	Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
-        #+latex: \vspace{.7em}	
-	| ~𝒮(x++)  ≈  𝒮(x); x += 1~ |
-	| ~𝒮(++x)  ≈  x += 1; 𝒮(x)~ |
-      
+        #+columnbreak:
+
+        The operators ~--~ and ~++~ can appear /before or after/ a name:
+        Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
+        #+latex: \vspace{.7em}
+        | ~𝒮(x++)  ≈  𝒮(x); x += 1~ |
+        | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~ |
+
      #+end_parallel
-      
+     #+html: <hr>
+
         # * We also have /augmented updates/   ~x ⊕= y  ≡  x = x ⊕ y~   and
         # | Increment: ~x--  ≡  x += 1~ | and | Decrement: ~y--  ≡  x -= 1~ |
-	# 
-	# The operators ~--~ and ~++~ can appear /before or after/ a name:
-	# \newline Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
-	# | ~𝒮(x++)  ≈  𝒮(x); x += 1~  | and | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~  |
+        #
+        # The operators ~--~ and ~++~ can appear /before or after/ a name:
+        # \newline Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
+        # | ~𝒮(x++)  ≈  𝒮(x); x += 1~  | and | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~  |
 
 - If we place the keyword src_java[:exports code]{final} before the type τ,
   then the names are constant: They can appear only once on the right side of an ‘=’,
   and any further occurrences (i.e., to change their values) crash the program.
   src_java[:exports code]{ final int x = 1, y; y = 3; } is fine, but changing the
-  second =y= to an =x= fails.  
+  second =y= to an =x= fails.
 
   :REPL:
   { final int x = 0; x = 4; }
@@ -896,16 +931,17 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
   declaration, to avoid writing the name of the type τ (which may be
   lengthy). Java then /infers/ the type by inspecting the shape of
   =v=.
-  
+
 - A binding name may include dollar signs ($) or underscores (_) or
   numbers but no other punctuation or special characters.
 
+#+html: <hr>
 Variable bindings can only occur within src_java[:exports code]{class}
 definitions: A =class= binding introduces a name for a new type of
 values.
 
 * Scope, Statements, and Control Flow
-  
+
 # #
 #+begin_parallel 2
 #+begin_src java
@@ -951,7 +987,7 @@ for (var x : List.of(1, 2, 3))
 
 + While-Loops src_java[:exports code]{ while (condition) S } and for-loops
   src_java[:exports code]{ for(init; cond; change) body }.
- 
+
     #+begin_src java
    var i = 0; while (i < 10) System.out.println(Math.pow(2, i++));
 ≈
@@ -982,7 +1018,7 @@ switch (x){
 }
 #+end_src
 
-\columnbreak
+#+columnbreak:
 
    The src_java[:exports code]{switch} works as follows:
    Find the /first/ 𝒾 with ~x == vᵢ~, then execute
@@ -991,12 +1027,12 @@ switch (x){
    statement after ~Sᵢ~ that ends with ~break;~.
 
 #+end_parallel
-   
+
    E.g., ~case v: S; case w: S′; break~
    means do ~S;S′~ if we see ~v~
    but we do ~S′~
    when seeing both ~v~ and ~w~.
-   
+
     #+begin_src java
 switch (2){
   case 0: System.out.println(0);
@@ -1005,6 +1041,8 @@ switch (2){
   default: System.out.println(-1);
 } // ⇒ Outputs: 2 -1
 #+end_src
+
+#+html: <hr>
 
    *⟦Switch Expression⟧*
    If we want to perform case analysis /without the fall-over behaviour/, we use
@@ -1017,7 +1055,7 @@ switch (2){
      default -> -1;
    } // ⇒ 2
    #+end_src
-   
+
 * Strings
 
 Any pair of matching double-quotes will produce a string literal
@@ -1033,7 +1071,7 @@ placeholders, use [[https://docs.oracle.com/javase/8/docs/api/java/text/MessageF
 String.format("Half of 100 is %s", 100 / 2) // ⇒ "Half of 100 is 50"
 #+END_SRC
 
-# import java.text.MessageFormat;    
+# import java.text.MessageFormat;
 # MessageFormat.format("G {0}", 12)
 
 + ~s.repeat(𝓃)~ ≈ Get a new string by gluing 𝓃-copies of the string 𝓈.
@@ -1047,7 +1085,7 @@ String.format("Half of 100 is %s", 100 / 2) // ⇒ "Half of 100 is 50"
 + ~s.isBlank()  ≡  s.trim().isEmpty()~
 + ~String.valueOf(x)~ gets a string representation of anything ~x~.
 + ~s.concat(t)~ glues together two strings into one longer string; i.e., ~s + t~.
-  
+
 * Equality
 
 + In general, ‘==’ is used to check two primitives for equality, whereas
@@ -1075,12 +1113,12 @@ String.format("Half of 100 is %s", 100 / 2) // ⇒ "Half of 100 is 50"
     code]{class}es.
 
 # ?? + Precedence: Relationals like ~==~ and ~>~ are first, then “and” ~&&~, then “or” ~||~.
-# 
+#
 # + The ternary operator: =condition ? if_true : if_false=
-# 
+#
 # && and || are lazy.
 
-** COMMENT Equality 
+** COMMENT Equality
 
 References to the same object are equal, whereas different object literals
 with the same properties are considered different.
@@ -1171,6 +1209,8 @@ an actual collection value back) the result.  ⟦Streams exist because
 Java lacks a proper extension mechanism, such as C#'s /extension
 methods/ or Haskell's /typeclasses/ or JavaScript's /prototypes/.⟧
 
+#+html: <hr>
+
 *Lists are ordered collections, that care about multiplicity*.  Lists
 are made with ~List.of(x₀, x₁, …, xₙ)~.  Indexing, ~xs.get(𝒾)~, yields
 the 𝒾-th element from the start; i.e., the number of items to skip;
@@ -1190,6 +1230,8 @@ mapping for the key. Maps have an ~entrySet()~ method that gives a set
 of key-value pairs, which can then be converted to a stream, if need
 be.
 
+#+html: <hr>
+
 Other collection methods include:
 + ~𝒞.size()~ is the number of elements in the collection
 + ~𝒞.isEmpty()  ≡  𝒞.size() == 0~
@@ -1201,19 +1243,21 @@ Other collection methods include:
 + ~Collections.max(𝒞)~ is the largest value in a collection; likewise ~min~.
 + ~Collections.nCopies(n, e)~ is a list of $n$ copies of ~e~.
 
+#+html: <hr>
+
 *src_java[:exports code]{Stream<τ>} methods*
 + ~Stream.of(x₀, …, xₙ)~ makes a stream of data, of type τ, ready to be acted on.
 + ~s.map(f)~ changes the elements according to a function $f : τ → τ′$.
   - ~s.flatMap(f)~ transforms each element into a stream since $f : τ → Stream<τ′>$, then the resulting
     stream-of-streams is flattened into a single sequential stream.
   - As such, to merge a streams of streams just invoke ~.flatMap(s -> s)~.
-+ ~s.filter(p)~ keeps only the elements that satisfy property ~p~  
++ ~s.filter(p)~ keeps only the elements that satisfy property ~p~
 + ~s.count()~ is the number of elements in the stream
 + ~s.allMatch(p)~ tests if all elements  satisfy the [[https://download.java.net/java/early_access/panama/docs/api/java.base/java/util/function/Predicate.html][predicate]] ~p~
 + ~s.anyMatch(p)~ tests if any element satisfies ~p~
 + ~s.noneMatch(p)  ≡  s.allMatch(p.negate())~
 + ~s.distinct()~ drops all duplicates
-+ ~s.findFirst()~ returns an ~Optional<τ>~ denoting the first element, if any.    
++ ~s.findFirst()~ returns an ~Optional<τ>~ denoting the first element, if any.
 + ~s.forEach(a)~ to loop over the elements and perform action ~a~.
   - If you want to do some action, and get the stream ~s~ back for further use, then use ~s.peek(a)~.
 
@@ -1294,7 +1338,7 @@ Notice that the ~this~ keyword allows us to refer to other parts of
 /this/ object literal.
 * COMMENT Object-Oriented Programming / Inheritance
 
-** Intro :ignore:
+** Intro :myIgnore:
 
 In English, /prototype/ means a preliminary model of something from which
 other forms are developed or /copied/. As such, a /prototypical/ object
@@ -1351,7 +1395,7 @@ console.log(Object.getPrototypeOf(Object.prototype)); // ⇒ null
  object, as it is now hidden behind the object’s own property.
 #+latex: \vspace{-0.5em}
 # #
-#+begin_parallel org 
+#+begin_parallel org
  #+BEGIN_SRC js
 Array.prototype.colour = 'purple'
 
@@ -1364,7 +1408,7 @@ xs.colour = 'green'
 console.log(xs.colour) // ⇒ green
 
 console.log(Array.prototype.colour)
-// ⇒ purple 
+// ⇒ purple
 #+END_SRC
 #+end_parallel
 
@@ -1400,7 +1444,7 @@ console.log(Array.prototype.colour)
    // It is occasionally useful to know whether an object was derived from a
    // specific class. For this, JavaScript provides a binary operator called
    // instanceof. Almost every object is an instance of Object.
-   console.log( bobert instanceof Person  
+   console.log( bobert instanceof Person
               , bobert instanceof Teacher
               , bobby  instanceof Teacher
               , [1, 2] instanceof Array
@@ -1434,16 +1478,16 @@ results and false otherwise.
 Let's make an iterable to traverse expression trees.
 #+BEGIN_SRC js
 class Expr { // [0] Our type of expression trees
-  static Constant(x) { 
+  static Constant(x) {
      let e = new Expr();
-     e.tag = 'constant', e.constant = x; 
-     return e; 
+     e.tag = 'constant', e.constant = x;
+     return e;
      }
 
-  static Plus(l, r) { 
+  static Plus(l, r) {
      let e = new Expr();
      e.tag = 'plus', e.left = l, e.right = r;
-     return e; 
+     return e;
      }
 }
 
@@ -1981,7 +2025,7 @@ spread.apply(Test.class, "og", "hello", 1)
      # Toc is displayed below at a strategic position.
 
      {{{blurb}}}
-    
+
      :Hide:
      This project is to contain a listing of common results in X Theory.
 
@@ -2015,7 +2059,7 @@ spread.apply(Test.class, "og", "hello", 1)
       ; (package-install 'toc-org)
       ; (toc-org-mode)
       ; (toc-org-insert-toc)
-      ; (setq org-toc-noexport-regexp ".*:ignore:.*") MA: Doesn't work.
+      ; (setq org-toc-noexport-regexp ".*:myIgnore:.*") MA: Doesn't work.
       ; (delete "TOC" org-export-exclude-tags)
       (pop org-export-exclude-tags)
       ; (org-org-export-to-org)
@@ -2030,7 +2074,7 @@ Note that the ~blurb~ macro is defined by the user, to provide a terse descripti
 #    The ~d:nil~ ensures the ‘drawer’ ~:Hide: ⋯ :End:~ is not exported; it's there for me
 #    as a reminder.
 
-* COMMENT Making artifacts for the Github Repo                               :ignore:
+* COMMENT Making artifacts for the Github Repo                               :myIgnore:
 
 # Whenever I save, C-x C-s, a new HTML is exported and then copied over to the write directory.
 #
@@ -2038,4 +2082,3 @@ Note that the ~blurb~ macro is defined by the user, to provide a terse descripti
 #
 # eval (progn (load-file "~/blog/AlBasmala.el") (blog/preview))
 # after-save-hook (lambda nil (-let [file (f-base (buffer-file-name))] (copy-file (concat file ".html") (concat "~/JavaCheatSheet/" file ".html") 'overwrite-if-exists)))
-
