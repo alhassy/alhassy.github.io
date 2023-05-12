@@ -50,7 +50,40 @@ Here are some notable features of my blog.
 + Style inline code and tables --- §[[curvy-blocks]]
 + Unfurling links --- §[[unfurling]]
 
+* Image Org Link                                          :details_imagelink:
+
+A quick way to embed clickable images, along with tooltip credits and other configs.
+
+#+begin_src emacs-lisp :exports code
+(org-deflink image
+             "Provide a quick way to insert images along with credits via tooltips.
+
+Example usage:
+
+image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100
+
+image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
+"
+;;             (upcase (or o-description o-label))
+  (-let [(image width height center? credit?) (s-split "|" o-label)]
+    (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
+      (let* ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+            (title (format "Image credit “%s”" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
+            (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+            (it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             width=\"%s\" height=\"%s\" align=\"top\"/></a>"
+                        href title src width height)))
+        (if center?
+            (format "<center> %s </center>" it)
+          it)))))
+#+end_src
+
+This will eventually be part of [[http://alhassy.com/org-special-block-extras/][org-special-block-extras]].
+
 * Redefining Org Section for purposes of blocks              :details_deftag:
+
+image:https://i.redd.it/rre5ggpx9jya1.png|100%|100%|center|Musa
+([[https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/][Reddit Post]])
 
 This will eventually be part of [[http://alhassy.com/org-special-block-extras/][org-special-block-extras]].
 
@@ -132,21 +165,20 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
    (insert "#+html: </details> </div>"))
 #+END_SRC
 
-
-* Demo
+** COMMENT Demo
 See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/
 
 @@html: <div style="padding-bottom: 30cm;"></div>@@
 
 
-** Tags are functions of Org sections :quote_blue:
+*** Tags are functions of Org sections                           :quote_blue:
   Just as a source block is a function on a region of text, so too a tag is
   construable as a function operating on an Org section. Thanks to doc:org-deftag (•̀ᴗ•́)و
 
   For instance, this tree is tagged =:quote:= with the single parameter =blue=.
   Look to the buffer to the right for the resulting HTML rendition.
 
-** Here is the actual implementation :details_quoteSource:
+*** Here is the actual implementation                   :details_quoteSource:
 
   The implementation is interesting, but it is of low-priority and so it is tagged
   with =:details:= which folds it away via a ~<details>~ element, with an anchor.
@@ -162,7 +194,7 @@ See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_s
 
 See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
 
-** Bye! :ignore:
+*** Bye!                                                             :ignore:
 
 /Have a great evening!/
 
@@ -170,6 +202,72 @@ See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
 
 
 @@html: <div style="padding-bottom: 30cm;"></div>@@
+** Known bug and proposed fix.                                     :noexport:
+Warning!
+#+begin_src org
+,* Useful notes :noexport:
+Be a good person.
+
+,* Advice to readers :details:
+Since this section is rewritten as a <details> block,
+it will, by structure, reside as an element in the previous
+tree which is not exported! This this tree wont be visible!
+#+end_src
+
+TODO: Fix the above bug by ensuring all altered headings are preserved as
+follows.
+#+begin_src org
+,* original heading :FOO:
+
+becomes
+
+,* original heading :ignore:
+⦃transformed heading⦄
+#+end_src
+
+This way we ensure that the new tree is completely independent of the previous
+tree.
+
+*** COMMENT Posterity                             :Delete_when_things_settle:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Posterity
+:END:
+#+BEGIN_SRC emacs-lisp :export none
+(defun my-headline-alteration (backend)
+  "BACKEND is the export back-end being used, as a symbol."
+  (setq first-heading t)
+  (outline-show-all)
+  (org-map-entries
+   (lambda ()
+    (kill-line)
+    ;; (thing-at-point 'line)
+    (let ((heading (car kill-ring)))
+
+      (if (not (s-contains? ":NOPE:" heading 'ignoring-case))
+          (insert heading)
+
+          (insert heading) (insert "NIIIIICE")
+          ;; (if first-heading (setq first-heading nil)
+          ;;                 (insert "+latex:\\end\{alertblock\}"))
+        ;; (insert "\n\n+latex: \\begin\{alertblock\}\{")
+
+          (org-next-visible-heading 1)
+        (insert "WOW :: " (s-chop-prefix "\** " heading))
+
+        (insert "\n") ;; Otherwise we impede on the auto-inserted “* footer :ignore:”
+        ;; (insert "\}")
+      )
+    )
+)))
+
+(add-hook 'org-export-before-parsing-hook 'my-headline-alteration)
+(remove-hook 'org-export-before-parsing-hook 'my-headline-alteration)
+#+END_SRC
+
+
+
+(org-next-visible-heading 1)
+
 * TODO Misc                                                        :noexport:
 :PROPERTIES:
 :CUSTOM_ID: Misc
@@ -303,72 +401,6 @@ into this 80-column width.
           ("I have a question" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png"))]
    (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
 #+end_src
-
-* Known bug and proposed fix. :noexport:
-Warning!
-#+begin_src org
-,* Useful notes :noexport:
-Be a good person.
-
-,* Advice to readers :details:
-Since this section is rewritten as a <details> block,
-it will, by structure, reside as an element in the previous
-tree which is not exported! This this tree wont be visible!
-#+end_src
-
-TODO: Fix the above bug by ensuring all altered headings are preserved as
-follows.
-#+begin_src org
-,* original heading :FOO:
-
-becomes
-
-,* original heading :ignore:
-⦃transformed heading⦄
-#+end_src
-
-This way we ensure that the new tree is completely independent of the previous
-tree.
-
-** COMMENT Posterity :Delete_when_things_settle:
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-Posterity
-:END:
-#+BEGIN_SRC emacs-lisp :export none
-(defun my-headline-alteration (backend)
-  "BACKEND is the export back-end being used, as a symbol."
-  (setq first-heading t)
-  (outline-show-all)
-  (org-map-entries
-   (lambda ()
-    (kill-line)
-    ;; (thing-at-point 'line)
-    (let ((heading (car kill-ring)))
-
-      (if (not (s-contains? ":NOPE:" heading 'ignoring-case))
-          (insert heading)
-
-          (insert heading) (insert "NIIIIICE")
-          ;; (if first-heading (setq first-heading nil)
-          ;;                 (insert "+latex:\\end\{alertblock\}"))
-        ;; (insert "\n\n+latex: \\begin\{alertblock\}\{")
-
-          (org-next-visible-heading 1)
-        (insert "WOW :: " (s-chop-prefix "\** " heading))
-
-        (insert "\n") ;; Otherwise we impede on the auto-inserted “* footer :ignore:”
-        ;; (insert "\}")
-      )
-    )
-)))
-
-(add-hook 'org-export-before-parsing-hook 'my-headline-alteration)
-(remove-hook 'org-export-before-parsing-hook 'my-headline-alteration)
-#+END_SRC
-
-
-
-(org-next-visible-heading 1)
 
 * TODO COMMENT Glossary Library of Arabic Linguistic Jargon
 :PROPERTIES:

@@ -122,10 +122,6 @@
         /* font-lock-doc-face */
         color: #902B5B;
       }
-      .flyspell-duplicate {
-        /* flyspell-duplicate */
-        text-decoration: underline;
-      }
       .function-name {
         /* font-lock-function-name-face */
         color: #36A1BB;
@@ -344,7 +340,7 @@
 </span><span class="org-meta-line">#+description: How my blog is setup (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;</span>
 <span class="org-document-info-keyword">#+date:</span> <span class="org-document-info">&lt;2020-05-03 19:29&gt;
 </span><span class="comment"># +DATE: 2018-06-01 ~ date of </span><span class="comment"><span class="writegood-weasels">very</span></span><span class="comment"> first AlBasmala, for a Jekyll-basked blog</span>
-<span class="org-meta-line">#+filetags: emacs org html css javascript git</span>
+<span class="comment"># +filetags: emacs org html css javascript git</span>
 <span class="org-meta-line">#+fileimage: org_logo.png </span><span class="org-meta-line"><span class="writegood-duplicates">150 150</span></span><span class="org-meta-line"> no-border</span>
 <span class="org-meta-line">#+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval</span>
 <span class="comment"># Use checkmarks instead of boring bullet points</span>
@@ -391,7 +387,40 @@ Here are <span class="writegood-weasels">some</span> notable features of my blog
 + Style inline code and tables --- &#167;<span class="org-link"><a href="curvy-blocks">curvy-blocks</a></span>
 + Unfurling links --- &#167;<span class="org-link"><a href="unfurling">unfurling</a></span>
 
+<span class="org-level-1">* Image Org Link                                          </span><span class="org-level-1"><span class="org-tag">:details_imagelink:</span></span>
+
+A quick way to embed clickable images, along with tooltip credits and other configs.
+
+<span class="org-block-begin-line">#+begin_src emacs-lisp :exports code
+</span><span class="org-block">(</span><span class="org-block"><span class="keyword">org-deflink</span></span><span class="org-block"> image
+             </span><span class="org-block"><span class="string">"Provide a quick way to insert images along with credits via tooltips.
+
+Example usage:
+
+<a href="image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100">image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100</a>
+
+<a href="image:URL|WIDTH|HEIGHT|CENTER?|CREDIT">image:URL|WIDTH|HEIGHT|CENTER?|CREDIT</a>?
+"</span></span><span class="org-block">
+</span><span class="org-block"><span class="comment-delimiter">;;             </span></span><span class="org-block"><span class="comment">(upcase (or o-description o-label))
+</span></span><span class="org-block">  (</span><span class="org-block"><span class="keyword">-let</span></span><span class="org-block"> [(image width height center? credit?) (s-split </span><span class="org-block"><span class="string">"|"</span></span><span class="org-block"> o-label)]
+    (</span><span class="org-block"><span class="keyword">-let</span></span><span class="org-block"> [unsplash (cl-second (s-match </span><span class="org-block"><span class="string">".*unsplash.com/photos/</span></span><span class="org-block"><span class="string"><span class="regexp-grouping-backslash">\\</span></span></span><span class="org-block"><span class="string"><span class="regexp-grouping-construct">(</span></span></span><span class="org-block"><span class="string">.*</span></span><span class="org-block"><span class="string"><span class="regexp-grouping-backslash">\\</span></span></span><span class="org-block"><span class="string"><span class="regexp-grouping-construct">)</span></span></span><span class="org-block"><span class="string">"</span></span><span class="org-block"> image))]
+      (</span><span class="org-block"><span class="keyword">let*</span></span><span class="org-block"> ((href (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (concat </span><span class="org-block"><span class="string">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span></span><span class="org-block"> unsplash) image))
+            (title (format </span><span class="org-block"><span class="string">"Image credit &#8220;%s&#8221;"</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> credit? (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (concat </span><span class="org-block"><span class="string">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span></span><span class="org-block"> unsplash) image))))
+            (src (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> unsplash (format </span><span class="org-block"><span class="string">"<a href="https://source.unsplash.com/%s/%sx%s">https://source.unsplash.com/%s/%sx%s</a>"</span></span><span class="org-block"> unsplash width height) image))
+            (it (format </span><span class="org-block"><span class="string">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
+             width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;"</span></span><span class="org-block">
+                        href title src width height)))
+        (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> center?
+            (format </span><span class="org-block"><span class="string">"&lt;center&gt; %s &lt;/center&gt;"</span></span><span class="org-block"> it)
+          it)))))
+</span><span class="org-block-end-line">#+end_src
+</span>
+This will eventually be part of <span class="org-link"><a href="http://alhassy.com/org-special-block-extras/">org-special-block-extras</a></span>.
+
 <span class="org-level-1">* Redefining Org Section for purposes of blocks              </span><span class="org-level-1"><span class="org-tag">:details_deftag:</span></span>
+
+<a href="image:https://i.redd.it/rre5ggpx9jya1.png|100%|100%|center|Musa">image:https://i.redd.it/rre5ggpx9jya1.png|100%|100%|center|Musa</a>
+(<span class="org-link"><a href="https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/">Reddit Post</a></span>)
 
 This will eventually be part of <span class="org-link"><a href="http://alhassy.com/org-special-block-extras/">org-special-block-extras</a></span>.
 
@@ -473,6 +502,109 @@ Incidentally, `</span></span><span class="org-block"><span class="string"><span 
    (insert </span><span class="org-block"><span class="string">"#+html: &lt;/details&gt; &lt;/div&gt;"</span></span><span class="org-block">))
 </span><span class="org-block-end-line">#+END_SRC
 </span>
+<span class="org-hide">*</span><span class="org-level-2">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-2"> Demo</span>
+See: <span class="org-link"><a href="https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/">https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/</a></span>
+
+<span class="comment">@@</span><span class="org-tag">html:</span> &lt;div style="padding-bottom: 30cm;"&gt;&lt;/div&gt;<span class="comment">@@</span>
+
+
+<span class="org-hide">**</span><span class="org-level-3">* Tags are functions of Org sections                           </span><span class="org-level-3"><span class="org-tag">:quote_blue:</span></span>
+  Just as a source block is a function on a region of text, so too a tag is
+  construable as a function operating on an Org section. Thanks to <span class="custom-button"><a href="doc:org-deftag">doc:org-deftag</a></span> (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;
+
+  For instance, this tree <span class="writegood-passive-voice">is tagged</span> <span class="org-verbatim">:quote:</span> with the single parameter <span class="org-verbatim">blue</span>.
+  Look to the buffer to the right for the resulting HTML rendition.
+
+<span class="org-hide">**</span><span class="org-level-3">* Here is the actual implementation                   </span><span class="org-level-3"><span class="org-tag">:details_quoteSource:</span></span>
+
+  The implementation is interesting, but it is of low-priority and so it <span class="writegood-passive-voice">is tagged</span>
+  with <span class="org-verbatim">:details:</span> which folds it away via a <span class="org-code">&lt;details&gt;</span> element, with an anchor.
+
+<span class="org-block-begin-line">#+begin_src emacs-lisp
+</span><span class="org-block">(</span><span class="org-block"><span class="keyword">org-deftag</span></span><span class="org-block"> quote (color)
+   </span><span class="org-block"><span class="string">"HTML export a section as if it were a &lt;blockquote&gt; block; COLOR is an optional
+   argument indicating the text colour of the resulting block."</span></span><span class="org-block">
+   (insert </span><span class="org-block"><span class="string">"\n#+html:"</span></span><span class="org-block"> (format </span><span class="org-block"><span class="string">"&lt;blockquote style=\"color: %s\"&gt;"</span></span><span class="org-block"> color))
+   (org-next-visible-heading 1)
+   (insert </span><span class="org-block"><span class="string">"#+html: &lt;/blockquote&gt;"</span></span><span class="org-block">))
+</span><span class="org-block-end-line">#+end_src
+</span>
+See <span class="org-link"><a href="http://alhassy.com/AlBasmala#deftag">http://alhassy.com/AlBasmala#deftag</a></span> for the definition of <span class="org-verbatim">org-deftag</span>.
+
+<span class="org-hide">**</span><span class="org-level-3">* Bye!                                                             </span><span class="org-level-3"><span class="org-tag">:ignore:</span></span>
+
+<span class="italic">Have a great evening!</span>
+
+
+
+
+<span class="comment">@@</span><span class="org-tag">html:</span> &lt;div style="padding-bottom: 30cm;"&gt;&lt;/div&gt;<span class="comment">@@</span>
+<span class="org-hide">*</span><span class="org-level-2">* Known bug and proposed fix.                                     </span><span class="org-level-2"><span class="org-tag">:noexport:</span></span>
+Warning!
+<span class="org-block-begin-line">#+begin_src org
+</span><span class="org-block">,* Useful notes :noexport:
+Be a good person.
+
+,* Advice to readers :details:
+Since this section is rewritten as a &lt;details&gt; block,
+it will, by structure, reside as an element in the previous
+tree which is not exported! </span><span class="org-block"><span class="writegood-duplicates"><span class="writegood-duplicates">This this</span></span></span><span class="org-block"> tree wont be visible!
+</span><span class="org-block-end-line">#+end_src
+</span>
+<span class="hl-todo"><span class="custom-14">TODO</span></span>: Fix the above bug by ensuring all altered headings <span class="writegood-passive-voice">are preserved</span> as
+follows.
+<span class="org-block-begin-line">#+begin_src org
+</span><span class="org-block">,* original heading :FOO:
+
+becomes
+
+,* original heading :ignore:
+&#10627;transformed heading&#10628;
+</span><span class="org-block-end-line">#+end_src
+</span>
+This way we ensure that the new tree is <span class="writegood-weasels">completely</span> independent of the previous
+tree.
+
+<span class="org-hide">**</span><span class="org-level-3">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-3"> Posterity                             </span><span class="org-level-3"><span class="org-tag">:Delete_when_things_settle:</span></span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">COMMENT-Posterity</span>
+<span class="org-drawer">:END:</span>
+<span class="org-block-begin-line">#+BEGIN_SRC emacs-lisp :export none
+</span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">my-headline-alteration</span></span><span class="org-block"> (backend)
+  </span><span class="org-block"><span class="doc">"BACKEND is the export back-end </span></span><span class="org-block"><span class="doc"><span class="writegood-passive-voice">being used</span></span></span><span class="org-block"><span class="doc">, as a symbol."</span></span><span class="org-block">
+  (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> first-heading t)
+  (outline-show-all)
+  (org-map-entries
+   (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> ()
+    (kill-line)
+    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(thing-at-point 'line)
+</span></span><span class="org-block">    (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((heading (car kill-ring)))
+
+      (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (not (s-contains? </span><span class="org-block"><span class="string">":NOPE:"</span></span><span class="org-block"> heading 'ignoring-case))
+          (insert heading)
+
+          (insert heading) (insert </span><span class="org-block"><span class="string">"NIIIIICE"</span></span><span class="org-block">)
+          </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(if first-heading (setq first-heading nil)
+</span></span><span class="org-block">          </span><span class="org-block"><span class="comment-delimiter">;;                 </span></span><span class="org-block"><span class="comment">(insert "+latex:\\end\{alertblock\}"))
+</span></span><span class="org-block">        </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(insert "\n\n+latex: \\begin\{alertblock\}\{")
+</span></span><span class="org-block">
+          (org-next-visible-heading 1)
+        (insert </span><span class="org-block"><span class="string">"WOW :: "</span></span><span class="org-block"> (s-chop-prefix </span><span class="org-block"><span class="string">"</span></span><span class="org-block"><span class="string"><span class="warning">\</span></span></span><span class="org-block"><span class="string">** "</span></span><span class="org-block"> heading))
+
+        (insert </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Otherwise we impede on the auto-inserted &#8220;* footer :ignore:&#8221;
+</span></span><span class="org-block">        </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(insert "\}")
+</span></span><span class="org-block">      )
+    )
+)))
+
+(add-hook 'org-export-before-parsing-hook 'my-headline-alteration)
+(remove-hook 'org-export-before-parsing-hook 'my-headline-alteration)
+</span><span class="org-block-end-line">#+END_SRC
+</span>
+
+
+(org-next-visible-heading 1)
+
 <span class="org-level-1">* </span><span class="org-level-1"><span class="org-todo"><span class="hl-todo"><span class="custom-14">TODO</span></span></span></span><span class="org-level-1"> Misc                                                        </span><span class="org-level-1"><span class="org-tag">:noexport:</span></span>
 <span class="org-drawer">:PROPERTIES:</span>
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Misc</span>
@@ -572,7 +704,7 @@ into this 80-column width.
 </span></span><span class="org-block">(</span><span class="org-block"><span class="keyword">bind-key*</span></span><span class="org-block"> </span><span class="org-block"><span class="string">"C-q"</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> () (</span><span class="org-block"><span class="keyword">interactive</span></span><span class="org-block">) (insert (format </span><span class="org-block"><span class="string">"&#8220;%s&#8221;"</span></span><span class="org-block"> (thing-at-point 'word))) (kill-word 1)))
 </span><span class="org-block-end-line">#+end_src
 </span>
-<span class="org-hide">**</span><span class="org-level-3">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-3"> [HERE TODAY] </span><span class="org-level-3"><span class="flyspell-duplicate">Rndm</span></span>
+<span class="org-hide">**</span><span class="org-level-3">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-3"> [HERE TODAY] Rndm</span>
 <span class="org-drawer">:PROPERTIES:</span>
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">COMMENT-HERE-TODAY-Rndm</span>
 <span class="org-drawer">:END:</span>
@@ -607,72 +739,6 @@ into this 80-column width.
    (format </span><span class="org-block"><span class="string">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span></span><span class="org-block"> url o-label url)))
 </span><span class="org-block-end-line">#+end_src
 </span>
-<span class="org-level-1">* Known bug and proposed fix. </span><span class="org-level-1"><span class="org-tag">:noexport:</span></span>
-Warning!
-<span class="org-block-begin-line">#+begin_src org
-</span><span class="org-block">,* Useful notes :noexport:
-Be a good person.
-
-,* Advice to readers :details:
-Since this section is rewritten as a &lt;details&gt; block,
-it will, by structure, reside as an element in the previous
-tree which is not exported! </span><span class="org-block"><span class="writegood-duplicates"><span class="writegood-duplicates">This this</span></span></span><span class="org-block"> tree wont be visible!
-</span><span class="org-block-end-line">#+end_src
-</span>
-<span class="hl-todo"><span class="custom-14"><span class="flyspell-duplicate">TODO</span></span></span>: Fix the above bug by ensuring all altered headings <span class="writegood-passive-voice">are preserved</span> as
-follows.
-<span class="org-block-begin-line">#+begin_src org
-</span><span class="org-block">,* original heading :FOO:
-
-becomes
-
-,* original heading :ignore:
-&#10627;transformed heading&#10628;
-</span><span class="org-block-end-line">#+end_src
-</span>
-This way we ensure that the new tree is <span class="writegood-weasels">completely</span> independent of the previous
-tree.
-
-<span class="org-hide">*</span><span class="org-level-2">* </span><span class="org-special-keyword">COMMENT</span><span class="org-level-2"> Posterity </span><span class="org-level-2"><span class="org-tag">:Delete_when_things_settle:</span></span>
-<span class="org-drawer">:PROPERTIES:</span>
-<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">COMMENT-Posterity</span>
-<span class="org-drawer">:END:</span>
-<span class="org-block-begin-line">#+BEGIN_SRC emacs-lisp :export none
-</span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">my-headline-alteration</span></span><span class="org-block"> (backend)
-  </span><span class="org-block"><span class="doc">"BACKEND is the export back-end </span></span><span class="org-block"><span class="doc"><span class="writegood-passive-voice">being used</span></span></span><span class="org-block"><span class="doc">, as a symbol."</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> first-heading t)
-  (outline-show-all)
-  (org-map-entries
-   (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> ()
-    (kill-line)
-    </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(thing-at-point 'line)
-</span></span><span class="org-block">    (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((heading (car kill-ring)))
-
-      (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (not (s-contains? </span><span class="org-block"><span class="string">":NOPE:"</span></span><span class="org-block"> heading 'ignoring-case))
-          (insert heading)
-
-          (insert heading) (insert </span><span class="org-block"><span class="string">"NIIIIICE"</span></span><span class="org-block">)
-          </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(if first-heading (setq first-heading nil)
-</span></span><span class="org-block">          </span><span class="org-block"><span class="comment-delimiter">;;                 </span></span><span class="org-block"><span class="comment">(insert "+latex:\\end\{alertblock\}"))
-</span></span><span class="org-block">        </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(insert "\n\n+latex: \\begin\{alertblock\}\{")
-</span></span><span class="org-block">
-          (org-next-visible-heading 1)
-        (insert </span><span class="org-block"><span class="string">"WOW :: "</span></span><span class="org-block"> (s-chop-prefix </span><span class="org-block"><span class="string">"</span></span><span class="org-block"><span class="string"><span class="warning">\</span></span></span><span class="org-block"><span class="string">** "</span></span><span class="org-block"> heading))
-
-        (insert </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Otherwise we impede on the auto-inserted &#8220;* footer :ignore:&#8221;
-</span></span><span class="org-block">        </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(insert "\}")
-</span></span><span class="org-block">      )
-    )
-)))
-
-(add-hook 'org-export-before-parsing-hook 'my-headline-alteration)
-(remove-hook 'org-export-before-parsing-hook 'my-headline-alteration)
-</span><span class="org-block-end-line">#+END_SRC
-</span>
-
-
-(org-next-visible-heading 1)
-
 <span class="org-level-1">* </span><span class="org-level-1"><span class="org-todo"><span class="hl-todo"><span class="custom-14">TODO</span></span></span></span><span class="org-level-1"> </span><span class="org-special-keyword">COMMENT</span><span class="org-level-1"> Glossary Library of Arabic Linguistic Jargon</span>
 <span class="org-drawer">:PROPERTIES:</span>
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">COMMENT-Glossary-Library-of-Arabic-Linguistic-Jargon</span>
@@ -2691,7 +2757,7 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
    <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Article-Image</span>
    <span class="org-drawer">:END:</span>
 
- An image <span class="writegood-passive-voice">is included</span> via the <span class="org-code">#+IMAGE:location</span> --see the usages sections below.
+ An image <span class="writegood-passive-voice">is included</span> via the <span class="org-code">#+</span><span class="org-link"><span class="org-code"><a href="IMAGE:location">IMAGE:location</a></span></span> --see the usages sections below.
  Alternative methods include.
 
  + An image can <span class="writegood-passive-voice">be embedded</span> as a url, in Org-mode:
