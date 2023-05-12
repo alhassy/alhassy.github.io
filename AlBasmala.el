@@ -1,3 +1,25 @@
+(org-deflink image
+             "Provide a quick way to insert images along with credits via tooltips.
+
+Example usage:
+
+image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|100
+
+image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
+"
+;;             (upcase (or o-description o-label))
+  (-let [(image width height center? credit?) (s-split "|" o-label)]
+    (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
+      (let* ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+            (title (format "Image credit “%s”" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
+            (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+            (it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             width=\"%s\" height=\"%s\" align=\"top\"/></a>"
+                        href title src width height)))
+        (if center?
+            (format "<center> %s </center>" it)
+          it)))))
+
 (defmacro org-deftag (name args docstring &rest body)
   "Re-render an Org section in any way you like, by tagging the section with NAME.
 
