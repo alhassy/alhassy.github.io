@@ -1,0 +1,2084 @@
+#+title: Java CheatSheet
+# +subtitle: /---An Old-School-Cool Language---/
+#+macro: blurb Quick reference for an old-school-cool high-level language ^_^
+#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+#   +include: CheatSheet/CheatSheetSetup.org
+#+property: header-args :results none :exports code :eval never-export
+#+date: <2023-05-10 Wed>
+#+filetags: java cheat-sheet
+#+fileimage: modern-java.png 88% 88%
+#+description: Quick reference for an old-school-cool high-level language ^_^
+#+options: toc:t
+
+* Stuff to relocate to AlBasmal.org :noexport:
+
+#+macro: begin-ignore-html #+html: <!--
+#+macro: end-ignore-html #+html: -->
+
+:details: makes a <details> block in HTML, and produces no contents in LaTeX.
+#+begin_src emacs-lisp
+(org-deftag details (anchor color)
+   "HTML export a heading as if it were a <details> block; ANCHOR & COLOR are optional
+   arguments indicating the anchor for this block as well as the background colour of the resulting block.
+
+For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
+friendly-soft-red to denote it as an “advanced” content that could be ignored
+on a first reading of my article.
+Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
+   (insert "\n#+html:"
+           (format "<div>%s <details class=\"float-child\" style=\"background-color: %s\">"
+                   (if anchor (format "<a style=\"width: 1%%;float: left; padding: 0px\" id=\"%s\" href=\"#%s\">🔗</a>" anchor anchor) "")
+                   color)
+           "<summary> <strong> <font face=\"Courier\" size=\"3\" color=\"green\">"
+           (s-replace-regexp "^\** " "" o-heading)
+           "</font> </strong> </summary>")
+   (org-next-visible-heading 1)
+   (insert "#+html: </details> </div>"))
+#+end_src
+
+
+:ignore_BACKEND: ignores a section's title for a given backend
+#+begin_src emacs-lisp
+(org-deftag myIgnore (backend)
+   "ignores a section's title for a given backend (defaulting to HTML)."
+   (unless backend (setq backend "html"))
+   (let (begin-ignore end-ignore)
+     (if (equal backend "pdf")
+         (setq begin-ignore "\\iffalse" end-ignore "\\fi"))
+     (if (equal backend "html")
+         (setq begin-ignore "<!--" end-ignore "-->"))
+   (insert (format "\n#+%s: %s\n" backend begin-ignore))
+   (insert o-heading)
+   (org-next-visible-heading 1)
+   (insert (format "\n#+%s: %s\n" backend end-ignore))))
+#+end_src
+
+
+# Remove a org-deftag via
+# (pop org-export-before-parsing-hook)
+# Make this into a macro: org-deftag-remove
+
+* COMMENT Additions to AlBasmala
+:Add_to_AlBasmala:
+Speaking of local variables, let's always load ones we've already marked as safe
+---see the bottom of the source of this file for an example of local variables.
+( At one point, all my files had locals! )
+#+BEGIN_SRC emacs-lisp :tangle no
+(setq enable-local-variables :safe)
+#+END_SRC
+:End:
+
+# TODO: AlBasmala's blog/publish-current-article should ensure I'm in the doom-solarized theme, since the current Emacs theme influences the HTML colouring used for code blocks.
+
+* COMMENT Colourful Source Blocks        :update_init_with_new_info_if_need_be:
+
+brew install pygments
+
+# Then alter path, eg in ~/.zshrc, so that the required Python version for Pygments is accessible.
+export PATH="/opt/homebrew/opt/python@3.11/bin/python3.11:$PATH"
+
+--------------------------------------------------------------------------------
+
+  Invoke the following with ~C-c C-c~, or better yet place it in your [[https://alhassy.github.io/init/][Emacs configuration]],
+  to ensure references are picked up and source code highlighting is turned on
+  using the Minted package ---which in turn requires the pygmentize system tool.
+
+#+BEGIN_SRC emacs-lisp
+(setq org-latex-listings 'minted
+      org-latex-packages-alist '(("" "minted"))
+      org-latex-pdf-process
+      '("pdflatex -shell-escape -output-directory %o %f"
+        "biber %b"
+        "pdflatex -shell-escape -output-directory %o %f"
+        "pdflatex -shell-escape -output-directory %o %f"))
+#+END_SRC
+
+For faster pdf generation, consider invoking:
+
+#+BEGIN_SRC emacs-lisp
+(setq org-latex-pdf-process
+      '("pdflatex -interaction nonstopmode -output-directory %o %f"))
+#+END_SRC
+
+By default, Org exports LaTeX using the ~nonstopmode~ option,
+which tries its best to produce a PDF
+---which ignores typesetting errors altogether,
+and therefore is not necessarily ideal when using LaTeX.
+
+* COMMENT LaTeX Extra, Local, Setup  :myIgnore:
+
+# Empty by default.
+#+LATEX_HEADER: \def\cheatsheeturl{https://github.com/alhassy/JavaCheatSheet}
+
+# The following are the defaults & may be omitted.
+#+LATEX_HEADER: \def\cheatsheetcols{2}
+#+LATEX_HEADER: \landscapetrue
+#+LATEX_HEADER: \def\cheatsheetitemsep{-0.5em}
+
+# Example unicode declarations; see section “unicode” below.
+#+LATEX_HEADER: \newunicodechar{𝑻}{\ensuremath{T}}
+#+LATEX_HEADER: \newunicodechar{⊕}{\ensuremath{\oplus}}
+#+LATEX_HEADER: \newunicodechar{≈}{\ensuremath{\approx}}
+
+#+LATEX_HEADER: \newunicodechar{𝒪}{\ensuremath{\mathcal{O}}}
+#+LATEX_HEADER: \newunicodechar{𝓈}{\ensuremath{\mathcal{s}}}
+#+LATEX_HEADER: \newunicodechar{𝓍}{\ensuremath{x}}
+#+LATEX_HEADER: \newunicodechar{𝓎}{\ensuremath{y}}
+#+LATEX_HEADER: \newunicodechar{ʸ}{\ensuremath{^y}}
+#+LATEX_HEADER: \newunicodechar{⟦}{\ensuremath{\llbracket}}
+#+LATEX_HEADER: \newunicodechar{⟧}{\ensuremath{\rrbracket}}
+#+LATEX_HEADER: \newunicodechar{ⁿ}{\ensuremath{^n}}
+#+LATEX_HEADER: \newunicodechar{¹}{\ensuremath{^1}}
+#+LATEX_HEADER: \newunicodechar{⁰}{\ensuremath{^0}}
+#+LATEX_HEADER: \newunicodechar{₌}{\ensuremath{_=}}
+
+* COMMENT Contents :TOC:QUOTE:myIgnore:
+#+BEGIN_QUOTE
+- [[#extra-local-setup][Extra, Local, Setup]]
+- [[#project-goal][Project Goal]]
+- [[#cheatsheet-examples][CheatSheet Examples]]
+- [[#why-learn--relearn][Why Learn & Relearn?]]
+- [[#getting-started][Getting Started]]
+- [[#what-if-its-not-good-enough][What if it's not good enough?]]
+- [[#what-if-i-want-n-columns-or-non-landscape-or-multiple-formats][What if I want ~N~ columns? Or non-landscape? Or multiple formats?]]
+- [[#colourful-source-blocks][Colourful Source Blocks]]
+- [[#break][break]]
+- [[#basic-equational-support][Basic Equational Support]]
+- [[#unicode][Unicode]]
+- [[#parallel-environment][Parallel Environment]]
+- [[#break-1][break]]
+- [[#subsection-support][Subsection Support]]
+  - [[#a-new-child-tree][A new child tree]]
+  - [[#another-child-tree][Another child tree]]
+- [[#making-readmeorg][Making ~README.org~]]
+#+END_QUOTE
+
+* COMMENT OG CheatSheet notes
+** ~LaTeX~ commands ↦ ~#+latex: \LaTeX~
+
+  Execute the following block, with ~C-c C-c~ anywhere inside it,
+  to hide all LaTeX specific items away so that, for example, the generated HTML
+  does not show them.
+
+  #+BEGIN_SRC emacs-lisp :results no
+(defun my/replace-in-buffer (this that)
+  "Replace every occurance of regexp ‘this’ with ‘that’
+   in the current buffer."
+   (interactive)
+   (save-excursion
+    (beginning-of-buffer)
+    (while (re-search-forward this nil t)
+      (replace-match that)
+    ))
+)
+
+;; Replace newline, any number of space, then room or vspace with a #+latex: beforehand.
+(let (this that)
+  (dolist (kp '( ( "^[ ]*\\\\room" . "#+latex: \\\\room")
+         ( "^[ ]*\\\\vspace" . "#+latex: \\\\vspace")
+         ( "^[ ]*\\\\newpage" . "#+latex: \\\\newpage")
+         ( "^[ ]*\\\\columnbreak" . "#+latex: \\\\columnbreak")
+         ))
+    (setq this (car kp))
+    (setq that (cdr kp))
+    (my/replace-in-buffer this that)
+   )
+)
+  #+END_SRC
+
+  #+RESULTS:
+
+** Project Goal
+
+  #+latex:  \hspace{-12pt}
+  /Use the elegant & intuitive Org-mode syntax to produce exquisite reference sheets./
+
+    - For example, the boxed section headers here are produced from usual Org headers,
+      as in ~* my section~; and one may use [[https://github.com/jkitchin/org-ref][org-ref]] for citations, as in nameref:name
+
+    #+latex: \vspace{-1em}
+    Read [[https://orgmode.org/worg/org-tutorials/org4beginners.html][Org-mode for beginners]] for a refresher!
+    - For more see [[https://orgmode.org/orgguide.pdf][The Compact Org-mode Guide]].
+
+  Execute ~C-c C-e l o~ or ~M-x compile~ to produce a nice looking PDF of your reference sheet.
+  # \newline
+  # I've bound the latter command to ~C-c C-m~ in [[https://github.com/alhassy/emacs.d][my Emacs setup]] ;-)
+
+#+latex: \vspace{-0em}
+#+begin_center
+/To learn more, manipulating this source is the way to go!/
+#+end_center
+
+:myIgnore:
+#+latex: \vspace{1em}
+Also, opening this file produces a ~README.md~ ;-)
+Which can then be regenerated on-demand with ~f11~.
+:End:
+
+*** COMMENT Org-mode Basics
+
+ Read [[https://orgmode.org/worg/org-tutorials/org4beginners.html][Org-mode for beginners]] for a refresher!
+   - For more see [[https://orgmode.org/orgguide.pdf][The Compact Org-mode Guide]].
+
+ #+latex: \vspace{1em}
+
+ + Reloading :: To reload a file with updated org settings, press
+  ~C-c C-c~ on a settings line --i.e., one beginning with a ~#+~, to reset the
+   temporary file cache.
+
+ + Inclusion :: During export, you can include the content of another file.
+   - Syntax: ~#+INCLUDE: "⟨fileName⟩" [⟨markup⟩ [⟨language⟩]]~
+     * ~markup ::= src | example~
+     * ~language ::= C | haskell | emacs-lisp | ⋯~
+     * If the markup is not given, the text will be assumed to be in
+       Org mode format and will be processed normally; c.f., [[https://orgmode.org/manual/In_002dbuffer-settings.html][Setup files]].
+
+   - To visit the file, ~C-c '~ while the cursor is on the line with the file name.
+
+   - Include only portions of a file by appending with ~:lines "x-y"~ where ~x~ is the first
+     line and ~y~ is the second-to-last line. Also ~"-y"~ for upto but not including line ~y~,
+     and ~"x-"~ for taking line ~x~ until the end of the file.
+      # - Include portions of a file: https://orgmode.org/manual/Include-files.html
+
+** What if I want ~N~ columns? Or non-landscape? Or multiple formats?
+
+ At the top, say after the ~#+INCLUDE: CheatSheet/CheatSheetSetup.org~ line, add
+ the following.
+
+#+BEGIN_EXAMPLE org :tangle no
+,#+LATEX_HEADER: \def\cheatsheetcols{N}
+,#+LATEX_HEADER: \landscapefalse
+#+END_EXAMPLE
+
+For example, having three narrow columns is useful for term-heavy or formula heavy sheets.
+In contrast, dense sheets may appear less daunting when rendered as single-column in portrait.
+Sometimes a double-column portrait is more appropriate.
+
+Press ~C-c C-c~ on the following incantation to produce a single column portrait of the cheat sheet.
+#+name: make-portrait
+#+BEGIN_SRC emacs-lisp :results none
+(with-temp-buffer
+    (insert
+    "#+EXPORT_FILE_NAME: CheatSheet_Portrait.pdf
+     ,#+LATEX_HEADER_EXTRA: \\landscapefalse \\def\\cheatsheetcols{1}
+     ,#+INCLUDE: CheatSheet.org
+    ")
+
+    (let ((org-export-use-babel nil))
+      (org-mode)
+      (org-latex-export-to-pdf)
+      )
+)
+#+END_SRC
+
+** spacing break                                             :myIgnore:
+#+latex: \columnbreak
+** spacing break               :accomodating_multiple_formats:myIgnore:
+
+#+LATEX: \ifnum\cheatsheetcols=1 \newpage \else \columnbreak \fi
+
+** Unicode
+
+I tend to use a lot of unicode and so this project comes with a unicode
+style file. We may add additional support for unicode characters as follows.
+#+BEGIN_EXAMPLE org
+,#+LATEX_HEADER: \newunicodechar{⊕}{\ensuremath{\oplus}}
+#+END_EXAMPLE
+
+Below we demonstrate that [[https://frama-c.com/][loops implement finite quantifications]]
+by showing how the specification of a loop is implemented, unsurprisingly,
+using a loop.
+
+# latex: \vspace{0.3em}
+A finite quantification can be defined axiomatically
+by the empty-range rule and split-off term rules.
+Together these form a recursive definition which can be phrased as a loop.
+#
+#+begin_parallel org
+#+BEGIN_SRC c
+// For _⊕_ : 𝑻 → 𝑻 → 𝑻,
+// fold(A,a,b) ≈ (⊕ x:a..b-1 • A[x])
+/*@ axiomatic Fold {
+  @
+  @ logic 𝑻
+  @   fold{L}(𝑻 *A, ℤ a, ℤ b)
+  @   reads a,b,A, A[..] ;
+  @
+  @ axiom foldEmptyRange{L} :
+  @   ∀ 𝑻 *A, ℤ a, b; a ≥ b
+  @   ⇒  fold(A,a,b) ≡ identity(⊕);
+  @
+  @ axiom foldSplitOffTerm{L} :
+  @   ∀ 𝑻 *A, ℤ a, b; a ≤ b
+  @   ⇒     fold(A, a, b+1)
+  @        ≡ fold(A, a, b  ) ⊕ A[b];
+  @ }
+  @*/
+#+END_SRC
+#+latex: \columnbreak
+#+BEGIN_SRC c
+/*@ requires \valid(A+(0..N-1));
+  @ assigns \nothing;
+  @ ensures \result ≡ fold(A,0,N);
+  @*/
+𝑻 fold(int N, 𝑻* A) {
+
+    𝑻 total = identity(⊕);
+
+    /*@ loop invariant
+             0 ≤ n ≤ N
+          ∧  total ≡ fold(A,0,n);
+      @ loop assigns n, total;
+      @ loop variant N - n;
+    ,*/
+    for(int n = 0; n != N; n++)
+      total = total ⊕ A[n];
+    return total;
+}
+#+END_SRC
+#+end_parallel
+
+#+latex: \vspace{-0.5em}
+
+This pseudo-code is reified by giving concrete values
+for ~(𝑻, ⊕, identity)~ such as ~(int, +, 0)~ or ~(bool, ||, false)~.
+Any [[https://en.wikipedia.org/wiki/Monoid][monoid]] will do.
+
+# We can accomodate for multiple formats.
+#+LATEX: \ifnum\cheatsheetcols=1 \newpage \else \fi
+
+** Subsection Support
+  Ideally a cheat sheet is not too hierarchical and so a subsection, as in ~** child~,
+  is turned into a rule as follows.
+
+*** A new child tree
+
+  Here is the first child's content.
+
+
+*** Another child tree
+
+  Here is the sibling's content.
+
+** spacing COMMENT vfill                                             :myIgnore:
+\vfill
+
+** COMMENT Negative space                                            :myIgnore:
+#+latex: \vspace{-1em}
+* COMMENT Emacs Java Repl
+;; Set “C­x C­j” to evaluate Java code in a background REPL.
+(repl-driven-development [C-x C-j]
+                         "jshell --enable-preview -R -ea" ;; enable assertions!
+                         :prompt "jshell>")
+
+// Selece this Java snippet, then press “C­x C­j” to evaluate it
+import javax.swing.*;
+var frame = new JFrame(){{ setAlwaysOnTop(true); }};
+JOptionPane.showMessageDialog(frame, "Super nice!");
+
+// REPL result values are shown as overlays:
+2 + 4 // ⇒ 6
+
+https://github.com/alhassy/repl-driven-development/blob/main/repl-driven-development.el#L31-L44
+
+* Abstract                                                           :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Abstract
+:END:
+
+#+begin_center
+This is a quick reference of concepts in modern Java.
+
+badge:PDF|colorful_cheat_sheet|success|https://alhassy.com/JavaCheatSheet/CheatSheet.pdf|read-the-docs
+#+end_center
+
+# @@html: <br> @@
+
+Modern Java is a strongly-typed, eagery evaluated, case sensative, yet
+whitespace insensative language. It uses hierarchies of classes/types
+to structure data, but also has first-class support for
+functional-style algebraic datatypes.
+
+Java programs are made up of ‘classes’, classes contain methods, and methods contain commands.  To just try out a
+snippet of code, we can
++ Open a terminal and enter ~jshell~; then enter:
+     #+begin_src java
+1 + 2 // The jshell lets you try things out!
+
+// Say hello in a fancy way
+import javax.swing.*;
+JOptionPane.showMessageDialog(new JFrame(), "Hello, World!");
+
+#+end_src
+
++ Alternatively, in IntelliJ, click /Tools/ then /Groovy Console/ to try things out!
++ Finally, [[http://alhassy.com/making-vscode-itself-a-java-repl.html][VSCode]] allows arbitrary Java code to be sent to a ~jshell~
+  in the background(!) and it echoes the result in a friendly way.
+
+# A program cannot consist of only commands. Java commands must be inside functions, and functions must be inside classes.
+#
+# Imagine a sofa. A sofa cannot exist on its own. It exist in a room somewhere. And a room also cannot exist on its own. A room is located in some house. Or, you could say that the house is divided into rooms, and those rooms contain things.
+#
+# Java programs are made up of classes, classes contain methods, and methods contain commands.
+
+# A minimal program must consist of at least one class, which must have at least
+# one method (function) that marks the program's starting point. This method must
+# be named main.
+
+:MWE:
+In order to run a java program, it must have a main method as an entry point.
+
+#+begin_src java
+  public class LearnJava {
+      // In order to run a java program, it must have a main method as an entry
+      // point.
+      public static void main(String[] args) {
+          System.out.println("Hello World!");
+
+          // Use System.out.printf() for easy formatted printing.
+          System.out.printf("pi = %.5f", Math.PI); // => pi = 3.14159
+      }
+  }
+#+end_src
+:End:
+
+#+begin_center
+
+# badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs
+tweet:https://alhassy.com/java-cheat-sheet
+badge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+badge:contributions|welcome|green|https://github.com/alhassy/JavaCheatSheet/issues
+# badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
+# badge:Warning|Incomplete_DRAFT|red||codeigniter
+#+end_center
+
+* The Philosophy of Classes & Interfaces
+
+# Real life objects have properties (e.g., /name, age, etc/) and behaviour (e.g., /eat, bark, fileTaxes, etc/).
+Real life objects have properties and behaviour.  For example, my cat
+has the properties of /name/ and /age/, and amongst its behaviours are
+/sleep/ and /meow/.  However, an apple does not have such features.
+*The possible features of an object are understood when we /classify/
+it;* e.g., my cat is an animal, whereas an apple is food.  In Java, a
+set of features is known as a src_java[:exports code]{class} and
+objects having those features are called “objects of that class”.
+Just as ~int~ is the type of the value ~12~, we say a class is a
+/type/ of an object.
+# Or, a class is like a blueprint of an object.
+
+We tend to think in (disjoint, hierarchical) categories; for example,
+in my library, a book can be found in one section, either “Sports” or
+“History” or “Trees”. So where should books on the history of football
+be located? Or books on the history of trees?  My library places such
+books under “Sports”, and “Tree” respecively, but then adds a
+“historical” *tag* to them.  Likewise, in Java, *to say different
+kinds of things have a feature in common, we “tag” them with an*
+*src_java[:exports code]{interface}.* (Real life tagging is a also known
+as /multi/-~class~-/ificiation/.)
+
+** Mathematically, what does <code>class</code> “mean”? :details_CategoryTheory:
+
+Mathematically, a programming language (i.e., a model of computation with types and programs) is represented by a
+[[https://alhassy.com/PathCat][category]] ---see [[https://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/acmmpc-calcfp.pdf][Calculating Functional Programs]] §1.4.  In such a setting, /a class denotes a pointed [[https://stackoverflow.com/questions/16015020/what-does-coalgebra-mean-in-the-context-of-programming][co-algebra]]/ $(𝒪, ℴ₀,
+𝒸 : 𝒪 → 𝒯(𝒪))$: “classes as modules” is captured by 𝒪 (“the set of objects”), “classes as structure” is captured by the
+co-algebra 𝒸, a “new object” is the point ℴ₀, and the functor 𝒯 is the ‘signature/type’ of the class (i.e., its
+properties and methods).
+
+** COMMENT [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object][Objects]]
+
+# Numbers, Booleans, and strings are the atoms that data structures are built
+# from. Many types of information require more than one atom, though. Objects
+# allow us to group values—including other objects—to build more complex
+# structures.
+
+Objects provide ways to group several values into a single
+value. Conceptually, this allows us to put a bunch of related things
+in a bag and run around with the bag, instead of wrapping our arms
+around all of the individual things and trying to hold on to them
+separately. These “things” are called /properties/.
+
+# Arrays are just a kind of object specialised for storing sequences of things.
+
+Values of the type /object/ are arbitrary collections of properties. One way to
+create an object is by using braces as an expression that lists properties as /“name:value”/
+pairs.
+
+1. Almost all JavaScript /values/ have properties. The exceptions are ~null~ and
+ ~undefined~. If you try to access a property on one of these nonvalues, you get
+ an error. Properties are accessed using ~value.prop~, /dot notation/.
+* Null :details_null:
+
+There is a special value named src_java[:exports code]{null} that
+denotes the absence of a meaningful value.  Ironically, it is a value
+of every type (excluding the primitive types).  [[https://funcall.blogspot.com/2007/11/in-kingdom-of-nouns.html?m=1][Here]] is a neat story
+about =null=.
+
+
+# Many operations that don’t produce meaningful values yield void simply because they have to yield some value.
+
+* TODO COMMENT mention optional alongside null
+* Reads
+
++ [[https://www.mooc.fi/en/#courses][“MOOC” Massive Open Online Course - University of Helsinki]]
+  - Useful for learning Java, Python, Haskell, JavaScript.
+  - I highly reccommend their [[https://fullstackopen.com/en/][“full stack”]] course on web development, with JS!
+  # - Extremely hands-on course for Java, perfect for indepedent learning.
++ Effective Java, 3rd Edition by Joshua Bloch
++ Seriously Good Software Code that Works, Survives, and Wins
++ Functional Programming in Java Harnessing the Power of Java 8 Lambda Expressions
++ Java Generics and Collections Speed Up the Java Development Process
++ Java 8 Lambdas Pragmatic Functional Programming - Richard Warburton
+# + Java Puzzlers Traps, Pitfalls, and Corner Cases by Joshua Bloch
+
+* COMMENT More Reads
+
+https://www.youtube.com/watch?v=-JYLuv7mmxM
+Excellent 6-part series by Abdul Bari
+
+https://www.baeldung.com/java-8-streams
+
+https://www.capitalone.com/tech/software-engineering/java-streams-explained-simple-example/
+
+https://stackify.com/streams-guide-java-8/
+
+https://livebook.manning.com/book/modern-java-in-action/chapter-5/
+
+https://www.digitalocean.com/community/tutorials/java-8-stream
+
+https://www.oracle.com/technical-resources/articles/java/ma14-java-se-8-streams.html
+
++ Leetcode is about algorithms, mooc about learning coding and to program.
+  - Java MOOC. It is a purely introductory course to programming (with Java).
+  - [Enjoyable!] Massive Open Online Course - Java University of Helsinki
+
+    oh my god i LOVE mooc. I only did the course to refresh my memory, but i learned so much more than i did in school.
+
+    I also finished it in four weeks. The course didnt burn me out which was surprising. I think its because the lessons were very clear and easy to understand.
+
+    probably the best beginner course ive ever taken
+
+  - The university of helsinki (the guys behind mooc.fi) has a web dev
+    with java course online for free, including exercises. It is only
+    available in finnish, though google translate does a passable job.
+
+    https://web-palvelinohjelmointi-21.mooc.fi/osa-1
+
++ Computer Science: An Interdisciplinary Approach
+
+   It’s a great textbook! You can use the web book site as a
+  supplement or just read from the book. The concepts are clearly
+  explained and there are a ton of useful exercises that are difficult
+  and certainly give you many “a ha” moments.
+
++ https://edabit.com/
+
++ Codingbat.com has easier questions, that is a good starter for leetcode IMO
+
+  CodingBat has really good exercises with multiple test cases (to
+  help you write unit tests and debug) from very basic to really
+  challenging, and all the way from booleans and substrings to
+  lambdas, streams and recursion.
+
++ [Free] Practice-it is, along with CodingBat, one of the best
+  websites for beginners to practice and consolidate the fundamentals
+  of Java. It has more than 600 exercises grouped by different
+  categories. In my case, it has helped me to strengthen the knowledge
+  acquired and to continue advancing with this wonderful programming
+  language.
+
+  https://practiceit.cs.washington.edu/
+
++ https://cscx.org/
+  Computer Science by Example (cscx.org) is a collection of short programming exercises.
+
++ Start with CodeWars. Select only level 8 problems and sort by most completed.
+
++ https://www.coursera.org/learn/algorithms-part1?action=enroll
++ https://www.coursera.org/learn/algorithms-part2
++ https://programmedlessons.org/Java9/index.html#part03
++ https://hyperskill.org/tracks
+
+  You can get 9 weeks free by registering with a new email address if you don't mind testing out of concepts you've already completed
+
+  Hyperskill is a fairly new resource from Jetbrains (the maker of IntelliJ)
+
+   It is based on learning projects, then having prerequisite lessons that need to be learned to successfully complete the project.
+
+
++ https://www.codility.com/
++ https://exercism.org/tracks/java
++ https://www.youtube.com/playlist?list=PLE7E8B7F4856C9B19
++ https://docs.oracle.com/javase/tutorial/index.html
+
+I recomend these books:
+
+Java Concurrency in Practice by Brian Goetz
+Java Performance - In-Depth Advice for Tuning and Programming Java 8, 11, and Beyond
+
+
+
+--------------------------------------------------------------------------------
+
+# Mention that JS, like Python, has decoraters with @-syntax and generators with yield-syntax.
+# The book Eloquent Javascript has useful stuff to revisit.
+#
+# http://es6-features.org/
+
++ https://eloquentjavascript.net/
+
+  /This is a book about JavaScript, programming, and the wonders of the digital./
+
+  Many of the examples in this cheatsheet were taken from this excellent read!
+
++ https://exploringjs.com/index.html
+
+  /Exploring JS: Free JavaScript books for programmers/
+  ---E.g., “JavaScript for impatient programmers”
+
++ https://www.w3schools.com/js/
+
+  /This tutorial will teach you JavaScript from basic to advanced./
+
+  Other bite-sized lessions can be found at: https://masteringjs.io/fundamentals
+
++ https://learnxinyminutes.com/docs/javascript/
+
+  /Take a whirlwind tour of your next favorite language. Community-driven!/
+
++ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference
+
+  /The JavaScript reference serves as a repository of facts about the JavaScript
+  language. The entire language is described here in detail./
+
++ https://github.com/you-dont-need/You-Dont-Need-Loops
+
+  /Avoid The One-off Problem, Infinite Loops, Statefulness and Hidden intent./
+* Properties and methods have *separate namespaces*
+
+{{{begin-ignore-html}}}
+Properties and methods have *separate namespaces* ---@@latex:{\tiny “Java is a Lisp-2 Language”.}@@
+{{{end-ignore-html}}}
+
+  :Like_Lisp:
+  + → :: Use ~funcall~ or ~apply~ to call functions bound to variables.
+  + → :: Refer to functions outside of function calls by using a sharp quote, ~#'~.
+  :End:
+
+  Below we use the name =plus1= in two different definitional roles.
+  Which one we want to refer to depends on whether we use "dot-notation" with /or/ without parenthesis:
+  The parentheis indicate we want to use the method.
+  # Alternatively, we can transform a method into a "function object"  using =::=-notation, /method-reference notation/.
+  # Function<Integer, Integer> theMethod   = SameNameNoProblem::plus1;
+#+begin_src java
+class SameNameNoProblem {
+    public static int plus1(int x){ return x + 1; } // Method!
+    public static String plus1 = "+1";             // Property!
+}
+
+class ElseWhere {
+    String pretty = SameNameNoProblem.plus1;
+    Integer three = SameNameNoProblem.plus1(2);
+
+}
+#+end_src
+
+The consequence of different namespaces @@meta: i.e. of being Lisp-2@@ are
++ → :: Use ~apply~ to call functions bound to variables.
++ → :: Refer to functions outside of function calls by using a double colon, ~::~.
+
+# Function<Integer, Integer> increment = SameNameNoProblem::plus1;
+# tri(SameNameNoProblem::plus1, 100) // ⇒ 5150
+
+Let's discuss both of these now...
+* COMMENT Functions
+
++ A ~return~ keyword without an expression after it will cause the
+  function to return ~undefined~.
+
++ Functions that don’t have a ~return~ statement at all, similarly return
+  ~undefined~.
+
++ One may also define functions using “arrow” notation: ~(x₀, …, xₙ) => ⋯~.
+  - When there is only one parameter name, you can omit the parentheses around
+    the parameter list.
+  - If the body is a single expression, rather than a (multi-line) block in
+    braces, that expression will be returned from the function.
+
+  So, these two definitions of square do the same thing:
+  #+BEGIN_SRC js
+  const square1 = (x) => { return x * x; };
+  const square2 =  x  => x * x;
+  #+END_SRC
+* Anonymous /functions/: ~(arg₁, …, argₙ) → bodyHere~
+
+#+begin_src java
+// define, then invoke later on
+Function<Integer, Integer> f  =  x -> x * 2;
+
+f.apply(3) // ⇒ 6
+// f(3)    // invalid!
+
+// define and immediately invoke
+((Function<Integer, Integer>) x -> x * 2).apply(3);
+
+// define from a method reference
+Function<Integer, Integer> f = SameNameNoProblem::plus1;
+#+end_src
+
+#+latex: \vspace{-1em}
+
+#+latex: \room
+In Java, everything is an object! (Ignoring primitives, which exist for the purposes of efficiency!)
+As such, functions are also objects! Which means, they must have a type: Either some class (or some interface), but which
+one? The arrow literal notation =x -> e= *is a short-hand* for an implementation of an interface with one abstract
+method. That is all.
+
+Let's make a method that takes anonymous functions, and use it.
+# +latex: {\color{white}.}\vspace{-2.4em}
+#+BEGIN_SRC java
+// Recursion with the ‘tri’angle numbers: tri(f, n) = Σⁿᵢ₌₀ f(i).
+public static int tri(Function<Integer, Integer> f, int n) {
+    return n <= 0 ? 0 : f.apply(n) + tri(f, n - 1);
+}
+
+tri(x -> x / 2, 100);  //  ⇒  Σ¹⁰⁰ᵢ₌₀ i/2 = 2500
+
+// Using the standard “do nothing” library function
+tri(Function.identity(), 100);  //  ⇒  Σ¹⁰⁰ᵢ₌₀ i = 5050
+#+END_SRC
+
+/Exercise!/ Why does the following code work?
+# Recall that methods and variables have different namespaces...
+#+BEGIN_SRC java
+int tri = 100;
+tri(Function.identity(), tri); //  ⇒ 5050
+
+Function<Integer, Integer> tri = x -> x;
+tri(tri, 100); //  ⇒ 5050
+#+END_SRC
+
+:Solution:
+Contextual location determines dispatch: In the expression =tri(tri,
+100)= the first =tri= must be /method/ whereas the second =tri= must
+be a variable (which happens to refer to a function).
+That is, /variables and methods have different namespaces./
+:End:
+
+** COMMENT Function, UnaryOperator, Consumer, Predicate, Supplier
+
+The phrase =Function<Integer, Integer>= is a bit of a mouthful to write each time,
+so the standard library provides a terser equivalent:
+* Lambdas are a shorthand for classes that implement functional interfaces
+
+# Good read! https://www.baeldung.com/java-8-lambda-expressions-tips
+
+Let's take a more theoretical look at anonymous functions.
+
+** Functional Interfaces :myIgnore_pdf:
+
+@@latex: \newline\newline\textbf{\centerline{Functional Interfaces}} @@
+
+A /lambda expression/ is a (shorthand) implementation of the only abstract method
+in a /functional interface/ ——–which is an interface that has exactly one abstract
+method, and possibly many default methods.
+
+For example, the following interface is a functional interface: It has only one abstract method.
+#+begin_src java
+  public interface Predicate<T> {
+
+      boolean test(T t);  // This is the abstract method
+
+      // Other non-abstract methods.
+      default Predicate<T> and(Predicate<? super T> other) { ... }
+      // Example usage: nonNull.and(nonEmpty).and(shorterThan5)
+      static <T> Predicate<T> isEqual(T target) {...}
+      // Example usage: Predicate.isEqual("Duke") is a new predicate to use.
+  }
+#+end_src
+
+Optionally, to ensure that this is indeed a functional interface, i.e., it has
+only one abstract method, we can place =@FunctionalInterface= above its
+declaration. Then the complier will check our intention for us.
+
+** The Type of a Lambda :myIgnore_pdf:
+
+@@latex: \newline\newline\textbf{\centerline{The Type of a Lambda}} @@
+
+Anyhow, since a lambda is a shorthand implementation of an interface, this means
+that what you can do with a lambda depenends on the interface it's impementing!
+
+As such, when you see a lambda it's important to know it's type is not "just a function"!
+This mean *to run/apply/execute a lambda variable* you need to remember that the variable
+is technically an object implementing a specific functional interface, which has a single
+/named/ abstract method (which is implemented by the lambda) and so we need to invoke that
+method on our lambda variable to actually run the lambda. For example,
+#+begin_src java
+  Predicate<String> f = s -> s.length() == 3;   // Make a lambda variable
+  boolean isLength3String = f.test("hola");     // Actually invoke it.
+#+end_src
+
+Since different lambdas may implement different interfaces, the actually method
+to run the lambda will likely be different! Moreover, you can invoke /any/ method
+on the interface that the lambda is implementing. After-all, a lambda is an object; not just a function.
+
+Moreover, ~Function~ has useful methods: Such as ~andThen~ for composing functions sequentially,
+and ~Function.identity~ for the do-nothing function.
+
+** Common Java Functional Types :myIgnore_pdf:
+
+@@latex: \newline\newline\textbf{\centerline{Common Java Functional Types}} @@
+
+Anyhow, [[https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/util/function/package-summary.html][Java has ~40 functional interfaces]], which are essentially useful variations around the following 4:
+|------------------+----------+------------------------------------------------------------------|
+| Class            | runner   | Description & example                                            |
+|------------------+----------+------------------------------------------------------------------|
+| ~Supplier<T>~    | ~get~    | Makes objects for us; e.g., =() -> "Hello"!=.                    |
+| ~Consumer<T>~    | ~accept~ | Does stuff with our objects, returning void;                     |
+|                  |          | e.g., ~s -> System.out.println(s)~.                              |
+| ~Predicate<T>~   | ~test~   | Tests our object for some property, returning a boolean          |
+|                  |          | e.g., ~s -> s.length() == 3~                                     |
+| ~Function<T, R>~ | ~apply~  | Takes our object and gives us a new one; e.g., ~s -> s.length()~ |
+|------------------+----------+------------------------------------------------------------------|
+
+For example, src_java[:exports code]{𝒞::new} is a supplier for the
+class 𝒞, and the [[https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/Iterable.html#forEach(java.util.function.Consumer)][forEach]] method on iterables actually uses a consumer
+lambda, and a supplier can be used to [[https://stackoverflow.com/questions/36255007/is-there-any-way-to-reuse-a-stream][reuse streams]] (discussed below).
+
+The remaining Java functional interfaces are variations on these 4
+that are optimised for primitive types, or have different number of
+inputs as functions. For example, ~UnaryOperator<T>~ is essentially
+~Function<T, T>~, and ~BiFunction<A, B, C>~ is essentially
+~Function<A, Function<B, C>>~ ———not equivalent, but essentially the
+same thing.
+
+- As another example, Java has a ~TriConsumer~ which is the type of functions that have 3 inputs and no outputs
+  ---since ~Tri~ means 3, as in /tricycle/.
+
+** Eta Reduction: Writing Lambda Expressions as Method References :myIgnore_pdf:
+
+@@latex: \textbf{\centerline{Eta Reduction: Writing Lambda Expressions as Method References}} @@
+
+Lambdas can sometimes be simplified by using /method reference/:
+
+| Static methods      |   | $(x,ys) → τ.f(x, ys)$   | ≈ | $τ::f$                             |
+| Instance methods    |   | $(x,ys) → x.f(ys)$      | ≈ | $τ::f$, where τ is the type of $x$ |
+| Constructor methods |   | ~args → new τ<A>(args)~ | ≈ | ~τ<A>::new~                        |
+
+For example, =(sentence, word) → sentence.indexOf(word)= is the same
+as =String::indexOf=. Likewise,  =(a, b) → Integer.max(a, b)= is just =Integer::max=.
+
++ Note that a class name τ might be qualified; e.g., =x → System.out.println(x)= is just =System.out::println=.
+
+* Variable Bindings
+
+Let's declare some new names, and assert what we know about them.
+#+BEGIN_center
+src_java[:exports code]{Integer x, y = 1, z;}
+
+#+latex: \vspace{-1em}
+src_java[:exports code]{assert x == null && y == 1 && z == null;}
+#+END_center
+
+@@latex:\hspace{-1em}@@
+~τ x₀ = v₀, …, xₙ = vₙ;~ introduces 𝓃-new names ~xᵢ~ each having value ~vᵢ~ of type τ.
+    - The ~vᵢ~ are optional, defaulting to src_java[:exports code]{ 0, false,} ='\000'=,
+      src_java[:exports code]{null } for numbers, booleans, characters, and
+      object types, respectively.
+    - Later we use ~xᵢ = wᵢ;~ to update the name ~xᵢ~ to refer to a new value
+      ~wᵢ~.
+
+
+      #+html: <hr>
+      #+begin_parallel 2 :bar t
+     There are a variety of update statements:
+     #+latex: \vspace{.7em}
+        | Augment   | ~x ⊕= y~ | ≈ | ~x = x ⊕ y~ |
+        | Increment | ~x++~    | ≈ | ~x += 1~    |
+        | Decrement | ~x--~    | ≈ | ~x -= 1~    |
+
+        #+columnbreak:
+
+        The operators ~--~ and ~++~ can appear /before or after/ a name:
+        Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
+        #+latex: \vspace{.7em}
+        | ~𝒮(x++)  ≈  𝒮(x); x += 1~ |
+        | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~ |
+
+     #+end_parallel
+     #+html: <hr>
+
+        # * We also have /augmented updates/   ~x ⊕= y  ≡  x = x ⊕ y~   and
+        # | Increment: ~x--  ≡  x += 1~ | and | Decrement: ~y--  ≡  x -= 1~ |
+        #
+        # The operators ~--~ and ~++~ can appear /before or after/ a name:
+        # \newline Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
+        # | ~𝒮(x++)  ≈  𝒮(x); x += 1~  | and | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~  |
+
+- If we place the keyword src_java[:exports code]{final} before the type τ,
+  then the names are constant: They can appear only once on the right side of an ‘=’,
+  and any further occurrences (i.e., to change their values) crash the program.
+  src_java[:exports code]{ final int x = 1, y; y = 3; } is fine, but changing the
+  second =y= to an =x= fails.
+
+  :REPL:
+  { final int x = 0; x = 4; }
+
+  Need the braces; see https://arbitrary-but-fixed.net/java/jshell/2018/01/17/jshell-final-toplevel-declarations.html
+  :End:
+
+- We may use src_java[:exports code]{var x = v}, for only /one/
+  declaration, to avoid writing the name of the type τ (which may be
+  lengthy). Java then /infers/ the type by inspecting the shape of
+  =v=.
+
+- A binding name may include dollar signs ($) or underscores (_) or
+  numbers but no other punctuation or special characters.
+
+#+html: <hr>
+Variable bindings can only occur within src_java[:exports code]{class}
+definitions: A =class= binding introduces a name for a new type of
+values.
+
+* Scope, Statements, and Control Flow
+
+# #
+#+begin_parallel 2
+#+begin_src java
+var x = 1;
+
+{ // new local scope
+  var x = 200; // “shadows” top x
+  var y = 300;
+  assert x + y == 500;
+}
+
+// y is not visible here
+assert y == 20; // CRASH!
+
+// The top-most x has not changed
+assert x == 1;
+#+END_SRC
+
+#+latex: \columnbreak
+
+⊙ Each binding has a scope, which is the part of the program in which
+the binding is visible.
+
+#+latex: \vspace{1em}
+⊙ /local bindings/ are defined within a block and can only be referenced in it.
+
+
+#+latex: \vspace{1em}
+⊙ Names within a block /shadow//hide bindings with the same name.
+#+end_parallel
+
+
+Besides the assignment statement, we also have the following statements:
++ Blocks: If ~Sᵢ~ are statements, then ~{S₀; …; Sₙ;}~ is a statement.
++ Conditionals: src_java[:exports code]{if (condition) S₁ else S₂}
++ The “for-each” syntax applies to iterable structures
+  ---we will define our own later.
+  #+BEGIN_SRC java
+// Print all the elements in the given list.
+for (var x : List.of(1, 2, 3))
+   System.out.printf("x ≈ %s\n", x);
+#+END_SRC
+
++ While-Loops src_java[:exports code]{ while (condition) S } and for-loops
+  src_java[:exports code]{ for(init; cond; change) body }.
+
+    #+begin_src java
+   var i = 0; while (i < 10) System.out.println(Math.pow(2, i++));
+≈
+   for(var i = 0; i < 10; i++) System.out.println(Math.pow(2, i));
+ #+end_src
+
+ #  ~for~ rewrites to a ~while~ loop:
+ #  src_java[:exports code]{for(init; cond; change) body  ≈  init;
+ #  while(cond){body; change;}}. As such, all three pieces of ~for~ are optional.
+
+ Exit the current loop with the src_java[:exports code]{break;}
+  statement.  Similarly, the src_java[:exports code]{continue;}
+  statement jumps out of the body and continues with the next
+  iteration of the loop.
+
+* src_java[:exports code]{switch}
+
+Dispatching on a value with switch
+
+#+begin_parallel
+  *⟦Switch Statement⟧*
+   #+begin_src java
+switch (x){
+  case v₁: S₁
+  ⋮
+  case vₙ: Sₙ
+  default: Sₙ
+}
+#+end_src
+
+#+columnbreak:
+
+   The src_java[:exports code]{switch} works as follows:
+   Find the /first/ 𝒾 with ~x == vᵢ~, then execute
+   ~{Sᵢ; ⋯; Sₘ;}~, if there is no such 𝒾, execute the
+   default statement ~Sₙ~. Where ~Sₘ~ is the first
+   statement after ~Sᵢ~ that ends with ~break;~.
+
+#+end_parallel
+
+   E.g., ~case v: S; case w: S′; break~
+   means do ~S;S′~ if we see ~v~
+   but we do ~S′~
+   when seeing both ~v~ and ~w~.
+
+    #+begin_src java
+switch (2){
+  case 0: System.out.println(0);
+  case 1: System.out.println(1);
+  case 2: System.out.println(2);
+  default: System.out.println(-1);
+} // ⇒ Outputs: 2 -1
+#+end_src
+
+#+html: <hr>
+
+   *⟦Switch Expression⟧*
+   If we want to perform case analysis /without the fall-over behaviour/, we use
+   arrows ‘→’ instead of colons ‘:’.
+   #+begin_src java
+   switch (2){
+     case 0 -> 0;
+     case 1 -> 1;
+     case 2 -> 2;
+     default -> -1;
+   } // ⇒ 2
+   #+end_src
+
+* Strings
+
+Any pair of matching double-quotes will produce a string literal
+---whereas single-quote around a single character produce a
+src_java[:exports code]{char}acter value. For multi-line strings, use
+triple quotes, ="""=, to produce /text blocks/.
+
+String interpolation can be done with ~String.format~ using ~%s~
+placeholders.  For advanced interpolation, such as positional
+placeholders, use [[https://docs.oracle.com/javase/8/docs/api/java/text/MessageFormat.html][MessageFormat]].
+
+#+BEGIN_SRC java
+String.format("Half of 100 is %s", 100 / 2) // ⇒ "Half of 100 is 50"
+#+END_SRC
+
+# import java.text.MessageFormat;
+# MessageFormat.format("G {0}", 12)
+
++ ~s.repeat(𝓃)~ ≈ Get a new string by gluing 𝓃-copies of the string 𝓈.
++ ~s.toUpperCase()~ and ~s.toLowerCase()~ to change case.
++ Trim removes spaces, newlines, tabs, and other whitespace from the start and end of a string.
+  #+BEGIN_SRC java
+  "  okay \n ".trim().equals("okay")
+#+END_SRC
++ ~s.length()~ is the number of characters in the string.
++ ~s.isEmpty()  ≡  s.length() == 0~
++ ~s.isBlank()  ≡  s.trim().isEmpty()~
++ ~String.valueOf(x)~ gets a string representation of anything ~x~.
++ ~s.concat(t)~ glues together two strings into one longer string; i.e., ~s + t~.
+
+* Equality
+
++ In general, ‘==’ is used to check two primitives for equality, whereas
+  =.equals= is used to check if two objects are equal.
+
++ The equality operator ‘==’ means “two things are indistinguishable:
+  They evaluate to the same literal value, or refer to the same place in memory”.
+
++ As a method, ~.equals~ can be redefined to obtain a suitable notion
+  of equality between objects; e.g., “two people are the same if they
+  have the same name (regardless of anything else)”.  If it's not
+  redefined, ~.equals~ behaves the same as ‘==’.  In contrast, Java
+  does not support operator overloading and so ‘==’ cannot be
+  redefined.
+
++ For strings, ‘==’ and ~.equals~ behave differently:
+  src_java[:exports code]{new String("x") == new String("x")} is false, but
+  src_java[:exports code]{new String("x").equals(new String("x"))} is
+  true!  The first checks that two things refer to the same place
+  in memory, the second checks that they have the same letters in the
+  same order.
+  - If we want this kind of “two objects are equal when they have the
+    same contents” behaviour, we can get it for free by using
+    src_java[:exports code]{record}s instead of src_java[:exports
+    code]{class}es.
+
+# ?? + Precedence: Relationals like ~==~ and ~>~ are first, then “and” ~&&~, then “or” ~||~.
+#
+# + The ternary operator: =condition ? if_true : if_false=
+#
+# && and || are lazy.
+
+** COMMENT Equality
+
+References to the same object are equal, whereas different object literals
+with the same properties are considered different.
+#+BEGIN_SRC js
+let a = {value: 10};
+let b = a;
+let c = {value: 10};
+
+console.log(a == b); // ⇒ true
+console.log(a == c); // ⇒ false
+
+a.value = 15;
+console.log(b.value); // ⇒ 15
+console.log(c.value); // ⇒ 10
+#+END_SRC
+
+Since ~a~ and ~b~ refer to the same object, changing one also changes the value of
+the other. However, ~c~ only superficially looks the same.
+
+We say different objects with the same properties are “deeply equal”.
+#+BEGIN_SRC js
+  // If non-objects, perform strict equality. Else, recursively check they have
+  // the (deeply) same values and properties.
+  function deepEqual(x, y){
+    if (typeof x != typeof y) return false;
+    if (x && y && typeof x != 'object') return x === y; // Values
+    let props = Object.keys(x).concat(Object.keys(y));
+    for (let p of props) if (! deepEqual(x[p], y[p])) return false;
+    return true;
+  }
+
+  let obj = {here: {is: "an"}, object: 2};
+  console.log(deepEqual(obj, {here: 1, object: 2})); // ⇒ false
+  console.log(deepEqual(obj, {here: {is: "an"}, object: 2})); // ⇒ true
+  console.log(deepEqual(1, 0 + 1)); // ⇒ true
+#+END_SRC
+
+Because of a historical accident, ~typeof null~ produces ~"object"~.
+* Arithmetic
+
+In addition to the standard arithmetic operations, we have
+~Math.max(x, y)~ that takes two numbers and gives the largest;
+likewise ~Math.min(⋯)~.  Other common functions include ~Math.sqrt,
+Math.ceil, Math.round, Math.abs,~ and ~Math.random()~ which returns a
+random number between 0 and 1.  Also, use ~%~ for remainder after
+division; e.g., =n % 10= is the right-most digit of integer $n$, and
+~n % 2 == 0~ exactly when $n$ is even, and =d % 1= gives the decimal
+points of a floating point number $d$, and finally:
+If ~d~ is the index of the current weekday (0..6), then
+~d + 13 % 7~ is the weekday 13-days from today.
+# In general, modulus is useful when working with a value that resets after a certain limit
+
+#+begin_src java
+// Scientific notation: 𝓍e𝓎 ≈ 𝓍 × 10ʸ
+assert 1.2e3 == 1.2 * Math.pow(10, 3)
+
+// Random number in range min..max
+Math.floor(Math.random() * (max - min) + min)
+
+// Below we sum the digits of the integer n
+int n = 31485;
+int sum = 0;
+while (n % 10 != 0) { sum += n % 10; n /= 10; }
+assert sum == 3 + 1 + 4 + 8 + 5;
+
+// A more elegant, “functional style”, solution:
+String.valueOf(n).chars().map(c -> c - '0').sum();
+#+end_src
+
+The =chars()= methods returns a stream of integers (Java
+src_java[:exports code]{char}acters are really just integers).
+Likewise, src_java[:exports code]{IntStream.range(0, 20)} makes a
+sequence of numbers that we can then ~map~ over, then ~sum, min, max, average~.
+
+#+begin_src java
+// Upper case letters come first, then lower case ones.
+assert 'Z' < 'a' && 'a' < 'z';
+#+end_src
+
+* Collections and Streams
+
+/Collections/ are types that hold a bunch of similar data: Lists,
+Sets, and Maps are the most popular. /Streams/ are pipelines for
+altering collections: Usually one has a collection, converts it to a
+stream by invoking ~.stream()~, then performs ~map~ and ~filter~
+methods, etc, then “collects” (i.e., runs the stream pipeline to get
+an actual collection value back) the result.  ⟦Streams exist because
+Java lacks a proper extension mechanism, such as C#'s /extension
+methods/ or Haskell's /typeclasses/ or JavaScript's /prototypes/.⟧
+
+#+html: <hr>
+
+*Lists are ordered collections, that care about multiplicity*.  Lists
+are made with ~List.of(x₀, x₁, …, xₙ)~.  Indexing, ~xs.get(𝒾)~, yields
+the 𝒾-th element from the start; i.e., the number of items to skip;
+whence ~xs.get(0)~ is the first element.
+
+*Sets are unordered collections, that ignore multiplicity*. Sets are
+made with ~Set.of(x₀, x₁, …, xₙ)~.
+
+*Maps are pairs of ‘keys’ along with ‘values’.* ~Map<K, V>~ is
+essentially the class of objects that have no methods but instead have
+an arbitary number of properties (the ‘keys’ of type =K=), where each
+property has a value of type =V=.  Maps are made with ~Map.of(k₀, v₀,
+…, k₁₀, v₁₀)~ by explicitly declaraing keys and their associated
+values.  The method ~ℳ.get(k)~ returns the value to which the
+specified key =k= is mapped, or =null= if the map ℳ contains no
+mapping for the key. Maps have an ~entrySet()~ method that gives a set
+of key-value pairs, which can then be converted to a stream, if need
+be.
+
+#+html: <hr>
+
+Other collection methods include:
++ ~𝒞.size()~ is the number of elements in the collection
++ ~𝒞.isEmpty()  ≡  𝒞.size() == 0~
++ ~𝒞.contains(e)  ≡  𝒞.stream().filter(x -> x.equals(e)).count() > 0~.
++ ~Collections.fill(ℒ, e)  ≅  ℒ.stream().map(_ -> e).toList()~;
+  i.e., copy list ~ℒ~ but replace all elements with ~e~.
++ ~Collections.frequency(𝒞, e)  ≅  𝒞.stream().filter(x -> x.equals(e)).count()~;
+  i.e., count how many times ~e~ occurs in a collection.
++ ~Collections.max(𝒞)~ is the largest value in a collection; likewise ~min~.
++ ~Collections.nCopies(n, e)~ is a list of $n$ copies of ~e~.
+
+#+html: <hr>
+
+*src_java[:exports code]{Stream<τ>} methods*
++ ~Stream.of(x₀, …, xₙ)~ makes a stream of data, of type τ, ready to be acted on.
++ ~s.map(f)~ changes the elements according to a function $f : τ → τ′$.
+  - ~s.flatMap(f)~ transforms each element into a stream since $f : τ → Stream<τ′>$, then the resulting
+    stream-of-streams is flattened into a single sequential stream.
+  - As such, to merge a streams of streams just invoke ~.flatMap(s -> s)~.
++ ~s.filter(p)~ keeps only the elements that satisfy property ~p~
++ ~s.count()~ is the number of elements in the stream
++ ~s.allMatch(p)~ tests if all elements  satisfy the [[https://download.java.net/java/early_access/panama/docs/api/java.base/java/util/function/Predicate.html][predicate]] ~p~
++ ~s.anyMatch(p)~ tests if any element satisfies ~p~
++ ~s.noneMatch(p)  ≡  s.allMatch(p.negate())~
++ ~s.distinct()~ drops all duplicates
++ ~s.findFirst()~ returns an ~Optional<τ>~ denoting the first element, if any.
++ ~s.forEach(a)~ to loop over the elements and perform action ~a~.
+  - If you want to do some action, and get the stream ~s~ back for further use, then use ~s.peek(a)~.
+
+# Higher-order functions start to shine when you need to compose operations.
+
+** TODO COMMENT Dictionries or maps
+
+   An object can also be used as a /“key:value”/ dictionary: When we ‘look-up’ a key,
+   we find a particular value. E.g., with ~ages = {mark: 12, james: 23, larry: 42}~
+   we use ~ages.mark~ to find Mark's age.
+
+   Similarly, objects can be used to simulate /keyword arguments/ in function calls.
+
+* COMMENT Methods
+
+#+latex: {\color{white}.}\vspace{-1em}
++ /Warning!/ Arguments are evaluated *before* the function is executed.
+
++ /Method/ definition:
+  #+BEGIN_SRC java
+τ f(τ₁ x₁, …, τₙ xₙ) {
+    ⋮
+    return e;
+    }
+  #+END_SRC
+
+In your home, furniture /must/ be in some room.
+  Likewise, in Java, methods /must/ be part of some
+  src_java[:exports code]{class},
+  src_java[:exports code]{record}, or
+  src_java[:exports code]{interface}.
+  - A src_java[:exports code]{class} is a /type/ consisting of some state and some methods.
+  - A src_java[:exports code]{record} is a "value class": It is like a class, but it has no private hidden state
+    and cannot be changed. It's like a number: /What you see is what you get!/
+    (It's essentially a fancy tuple, pair, or heterogenous-array. More on this later!)
+  - An src_java[:exports code]{interface} is a collection of method /signatures/: It is a bunch of method names,
+    that can be implemented by a =class= or a =record=. It may also have src_java[:exports code]{default} definitions
+    of methods. It is an abstraction with /no/ state.
+
+* COMMENT The ~this~ Keyword
+
+:Hide:
+Methods are nothing more than properties that hold function values. This is a
+simple method:
+
+#+BEGIN_SRC js
+let rabbit = {};
+rabbit.speak = function(line) {
+  console.log(`The rabbit says '${line}'`);
+};
+
+rabbit.speak("I'm alive."); // ⇒ The rabbit says 'I'm alive.'
+#+END_SRC
+:End:
+
+Usually a method needs to do something with the object it was called on. When a
+function is called as a method --- looked up as a property and immediately
+called, as in ~object.method()~ —-- the binding called ~this~ in its body
+automatically points at the object that it was called on.
+
+#+BEGIN_SRC js
+function speak(line) {
+  console.log(`The ${this.type} rabbit says '${line}'`);
+}
+let whiteRabbit  = {type: "white", speak};
+let hungryRabbit = {type: "hungry", speak};
+
+whiteRabbit.speak("Hola!"); // ⇒ The white rabbit says 'Hola!'
+hungryRabbit.speak("Hey!")  // ⇒ The hungry rabbit says 'Hey!'
+#+END_SRC
+
+** COMMENT =THIS= keyword
+
+The keyword ~this~ is useful when your code needs to refer to the instance of the object, where this code is running.
+
+
+Notice that the ~this~ keyword allows us to refer to other parts of
+/this/ object literal.
+* COMMENT Object-Oriented Programming / Inheritance
+
+** Intro :myIgnore:
+
+In English, /prototype/ means a preliminary model of something from which
+other forms are developed or /copied/. As such, a /prototypical/ object
+is an object denoting the original or typical form of something.
+
+In addition to their properties, JavaScript objects also have prototype ---i.e.,
+another object that is used as a source of additional properties. When an object
+gets a request for a property that it does not have, its prototype will be
+searched for the property, then the prototype’s prototype, and so on.
+# the way JavaScript objects work. In addition to their set of properties, most
+# objects also have a prototype. A prototype is another object that is used as a
+# fallback source of properties. When an object gets a request for a property that
+# it does not have, its prototype will be searched for the property, then the
+# prototype’s prototype, and so on.
+
++ ~Object.getPrototypeOf(x)~ returns the prototype of an object ~x~.
+
+For example, arrays are derived from ~Array.prototype~ which is derived from
+~Object.prototype~ ---which is the great ancestral prototype, the entity behind
+almost all object. ~Object.prototype~ provides a few methods that show up in all
+objects, such as ~toString~, which converts an object to a string representation.
+
+# What Properties Does a (prototype) Object have?
++ We can use the ~Object.getOwnPropertyNames(x)~ to get all the property names
+  linked to object ~x~.
+
+It is occasionally useful to know whether an object was derived from a specific
+class. For this, JavaScript provides a binary operator called ~instanceof~.
+Almost every object is an instance of Object.
+
++ ~𝓍 instanceof 𝓎  ≈  Object.getPrototypeOf(𝓍) == 𝓎.prototype~
+
+#+BEGIN_SRC js
+ // “Object” includes “toString”, and some other technical utilities.
+ console.log(Object.getOwnPropertyNames(Object.prototype))
+
+// Some true facts
+console.log( {}       instanceof Object
+           , []       instanceof Array
+           , Math.max instanceof Function
+           , Math.max instanceof Object) // Since Function derives from Object
+
+// “Object” has no parent prototype.
+console.log(Object.getPrototypeOf(Object.prototype)); // ⇒ null
+#+END_SRC
+
+** Overriding Methods
+
+# +latex: \newpage
+ (*Overriding*)
+ When you add a property to an object, whether it is present in the prototype or
+ not, the property is added to the object itself. If there was already a property
+ with the same name in the prototype, this property will no longer affect the
+ object, as it is now hidden behind the object’s own property.
+#+latex: \vspace{-0.5em}
+# #
+#+begin_parallel org
+ #+BEGIN_SRC js
+Array.prototype.colour = 'purple'
+
+let xs = [1, 2, 3]
+console.log(xs.colour) // ⇒ purple
+#+END_SRC
+#+latex: \columnbreak
+#+BEGIN_SRC js
+xs.colour = 'green'
+console.log(xs.colour) // ⇒ green
+
+console.log(Array.prototype.colour)
+// ⇒ purple
+#+END_SRC
+#+end_parallel
+
+#+latex: \vspace{-1em}
+
+** Inheritance
+
+ With ~extends~, the new class inherits properties and behavior from the old
+ class ---it is like ~Object.create(parentPrototype)~. The old, parent, class is
+ called the “super-class” and we refer to it using the ~super~ binding.
+
+ #+BEGIN_SRC js
+   class Person {
+     constructor(name) { this.name = name; }
+     speak() { console.log(`I am ${this.name}`); }
+   }
+
+   // Use “super” to invoke properties of the parent, such as the parent's
+   // constructor.
+   class Teacher extends Person {
+    constructor(name, topic) { super(name); this.topic = topic; }
+    speak() { super.speak(); console.log(`I teach ${this.topic}`); }
+   }
+
+   let bobby = new Person('Bob');
+   bobby.speak(); // ⇒ I am Bob
+
+   let bobert = new Teacher('Bob', 'Maths');
+   bobert.speak(); // ⇒ I am Bob \n I teach Maths
+ #+END_SRC
+ :Hide:
+ #+BEGIN_SRC js
+   // It is occasionally useful to know whether an object was derived from a
+   // specific class. For this, JavaScript provides a binary operator called
+   // instanceof. Almost every object is an instance of Object.
+   console.log( bobert instanceof Person
+              , bobert instanceof Teacher
+              , bobby  instanceof Teacher
+              , [1, 2] instanceof Array
+              )
+ #+END_SRC
+ :End:
+
+** OOP Summary
+
+ So objects do more than just hold their own properties. They have prototypes,
+ which are other objects. They’ll act as if they have properties they don’t have
+ as long as their prototype has that property. Simple objects have
+ Object.prototype as their prototype.
+
+ The instanceof operator can, given an object and a constructor, tell you whether
+ that object is an instance of that constructor.
+
+ When implementing multiple classes that differ in only some details, it can be
+ helpful to write the new classes as subclasses of an existing class, inheriting
+ part of its behavior.
+* COMMENT The Iterator Interface
+
+The object given to a ~for/of~ loop is expected to be iterable. This means it
+has a method named ~Symbol.iterator~. When called, that method should return an
+object that provides a second interface, the iterator. This is the actual thing
+that iterates. It has a ~next~ method that returns the next result. That result
+should be an object with a ~value~ property that provides the next value, if
+there is one, and a ~done~ property, which should be true when there are no more
+results and false otherwise.
+
+Let's make an iterable to traverse expression trees.
+#+BEGIN_SRC js
+class Expr { // [0] Our type of expression trees
+  static Constant(x) {
+     let e = new Expr();
+     e.tag = 'constant', e.constant = x;
+     return e;
+     }
+
+  static Plus(l, r) {
+     let e = new Expr();
+     e.tag = 'plus', e.left = l, e.right = r;
+     return e;
+     }
+}
+
+// [1] The class tracks the progress of iterating over an expression tree
+class ExprIterator {
+  constructor(expr) { this.expr = expr; this.unvisited = [{expr, depth: 0}]; }
+  next () {
+   if(this.unvisited.length == 0) return {done: true};
+   let {expr , depth} = this.unvisited.pop();
+   if (expr.tag == 'constant') return {value: {num: expr.constant, depth}}
+   if (expr.tag == 'plus') {
+     // pre-order traversal
+     this.unvisited.push({expr: expr.right, depth: depth + 1})
+     this.unvisited.push({expr: expr.left, depth: depth + 1})
+     }
+   return this.next()
+  }
+}
+
+// [2] We can add the iterator after-the-fact rather than within the Expr class.
+Expr.prototype[Symbol.iterator] = function () { return new ExprIterator(this) }
+
+// [3] Here's some helpers and an example.
+let num = (i) => Expr.Constant(i)
+let sum = (l, r) => Expr.Plus(l, r)
+// test ≈ 1 +  (2 + (3 + 4))
+let test = sum( num(1), sum( num(2), sum(num(3), num(4))))
+// console.log(test) // ⇒ Nice looking tree ^_^
+
+// [4] We now loop over an expression with for/of
+for (let {num, depth} of test)
+  console.log(`${num} is ${depth} deep in the expression`)
+#+END_SRC
+
+Recall that inside a class declaration, methods that have ~static~ written
+before their name are *stored on* the constructor. It appears that static
+properties are shared by all instances, because the constructor /object/ has
+these as properties rather than particular instance objects.
+
+:Hide:
+We can directly use this iterable interface ourselves.
+
+#+BEGIN_SRC js
+let okIterator = "OK"[Symbol.iterator]();
+console.log(okIterator.next()); // ⇒ {value: "O", done: false}
+console.log(okIterator.next()); // ⇒ {value: "K", done: false}
+console.log(okIterator.next()); // ⇒ {value: undefined, done: true}
+#+END_SRC
+:End:
+
+:Hide:
+*wrt* to factory methods, “static” is syntactic sugar:
+  ~class C { ⋯ static M (){⋯} }; let c = C.M()~
+≈ ~class C {⋯}; function M() {⋯}; let c = new M()~.
+:End:
+* COMMENT Class Extension & Overloading
+
+In the real life, every person inherits some features from his or her parents.  Likewise, it’s easier to create /children/
+classes that will inherit some common behavior and attributes from a /parent/ class, rather than creating each /child/ class
+from scratch every time and copy-pasting the common features.
+
+#+begin_src java
+class A           { int age() { return 1; } }
+class B extends A { int age() { return 2; } } // “Overrides” the ‘age’ of parent A
+
+A a = new B();
+a.age(); // 2
+#+end_src
+
+The actual implementation of =age()= is determined at run-time: =a= is an
+=A= which has an =age= method; moreover, =a= is specialised kind of
+=A= known as a =B=, which overrides the implementation of the =age=
+method.
+
+In general, /when there are overloads, the most specific overload is used./
+#+begin_src java
+int height(A a) { return 10; }
+int height(B b) { return 20; }
+
+height(a) // 20
+#+end_src
+
+Note: Properties cannot be overriden, only methods can.
+
+* COMMENT Streams
+
+#+BEGIN_SRC java
+class SameNameNoProblem0 {
+
+    // Recursion with the ‘tri’angle numbers: tri(f, n) = Σⁿᵢ₌₀ f(i).
+    public static int tri(Function<Integer, Integer> f, int n) {
+        return n <= 0 ? 0 : f.apply(n) + tri(f, n - 1);
+        // Equivalently: return IntStream.range(0, n + 1).map(f::apply).sum();
+    }
+
+    // tri(Function.identity(), 100); // ⇒ 5050
+    // tri(x -> x / 2, 100);         // ⇒ 2500
+
+    // Contextual location determines dispatch.
+    // int tri = 100; int fiftyFifty = tri(Function.identity(), tri); //  ⇒ 5050
+    // Likewise, location determines dispatch!
+    public static Function<Integer, Integer> tri = x -> x;
+    int fiftyFifty = tri(tri, 100); //  ⇒ 5050
+}
+#+END_SRC
+
+* COMMENT Lists and List-Like Structures
+
++ Produce a syntactic, un-evaluated list, we use the single quote:
+  ~'(1 2 3)~.
+
++ Construction: ~(cons 'x₀ '(x₁ … xₖ)) → (x₀ x₁ … xₖ)~.
+
++ Head, or /contents of the address part of the register/:
+   ~(car '(x₀ x₁ … xₖ)) → x₀~.
+
++ Tail, or /contents of the decrement part of the register/:
+   ~(cdr '(x₀ x₁ … xₖ)) → (x₁ … xₖ)~.
+
+# + Deletion: ~(delete e xs)~ yields ~xs~ with all instance of ~e~ removed.
+#  - E.g., ~(delete 1 '(2 1 3 4 1)) → '(2 3 4)~.
+#
+# (describe-symbol 'remove-if-not) ;; “filter” ;-)
+
+E.g., ~(cons 1 (cons "a" (cons 'nice nil))) ≈ (list 1 "a" 'nice) ≈ '(1 "a" nice)~.
+
+#+latex: \room
+Since variables refer to literals and functions have lambdas as literals, we
+can produce forms that take functions as arguments. E.g., the standard ~mapcar~
+may be construed:
+#+BEGIN_SRC emacs-lisp
+(defun my-mapcar (f xs)
+  (if (null xs) xs
+   (cons (funcall f (car xs)) (my-mapcar f (cdr xs)))))
+
+(my-mapcar (lambda (x) (* 2 x)) '(0 1 2 3 4 5)) ;; ⇒ (0 2 4 6 8 10)
+(my-mapcar 'upcase '("a" "b" "cat")) ;; ⇒ ("A" "B" "CAT")
+#+END_SRC
+
+Pairs: ~(x . y) ≈ (cons x y)~.
+
+  An association list, or alist, is a list formed of such pairs.
+  They're useful for any changeable collection of key-value pairs.
+  The ~assoc~ function takes a key and an alist and returns the first pair
+  having that key. In the end, alists are just lists.
+
+  :Try_it_out:
+#+BEGIN_SRC emacs-lisp
+(setq drinks '( (jasim . coffee) (mary . tea) (jasim . chai) ))
+
+(assoc 'mary drinks) ;; ⇒ (mary . tea)
+(assoc 'jasim drinks) ;; ⇒ (jasim . coffee)
+
+(push '(mary . cola) drinks)
+(assoc 'mary drinks) ;; ⇒ (mary . cola)
+#+END_SRC
+:End:
+
+#+latex: \room
+(Rose) Trees in lisp are easily formed as lists of lists where each inner
+   list is of length 2:
+   The first symbol is the parent node and the second is the list of children.
+
+#+latex: \room
+Lists are formed by chains of cons cells, so getting and setting are very slow;
+likewise for alists. If performance is desired, one uses arrays and hash tables,
+respectively, instead. In particular, the performance of arrays and hash tables always
+requires a constant amount of time whereas the performance of lists and alists grows in
+proportion with their lengths.
+
+However, the size of an array is fixed ---it cannot change and thus grow--- and hash
+tables have a lookup cost as well as issues with "hash collisions". Their use is worth
+it for large amounts of data, otherwise lists are the way to go.
+
+#+latex: \room
+An [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Arrays.html][array]] is created like a list but using [only square brackets] with getter ~(aref arr index)~.
+
+A hash table is created with ~(make-hash-table)~ with getter ~(gethash key table)~.
+
+:Try_it_out:
+#+BEGIN_SRC emacs-lisp
+(setq x [0 1 2 nice])
+(aref x 3)
+(aset x 0 'woah)
+
+(setq drinks (make-hash-table))
+(setf (gethash 'mary drinks) 'tea)
+(setf (gethash 'mary drinks) 'chai)
+(gethash 'mary drinks) ;; ⇒ 'chai
+#+END_SRC
+:End:
+
+#+latex: \room
+What if you look up a key and get ~nil~, is there no value for that key or is the value
+~nil~? ~gethash~ takes a final, optional, argument which is the value to return when the
+key is not found; it is ~nil~ by default.
+
+* COMMENT Records
+
+If we want to keep a list of related properties in a list, then we have to remember
+which position keeps track of which item and may write helper functions to keep track
+of this. Instead we could use a structure.
+:More:
+A Lisp "Structure, record, object" represents objects with properties as in OOP.
+Make a structure like this: (defstruct X (f1 d1) (f2 d2) ... (fn dn)), this creates a record type named X with slots/properties/fields fi having defaults di or nil if di is absent in which case we simply write fi rather than (fi di), moreover it gives the generic constructor (make-X :f1 val1 :f2 val2 ... :fn valn) where any of the fi is optional and assigned nil by default; projection functions X.fi are also provided automatically.
+Printing and reading symmetry works as expected with structures and updates happen with setf as expected.
+:End:
+
+#+BEGIN_SRC elisp
+(defstruct X "Record with fields/slots fᵢ having defaults dᵢ"
+  (f₀ d₀) ⋯ (fₖ dₖ))
+
+;; Automatic constructor is “make-X” with keyword parameters for
+;; initialising any subset of the fields!
+;; Hence (expt 2 (1+ k)) kinds of possible constructor combinations!
+(make-X :f₀ val₀ :f₁ val₁ ⋯ :fₖ valₖ) ;; Any, or all, fᵢ may be omitted
+
+;; Automatic runtime predicate for the new type.
+(X-p (make-X)) ;; ⇒ true
+(X-p 'nope)    ;; ⇒ nil
+
+;; Field accessors “X-fᵢ” take an X record and yield its value.
+
+;; Field update: (setf (X-fᵢ x) valᵢ)
+
+(defstruct book
+  title  (year  0))
+
+(setq ladm (make-book :title "Logical Approach to Discrete Math" :year 1993))
+(book-title ladm) ;; ⇒ "Logical Approach to Discrete Math"
+(setf (book-title ladm) "LADM")
+(book-title ladm) ;; ⇒ "LADM"
+#+END_SRC
+
+Advanced OOP constructs can be found within the CLOS, Common Lisp Object System;
+which is also used as a research tool for studying OOP ideas.
+
+* COMMENT Conditionals
+
++ Booleans: ~nil~, the empty list ~()~, is considered /false/, all else
+  is /true/.
+  - Note: ~nil ≈ () ≈ '() ≈ 'nil~.
+  - (Deep structural) equality: ~(equal x y)~.
+  - Comparisons: As expected; e.g., ~(<= x y)~ denotes /x ≤ y/.
+
++ ~(if condition thenExpr optionalElseBlock)~
+  - Note: ~(if x y) ≈ (if x y nil)~; \newline better: ~(when c thenBlock) ≈ (if c (progn thenBlock))~.
+  - Note the else-clause is a ‘block’: Everything after the then-clause is considered to be part of it.
+  - ~(if xs ⋯)~ means “if xs is nonempty then ⋯” is akin to C style idioms on
+    linked lists.
+
+#
+#+begin_parallel org
+#+BEGIN_SRC emacs-lisp
+(cond
+  (test₀
+    actionBlock₀)
+  (test₁
+    actionBlock₁)
+  …
+  (t                    ;; optional
+    defaultActionBlock))
+#+END_SRC
+  \columnbreak
+   #+BEGIN_SRC emacs-lisp
+;; pattern matching on any type
+(defun go (x)
+  (pcase x
+    ('bob 1972)
+    (`(,a ,_ ,c) (+ a c))
+    (otherwise "Shucks!")))
+
+(go 'bob)     ;; ⇒ 1972
+(go '(1 2 3)) ;; ⇒ 4
+(go 'hallo)   ;; "Shucks!"
+#+END_SRC
+#+end_parallel
+
+Avoid nested if-then-else clauses by using a ~cond~ statement --a (lazy) generalisation
+of switch statements: It sequentially evaluates the expressions ~testᵢ~ and
+performs only the action of the first true test; yielding ~nil~ when no tests are true.
+Or use [[http://www.wilfred.me.uk/blog/2017/03/19/pattern-matching-in-emacs-lisp/][pattern matching]]; which even allows predicates in the case position ---~C-h o~ ;-)
+
+:Try_it_out:
+#+BEGIN_SRC emacs-lisp
+(cond
+  (t (message "first"))
+  ((/ 2 0) (message "crash"))
+)
+#+END_SRC
+:End:
+
+#+latex: \room
+Hint: If you write a predicate, think of what else you can return besides ~t~; such as
+a witness to why you're returning truth --all non-nil values denote true after all.
+E.g., ~(member e xs)~ returns the sublist of ~xs~ that begins with ~e~.
+# Return more than just the truth!
+
+:Try_it_out:
+#+BEGIN_SRC emacs-lisp
+(member 1 '(2 1 3 5))
+#+END_SRC
+:End:
+
+* COMMENT Loops
+
+Let's sum the first ~100~ numbers in 3 ways.
+#
+#+begin_parallel org
+#+BEGIN_SRC elisp
+(let ((n 100) (i 0) (sum 0))
+  (while (<= i n)
+    (incf sum i) (incf i))
+    (message (format "sum: %s" sum)))
+#+END_SRC
+\columnbreak
+
+| _C_      | _Elisp_      |
+| ~x += y~ | ~(incf x y)~ |
+| ~x -= y~ | ~(decf x y)~ |
+
+~y~ is optional, and is 1 by default.
+#+end_parallel
+
+# dotimes is just a specfic while loop.
+# (insert (format "\n\n%s" (macroexpand '(dotimes (x l r) b))))
+
+# Two instances of a while loop:
+#+BEGIN_SRC elisp
+;; Repeat body n times, where i is current iteration.
+(let ((result 0) (n 100))
+  (dotimes (i (1+ n) result) (incf result i)))
+
+;; A for-each loop: Iterate through the list [0..100].
+(let ((result 0) (mylist (number-sequence 0 100)))
+  (dolist (e mylist result) (incf result e)))
+#+END_SRC
+
+In both loops, ~result~ is optional and defaults to nil.
+It is the return value of the loop expression.
+#+latex: \vspace{-1em}
+| *Example of Above Constructs* |
+#+latex: \vspace{-1em}
+#+BEGIN_SRC emacs-lisp
+(defun my/cool-function (N D)
+  "Sum the numbers 0..N that are not divisible by D"
+  (catch 'return
+    (when (< N 0) (throw 'return 0)) ;; early exit
+    (let ((counter 0) (sum 0))
+      (catch 'break
+    (while 'true
+      (catch 'continue
+        (incf counter)
+        (cond ((equal counter N)       (throw 'break sum   ))
+           ((zerop (% counter D))  (throw 'continue nil))
+           ('otherwise             (incf sum counter   )) )))))))
+
+(my/cool-function  100 3)  ;; ⇒ 3267
+(my/cool-function  100 5)  ;; ⇒ 4000
+(my/cool-function -100 7)  ;; ⇒ 0
+#+END_SRC
+
+The special [[http://www.gigamonkeys.com/book/loop-for-black-belts.html][loop]] construct provides immensely many options to form
+nearly any kind of imperative loop. E.g., Python-style ‘downfrom’ for-loops
+and Java do-while loops. I personally prefer functional programming, so wont
+look into this much.
+
+* COMMENT Exception Handling
+
+We can attempt a dangerous clause and catch a possible exceptional case
+--below we do not do so via ~nil~-- for which we have an associated handler.
+# Which handles how to recover from such exceptional circumstances.
+#+BEGIN_SRC elisp
+(condition-case nil attemptClause (error recoveryBody))
+
+  (ignore-errors attemptBody)
+≈ (condition-case nil (progn attemptBody) (error nil))
+
+(ignore-errors (+ 1 "nope")) ;; ⇒ nil
+#+END_SRC
+
+* COMMENT Types & Overloading
+
+Since Lisp is dynamically typed, a variable can have any kind of data, possibly
+different kinds if data at different times in running a program.
+We can use ~type-of~ to get the type of a given value; suffixing that with ~p~
+gives the associated predicate; \newline e.g., ~function ↦ functionp~.
+:More:
+The following predicates tell us what kind of data a variable
+has: ~numberp, arrayp, characterp,~
+~consp, functionp, hash-tablep, listp, stringp, and symbolp~.
+:End:
+
+:Details:
+Using these we can write functions that behave differently according to the types of
+their arguments. However this sort of ad hoc polymorphism can be slow and difficult to
+maintain when new types need to be considered. Instead, we could create overloaded
+methods using the defmethod command: Lisp decides which one to use by considering the
+types, hence the types of each declaration need to differ in at least one argument.
+:End:
+
+:Try_it_out:
+#+BEGIN_SRC emacs-lisp
+(type-of 3)        ;; integer
+(type-of "3")      ;; string
+(type-of 'x)       ;; symbol
+(type-of '(x . y)) ;; cons
+(type-of nil)      ;; symbol
+(type-of '(1 2 3)) ;; cons
+(type-of [1 2 3])  ;; vector
+#+END_SRC
+:End:
+
+#+BEGIN_SRC emacs-lisp
+;; Difficult to maintain as more types are added.
+(defun sad-add (a b)
+  (if (and (numberp a) (numberp b))
+      (+ a b)
+      (format "%s + %s" a b))
+)
+
+(sad-add 2 3)       ;; ⇒ 5
+(sad-add 'nice "3") ;; ⇒ "nice + 3"
+
+;; Better: Seperation of concerns.
+;;
+(cl-defmethod add ((a number) (b number)) (+ a b))      ;; number types
+(cl-defmethod add ((a t) (b t)) (format "%s + %s" a b)) ;; catchall types
+
+(add 2 3)       ;; ⇒ 5
+(add 'nice "3") ;; ⇒ "nice + 3"
+#+END_SRC
+
+While list specific functions like list-length and mapcar may be more efficient than
+generic functions, which require extra type checking, the generic ones are easier to
+remember. The following generic functions work on lists, arrays, and strings:
++ ~find-if~, gets first value satisfying a predicate.
++ ~count~, finds how often an element appears in a sequence
++ ~position~, finds the index of a given element.
++ ~some~, check if any element satisfies a given predicate
++ ~every~, check if every element satisfies the given predicate
++ ~reduce~, takes a binary operation and a sequence and mimics a for-loop.
+  Use keyword ~:initial-value~ to specify the starting value, otherwise use head of
+  sequence.
++ ~sum~, add all numbers; crash for strings.
++ ~length, subseq, sort~.
+:More:
++ ~map~, like ~mapcar~ but works for any sequence with the added ability to transform
+  sequences to other types: Its first argument could be ~'list~ even if we operate in a
+  string, so that the list is converted after the operation is mapped.
++ ~subseq~, yields subsequence according to given indices.
++ ~sort~, takes an ordering relation and sorts according to it.
+:End:
+
+[[https://github.com/magnars/dash.el][dash]] is a modern list library for Emacs that uses Haskell-like names for list operations ;-)
+Likewise, [[https://github.com/magnars/s.el][s]] is a useful Emacs string manipulation library.
+
+In-fact, we can [[https://github.com/knupfer/haskell-emacs][write Emacs extensions using Haskell directly]].
+
+* COMMENT This is how we do it ---Assertions
+
+
+An [[https://nodejs.org/api/assert.html#assert_strict_mode][assertion]] describes what the result of a computation is expected to look like
+and throws an exception if those expectations are not met.
+#+BEGIN_SRC js
+const assert = require('assert');
+assert.ok(!null)
+
+// Printing a value to standard out (another method call)
+console.log('Hello!');
+#+END_SRC
+
+#+RESULTS:
+: Hello!
+* COMMENT Misc experiments
+** Lisp's ~apply~ operator in Java; i.e., JS's spread operator         :Misc:
+(See also: https://stackoverflow.com/questions/48351536/varargs-as-input-parameter-to-a-function-in-java-8)
+- What are varargs behind the scenes? Arrays! https://stackoverflow.com/a/57290781
+- How to write Lisp's ~apply~ operator in Java? i.e., JS's spread operator? https://stackoverflow.com/a/46388765
+#+begin_src java
+import java.lang.reflect.*;
+class Test {
+    public static int go(int a, int b, int c) {
+        return a + b + c;
+    }
+    public static int go(int a, int b) {
+        return a + b;
+    }
+    public static int og(String a, Integer b) {
+        return 12;
+    }
+    public static void main () throws java.lang.Exception {
+        Method goM = Test.class.getMethod("go", Integer.TYPE, Integer.TYPE);
+        // Note that args is Object[], not int[]
+        Object[] args = new Object[] {1, 2};
+        // Result is also Object, not int
+        Object res = goM.invoke(null, args);
+        System.out.println(res);
+    }
+}
+
+@FunctionalInterface
+public interface VarArgsBiFunction<S, T, R>{
+    R apply(S a, T... args);
+}
+//
+// args[0] should be a string, the name of the method we want to execute.
+// Remaining args are the actual arguments to be passed to the method.
+VarArgsBiFunction<Class,Object,Object> spread = (clazzy, arguments) -> {
+    String fname = (String) arguments[0];
+    Object[] args  = Arrays.stream(arguments).skip(1).toArray();
+    Class<? extends Object>[] types = Arrays.stream(args).map(x -> x.getClass()).toArray(Class[]::new);
+    try { Method f = clazzy.getMethod(fname, types);
+          return f.invoke(null, args);} catch(Exception e) { return null; }
+};
+//
+// Example usage:
+//
+spread.apply(Test.class, "og", "hello", 1)
+#+end_src
+* COMMENT Making ~README.org~
+
+  Evaluate the following source block with ~C-c C-c~
+  to produce a ~README~ file.
+
+  # :'( For some reason using {{{title}}} below would not work.
+
+#+NAME: make-readme
+#+BEGIN_SRC emacs-lisp
+(with-temp-buffer
+    (insert
+    "#+EXPORT_FILE_NAME: README.md
+     # HTML: <h1> Easily Making CheatSheets with Org-mode </h1>
+     #+OPTIONS: toc:nil d:nil
+     # Toc is displayed below at a strategic position.
+
+     {{{blurb}}}
+
+     :Hide:
+     This project is to contain a listing of common results in X Theory.
+
+     *The repo contains other articles I've written on X Theory;*
+     *which may be read in a blog-format at:*
+     https://alhassy.github.io/blog/categories/#Xtheory
+     :End:
+
+     *The listing sheet, as PDF, can be found
+     [[file:CheatSheet.pdf][here]]*, @@NOPE: or as a [[file:CheatSheet_Portrait.pdf][single column portrait]],@@
+     while below is an unruly html rendition
+     ---there is also a
+     badge:beautiful|HTML_webpage|success|https://alhassy.com/JavaCheatSheet|java (•̀ᴗ•́)
+
+     # Markdown links: [title](target)
+
+     This reference sheet is built from a
+     [[https://github.com/alhassy/CheatSheet][CheatSheets with Org-mode]]
+     system.
+
+     #+TOC: headlines 2
+     #+INCLUDE: CheatSheet.org
+    ")
+
+    ;; No code execution on export
+    ;; ⟪ For a particular block, we use “:eval never-export” ⟫
+    ;;
+    (let ((org-export-use-babel nil))
+      (org-mode)
+      (org-md-export-to-markdown)
+      ; (package-install 'toc-org)
+      ; (toc-org-mode)
+      ; (toc-org-insert-toc)
+      ; (setq org-toc-noexport-regexp ".*:myIgnore:.*") MA: Doesn't work.
+      ; (delete "TOC" org-export-exclude-tags)
+      (pop org-export-exclude-tags)
+      ; (org-org-export-to-org)
+      (add-to-list 'org-export-exclude-tags "TOC")
+      )
+)
+#+END_SRC
+
+Note that the ~blurb~ macro is defined by the user, to provide a terse description of the project.
+   - Think the one-line statement at the top of a github repo page.
+
+#    The ~d:nil~ ensures the ‘drawer’ ~:Hide: ⋯ :End:~ is not exported; it's there for me
+#    as a reminder.
+
+* COMMENT Making artifacts for the Github Repo                               :myIgnore:
+
+# Whenever I save, C-x C-s, a new HTML is exported and then copied over to the write directory.
+#
+# (lambda nil (-let [file (f-base (buffer-file-name))] (when (org-html-export-to-html) (copy-file (concat file ".html") (concat "~/JavaCheatSheet/" file ".html") 'overwrite-if-exists))))
+#
+# eval (progn (load-file "~/blog/AlBasmala.el") (blog/preview))
+# after-save-hook (lambda nil (-let [file (f-base (buffer-file-name))] (copy-file (concat file ".html") (concat "~/JavaCheatSheet/" file ".html") 'overwrite-if-exists)))
