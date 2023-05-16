@@ -367,6 +367,8 @@ Any [[https://en.wikipedia.org/wiki/Monoid][monoid]] will do.
 ** COMMENT Negative space                                            :myIgnore:
 #+latex: \vspace{-1em}
 * COMMENT Emacs Java Repl
+(load-file "~/repl-driven-development/repl-driven-development.el")
+
 ;; Set “C­x C­j” to evaluate Java code in a background REPL.
 (repl-driven-development [C-x C-j]
                          "jshell --enable-preview -R -ea" ;; enable assertions!
@@ -476,8 +478,158 @@ books under “Sports”, and “Tree” respecively, but then adds a
 kinds of things have a feature in common, we “tag” them with an*
 *src_java[:exports code]{interface}.* (Real life tagging is a also known
 as /multi/-~class~-/ificiation/.)
+#
+# Technically, an interface is essentially a type for classes.  Given an
+# arbitrary class, the only way to now what methods it can do is to ask
+# what interfaces it performs. In other languages, /interfaces/ are also
+# known as /signatures/.
+# # And implementations of signatures are known as /algebras/.
+#
+#
+# Since interfaces allow default, and static, methods they also serve as a tool for method re-use: Given implementations of some core methods, a number of derived methods can then be used.
 
-** Mathematically, what does <code>class</code> “mean”? :details_CategoryTheory:
+# If private state is needed (e.g., to define a constructor), then
+# /abstract classes/ can be used.
+# | Abstract class ≈ interface [signatures] + class [private state] |
+#
+# Which is used /communicates more to others/; e.g., using an abtract
+# class communicates that there is some state
+#
+# | Concept          | Top-level idea                                                      |
+# |------------------+---------------------------------------------------------------------|
+# | ~class~          | Attributes & properties, backed-up by (possibly hidden) state       |
+# | ~record~         | Attributes & properties, completely exposed without any state       |
+# |------------------+---------------------------------------------------------------------|
+# | ~abstract class~ | Partial implementation, backed-up by state                          |
+# | ~interface~      | Reusable methods derived from a handful of unimplemented signatures |
+#
+#+begin_box "Java's Main Organisational Mechanisms"
+|                         |   | With state     | Without state |
+|-------------------------+---+----------------+---------------|
+| Attributes & properties |   | class          | record        |
+| Partial implementations |   | abstract class | interface     |
+#+end_box
+
+** Here is a teaser of nearly all of these packaging mechanisms :details:
+
+#+begin_src java
+interface Hospitable {
+    String name();   /* unimplemented method signature */
+    default void greet() { /* derived, implemented, method */
+        System.out.printf("%s says “Welcome!”", name());
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class Person implements Hospitable {
+    String name;
+    int age;
+    public String name() { return name; }
+}
+
+// Actual usage of “Person”:
+Person me = new Person();
+me.name = "Musa";
+me.age = 31;
+me.greet();
+
+////////////////////////////////////////////////////////////////////////////////
+
+record Person2(String name, int age) implements Hospitable { }
+
+// Actual usage of “Person2”:
+Person2 me = new Person2("Musa", 31);
+me.greet();
+#+end_src
+
+** Algebraic Data Types :ignore:
+
+Finally, suppose there's something you want to do /and/ there are a number of
+ways/configurations to get it done.  You could write it as a method in
+a src_java[:exports code]{class} with a bunch of ~if~'s to account for
+all of those ways.  Better would be to create an interface, then have
+a bunch of classes that implement it: One class for each possible
+implementation. Finally, if you know /all/ configurations, you
+can move those classes /into/ the definition of the interface
+and make it /sealed/: This is known as an /algebraic data-type/,
+whose kill-feature is that you can use src_java[:exports code]{switch}
+to pattern match on instances of the interface.
+
+# E.g., the action could be to emit a message to the user; e.g., via dialog or via toast notice or via a notification banner.
+
+
+# --------------------------------------------------------------------------------
+
+# These days we tend to prefer interface (like-a) relationships over class hierarchy (is-a) relationships
+#
+# Interfaces are still inheritance and an "is a" relationship. An ArrayList 'is a' List. A HashMap 'is a' Map.
+#
+# While people should prefer interfaces over abstract classes for the simple reason you can't only extend a single class, it's really not a different "type" of relationship.
+#
+# IMO there definitely is a different 'type' of relationship with
+# interface implementation - at its core it is just the decoupling of
+# a commitment to a contract from implementation choices - which does
+# allow a commitment to multiple contracts (by either reimplementing
+# them or using composition and delegation), but it isn't the primary
+# reason we use them (considering the number of types that extend
+# Object and implement a single interface).
+
+** ADT example :details_ADTs:
+
+An example 3-level hierarchy that can be easily represented with ADTs
+rather than a traditional class hierarchy.
+
+#+BEGIN_SRC dot :file ../images/monsters-adt.png :exports results
+digraph {
+ bgcolor="transparent"
+ Monster -> {Flying, Ground};
+ Flying -> {Griffin, Pegasus};
+ Ground -> {Ogre};
+}
+#+END_SRC
+
+#+html: <center><image src="../images/monsters-adt.png" width="50%" height="50%" /> </center>
+
+# /* Monster ⟶ {Flying ⟶ {Griffin, Pegasus}, Ground ⟶ {Ogre}} */
+#+begin_src java
+sealed interface Monster {
+
+    sealed interface Flying extends Monster { }
+    record Griffin() implements Flying { }
+    record Pegasus() implements Flying { }
+
+    sealed interface Ground extends Monster { }
+    record Ogre() implements Ground { }
+}
+#+end_src
+
+Then we can actually use this new type as follows:
+#+begin_src java
+private static String glare(Monster m) {
+    return switch (m) {
+        case Monster.Griffin it -> "Roar";
+        case Monster.Pegasus it -> "HeeHaw";
+        case Monster.Ogre it -> "Grrr";
+    };
+}
+
+glare(new Monster.Flying.Griffin()); // "Roar"
+#+end_src
+
+Or only look at the ~Flying~ sub-type:
+#+begin_src java
+private static int attackDamage(Monster.Flying f) {
+    return switch (f) {
+        case Monster.Flying.Griffin it -> 120;
+        case Monster.Flying.Pegasus it -> 60;
+    };
+}
+
+attackDamage(new Monster.Pegasus()); // 60
+#+end_src
+
+** COMMENT Mathematically, what does <code>class</code> “mean”? :details_CategoryTheory:
 
 Mathematically, a programming language (i.e., a model of computation with types and programs) is represented by a
 [[https://alhassy.com/PathCat][category]] ---see [[https://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/acmmpc-calcfp.pdf][Calculating Functional Programs]] §1.4.  In such a setting, /a class denotes a pointed [[https://stackoverflow.com/questions/16015020/what-does-coalgebra-mean-in-the-context-of-programming][co-algebra]]/ $(𝒪, ℴ₀,
@@ -485,7 +637,15 @@ Mathematically, a programming language (i.e., a model of computation with types 
 co-algebra 𝒸, a “new object” is the point ℴ₀, and the functor 𝒯 is the ‘signature/type’ of the class (i.e., its
 properties and methods).
 
-** COMMENT [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object][Objects]]
+* COMMENT [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object][Objects]]
+
+In the real world you see and use various objects, and each of them is
+belongs to some kind such as toys, food, animals, electronics et
+al. In Java, instead of saying what kind of objects, we say what class
+of objects. In other words, each object belongs to a class. A class is
+like a blueprint of an object. In this chapter you’ll get familiar
+with classes - the main constructs of the Java language.
+
 
 # Numbers, Booleans, and strings are the atoms that data structures are built
 # from. Many types of information require more than one atom, though. Objects
@@ -507,6 +667,84 @@ pairs.
 1. Almost all JavaScript /values/ have properties. The exceptions are ~null~ and
  ~undefined~. If you try to access a property on one of these nonvalues, you get
  an error. Properties are accessed using ~value.prop~, /dot notation/.
+
+* COMMENT Operational vs Denotational Semantics
+
+A programming language consists of two parts: A *syntax* to indicate how to write programs down,
+and a *semantics* to indicate how to execute programs.
+
+*Semantics* describes the processes a computer follows when executing a
+program in a specific language. This can be shown by describing the
+relationship between the input and output of a program (i.e., “axiomatic semantics”)
+or how expressions are reduced (i.e., “operational semantics).
+# Then with the semantics, one can answer questions like /can we know when certain programs will halt?/
+
+Compilers are concernd with “syntax errors” (i.e., invalid expressions);
+humans are concerns with semantics. Syntax is determined at compile-time,
+whereas semantics is deteremined at run-time: For example, =x + 1= is
+syntactically a number whenever =x= is a number, but semantically it may
+denote a number, or an overflow error if =x= is already the largest representable number,
+or it may just be =x= again as is the case in JavaScript (~Infinity + 1 == Infinity~).
+A similar argument applies to =1 / x=.
+Type annotations are a way to bring some semantics into the world of syntax.
+# Likewise, dereferencing pointers, which may be null at run-time.
+
+There are 3 popular approachs to semantics, each useful for particular goals.
+For example, operational semantics is helpful for implementing a programming language (in, say, Java or Prolog);
+whereas axiomatic semantics is helpful for program verification;
+and denotation semantics is helpful for program rewriting (in possibly different programming languages).
+
+*Operational Semantics:* A type is defined by how its “introduction
+rules” (i.e., how instances are created) and its “elimination rules”
+(i.e., how instances are used) and how those rules combine together
+(so called “computation rules”). There is no “meaning” here: Just how
+new syntax is introduced, and how it is operationally executed/reduced
+(in an idealised computer). This is presented as a “Type Theory” or a
+“Transition System” (which is a machine named “⟶” whose execution rules
+are directed by the programming syntax).
+/This approach encourages “smart/
+/constructors”, i.e., “factory methods”, and exhaustive case analysis;
+i.e., src_java[:exports code]{switch}./
+
+*Axiomatic Semantics:* A type denotes some state, and methods/programs
+are characterised by their effect on assertions about program
+state. /This approach encourages explicit pre-conditions and post-conditions; emphasizing proofs-of-correctness./
+# That is, a method denotes a predicate transformer.
+
+*Denotational Semantics:* A type is defined, characterised, by the
+mathematical properties of its instances.  That is to say, a type (and
+its properties & methods) are considered to denote an object in some
+category, namely the category theory denoting the programming language
+under consideration. This is also known more generally as
+“categorical, or functorial, semantics”, and may be presented as two
+categories and a functor “⟦⟧: Syntax → Semantics”.  /This approach
+encourages “compositionality, functoriality”: Working with a complex/
+/structure can be done by working with its parts./ The mathematical
+properties of this approach allow us to rewrite programs: For example,
+requiring type constructors to be functors means we need the law
+~x.map(f).map(g) = x.map(f⨾g)~ which, when read left-to-right, is
+essentially an optimisation.  Likewise, the (homo)morphisms of the
+category essentially give us /correctness-preserving rewrite rules/
+for the methods of a type.  Simply put, we can start with a program ℰ
+that clearly does something we want but is inefficient, then we can
+optimise it by rewriting its semantics ⟦ℰ⟧ to, say, ⟦ℱ⟧ which is
+clearly more efficient but it's not obvious that it accomplishes the
+same goal: The semantic rewrite justifies using ℱ in-place of ℰ.
+(Note that ℱ might be a program in a different language that happens to have the same
+semantics; this is useful when porting code from one language to another in a correctness-preserving fashion.)
+/This approach encourages characterising types by their
+relationships/methods, rather than by specific implementation matter./
+For example, /a/ type of pairs has a specific characterising property,
+rather than explicitly two projection functions (e.g.,
+a pair of 1-byte src_java[:exports code]{char}s can be encoded
+with the 2-byte src_java[:exports code]{short} type).
+
+It is intersting to note that while explicit presentations may differ,
+the type theories of operational semantics correspond to the categories
+of denotational semantics. In particular, the simply typed lambda calculus
+can be treated as a /syntax/ whose /semantics/ is an arbitrary cartesian closed category.
+*“We may program with type theory, but our programs can have arbitrary non-standard semantics!”*
+
 * Null :details_null:
 
 There is a special value named src_java[:exports code]{null} that
@@ -530,6 +768,10 @@ about =null=.
 + Java Generics and Collections Speed Up the Java Development Process
 + Java 8 Lambdas Pragmatic Functional Programming - Richard Warburton
 # + Java Puzzlers Traps, Pitfalls, and Corner Cases by Joshua Bloch
+
+** COMMENT https://hyperskill.org/join/dee0c003                       :5_months_free:
+
+By this link up to 5 months free
 
 * COMMENT More Reads
 
@@ -654,6 +896,93 @@ Java Performance - In-Depth Advice for Tuning and Programming Java 8, 11, and Be
 + https://github.com/you-dont-need/You-Dont-Need-Loops
 
   /Avoid The One-off Problem, Infinite Loops, Statefulness and Hidden intent./
+
+Head First Java: A Brain-Friendly Guide 3rd Edition
+
+runestone academy - https://runestone.academy/ns/books/published/csawesome/index.html
+This is what I’m using, it simplifies Java into bite size lessons and has immediate hands on practice with coding.
+
+* Primitive Objects
+
+For performance reasons, there are a handful of types whose values are
+created by /literals/; i.e., “What you see is what you get”.
+(As such, primitives are a basic building block which cannot be broken apart;
+whereas non-primitives (aka references) are made-up from primitives and other references.)
+For
+example, to create a value of src_java[:exports code]{int} we simply
+write ~5~.
+
+/There are no instance methods on literals;/ only a
+handful of operator methods.  For example, we cannot write ~2.pow(3)~
+to compute 2³, but instead must write ~Math.pow(2, 3)~.
+Finally, variables of primitive types have default values when not initialized
+whereas object types default to ~null~ ---note: ~null~ is a value of all object types, but not of primitive types.
+
+#+begin_src java
+class Person { String name; }
+
+Person obj; // ≈ null
+int prim;    // ≈ 0
+
+// Primitives are created as literals; objects use “new”
+prim = 1;    // ≈ 1
+obj = new Person(); // ≈ a reference, like: Person@66048bfd
+
+// Primitives are uniquely identified by their literal shape;
+// objects are identified by references to their memory locations (not syntax shape!)
+assert prim == 1;
+assert obj != new Person();
+
+// Primitive copy values, objects copy references
+int primCopy = prim;  // ≈ 1
+Person objCopy = obj; // ≈ a reference, like: Person@66048bfd
+
+// Changing primitive copy has no impact on original
+primCopy = 123;
+assert prim == 1;
+
+// Chaning object copy also changes the original!
+assert obj.name == null;
+objCopy.name = "woah";    // Alter copy!
+assert obj.name.equals("woah"); // Original is altered!
+// (Notice we use .equals since String is an object type!)
+#+end_src
+
+:Remark:
+Having two references accessing the same object in memory can be dangerous,
+since they can alter it unexpectedly. It can also be useful, since the users
+of the references can essentially communicate with one another by using
+the object as “shared message buffer”.
+:End:
+
+Note: The aliases-as-reference behaviour is not an issue with the primitive wrapper
+types, such as ~Integer~.
+
+** Wrapper Types
+
+Java lets primitives shift back and forth from their literal representations
+and the world of reference objects somewhat-harmoniously by automatically
+“boxing” them up as objects when need be. This is done by having class
+versions of every primitive type; e.g., the primitive src_java[:exports code]{int}
+has the class version src_java[:exports code]{Integer}.
+
+#+begin_src java
+Integer x = 1; // auto-boxed to an object
+int y = new Integer(2); // auto-unboxed to a primitive
+#+end_src
+
+/Primitives require much less memory!/
+An ~int~ requires 32-bits to represent, whereas an ~Integer~ requires 128-bits:
+The object requires as much space as 4 primitives, in this case.
+
+# On the other hand, current Java language specification doesn't allow
+# usage of primitive types in the parametrized types (generics), in the
+# Java collections or the Reflection API.
+#
+# TODO: Mention auto-boxing; e.g.,
+# "hello".toUpperCase()
+# Or find a better, numeric, example of auto-boxing.
+
 * Properties and methods have *separate namespaces*
 
 {{{begin-ignore-html}}}
@@ -892,10 +1221,11 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
       #+html: <hr>
       #+begin_parallel 2 :bar t
      There are a variety of update statements:
+     Suppose $τ$ is the type of $x$ then,
      #+latex: \vspace{.7em}
-        | Augment   | ~x ⊕= y~ | ≈ | ~x = x ⊕ y~ |
-        | Increment | ~x++~    | ≈ | ~x += 1~    |
-        | Decrement | ~x--~    | ≈ | ~x -= 1~    |
+        | Augment   | ~x ⊕= y~ | ≈ | ~x = (τ)(x ⊕ y)~ |
+        | Increment | ~x++~    | ≈ | ~x += 1~         |
+        | Decrement | ~x--~    | ≈ | ~x -= 1~         |
 
         #+columnbreak:
 
@@ -906,14 +1236,32 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
         | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~ |
 
      #+end_parallel
-     #+html: <hr>
 
-        # * We also have /augmented updates/   ~x ⊕= y  ≡  x = x ⊕ y~   and
+        # * We also have /augmented updates/   ~x ⊕= y  ≡  x = (τ)(x ⊕ y)~   and
         # | Increment: ~x--  ≡  x += 1~ | and | Decrement: ~y--  ≡  x -= 1~ |
         #
         # The operators ~--~ and ~++~ can appear /before or after/ a name:
         # \newline Suppose $𝒮(x)$ is a statement mentioning the name $x$, then
         # | ~𝒮(x++)  ≈  𝒮(x); x += 1~  | and | ~𝒮(++x)  ≈  x += 1; 𝒮(x)~  |
+
+     # Note “+=” works for both numbers and strings:
+     # String a = "hello";
+     # a += " world";
+
+     Since compound assignment is really an [[https://docs.oracle.com/javase/specs/jls/se11/html/jls-15.html#jls-15.26.2][update with a /cast/]],
+     there could be unexpected behaviour when $x$ and $y$ are not both
+     ints/floats.
+
+     :Example:
+     short a = 0; // 16-bit integer
+     int b = 123456; // 32-bit integer
+     a = b; // Error: Possible loss of converion
+     a += b; // Now: a == -7616 due to hidden cast!
+
+     Long story short, don't use compound assignment operators on byte, short and char types.
+     :End:
+
+     #+html: <hr>
 
 - If we place the keyword src_java[:exports code]{final} before the type τ,
   then the names are constant: They can appear only once on the right side of an ‘=’,
@@ -932,15 +1280,25 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
   lengthy). Java then /infers/ the type by inspecting the shape of
   =v=.
 
+- Chained assignments associate to the right:
+  | ~a += b /= 2 * ++c;~ |  ≈  | ~a += (b /= (2 * ++c));~ |
+  (The left side of an “=”, or “⊕=”, must a single name!)
+
+  :Example:
+  int a, b, c, d = 1, e, f; a += b *= c /= d += e = 2 * ++f;
+List.of(a, b, c, d, e, f).equals(List.of(0, 0, 0, 3, 2, 1))
+
+int a, b, c, d = 1, e, f; a += (b *= (c /= (d += (e = (2 * ++f)))));
+List.of(a, b, c, d, e, f).equals(List.of(0, 0, 0, 3, 2, 1))
+  :End:
+
 - A binding name may include dollar signs ($) or underscores (_) or
   numbers but no other punctuation or special characters.
 
 #+html: <hr>
 Variable bindings can only occur within src_java[:exports code]{class}
 definitions: A =class= binding introduces a name for a new type of
-values.
-
-* Scope, Statements, and Control Flow
+values.* Scope, Statements, and Control Flow
 
 # #
 #+begin_parallel 2
@@ -1175,8 +1533,8 @@ If ~d~ is the index of the current weekday (0..6), then
 // Scientific notation: 𝓍e𝓎 ≈ 𝓍 × 10ʸ
 assert 1.2e3 == 1.2 * Math.pow(10, 3)
 
-// Random number in range min..max
-Math.floor(Math.random() * (max - min) + min)
+// random integer between min inclusive and max exclusive
+new Random().nextInt(4, 99)
 
 // Below we sum the digits of the integer n
 int n = 31485;
@@ -1187,6 +1545,12 @@ assert sum == 3 + 1 + 4 + 8 + 5;
 // A more elegant, “functional style”, solution:
 String.valueOf(n).chars().map(c -> c - '0').sum();
 #+end_src
+
+
+# Neato.
+# // Random number in range min..max
+# Math.floor(Math.random() * (max - min) + min)
+
 
 The =chars()= methods returns a stream of integers (Java
 src_java[:exports code]{char}acters are really just integers).
@@ -1270,6 +1634,108 @@ Other collection methods include:
    we use ~ages.mark~ to find Mark's age.
 
    Similarly, objects can be used to simulate /keyword arguments/ in function calls.
+
+* DONE COMMENT Streams are just a lazy, declarative, (mostly side-effect-free), abstraction of design patterns manually implemented with procedural for-loops and ~if~'s
+
+When someone sees the stream ~.map~ method, it's clear that we are
+using the obvious explicit design pattern for transforming elements of
+a data source.  In contrast, using a ~for~ loop means that the entire
+data source will be processed even if it's not all needed, and /there
+may be/ stateful mutation within the loop body.
+
+--------------------------------------------------------------------------------
+
+/Collections/ are data, and /Streams/ are how we operate on them at a high-level
+rather ---than resorting to ~for~ loops and ~if~'s.
+
+Collections are just containers of objects. There are a bunch of them with slightly different API's, depending on what you need. There is List, Set, Map, ...
+
+Streams are for data transformation and processing. That's what the API is designed for. You can map, filter, reduce, ...
+
+--------------------------------------------------------------------------------0
+
+Streams are for incrementally processing some data source (could be a
+collection, or it could be generated on the fly as you process it) and
+either doing something on the result, or transforming it to some other
+representation.
+
+Think of it like a pipeline of operations being performed on some data
+being fed in.
+
+Stuff is accessed in a stream lazily (so only when you demand each
+item), unless you use a terminal operation like .toList, .collect,
+.reduce, .forEach, .distinct, .count, .iterator, etc. In the latter
+case, the entire stream contents will usually get retrieved eagerly
+and buffered before the next operation is run. The side effect of this
+is that unless your stream contains/ends with a terminal operation,
+nothing will be executed.
+
+Streams are designed to let you focus on "what is being done" rather
+than "how it is being done" (declarative rather than
+imperitive). Doing this lets you write code in a functional style
+which ideally reads more closely to how you would explain it as a
+human.
+
+--------------------------------------------------------------------------------
+
+Stuff is accessed in a stream lazily (so only when you demand each
+item), unless you use a terminal operation like .toList, .collect,
+.reduce, .forEach, .distinct, .count, .iterator, etc. In the latter
+case, the entire stream contents will usually get retrieved eagerly
+and buffered before the next operation is run. The side effect of this
+is that unless your stream contains/ends with a terminal operation,
+nothing will be executed.
+
+This means that streams can be infinite; e.g., see .generate or .iterate.
+Since they are lazy (ie fancy “short circuiting”).
+/And can only be consumed once./
++ So a method with an argument typed /Stream/ communicates more information
+  about how the argument is used: Namely, that the argument is used only once!
+  - C.f., “linear methods” and “linear logic and programming”.
+  - This use-once constraint is because a stream's data values need not exist
+    before they are accessed, nor be stored anywhere afterwards. The canonical
+    example here is a stream of random integers where each is generated upon access.
+    Such a stream cannot be reused unless we explicitly save the values somewhere.
+
+* Generics
+
+Java only lets us return a single value from a method, what if we want
+to return a pair of values? Easy, let's declare ~record Pair(Object
+first, Object second) { }~ and then return ~Pair~. This solution has
+the same problem as methods that just return ~Object~: It communicates
+essentially no information ---after all, /everything is an object!/---
+and so requires dangerous casts to be useful, and the compiler wont
+help me avoid type mistakes.
+#+begin_src java
+record Pair(Object first, Object second) { }
+
+// This should return an integer and a string
+Pair myMethod() { return new Pair("1", "hello"); } // Oops, I made a typo!
+
+int num = (int) (myMethod().first()); // BOOM!
+#+end_src
+
+It would be better if we could say “this method returns a pair of an integer and a string”, for example.
+We can do just that with /generics/!
+#+begin_src java
+record Pair<A, B>(A first, B second) { }
+
+Pair<Integer, String> myMethod() { return new Pair<>(1, "hello"); }
+
+int num = myMethod().first();
+#+end_src
+This approach /communicates to the compiler my intentions/ and so the compiler ensures I don't make any silly typos.
+Such good communication also means no dangerous casts are required.
+
+We can use the new type in three ways:
+| ~Pair<A, B>~ | explicitly providing the types we want to use ~Pair~ with          |
+| ~Pair<>~     | letting Java /infer, guess,/ the types for ~Pair~ by how we use it |
+| ~Pair~       | defaulting the types to all be ~Object~                            |
+
+The final option is not recommended, since it looses type information. It's only allowed
+since older versions of Java do not have type parameters and so, at run time, all type
+parameters are ‘erased’. That is, /type parameters only exist at compile time and so cannot
+be inspected/observed at run-time./
 
 * COMMENT Methods
 
@@ -1465,84 +1931,6 @@ console.log(Array.prototype.colour)
  When implementing multiple classes that differ in only some details, it can be
  helpful to write the new classes as subclasses of an existing class, inheriting
  part of its behavior.
-* COMMENT The Iterator Interface
-
-The object given to a ~for/of~ loop is expected to be iterable. This means it
-has a method named ~Symbol.iterator~. When called, that method should return an
-object that provides a second interface, the iterator. This is the actual thing
-that iterates. It has a ~next~ method that returns the next result. That result
-should be an object with a ~value~ property that provides the next value, if
-there is one, and a ~done~ property, which should be true when there are no more
-results and false otherwise.
-
-Let's make an iterable to traverse expression trees.
-#+BEGIN_SRC js
-class Expr { // [0] Our type of expression trees
-  static Constant(x) {
-     let e = new Expr();
-     e.tag = 'constant', e.constant = x;
-     return e;
-     }
-
-  static Plus(l, r) {
-     let e = new Expr();
-     e.tag = 'plus', e.left = l, e.right = r;
-     return e;
-     }
-}
-
-// [1] The class tracks the progress of iterating over an expression tree
-class ExprIterator {
-  constructor(expr) { this.expr = expr; this.unvisited = [{expr, depth: 0}]; }
-  next () {
-   if(this.unvisited.length == 0) return {done: true};
-   let {expr , depth} = this.unvisited.pop();
-   if (expr.tag == 'constant') return {value: {num: expr.constant, depth}}
-   if (expr.tag == 'plus') {
-     // pre-order traversal
-     this.unvisited.push({expr: expr.right, depth: depth + 1})
-     this.unvisited.push({expr: expr.left, depth: depth + 1})
-     }
-   return this.next()
-  }
-}
-
-// [2] We can add the iterator after-the-fact rather than within the Expr class.
-Expr.prototype[Symbol.iterator] = function () { return new ExprIterator(this) }
-
-// [3] Here's some helpers and an example.
-let num = (i) => Expr.Constant(i)
-let sum = (l, r) => Expr.Plus(l, r)
-// test ≈ 1 +  (2 + (3 + 4))
-let test = sum( num(1), sum( num(2), sum(num(3), num(4))))
-// console.log(test) // ⇒ Nice looking tree ^_^
-
-// [4] We now loop over an expression with for/of
-for (let {num, depth} of test)
-  console.log(`${num} is ${depth} deep in the expression`)
-#+END_SRC
-
-Recall that inside a class declaration, methods that have ~static~ written
-before their name are *stored on* the constructor. It appears that static
-properties are shared by all instances, because the constructor /object/ has
-these as properties rather than particular instance objects.
-
-:Hide:
-We can directly use this iterable interface ourselves.
-
-#+BEGIN_SRC js
-let okIterator = "OK"[Symbol.iterator]();
-console.log(okIterator.next()); // ⇒ {value: "O", done: false}
-console.log(okIterator.next()); // ⇒ {value: "K", done: false}
-console.log(okIterator.next()); // ⇒ {value: undefined, done: true}
-#+END_SRC
-:End:
-
-:Hide:
-*wrt* to factory methods, “static” is syntactic sugar:
-  ~class C { ⋯ static M (){⋯} }; let c = C.M()~
-≈ ~class C {⋯}; function M() {⋯}; let c = new M()~.
-:End:
 * COMMENT Class Extension & Overloading
 
 In the real life, every person inherits some features from his or her parents.  Likewise, it’s easier to create /children/
@@ -1962,7 +2350,42 @@ console.log('Hello!');
 
 #+RESULTS:
 : Hello!
-* COMMENT Misc experiments
+* COMMENT Misc experiments :SomeUsefulStuffHere:
+** Clean up multiple if/else statements by using a Map
+TODO: Take a look on Martin Fowler's book ''Refactoring", he talks about a technique called Replace Conditional With Polymorphism
+
+#+begin_src java
+var perform = new Utilities();
+if (someCondition(1)) perform.a();
+if (someCondition(2)) perform.b();
+if (someCondition(3)) perform.c();
+
+// The “if”s have a common condition
+boolean someCondition(int i) {
+    return List.of(1, 3, 4).contains(i);
+}
+
+// But the “if” branches can each do something different
+class Utilities {
+    void a() { System.out.println("A"); }
+    void b() { System.out.println("B"); }
+    void c() { System.out.println("C"); }
+}
+
+// Then you can replace the sequence of “if”s with a map as follows
+
+Map<Integer, Consumer<Utilities>> ifs =
+    Map.of(1, it -> it.a(),
+           2, it -> it.b(),
+           3, it -> it.c());
+
+ifs.keySet().stream().filter(k -> someCondition(k)).forEach(k -> ifs.get(k).accept(perform))
+
+// Though this is not necessarily much better.
+
+// An alternative approach is to use enum-s.
+#+end_src
+
 ** Lisp's ~apply~ operator in Java; i.e., JS's spread operator         :Misc:
 (See also: https://stackoverflow.com/questions/48351536/varargs-as-input-parameter-to-a-function-in-java-8)
 - What are varargs behind the scenes? Arrays! https://stackoverflow.com/a/57290781
@@ -2008,6 +2431,137 @@ VarArgsBiFunction<Class,Object,Object> spread = (clazzy, arguments) -> {
 //
 spread.apply(Test.class, "og", "hello", 1)
 #+end_src
+** How to make a ‘fat’ jar file
+
+Do you want to make a regular desktop GUI application? If so, in IntelliJ click File > New... > Project... And pick JavaFX and go from there. It even gives you a sort of Hello World window. You can just launch the app by clicking the green play button.
+
+IntelliJ's new project wizard does a ton to make it easier to get started so you don't have to futz as much with IDE, JDK and build tool configuration. I like to let IntelliJ download and install the JDK too. It's just so much easier.
+
+To build an executable, open the Maven pane and run package under "lifecycle". That creates your runnable jar in the target/ folder.
+
+--------------------------------------------------------------------------------
+
+None of the responses so far answered what you are asking. I will give you the terms you need to look up in order to do what you want to do. First you need to install the Java SDK on your computer. Next you can create a new project in intellij. Intellij manages the packages so you don't have to worry about that for the most part. If you plan on using third party libraries you will need to use Maven or Gradle to easily download and apply them. Once you have coded your project then you need to compile the project into a Jar file. A jar file is like a zip folder full of class files which are compiled Java files. To run you project you will use the Java command in the terminal with the jar name. If you want to double click on an icon to run the project you will need to create a "fat" jar instead which has Java bundled into it. Using these keywords you can look up tutorials on how to do each step. Good luck!
+** Searlisation
+
+Neato article: https://yfain.github.io/Java4Kids/#_serialization_turning_an_object_into_bytes
+#+begin_quote
+11.5. Serialization: Turning an Object Into Bytes
+
+Imagine a building that, with a push of a button, can be turned into a
+pile of construction materials. Load all these materials on the truck
+and drive to a different city. On arrival push another button, and the
+building is magically re-created in its original form. This is what
+Java serialization is about, but instead of a building we’ll use a
+Java object. By “clicking the serialize button” JVM turns an instance
+of an object into a pile of bytes, and “clicking the deserialize
+button” re-creates the object.
+
+Why would you need such functionality? Say you are working on a board
+game and want to be able to save the current state of the game so the
+player can continue playing it tomorrow even if the computer will need
+to be rebooted. The program needs to save the state of the game in a
+file, and when the player launches the game again, the program should
+load the saved state and recreate the situation on the board. Creating
+a Java class with fields like player name, level, score, and lives can
+be a good way to represent a state of the game.
+#+end_quote
+
+A Java object can be serialized if it implements Serializabe
+interface. It’s a very simple interface to implement, as it doesn’t
+declare any abstract methods. Just add implements Serializable to the
+class declaration to make a class serializable.
+
+#+begin_src java
+record Winner(String name, int score) implements Serializable { }
+
+var gameState = List.of(new Winner("You", 123), new Winner("Me", 456));
+var gamePath = Paths.get("gamestate.ser");
+
+// write the state to the gamePath file
+new ObjectOutputStream(Files.newOutputStream(gamePath, StandardOpenOption.CREATE)).writeObject(gameState);
+
+// read the state from the gamePath file
+List<Winner> mySavedState = (List<Winner>) new ObjectInputStream(Files.newInputStream(gamePath)).readObject();
+#+end_src
+
+you’ll see that it creates a new file gamestate.ser. Open this file in
+a text editor, and you’ll see some gibberish. Java serializes objects
+in its internal format, which is not meant to be read by people.
+
+** Reading URLs (including local files)
+var url = "file:///Users/musa/blog/java-cheat-sheet.html";
+var buffer = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+//
+for(String line; (line = buffer.readLine()) != null;) System.out.println(line);
+
+
+There are better ways to read local files, though.
+
+** labels aka jump points
+
+https://stackoverflow.com/questions/3821827/loop-in-java-code-what-is-this-and-why-does-it-compile
+
+these are labels.
+
+They should not even be taught to you. Labels are mostly a thing of the past (like line numbers in BASIC were).
+
+Do yourself a favor and forget them as soon as you are over with that chapter/have done your test.
+
+Basically what they do is define "jump points" to where the code execution is rerouted.
+
+--------------------------------------------------------------------------------
+
+these are essentially a limited form of 'goto' in Java.
+
+There are very rare cases where the use of labels could allow you to write faster control-flow - but unless you're micro-optimising something, you really shouldn't use them. I wouldn't go as far as saying you shouldn't be taught about them, or that you should immediately forget them - you may encounter them in highly tuned, very specialised code (or in cases where people optimise when they shouldn't), but their use is exceptionally rare and justified use even more so.
+
+
+You can short-circuit a block of code by naming it, then using ~break~ to “break out of it”:
+~N : {S₀; S₁; …; if(someCondition) break N; Sᵏ; Sᵏ⁺¹; … }  ≈  S₀; S₁; ⋯; if(!someCondition) { Sᵏ; Sᵏ⁺¹; ⋯ }~.
+
+
+
+A fair number of those that know about labels, don't realise that they don't just apply to loops.
+
+Both of these are valid Java (assuming I don't have a typo).
+
+#+begin_src java
+void m1(int x) {
+    X1: {
+        System.out.println(1);
+        X2: {
+            System.out.println(2);
+            if (x %2 == 0) break X1;
+            else break X2;
+        }
+        System.out.println(3);
+    }
+    System.out.println(4);
+}
+
+m1(3) // ⇒ 1 2 3 4
+
+void m2(int x) {
+    X1: if (x > 5) {
+        System.out.println(1);
+        if (x < 10) break X1;
+        System.out.println(2);
+    }
+    else X2: {
+        System.out.println(3);
+        if (x > 0) break X2;
+        System.out.println(4);
+    }
+}
+#+end_src
+
+** Subclasses
+
+We can be more specific and create another Java class called
+PlayStation4. It also belongs to the family of video games, but has
+some properties that are specific to the model Play Station 4,
+
 * COMMENT Making ~README.org~
 
   Evaluate the following source block with ~C-c C-c~
