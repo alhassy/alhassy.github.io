@@ -3,7 +3,7 @@
 #+macro: blurb Quick reference for an old-school-cool high-level language ^_^
 #+author: Musa Al-hassy
 #+email: alhassy@gmail.com
-#   +include: CheatSheet/CheatSheetSetup.org
+#+include: ~/CheatSheet/CheatSheetSetup.org
 #+property: header-args :results none :exports code :eval never-export
 #+date: <2023-05-10 Wed>
 #+filetags: java cheat-sheet
@@ -366,14 +366,15 @@ Any [[https://en.wikipedia.org/wiki/Monoid][monoid]] will do.
 ** COMMENT Negative space                                            :myIgnore:
 #+latex: \vspace{-1em}
 * COMMENT Emacs Java Repl
-(load-file "~/repl-driven-development/repl-driven-development.el")
+
+(use-package repl-driven-development)
 
 ;; Set “C­x C­j” to evaluate Java code in a background REPL.
 (repl-driven-development [C-x C-j]
                          "jshell --enable-preview -R -ea" ;; enable assertions!
                          :prompt "jshell>")
 
-// Selece this Java snippet, then press “C­x C­j” to evaluate it
+// Select this Java snippet, then press “C­x C­j” to evaluate it
 import javax.swing.*;
 var frame = new JFrame(){{ setAlwaysOnTop(true); }};
 JOptionPane.showMessageDialog(frame, "Super nice!");
@@ -541,6 +542,24 @@ record Person2(String name, int age) implements Hospitable { }
 Person2 me = new Person2("Musa", 31);
 me.greet();
 #+end_src
+
+** “Interfaces are the types of classes” :details:
+
+A /module/ is
+a bunch of utilities that can be defined from some shared set of parameters.
+Those utilities can be thought of as an interface 𝑰.
+/Then a module is a function from parameters to an anonymous implementation of an interface./
+However, functions that return implementations are essentially records/classes that implement
+the interface; i.e.,
+
+#+begin_src java
+   𝑰 R(params) { return new 𝑰() { 𝑰_𝑶𝑽𝑬𝑹𝑰𝑫𝑬𝑺 }; } // module-as-function
+≈  record R(params) implements 𝑰 { 𝑰_𝑶𝑽𝑬𝑹𝑰𝑫𝑬𝑺 }; // module-as-record
+#+end_src
+
+This equation justifies the phrase “interfaces are the types of records/classes”
+since a record declaration (i.e., the right side of the “≈”)
+can be converted to an (abstract) module (of type 𝑰) ---i.e., the left side of the “≈”.
 
 ** Algebraic Data Types :ignore:
 
@@ -743,6 +762,14 @@ the type theories of operational semantics correspond to the categories
 of denotational semantics. In particular, the simply typed lambda calculus
 can be treated as a /syntax/ whose /semantics/ is an arbitrary cartesian closed category.
 *“We may program with type theory, but our programs can have arbitrary non-standard semantics!”*
+
+* COMMENT Records
+Like tuples, but better.
+
+Good for defining immutable data carriers.
+
+Records are a constrained kind of class, and as a class
+it can have constructors and methods.
 
 * Null :details_null:
 
