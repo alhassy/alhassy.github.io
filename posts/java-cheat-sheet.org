@@ -3,13 +3,18 @@
 #+macro: blurb Quick reference for an old-school-cool high-level language ^_^
 #+author: Musa Al-hassy
 #+email: alhassy@gmail.com
-#+include: ~/CheatSheet/CheatSheetSetup.org
 #+property: header-args :results none :exports code :eval never-export
-#+date: <2023-05-10 Wed>
 #+filetags: java cheat-sheet
 #+fileimage: modern-java.png 88% 88%
 #+description: Quick reference for an old-school-cool high-level language ^_^
-#+options: toc:t
+#+macro: src @@latex: \mintinline{java}{$1}@@ @@html: src_java[:exports code]{$1}@@
+
+# MA: Remember to invoke “blog/preview/disable” before running “C-c C-e l o”!
+# MA: Comment-out #+date for PDF generation.
+# +date: <2023-05-10 Wed>
+#
+# MA: Comment-out the #+include for HTML Generation
+# +include: CheatSheet/CheatSheetSetup.org
 
 * Stuff to relocate to AlBasmal.org :noexport:
 
@@ -25,8 +30,11 @@
 For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
 friendly-soft-red to denote it as an “advanced” content that could be ignored
 on a first reading of my article.
-Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
-   (insert "\n#+html:"
+Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours.
+
+Sections with this tag are simply hidden for LaTeX exports.
+"
+   (insert "\n#+latex: \\iffalse \n#+html:"
            (format "<div>%s <details class=\"float-child\" style=\"background-color: %s\">"
                    (if anchor (format "<a style=\"width: 1%%;float: left; padding: 0px\" id=\"%s\" href=\"#%s\">🔗</a>" anchor anchor) "")
                    color)
@@ -34,14 +42,23 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
            (s-replace-regexp "^\** " "" o-heading)
            "</font> </strong> </summary>")
    (org-next-visible-heading 1)
-   (insert "#+html: </details> </div>"))
+   (insert "#+html: </details> </div> \n#+latex: \\fi\n"))
 #+end_src
 
-
-:ignore_BACKEND: ignores a section's title for a given backend
+:centerline: Centerlines a section's title (LaTeX only)
 #+begin_src emacs-lisp
-(org-deftag myIgnore (backend)
-   "ignores a section's title for a given backend (defaulting to HTML)."
+(org-deftag centerline (NO_ARGS) ;; TODO: FIXME: The org-deftag macro requires there to be at least one arg, due to how args are looked-up. Fix that to avoid creating a “let” when there are no args!
+   "Centerlines a section's title (LaTeX only); otherwise the title is left alone for non-LaTeX backends."
+   ;; WARNING: There cannot be a space between “\n%s” otherwise Org wont recognise the section heading.
+   (insert (format "\n#+latex: \\textbf{\\centerline{%s}} \\iffalse \n%s \n#+latex: \\fi \n"
+                   (s-replace-regexp "^\** " "" o-heading)
+                   o-heading)))
+#+end_src
+
+:noexport_BACKEND: noexport's a section's title for a given backend
+#+begin_src emacs-lisp
+(org-deftag noexport (backend)
+   "noexports a section's title for a given backend (defaulting to HTML)."
    (unless backend (setq backend "html"))
    (let (begin-ignore end-ignore)
      (if (equal backend "pdf")
@@ -105,10 +122,10 @@ which tries its best to produce a PDF
 ---which ignores typesetting errors altogether,
 and therefore is not necessarily ideal when using LaTeX.
 
-* COMMENT LaTeX Extra, Local, Setup  :myIgnore:
+* LaTeX Extra, Local, Setup  :ignore:
 
 # Empty by default.
-#+LATEX_HEADER: \def\cheatsheeturl{https://github.com/alhassy/JavaCheatSheet}
+#+LATEX_HEADER: \def\cheatsheeturl{https://github.com/alhassy/java-cheat-sheet}
 
 # The following are the defaults & may be omitted.
 #+LATEX_HEADER: \def\cheatsheetcols{2}
@@ -131,6 +148,8 @@ and therefore is not necessarily ideal when using LaTeX.
 #+LATEX_HEADER: \newunicodechar{¹}{\ensuremath{^1}}
 #+LATEX_HEADER: \newunicodechar{⁰}{\ensuremath{^0}}
 #+LATEX_HEADER: \newunicodechar{₌}{\ensuremath{_=}}
+
+#+latex_header: \usepackage{tcolorbox}
 
 * COMMENT Contents :TOC:QUOTE:myIgnore:
 #+BEGIN_QUOTE
@@ -390,9 +409,9 @@ https://github.com/alhassy/repl-driven-development/blob/main/repl-driven-develop
 :END:
 
 #+begin_center
-This is a quick reference of concepts in modern Java.
+#+html: This is a quick reference of concepts in modern Java.
 
-badge:PDF|colorful_cheat_sheet|success|https://alhassy.com/JavaCheatSheet/CheatSheet.pdf|read-the-docs
+badge:PDF|colorful_cheat_sheet|success|https://alhassy.com/java-cheat-cheet/java-cheat-sheet.pdf|read-the-docs
 #+end_center
 
 # @@html: <br> @@
@@ -455,6 +474,17 @@ badge:contributions|welcome|green|https://github.com/alhassy/JavaCheatSheet/issu
 # badge:Warning|Incomplete_DRAFT|red||codeigniter
 #+end_center
 
+** Web reference                                                     :ignore:
+
+#+macro: begin-ignore-html #+html: <!--
+#+macro: end-ignore-html #+html: -->
+
+#+latex: \vspace{-1em}
+{{{begin-ignore-html()}}}
+To be terse, lots of content is not shown in this PDF, but is shown in the [[https://alhassy.com/java-cheat-sheet][HTML]]
+version.
+{{{end-ignore-html()}}}
+
 * The Philosophy of Classes & Interfaces
 
 # Real life objects have properties (e.g., /name, age, etc/) and behaviour (e.g., /eat, bark, fileTaxes, etc/).
@@ -503,11 +533,12 @@ as /multi/-~class~-/ificiation/.)
 # | ~abstract class~ | Partial implementation, backed-up by state                          |
 # | ~interface~      | Reusable methods derived from a handful of unimplemented signatures |
 #
+
 #+begin_box "Java's Main Organisational Mechanisms"
-|                         |   | With state     | Without state |
-|-------------------------+---+----------------+---------------|
-| Attributes & properties |   | class          | record        |
-| Partial implementations |   | abstract class | interface     |
+|                         |   | With state          | Without state  |
+|-------------------------+---+---------------------+----------------|
+| Attributes & properties |   | {{{src(class)}}}          | {{{src(record)}}}    |
+| Partial implementations |   | {{{src(abstract class)}}} | {{{src(interface)}}} |
 #+end_box
 
 ** Here is a teaser of nearly all of these packaging mechanisms :details:
@@ -561,7 +592,7 @@ This equation justifies the phrase “interfaces are the types of records/classe
 since a record declaration (i.e., the right side of the “≈”)
 can be converted to an (abstract) module (of type 𝑰) ---i.e., the left side of the “≈”.
 
-** Algebraic Data Types :ignore:
+** Algebraic Data Types :ignore:details:
 
 Finally, suppose there's something you want to do /and/ there are a number of
 ways/configurations to get it done.  You could write it as a method in
@@ -655,134 +686,7 @@ Mathematically, a programming language (i.e., a model of computation with types 
 co-algebra 𝒸, a “new object” is the point ℴ₀, and the functor 𝒯 is the ‘signature/type’ of the class (i.e., its
 properties and methods).
 
-* COMMENT [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object][Objects]]
-
-In the real world you see and use various objects, and each of them is
-belongs to some kind such as toys, food, animals, electronics et
-al. In Java, instead of saying what kind of objects, we say what class
-of objects. In other words, each object belongs to a class. A class is
-like a blueprint of an object. In this chapter you’ll get familiar
-with classes - the main constructs of the Java language.
-
-
-# Numbers, Booleans, and strings are the atoms that data structures are built
-# from. Many types of information require more than one atom, though. Objects
-# allow us to group values—including other objects—to build more complex
-# structures.
-
-Objects provide ways to group several values into a single
-value. Conceptually, this allows us to put a bunch of related things
-in a bag and run around with the bag, instead of wrapping our arms
-around all of the individual things and trying to hold on to them
-separately. These “things” are called /properties/.
-
-# Arrays are just a kind of object specialised for storing sequences of things.
-
-Values of the type /object/ are arbitrary collections of properties. One way to
-create an object is by using braces as an expression that lists properties as /“name:value”/
-pairs.
-
-1. Almost all JavaScript /values/ have properties. The exceptions are ~null~ and
- ~undefined~. If you try to access a property on one of these nonvalues, you get
- an error. Properties are accessed using ~value.prop~, /dot notation/.
-
-* COMMENT Operational vs Denotational Semantics
-
-A programming language consists of two parts: A *syntax* to indicate how to write programs down,
-and a *semantics* to indicate how to execute programs.
-
-*Semantics* describes the processes a computer follows when executing a
-program in a specific language. This can be shown by describing the
-relationship between the input and output of a program (i.e., “axiomatic semantics”)
-or how expressions are reduced (i.e., “operational semantics).
-# Then with the semantics, one can answer questions like /can we know when certain programs will halt?/
-
-Compilers are concernd with “syntax errors” (i.e., invalid expressions);
-humans are concerns with semantics. Syntax is determined at compile-time,
-whereas semantics is deteremined at run-time: For example, =x + 1= is
-syntactically a number whenever =x= is a number, but semantically it may
-denote a number, or an overflow error if =x= is already the largest representable number,
-or it may just be =x= again as is the case in JavaScript (~Infinity + 1 == Infinity~).
-A similar argument applies to =1 / x=.
-Type annotations are a way to bring some semantics into the world of syntax.
-# Likewise, dereferencing pointers, which may be null at run-time.
-
-There are 3 popular approachs to semantics, each useful for particular goals.
-For example, operational semantics is helpful for implementing a programming language (in, say, Java or Prolog);
-whereas axiomatic semantics is helpful for program verification;
-and denotation semantics is helpful for program rewriting (in possibly different programming languages).
-
-*Operational Semantics:* A type is defined by how its “introduction
-rules” (i.e., how instances are created) and its “elimination rules”
-(i.e., how instances are used) and how those rules combine together
-(so called “computation rules”). There is no “meaning” here: Just how
-new syntax is introduced, and how it is operationally executed/reduced
-(in an idealised computer). This is presented as a “Type Theory” or a
-“Transition System” (which is a machine named “⟶” whose execution rules
-are directed by the programming syntax).
-/This approach encourages “smart/
-/constructors”, i.e., “factory methods”, and exhaustive case analysis;
-i.e., src_java[:exports code]{switch}./
-
-*Axiomatic Semantics:* A type denotes some state, and methods/programs
-are characterised by their effect on assertions about program
-state. /This approach encourages explicit pre-conditions and post-conditions; emphasizing proofs-of-correctness./
-# That is, a method denotes a predicate transformer.
-
-*Denotational Semantics:* A type is defined, characterised, by the
-mathematical properties of its instances.  That is to say, a type (and
-its properties & methods) are considered to denote an object in some
-category, namely the category theory denoting the programming language
-under consideration. This is also known more generally as
-“categorical, or functorial, semantics”, and may be presented as two
-categories and a functor “⟦⟧: Syntax → Semantics”.  /This approach
-encourages “compositionality, functoriality”: Working with a complex/
-/structure can be done by working with its parts./ The mathematical
-properties of this approach allow us to rewrite programs: For example,
-requiring type constructors to be functors means we need the law
-~x.map(f).map(g) = x.map(f⨾g)~ which, when read left-to-right, is
-essentially an optimisation.  Likewise, the (homo)morphisms of the
-category essentially give us /correctness-preserving rewrite rules/
-for the methods of a type.  Simply put, we can start with a program ℰ
-that clearly does something we want but is inefficient, then we can
-optimise it by rewriting its semantics ⟦ℰ⟧ to, say, ⟦ℱ⟧ which is
-clearly more efficient but it's not obvious that it accomplishes the
-same goal: The semantic rewrite justifies using ℱ in-place of ℰ.
-(Note that ℱ might be a program in a different language that happens to have the same
-semantics; this is useful when porting code from one language to another in a correctness-preserving fashion.)
-/This approach encourages characterising types by their
-relationships/methods, rather than by specific implementation matter./
-For example, /a/ type of pairs has a specific characterising property,
-rather than explicitly two projection functions (e.g.,
-a pair of 1-byte src_java[:exports code]{char}s can be encoded
-with the 2-byte src_java[:exports code]{short} type).
-
-It is intersting to note that while explicit presentations may differ,
-the type theories of operational semantics correspond to the categories
-of denotational semantics. In particular, the simply typed lambda calculus
-can be treated as a /syntax/ whose /semantics/ is an arbitrary cartesian closed category.
-*“We may program with type theory, but our programs can have arbitrary non-standard semantics!”*
-
-* COMMENT Records
-Like tuples, but better.
-
-Good for defining immutable data carriers.
-
-Records are a constrained kind of class, and as a class
-it can have constructors and methods.
-
-* Null :details_null:
-
-There is a special value named src_java[:exports code]{null} that
-denotes the absence of a meaningful value.  Ironically, it is a value
-of every type (excluding the primitive types).  [[https://funcall.blogspot.com/2007/11/in-kingdom-of-nouns.html?m=1][Here]] is a neat story
-about =null=.
-
-
-# Many operations that don’t produce meaningful values yield void simply because they have to yield some value.
-
-* TODO COMMENT mention optional alongside null
-* Reads
+* Reads :details:
 
 + [[https://www.mooc.fi/en/#courses][“MOOC” Massive Open Online Course - University of Helsinki]]
   - Useful for learning Java, Python, Haskell, JavaScript.
@@ -799,7 +703,7 @@ about =null=.
 
 By this link up to 5 months free
 
-* COMMENT More Reads
+** COMMENT More Reads
 
 https://www.youtube.com/watch?v=-JYLuv7mmxM
 Excellent 6-part series by Abdul Bari
@@ -928,51 +832,196 @@ Head First Java: A Brain-Friendly Guide 3rd Edition
 runestone academy - https://runestone.academy/ns/books/published/csawesome/index.html
 This is what I’m using, it simplifies Java into bite size lessons and has immediate hands on practice with coding.
 
+* newpage :ignore:
+#+latex: \columnbreak
+* COMMENT [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object][Objects]]
+
+In the real world you see and use various objects, and each of them is
+belongs to some kind such as toys, food, animals, electronics et
+al. In Java, instead of saying what kind of objects, we say what class
+of objects. In other words, each object belongs to a class. A class is
+like a blueprint of an object. In this chapter you’ll get familiar
+with classes - the main constructs of the Java language.
+
+
+# Numbers, Booleans, and strings are the atoms that data structures are built
+# from. Many types of information require more than one atom, though. Objects
+# allow us to group values—including other objects—to build more complex
+# structures.
+
+Objects provide ways to group several values into a single
+value. Conceptually, this allows us to put a bunch of related things
+in a bag and run around with the bag, instead of wrapping our arms
+around all of the individual things and trying to hold on to them
+separately. These “things” are called /properties/.
+
+# Arrays are just a kind of object specialised for storing sequences of things.
+
+Values of the type /object/ are arbitrary collections of properties. One way to
+create an object is by using braces as an expression that lists properties as /“name:value”/
+pairs.
+
+1. Almost all JavaScript /values/ have properties. The exceptions are ~null~ and
+ ~undefined~. If you try to access a property on one of these nonvalues, you get
+ an error. Properties are accessed using ~value.prop~, /dot notation/.
+
+* COMMENT Operational vs Denotational Semantics
+
+A programming language consists of two parts: A *syntax* to indicate how to write programs down,
+and a *semantics* to indicate how to execute programs.
+
+*Semantics* describes the processes a computer follows when executing a
+program in a specific language. This can be shown by describing the
+relationship between the input and output of a program (i.e., “axiomatic semantics”)
+or how expressions are reduced (i.e., “operational semantics).
+# Then with the semantics, one can answer questions like /can we know when certain programs will halt?/
+
+Compilers are concernd with “syntax errors” (i.e., invalid expressions);
+humans are concerns with semantics. Syntax is determined at compile-time,
+whereas semantics is deteremined at run-time: For example, =x + 1= is
+syntactically a number whenever =x= is a number, but semantically it may
+denote a number, or an overflow error if =x= is already the largest representable number,
+or it may just be =x= again as is the case in JavaScript (~Infinity + 1 == Infinity~).
+A similar argument applies to =1 / x=.
+Type annotations are a way to bring some semantics into the world of syntax.
+# Likewise, dereferencing pointers, which may be null at run-time.
+
+There are 3 popular approachs to semantics, each useful for particular goals.
+For example, operational semantics is helpful for implementing a programming language (in, say, Java or Prolog);
+whereas axiomatic semantics is helpful for program verification;
+and denotation semantics is helpful for program rewriting (in possibly different programming languages).
+
+*Operational Semantics:* A type is defined by how its “introduction
+rules” (i.e., how instances are created) and its “elimination rules”
+(i.e., how instances are used) and how those rules combine together
+(so called “computation rules”). There is no “meaning” here: Just how
+new syntax is introduced, and how it is operationally executed/reduced
+(in an idealised computer). This is presented as a “Type Theory” or a
+“Transition System” (which is a machine named “⟶” whose execution rules
+are directed by the programming syntax).
+/This approach encourages “smart/
+/constructors”, i.e., “factory methods”, and exhaustive case analysis;
+i.e., src_java[:exports code]{switch}./
+
+*Axiomatic Semantics:* A type denotes some state, and methods/programs
+are characterised by their effect on assertions about program
+state. /This approach encourages explicit pre-conditions and post-conditions; emphasizing proofs-of-correctness./
+# That is, a method denotes a predicate transformer.
+
+*Denotational Semantics:* A type is defined, characterised, by the
+mathematical properties of its instances.  That is to say, a type (and
+its properties & methods) are considered to denote an object in some
+category, namely the category theory denoting the programming language
+under consideration. This is also known more generally as
+“categorical, or functorial, semantics”, and may be presented as two
+categories and a functor “⟦⟧: Syntax → Semantics”.  /This approach
+encourages “compositionality, functoriality”: Working with a complex/
+/structure can be done by working with its parts./ The mathematical
+properties of this approach allow us to rewrite programs: For example,
+requiring type constructors to be functors means we need the law
+~x.map(f).map(g) = x.map(f⨾g)~ which, when read left-to-right, is
+essentially an optimisation.  Likewise, the (homo)morphisms of the
+category essentially give us /correctness-preserving rewrite rules/
+for the methods of a type.  Simply put, we can start with a program ℰ
+that clearly does something we want but is inefficient, then we can
+optimise it by rewriting its semantics ⟦ℰ⟧ to, say, ⟦ℱ⟧ which is
+clearly more efficient but it's not obvious that it accomplishes the
+same goal: The semantic rewrite justifies using ℱ in-place of ℰ.
+(Note that ℱ might be a program in a different language that happens to have the same
+semantics; this is useful when porting code from one language to another in a correctness-preserving fashion.)
+/This approach encourages characterising types by their
+relationships/methods, rather than by specific implementation matter./
+For example, /a/ type of pairs has a specific characterising property,
+rather than explicitly two projection functions (e.g.,
+a pair of 1-byte src_java[:exports code]{char}s can be encoded
+with the 2-byte src_java[:exports code]{short} type).
+
+It is intersting to note that while explicit presentations may differ,
+the type theories of operational semantics correspond to the categories
+of denotational semantics. In particular, the simply typed lambda calculus
+can be treated as a /syntax/ whose /semantics/ is an arbitrary cartesian closed category.
+*“We may program with type theory, but our programs can have arbitrary non-standard semantics!”*
+
+* COMMENT Records
+Like tuples, but better.
+
+Good for defining immutable data carriers.
+
+Records are a constrained kind of class, and as a class
+it can have constructors and methods.
+
+* Null :details_null:
+
+There is a special value named src_java[:exports code]{null} that
+denotes the absence of a meaningful value.  Ironically, it is a value
+of every type (excluding the primitive types).  [[https://funcall.blogspot.com/2007/11/in-kingdom-of-nouns.html?m=1][Here]] is a neat story
+about =null=.
+
+
+# Many operations that don’t produce meaningful values yield void simply because they have to yield some value.
+
+* TODO COMMENT mention optional alongside null
 * Primitive Objects
 
-For performance reasons, there are a handful of types whose values are
-created by /literals/; i.e., “What you see is what you get”.
-(As such, primitives are a basic building block which cannot be broken apart;
-whereas non-primitives (aka references) are made-up from primitives and other references.)
-For
-example, to create a value of src_java[:exports code]{int} we simply
-write ~5~.
+For performance reasons, there are a handful of types whose values are created
+by /literals/; i.e., “What you see is what you get”.  (As such, primitives are a
+basic building block which cannot be broken apart; whereas non-primitives (aka
+references) are made-up from primitives and other references.)  For example, to
+create a value of src_java[:exports code]{int} we simply write ~5~.
 
 /There are no instance methods on literals;/ only a
 handful of operator methods.  For example, we cannot write ~2.pow(3)~
-to compute 2³, but instead must write ~Math.pow(2, 3)~.
-Finally, variables of primitive types have default values when not initialized
-whereas object types default to ~null~ ---note: ~null~ is a value of all object types, but not of primitive types.
+to compute 2³, but instead must write src_java[:exports code]{Math.pow(2, 3)}.
+Finally, variables of primitive types have default values when not initialised
+whereas object types default to src_java[:exports code]{null} ---note: ~null~ is a value of all object types, but not of primitive types.
 
-#+begin_src java
+#+latex: \begingroup\scriptsize
+#+begin_parallel :bar t
+#+begin_src java :exports code
+// Declare a new object type
 class Person { String name; }
 
-Person obj; // ≈ null
-int prim;    // ≈ 0
+Person obj; // ≈ null (OBJECT)
+int prim;    // ≈ 0   (PRIMITIVE)
 
-// Primitives are created as literals; objects use “new”
+// Primitives are created as literals
 prim = 1;    // ≈ 1
-obj = new Person(); // ≈ a reference, like: Person@66048bfd
 
-// Primitives are uniquely identified by their literal shape;
-// objects are identified by references to their memory locations (not syntax shape!)
+// Objects are created with “new”
+obj = new Person(); // ≈ a reference,
+   // like: Person@66048bfd
+
+// Primitives are  identified by
+// thier literal shape
 assert prim == 1;
+
+// Objects are identified by
+/// references to their memory
+// locations (not syntax shape!)
 assert obj != new Person();
 
-// Primitive copy values, objects copy references
+// Primitives copy values
 int primCopy = prim;  // ≈ 1
-Person objCopy = obj; // ≈ a reference, like: Person@66048bfd
 
-// Changing primitive copy has no impact on original
+/// Objects copy references
+Person objCopy = obj;
+  // ≈ a reference, like: Person@66048bfd
+
+// Changing primitive copy has
+// no impact on original
 primCopy = 123;
 assert prim == 1;
 
-// Chaning object copy also changes the original!
+// Changing object copy also
+// changes the original!
 assert obj.name == null;
 objCopy.name = "woah";    // Alter copy!
-assert obj.name.equals("woah"); // Original is altered!
-// (Notice we use .equals since String is an object type!)
+// Original is altered!
+assert obj.name.equals("woah");
 #+end_src
+# // (Notice we use .equals since String is an object type!)
+#+end_parallel
+#+latex: \endgroup
 
 :Remark:
 Having two references accessing the same object in memory can be dangerous,
@@ -981,10 +1030,10 @@ of the references can essentially communicate with one another by using
 the object as “shared message buffer”.
 :End:
 
-Note: The aliases-as-reference behaviour is not an issue with the primitive wrapper
-types, such as ~Integer~.
+# Note: The aliases-as-reference behaviour is not an issue with the primitive wrapper
+# types, such as ~Integer~.
 
-** Wrapper Types
+** Wrapper Types :details:
 
 Java lets primitives shift back and forth from their literal representations
 and the world of reference objects somewhat-harmoniously by automatically
@@ -1025,6 +1074,8 @@ Properties and methods have *separate namespaces* ---@@latex:{\tiny “Java is a
   The parentheis indicate we want to use the method.
   # Alternatively, we can transform a method into a "function object"  using =::=-notation, /method-reference notation/.
   # Function<Integer, Integer> theMethod   = SameNameNoProblem::plus1;
+
+#+latex: \begingroup\scriptsize
 #+begin_src java
 class SameNameNoProblem {
     public static int plus1(int x){ return x + 1; } // Method!
@@ -1034,18 +1085,19 @@ class SameNameNoProblem {
 class ElseWhere {
     String pretty = SameNameNoProblem.plus1;
     Integer three = SameNameNoProblem.plus1(2);
-
 }
 #+end_src
+#+latex: \endgroup
 
 The consequence of different namespaces @@meta: i.e. of being Lisp-2@@ are
-+ → :: Use ~apply~ to call functions bound to variables.
-+ → :: Refer to functions outside of function calls by using a double colon, ~::~.
+1. Use src_java[:exports code]{apply} to call functions bound to variables.
+2. Refer to functions outside of function calls by using a double colon, ~::~.
 
 # Function<Integer, Integer> increment = SameNameNoProblem::plus1;
 # tri(SameNameNoProblem::plus1, 100) // ⇒ 5150
 
-Let's discuss both of these now...
+#+latex: \vspace{-.03em}{\centerline{\tiny Let's discuss both of these now... }}
+
 * COMMENT Functions
 
 + A ~return~ keyword without an expression after it will cause the
@@ -1065,8 +1117,11 @@ Let's discuss both of these now...
   const square1 = (x) => { return x * x; };
   const square2 =  x  => x * x;
   #+END_SRC
-* Anonymous /functions/: ~(arg₁, …, argₙ) → bodyHere~
+* Anonymous /functions/:    ~(arg₁, …, argₙ) → bodyHere~     @@latex: {\color{white}.}@@
 
+#+latex: {\color{white} . } \vspace{-1em}
+
+#+begin_box Functions are formed with the “→” notation and used with “apply”
 #+begin_src java
 // define, then invoke later on
 Function<Integer, Integer> f  =  x -> x * 2;
@@ -1077,21 +1132,13 @@ f.apply(3) // ⇒ 6
 // define and immediately invoke
 ((Function<Integer, Integer>) x -> x * 2).apply(3);
 
-// define from a method reference
+// define from a method reference, using “::”
 Function<Integer, Integer> f = SameNameNoProblem::plus1;
 #+end_src
+#+end_box
 
-#+latex: \vspace{-1em}
-
-#+latex: \room
-In Java, everything is an object! (Ignoring primitives, which exist for the purposes of efficiency!)
-As such, functions are also objects! Which means, they must have a type: Either some class (or some interface), but which
-one? The arrow literal notation =x -> e= *is a short-hand* for an implementation of an interface with one abstract
-method. That is all.
-
-Let's make a method that takes anonymous functions, and use it.
-# +latex: {\color{white}.}\vspace{-2.4em}
-#+BEGIN_SRC java
+#+begin_box "Let's make a method that takes anonymous functions, and use it"
+#+begin_src java
 // Recursion with the ‘tri’angle numbers: tri(f, n) = Σⁿᵢ₌₀ f(i).
 public static int tri(Function<Integer, Integer> f, int n) {
     return n <= 0 ? 0 : f.apply(n) + tri(f, n - 1);
@@ -1101,17 +1148,18 @@ tri(x -> x / 2, 100);  //  ⇒  Σ¹⁰⁰ᵢ₌₀ i/2 = 2500
 
 // Using the standard “do nothing” library function
 tri(Function.identity(), 100);  //  ⇒  Σ¹⁰⁰ᵢ₌₀ i = 5050
-#+END_SRC
+#+end_src
+#+end_box
 
-/Exercise!/ Why does the following code work?
-# Recall that methods and variables have different namespaces...
-#+BEGIN_SRC java
+#+begin_box Exercise! Why does the following code work?
+#+begin_src java
 int tri = 100;
 tri(Function.identity(), tri); //  ⇒ 5050
 
 Function<Integer, Integer> tri = x -> x;
 tri(tri, 100); //  ⇒ 5050
 #+END_SRC
+# Solution: Recall that methods and variables have different namespaces...
 
 :Solution:
 Contextual location determines dispatch: In the expression =tri(tri,
@@ -1119,6 +1167,14 @@ Contextual location determines dispatch: In the expression =tri(tri,
 be a variable (which happens to refer to a function).
 That is, /variables and methods have different namespaces./
 :End:
+#+end_box
+
+#+latex: \room
+In Java, everything is an object! (Ignoring primitives, which exist for the purposes of efficiency!)
+As such, functions are also objects! Which means, they must have a type: Either some class (or some interface), but which
+one? The arrow literal notation =x -> e= *is a short-hand* for an implementation of an interface with one abstract
+method...
+# That is all ;-)
 
 ** COMMENT Function, UnaryOperator, Consumer, Predicate, Supplier
 
@@ -1130,9 +1186,7 @@ so the standard library provides a terser equivalent:
 
 Let's take a more theoretical look at anonymous functions.
 
-** Functional Interfaces :myIgnore_pdf:
-
-@@latex: \newline\newline\textbf{\centerline{Functional Interfaces}} @@
+** Functional Interfaces :centerline:
 
 A /lambda expression/ is a (shorthand) implementation of the only abstract method
 in a /functional interface/ ——–which is an interface that has exactly one abstract
@@ -1156,9 +1210,7 @@ Optionally, to ensure that this is indeed a functional interface, i.e., it has
 only one abstract method, we can place =@FunctionalInterface= above its
 declaration. Then the complier will check our intention for us.
 
-** The Type of a Lambda :myIgnore_pdf:
-
-@@latex: \newline\newline\textbf{\centerline{The Type of a Lambda}} @@
+** The Type of a Lambda :centerline:
 
 Anyhow, since a lambda is a shorthand implementation of an interface, this means
 that what you can do with a lambda depenends on the interface it's impementing!
@@ -1180,21 +1232,19 @@ on the interface that the lambda is implementing. After-all, a lambda is an obje
 Moreover, ~Function~ has useful methods: Such as ~andThen~ for composing functions sequentially,
 and ~Function.identity~ for the do-nothing function.
 
-** Common Java Functional Types :myIgnore_pdf:
-
-@@latex: \newline\newline\textbf{\centerline{Common Java Functional Types}} @@
+** Common Java Functional Types :centerline:
 
 Anyhow, [[https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/util/function/package-summary.html][Java has ~40 functional interfaces]], which are essentially useful variations around the following 4:
-|------------------+----------+------------------------------------------------------------------|
-| Class            | runner   | Description & example                                            |
-|------------------+----------+------------------------------------------------------------------|
-| ~Supplier<T>~    | ~get~    | Makes objects for us; e.g., =() -> "Hello"!=.                    |
-| ~Consumer<T>~    | ~accept~ | Does stuff with our objects, returning void;                     |
-|                  |          | e.g., ~s -> System.out.println(s)~.                              |
-| ~Predicate<T>~   | ~test~   | Tests our object for some property, returning a boolean          |
-|                  |          | e.g., ~s -> s.length() == 3~                                     |
-| ~Function<T, R>~ | ~apply~  | Takes our object and gives us a new one; e.g., ~s -> s.length()~ |
-|------------------+----------+------------------------------------------------------------------|
+|---------------------+--------+--------------------------------------------------------------------|
+| Class               | runner | Description & example                                              |
+|---------------------+--------+--------------------------------------------------------------------|
+| {{{src(Supplier<T>)}}}    | ~get~    | Makes objects for us; e.g., {{{src(() -> "Hello"!)}}}.                    |
+| {{{src(Consumer<T>)}}}    | ~accept~ | Does stuff with our objects, returning void;                       |
+|                     |        | e.g., {{{src(s -> System.out.println(s))}}}.                              |
+| {{{src(Predicate<T>)}}}   | ~test~   | Tests our object for some property, returning a boolean            |
+|                     |        | e.g., {{{src(s -> s.length() == 3)}}}                                      |
+| {{{src(Function<T, R>)}}} | ~apply~  | Takes our object and gives us a new one; e.g., {{{src(s -> s.length())}}} |
+|---------------------+--------+--------------------------------------------------------------------|
 
 For example, src_java[:exports code]{𝒞::new} is a supplier for the
 class 𝒞, and the [[https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/Iterable.html#forEach(java.util.function.Consumer)][forEach]] method on iterables actually uses a consumer
@@ -1210,20 +1260,22 @@ same thing.
 - As another example, Java has a ~TriConsumer~ which is the type of functions that have 3 inputs and no outputs
   ---since ~Tri~ means 3, as in /tricycle/.
 
-** Eta Reduction: Writing Lambda Expressions as Method References :myIgnore_pdf:
-
-@@latex: \textbf{\centerline{Eta Reduction: Writing Lambda Expressions as Method References}} @@
+** Eta Reduction: Writing Lambda Expressions as Method References :centerline:
 
 Lambdas can sometimes be simplified by using /method reference/:
 
-| Static methods      |   | $(x,ys) → τ.f(x, ys)$   | ≈ | $τ::f$                             |
-| Instance methods    |   | $(x,ys) → x.f(ys)$      | ≈ | $τ::f$, where τ is the type of $x$ |
-| Constructor methods |   | ~args → new τ<A>(args)~ | ≈ | ~τ<A>::new~                        |
+| Method type |   |                       |   |                                    |
+|-------------+---+-----------------------+---+------------------------------------|
+| Static      |   | $(x,ys) → τ.f(x, ys)$ | ≈ | $τ::f$                             |
+| Instance    |   | $(x,ys) → x.f(ys)$    | ≈ | $τ::f$, where τ is the type of $x$ |
+| Constructor |   | ~args → new τ<A>(args)~ | ≈ | ~τ<A>::new~                          |
 
-For example, =(sentence, word) → sentence.indexOf(word)= is the same
-as =String::indexOf=. Likewise,  =(a, b) → Integer.max(a, b)= is just =Integer::max=.
+For example, src_java[:exports code]{(sentence, word) -> sentence.indexOf(word)} is the same
+as src_java[:exports code]{String::indexOf}. Likewise, src_java[:exports code]{(a, b) -> Integer.max(a,
+b)} is just src_java[:exports code]{Integer::max}.
 
-+ Note that a class name τ might be qualified; e.g., =x → System.out.println(x)= is just =System.out::println=.
++ Note that a class name τ might be qualified; e.g., src_java[:exports code]{x ->
+  System.out.println(x)} is just src_java[:exports code]{System.out::println}.
 
 * Variable Bindings
 
@@ -1249,9 +1301,9 @@ src_java[:exports code]{assert x == null && y == 1 && z == null;}
      There are a variety of update statements:
      Suppose $τ$ is the type of $x$ then,
      #+latex: \vspace{.7em}
-        | Augment   | ~x ⊕= y~ | ≈ | ~x = (τ)(x ⊕ y)~ |
-        | Increment | ~x++~    | ≈ | ~x += 1~         |
-        | Decrement | ~x--~    | ≈ | ~x -= 1~         |
+        | Augment:  ~x ⊕= y  ≈  x = (τ)(x ⊕ y)~   |
+        | Increment:   ~x++  ≈  x += 1)~         |
+        | Decrement:  ~x--  ≈  x -= 1)~          |
 
         #+columnbreak:
 
@@ -1318,13 +1370,15 @@ int a, b, c, d = 1, e, f; a += (b *= (c /= (d += (e = (2 * ++f)))));
 List.of(a, b, c, d, e, f).equals(List.of(0, 0, 0, 3, 2, 1))
   :End:
 
-- A binding name may include dollar signs ($) or underscores (_) or
-  numbers but no other punctuation or special characters.
-
-#+html: <hr>
-Variable bindings can only occur within src_java[:exports code]{class}
-definitions: A =class= binding introduces a name for a new type of
-values.* Scope, Statements, and Control Flow
+# - A binding name may include dollar signs ($) or underscores (_) or
+#   numbers but no other punctuation or special characters.
+#
+# #+html: <hr>
+# Variable bindings can only occur within src_java[:exports code]{class}
+# definitions: A =class= binding introduces a name for a new type of
+# values.
+#
+* Scope, Statements, and Control Flow :noexport_pdf:
 
 # #
 #+begin_parallel 2
@@ -1387,7 +1441,7 @@ for (var x : List.of(1, 2, 3))
   statement jumps out of the body and continues with the next
   iteration of the loop.
 
-* src_java[:exports code]{switch}
+* src_java[:exports code]{switch} :noexport_pdf:
 
 Dispatching on a value with switch
 
@@ -1460,10 +1514,9 @@ String.format("Half of 100 is %s", 100 / 2) // ⇒ "Half of 100 is 50"
 
 + ~s.repeat(𝓃)~ ≈ Get a new string by gluing 𝓃-copies of the string 𝓈.
 + ~s.toUpperCase()~ and ~s.toLowerCase()~ to change case.
-+ Trim removes spaces, newlines, tabs, and other whitespace from the start and end of a string.
-  #+BEGIN_SRC java
-  "  okay \n ".trim().equals("okay")
-#+END_SRC
++ Trim removes spaces, newlines, tabs, and other whitespace from the start and
+  end of a string.
+  E.g., src_java[:exports code]{"  okay \n ".trim().equals("okay")}
 + ~s.length()~ is the number of characters in the string.
 + ~s.isEmpty()  ≡  s.length() == 0~
 + ~s.isBlank()  ≡  s.trim().isEmpty()~
@@ -1543,32 +1596,45 @@ We say different objects with the same properties are “deeply equal”.
 Because of a historical accident, ~typeof null~ produces ~"object"~.
 * Arithmetic
 
-In addition to the standard arithmetic operations, we have
-~Math.max(x, y)~ that takes two numbers and gives the largest;
-likewise ~Math.min(⋯)~.  Other common functions include ~Math.sqrt,
-Math.ceil, Math.round, Math.abs,~ and ~Math.random()~ which returns a
-random number between 0 and 1.  Also, use ~%~ for remainder after
-division; e.g., =n % 10= is the right-most digit of integer $n$, and
-~n % 2 == 0~ exactly when $n$ is even, and =d % 1= gives the decimal
-points of a floating point number $d$, and finally:
-If ~d~ is the index of the current weekday (0..6), then
-~d + 13 % 7~ is the weekday 13-days from today.
+In addition to the standard arithmetic operations, we have src_java[:exports
+code]{Math.max(x, y)} that takes two numbers and gives the largest; likewise
+src_java[:exports code]{Math.min(x, y)}.  Other common functions include
+src_java[:exports code]{Math.sqrt, Math.ceil, Math.round, Math.abs,} and
+src_java[:exports code]{Math.random()} which returns a random number between 0
+and 1.  Also, use ~%~ for remainder after division; e.g., =n % 10= is the right-most
+digit of integer $n$, and src_java[:exports code]{n % 2 == 0} exactly when $n$ is
+even, and =d % 1= gives the decimal points of a floating point number $d$, and
+finally: If ~d~ is the index of the current weekday (0..6), then ~d + 13 % 7~ is the
+weekday 13-days from today.
 # In general, modulus is useful when working with a value that resets after a certain limit
 
+#+begin_parallel :bar t
+#+latex: \begingroup\scriptsize
 #+begin_src java
 // Scientific notation: 𝓍e𝓎 ≈ 𝓍 × 10ʸ
 assert 1.2e3 == 1.2 * Math.pow(10, 3)
+#+end_src
 
-// random integer between min inclusive and max exclusive
-new Random().nextInt(4, 99)
+#+begin_src java
+// random integer x with 4 ≤ x < 99
+var x = new Random().nextInt(4, 99);
+#+end_src
+#+latex:\endgroup
+#+end_parallel
 
-// Below we sum the digits of the integer n
+#+begin_box "Sum the digits of the integer $n = 31485$"
+#+begin_src java
 int n = 31485;
 int sum = 0;
 while (n % 10 != 0) { sum += n % 10; n /= 10; }
 assert sum == 3 + 1 + 4 + 8 + 5;
+#+end_src
 
-// A more elegant, “functional style”, solution:
+--------------------------------------------------------------------------------
+#+latex: \vspace{1em}
+A more elegant, “functional style”, solution:
+#+latex: \vspace{.3em}
+#+begin_src java
 String.valueOf(n).chars().map(c -> c - '0').sum();
 #+end_src
 
@@ -1577,16 +1643,19 @@ String.valueOf(n).chars().map(c -> c - '0').sum();
 # // Random number in range min..max
 # Math.floor(Math.random() * (max - min) + min)
 
-
+#+latex: \vspace{1em}
 The =chars()= methods returns a stream of integers (Java
 src_java[:exports code]{char}acters are really just integers).
 Likewise, src_java[:exports code]{IntStream.range(0, 20)} makes a
 sequence of numbers that we can then ~map~ over, then ~sum, min, max, average~.
+#+end_box
 
+:Ordering_on_chars:
 #+begin_src java
 // Upper case letters come first, then lower case ones.
 assert 'Z' < 'a' && 'a' < 'z';
 #+end_src
+:End:
 
 * Collections and Streams
 
@@ -1595,9 +1664,10 @@ Sets, and Maps are the most popular. /Streams/ are pipelines for
 altering collections: Usually one has a collection, converts it to a
 stream by invoking ~.stream()~, then performs ~map~ and ~filter~
 methods, etc, then “collects” (i.e., runs the stream pipeline to get
-an actual collection value back) the result.  ⟦Streams exist because
-Java lacks a proper extension mechanism, such as C#'s /extension
-methods/ or Haskell's /typeclasses/ or JavaScript's /prototypes/.⟧
+an actual collection value back) the result.
+# ⟦Streams exist because
+# Java lacks a proper extension mechanism, such as C#'s /extension
+# methods/ or Haskell's /typeclasses/ or JavaScript's /prototypes/.⟧
 
 #+html: <hr>
 
@@ -1622,34 +1692,36 @@ be.
 
 #+html: <hr>
 
-Other collection methods include:
-+ ~𝒞.size()~ is the number of elements in the collection
-+ ~𝒞.isEmpty()  ≡  𝒞.size() == 0~
-+ ~𝒞.contains(e)  ≡  𝒞.stream().filter(x -> x.equals(e)).count() > 0~.
-+ ~Collections.fill(ℒ, e)  ≅  ℒ.stream().map(_ -> e).toList()~;
+Other collection methods include, for a collection instance 𝒞:
++ src_java[:exports code]{𝒞.size()} is the number of elements in the collection
++ src_java[:exports code]{𝒞.isEmpty()}  ≡  src_java[:exports code]{𝒞.size() == 0}
++ src_java[:exports code]{𝒞.contains(e)}  ≡  src_java[:exports code]{𝒞.stream().filter(x -> x.equals(e)).count() > 0}
++ src_java[:exports code]{Collections.fill(ℒ, e)}  ≅  src_java[:exports code]{ℒ.stream().map(_ -> e).toList()};
   i.e., copy list ~ℒ~ but replace all elements with ~e~.
-+ ~Collections.frequency(𝒞, e)  ≅  𝒞.stream().filter(x -> x.equals(e)).count()~;
-  i.e., count how many times ~e~ occurs in a collection.
-+ ~Collections.max(𝒞)~ is the largest value in a collection; likewise ~min~.
-+ ~Collections.nCopies(n, e)~ is a list of $n$ copies of ~e~.
++ src_java[:exports code]{Collections.frequency(𝒞, e)}
+  counts how many times ~e~ occurs in a collection.
+  # ~Collections.frequency(𝒞, e)  ≅  𝒞.stream().filter(x -> x.equals(e)).count()~;
++ src_java[:exports code]{Collections.max(𝒞)} is the largest value in a collection; likewise ~min~.
++ src_java[:exports code]{Collections.nCopies(n, e)} is a list of $n$ copies of ~e~.
 
 #+html: <hr>
 
 *src_java[:exports code]{Stream<τ>} methods*
-+ ~Stream.of(x₀, …, xₙ)~ makes a stream of data, of type τ, ready to be acted on.
-+ ~s.map(f)~ changes the elements according to a function $f : τ → τ′$.
-  - ~s.flatMap(f)~ transforms each element into a stream since $f : τ → Stream<τ′>$, then the resulting
++ src_java[:exports code]{Stream.of(x₀, ..., xₙ)} makes a stream of data, of type τ, ready to be acted on.
++ src_java[:exports code]{s.map(f)} changes the elements according to a function $f : τ → τ′$.
+  - src_java[:exports code]{s.flatMap(f)} transforms each element into a stream since $f : τ → Stream<τ′>$, then the resulting
     stream-of-streams is flattened into a single sequential stream.
   - As such, to merge a streams of streams just invoke ~.flatMap(s -> s)~.
-+ ~s.filter(p)~ keeps only the elements that satisfy property ~p~
-+ ~s.count()~ is the number of elements in the stream
-+ ~s.allMatch(p)~ tests if all elements  satisfy the [[https://download.java.net/java/early_access/panama/docs/api/java.base/java/util/function/Predicate.html][predicate]] ~p~
-+ ~s.anyMatch(p)~ tests if any element satisfies ~p~
-+ ~s.noneMatch(p)  ≡  s.allMatch(p.negate())~
-+ ~s.distinct()~ drops all duplicates
-+ ~s.findFirst()~ returns an ~Optional<τ>~ denoting the first element, if any.
-+ ~s.forEach(a)~ to loop over the elements and perform action ~a~.
-  - If you want to do some action, and get the stream ~s~ back for further use, then use ~s.peek(a)~.
++ src_java[:exports code]{s.filter(p)} keeps only the elements that satisfy property ~p~
++ src_java[:exports code]{s.count()} is the number of elements in the stream
++ src_java[:exports code]{s.allMatch(p)} tests if all elements  satisfy the [[https://download.java.net/java/early_access/panama/docs/api/java.base/java/util/function/Predicate.html][predicate]] ~p~
++ src_java[:exports code]{s.anyMatch(p)} tests if any element satisfies ~p~
++ src_java[:exports code]{s.noneMatch(p)}  ≡  src_java[:exports code]{s.allMatch(p.negate())}
++ src_java[:exports code]{s.distinct()} drops all duplicates
++ src_java[:exports code]{s.findFirst()} returns an src_java[:exports code]{Optional<τ>} denoting the first element, if any.
++ src_java[:exports code]{s.forEach(a)} to loop over the elements and perform action ~a~.
+  - If you want to do some action, and get the stream ~s~ back for further use,
+    then use src_java[:exports code]{s.peek(a)}.
 
 # Higher-order functions start to shine when you need to compose operations.
 
