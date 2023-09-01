@@ -12,7 +12,7 @@
 #+filetags: repl-driven-development vscode emacs javascript java python lisp clojure haskell arend purescript idris racket
 # #+fileimage: https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl.gif 90% 90%
 
-# (load-file "../AlBasmala.el")
+# (progn (load-file "../AlBasmala.el") (advice-add 'blog/preview :before 'my/ensure-headline-ids))
 
 # TODO: The “-filter” method is my callback for when a process emits some output!
 # As such, I can use that to hook my tests! Something to explore when I have the
@@ -72,7 +72,13 @@ badge:Warning|Incomplete_DRAFT|red||codeigniter
 arbitrary languages, provided they have a primitive cli REPL.
 
 * A Rapid Overview of RDD
+:PROPERTIES:
+:CUSTOM_ID: A-Rapid-Overview-of-RDD
+:END:
 ** How do people usually code? 🌤️
+:PROPERTIES:
+:CUSTOM_ID: How-do-people-usually-code-️
+:END:
 
 Either you,
 
@@ -88,6 +94,9 @@ different places 😢 The second is only realistic for small experimentation
 same features that your code editor provides 🧟‍♂️
 
 ** If only we could have our cake, and eat it too! 🍰
+:PROPERTIES:
+:CUSTOM_ID: If-only-we-could-have-our-cake-and-eat-it-too
+:END:
 
 With an /editor-integrated REPL/, we get both approaches! No need to switch
 between the two any more! For example, Emacs out-of-the-box lets us just select
@@ -108,6 +117,8 @@ evaluate a selection, or the entire line, as if it were Java code.
 # - For instance, copy-paste the following examples into a Java file ---or just
 #  press kbd:C-x_C-j /in any buffer/ to evaluate them!
 
+# Get “kbd:C-x_C-j” defined for HTML export.
+#+name: startup-code
 #+begin_src emacs-lisp :tangle nil
   ;; C-x C-j now evaluates arbitrary Java code
   ;; ⟦Emacs spawns a new “jshell” process, then “C-x C-j” sends text to that process.⟧
@@ -145,6 +156,9 @@ badge:Java|Colourful PDF CheatSheet|success|https://alhassy.com/java-cheat-she
 # cannot be rendered nicely within an overlay.
 
 ** Say that again, but use Python please! 🐍 :details:
+:PROPERTIES:
+:CUSTOM_ID: Say-that-again-but-use-Python-please
+:END:
 
 #+begin_center
 badge:Python|Colourful PDF CheatSheet|success|https://alhassy.github.io/PythonCheatSheet/CheatSheet.pdf|python
@@ -204,6 +218,9 @@ in the for, then re-runs and all of this is _discovered live_!
 😲
 
 ** Technically speaking, how is Emacs /itself/ the REPL? 🤔
+:PROPERTIES:
+:CUSTOM_ID: Technically-speaking-how-is-Emacs-itself-the-REPL
+:END:
 
 Let's do what math-nerds call /proof by definition-chasing:/
 
@@ -218,6 +235,9 @@ Let's do what math-nerds call /proof by definition-chasing:/
    until you close Emacs
 
 ** 🛗 Summarising Evaluator Pitch ⚾
+:PROPERTIES:
+:CUSTOM_ID: Summarising-Evaluator-Pitch
+:END:
 
 #+html: <center>
 /Make Emacs itself a REPL for your given language of choice/
@@ -252,6 +272,9 @@ are kept for future use ---e.g., when writing unit tests where you have an
 expression but do not know what it results to.
 
 ** 🤖 💪 🤖 Features of RDD.el 💪 🤖 💪
+:PROPERTIES:
+:CUSTOM_ID: Features-of-RDD-el
+:END:
 
 + 👀 Evaluation results are echoed at your cursor, in your editor, by your code, in an overlay
 + 🔑 You can specify whatever keys you want, for evaluating code.  That
@@ -267,6 +290,9 @@ expression but do not know what it results to.
 # + 🚀
 
 * Implementation of [[doc:repl-driven-development]] :noexport:
+:PROPERTIES:
+:CUSTOM_ID: Implementation-of-doc-repl-driven-development
+:END:
 
 This article does /not/ discuss the source code, which can be found below, folded
 away. If you're interested, consider consulting
@@ -285,7 +311,7 @@ badge:Elisp|Colourful PDF CheatSheet|success|https://alhassy.github.io/ElispCh
 ;; Package-Requires: ((s "1.12.0") (dash "2.16.0") (eros "0.1.0") (bind-key "2.4.1") (emacs "27.1") (f "0.20.0") (devdocs "0.5") (pulsar "1.0.1"))
 ;; Keywords: repl-driven-development, rdd, repl, lisp, java, python, ruby, programming, convenience
 ;; Repo: https://github.com/alhassy/repl-driven-development
-;; Homepage: https://alhassy.com/repl-driven-development
+;; Homepage: http://alhassy.com/repl-driven-development
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -361,6 +387,9 @@ badge:Elisp|Colourful PDF CheatSheet|success|https://alhassy.github.io/ElispCh
 : repl-driven-development-version
 
 ** Implementation Code                            :details_source_code:
+:PROPERTIES:
+:CUSTOM_ID: Implementation-Code
+:END:
 
 # (repl-driven-development [C-x C-j] "node")
 # (repl-driven-development [C-x C-j] "jshell" :prompt "jshell>")
@@ -574,6 +603,9 @@ badge:Elisp|Colourful PDF CheatSheet|success|https://alhassy.github.io/ElispCh
 : repl-driven-development/echo-duration
 
 *** repl-driven-development--make-repl-function and other helpers
+:PROPERTIES:
+:CUSTOM_ID: repl-driven-development-make-repl-function-and-other-helpers
+:END:
 
 #+name: startup-code
 #+begin_src emacs-lisp :tangle ~/repl-driven-development/repl-driven-development.el
@@ -722,6 +754,9 @@ For example:
 #+end_src
 
 *** Testing                                                        :noexport:
+:PROPERTIES:
+:CUSTOM_ID: Testing
+:END:
 #+name: startup-code
 #+begin_src emacs-lisp :tangle no
 (require 'ert) ;; Nice explanations when assertions fail.
@@ -764,6 +799,9 @@ For example:
 #+end_src
 
 *** Tell me something about them there Emacs threads! :noexport:
+:PROPERTIES:
+:CUSTOM_ID: Tell-me-something-about-them-there-Emacs-threads
+:END:
 #+begin_src emacs-lisp :tangle no
 ;; Press C-x C-e a few times and notice that there is no guaraentee that "Thread 2"
 ;; is printed after "Thread 1"!
@@ -792,6 +830,9 @@ For example:
 : #<thread 0x7ffb3f1ea9d8>
 
 *** rdd---ignore-ansi-color-codes && rdd---insertion-filter
+:PROPERTIES:
+:CUSTOM_ID: rdd-ignore-ansi-color-codes-rdd-insertion-filter
+:END:
 
 #+name: startup-code
 #+begin_src emacs-lisp  :tangle ~/repl-driven-development/repl-driven-development.el
@@ -843,6 +884,9 @@ For example:
 ;;; repl-driven-development.el ends here
 #+END_SRC
 * Teaching a runtime, *[[green:incrementally]]*, to be a web server 🍽️ 🔁 🤖
+:PROPERTIES:
+:CUSTOM_ID: Teaching-a-runtime-green-incrementally-to-be-a-web-server-️
+:END:
 
 #+html: <center> <em>
 /RDD by example/: Let's start with a JavaScript runtime and incrementally turn it
@@ -864,6 +908,9 @@ to various stimuli (e.g., how things look, how they function, etc).
 # each feature is immediately tested since the program is live.
 
 ** The “𝒳 as teaching” meme :details:
+:PROPERTIES:
+:CUSTOM_ID: The-𝒳-as-teaching-meme
+:END:
 
 + The “𝒳 as teaching” meme is about /accomplishing the goal 𝒳 as if you were
   talking to a friend in-person, explaining how to do something./
@@ -876,6 +923,9 @@ to various stimuli (e.g., how things look, how they function, etc).
 + Related video: [[https://www.youtube.com/watch?v=VEXaUHNmpQw&t=1520s][“How to Write a Great Research Paper (7 Excellent Tips)” by Simon Peyton Jones]].
 
 ** <em>Wait, I already do this RDD stuff everyday, in the shell!</em> :details:
+:PROPERTIES:
+:CUSTOM_ID: em-Wait-I-already-do-this-RDD-stuff-everyday-in-the-shell-em
+:END:
 
 You /can/ *[[green:“discover”]]* a bash script by running various incantations at the
 terminal, pressing the up-arrow key, tweaking your incantation ---and repeating
@@ -918,6 +968,9 @@ interface to a REPL/: You write some code in your feature-rich editor then press
 some keys to have /only the newly written code/ executed.
 
 ** Actual example :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Actual-example
+:END:
 
 # Make a server, start it, then with RDD alter the request handler
 # until we've made something we want!
@@ -1009,6 +1062,9 @@ Instead, the already-working program “learns” what we have taught it ---and
 continues to be a working program.
 #+end_box
 * Programming   ≈   Definitions and re-definitions
+:PROPERTIES:
+:CUSTOM_ID: Programming-Definitions-and-re-definitions
+:END:
 
 In the previous section we saw how easy it was to add & redefine things /without/
 having to restart our program; as such we have the motto “RDD ≈ Interactive
@@ -1101,6 +1157,9 @@ evaluate it.
 # Then again, I've never written a real Common Lisp program. 🤷‍♂️ 🙃
 
 * Concluding Remarks
+:PROPERTIES:
+:CUSTOM_ID: Concluding-Remarks
+:END:
 #+begin_box Some languages have tight integration with Emacs!
 Programs in these languages are essentially “constructed incrementally” by
 “interactive conversations” with Emacs (as the REPL).
@@ -1129,8 +1188,12 @@ Bye! 👋 🥳
 * Appendix: Recipes for a number of languages
 :PROPERTIES:
 :UNNUMBERED: t
+:CUSTOM_ID: Appendix-Recipes-for-a-number-of-languages
 :END:
 ** JavaScript ---and a minimal server             :details_javascript:
+:PROPERTIES:
+:CUSTOM_ID: JavaScript-and-a-minimal-server
+:END:
 
 #+begin_center
 badge:JavaScript|Colourful PDF CheatSheet|success|https://alhassy.github.io/JavaScriptCheatSheet/CheatSheet.pdf|javascript
@@ -1204,6 +1267,9 @@ Just as “Emacs is a Lisp Machine”, one can use “VSCodeJS” to use
 See http://alhassy.com/vscode-is-itself-a-javascript-repl.
 
 ** Python :details_python_#add8e6:
+:PROPERTIES:
+:CUSTOM_ID: Python
+:END:
 
 #+begin_center
 badge:Python|Colourful PDF CheatSheet|success|https://alhassy.github.io/PythonCheatSheet/CheatSheet.pdf|python
@@ -1229,6 +1295,9 @@ print(hello)      # ⮕ world!
 Learn more by reading...  [[https://cs.lmu.edu/~ray/notes/pythonnetexamples/][Python: A Gentle Introduction to Socket Programming]]
 
 ** Java                                                        :details_java:
+:PROPERTIES:
+:CUSTOM_ID: Java
+:END:
 
 #+begin_center
 badge:Java|Colourful PDF CheatSheet|success|https://alhassy.com/java-cheat-sheet.pdf|coffeescript
@@ -1259,6 +1328,9 @@ new Maybe.Just(3).equals(new Maybe.Just(3)) // yay
 #+end_src
 
 ** Clojure                            :details_clojure:
+:PROPERTIES:
+:CUSTOM_ID: Clojure
+:END:
 
 We can set up a REPL in the background as follows...
 #+begin_src emacs-lisp
@@ -1275,6 +1347,9 @@ For example...
 #+end_src
 
 ** Haskell                                           :details_haskell_#add8e6:
+:PROPERTIES:
+:CUSTOM_ID: Haskell
+:END:
 
 #+begin_center
 badge:Haskell|Colourful PDF CheatSheet|success|https://alhassy.github.io/HaskellCheatSheet/CheatSheet.pdf|awslambda
@@ -1309,6 +1384,9 @@ Note that Haskell has “typed holes” with the syntax =_A=:
 Another language with typed holes is Arend...
 
 ** Arend: Quickly making a terse Emacs interface for a language without one  :details_recipe:
+:PROPERTIES:
+:CUSTOM_ID: Arend-Quickly-making-a-terse-Emacs-interface-for-a-language-without-one
+:END:
 
 The [[https://arend-lang.github.io/download#console-application][Arend Theorem Prover]] has an IntelliJ interface (since it's a JetBrains proof
 assistant), but no Emacs counterpart ---which may be annoying for Agda/Coq
@@ -1341,6 +1419,9 @@ id 12  -- ⇒ 12
 #+end_src
 
 ** PureScript  :details_purescript_#add8e6:
+:PROPERTIES:
+:CUSTOM_ID: PureScript
+:END:
 
 First =brew install spago=, then we can set up a PureScript REPL in the background
 as follows...
@@ -1364,6 +1445,9 @@ add1 2    -- ⇒ 3
 #+end_src
 
 ** Idris  :details_idris:
+:PROPERTIES:
+:CUSTOM_ID: Idris
+:END:
 
 First =brew install idris2=, then we can set up an Idris REPL in the background as
 follows...
@@ -1389,6 +1473,9 @@ with List sum [1,2,3] -- ⇒ 6
 #+end_src
 
 ** Racket  :details_racket_#add8e6:
+:PROPERTIES:
+:CUSTOM_ID: Racket
+:END:
 
 | Racket is a modern programming language in the Lisp/Scheme family. |
 
@@ -1411,6 +1498,9 @@ Meeting Racket for the first time is probably best done with /DrRacket/.
 # - Learning it can be done with a nice Emacs-integrated REPL ---see [[https://beautifulracket.com/][Beautiful Racket by Matthew Butterick]].
 
 ** TODO COMMENT Prolog ---saving the REPL for future use         :not_ideal_use_case:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Prolog-saving-the-REPL-for-future-use
+:END:
 
 #+begin_center
 badge:Prolog|Colourful PDF CheatSheet|success|https://alhassy.github.io/PrologCheatSheet/CheatSheet.pdf|prolog
@@ -1463,6 +1553,9 @@ parent(musa, X).
 findall(X, parent(musa, X), Xs).
 #+end_src
 ** TODO COMMENT Ruby
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Ruby
+:END:
 
 #+begin_center
 badge:Ruby|Colourful PDF CheatSheet|success|https://alhassy.github.io/RubyCheatSheet/CheatSheet.pdf|ruby
@@ -1487,6 +1580,9 @@ For example...
 require 'tk'
 #+end_src
 ** TODO COMMENT TypeScript
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-TypeScript
+:END:
 
 We can set up a REPL in the background as follows...
 #+begin_src emacs-lisp :tangle nil
@@ -1495,6 +1591,9 @@ We can set up a REPL in the background as follows...
 #+end_src
 
 ** COMMENT F#          :Does_not_work:fsharpi_requires_ansi_term__not_eshell:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-F
+:END:
 
 badge:F#|Colourful PDF CheatSheet|success|https://alhassy.github.io/FSharpCheatSheet/CheatSheet.pdf|f-sharp
 
@@ -1523,6 +1622,9 @@ follows...
 If you like F#, take a look at [[https://fstar-lang.org/][F*: A Proof-Oriented Programming Language]].
 
 ** TODO COMMENT Java MWE
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Java-MWE
+:END:
 
 #+begin_center
 badge:Java|Colourful PDF CheatSheet|success|https://alhassy.com/java-cheat-sheet.pdf|coffeescript
