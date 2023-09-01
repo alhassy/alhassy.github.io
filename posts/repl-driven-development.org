@@ -1,0 +1,1730 @@
+# -*- eval: (my/execute-startup-blocks) -*-
+#+title: 💐 Repl Driven Development and The Wonders of <kbd>C-x C-e</kbd> 🔁, or <em>Editor Integrated REPLs for all languages</em>
+#+description: Press “C-x C-e” to send any piece of code (in any language) to a REPL in the background, within Emacs!
+#+property: header-args:emacs-lisp :tangle yes :exports code :eval never-export
+#+options: d:nil toc:t
+#+toc: headlines 2
+#+author: [[https://www.alhassy.com][Musa Al-hassy]]
+#+email: alhassy@gmail.com
+#+date: <2023-05-23 Tue>
+# #+filetags: java python lisp
+#+fileimage: emacs-birthday-present.png 48% 18%
+#+filetags: repl-driven-development vscode emacs javascript java python lisp clojure haskell arend purescript idris racket
+# #+fileimage: https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl.gif 90% 90%
+
+# (load-file "../AlBasmala.el")
+
+# TODO: The “-filter” method is my callback for when a process emits some output!
+# As such, I can use that to hook my tests! Something to explore when I have the
+# basics of rdd.el fleshed-out.
+
+* Abstract                                                           :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Abstract
+:END:
+
+#+begin_center
+badge:Warning|Incomplete_DRAFT|red||codeigniter
+#+end_center
+
+The melpa:repl-driven-development package makes the philosophy of REPL Driven
+Development (RDD) accessible to any language that has a primitive CLI repl: /The
+result is an Emacs interface for the language, where code of your choosing is/
+/evaluated, and results are echoed at your cursor in overlays./
+
+That is, with Repl *green:aided* development, you make software by starting with
+an already working program (i.e., the repl) then *green:incrementlly* “teach it”
+to be the program you want, by defining & redefining things.  Until satisfied,
+loop: Type/modify code *[[green:in your editor]]*, press some keys to evaluate what you
+wrote/modified /in the currently running system/, and explore/test the resulting
+runtime.
+# Eventually, save your code as a clean text file.
+
+/RDD is programming emphasising fast & rich feedback from a running system./ RDD
+is fantastic for quickly /teaching/exploring/ an idea; as such, the running
+example of this article will be on servers ---no prior experience with servers
+is assumed.
+The main examples will be in JavaScript, Python, and Java.  (Since /JavaScript is
+just Lisp in C clothing/, we will not discuss Lisp.)  Since Java is verbose, the
+power of REPLs really pays off when exploring a new idea. We see how many
+imports and setup-code simply disappear in the RDD approach, letting you focus
+on the core idea you're exploring/teaching.  For comparison, a traditional
+self-contained Java server program is ~30 lines long whereas the focused RDD
+approach is ~4 lines long.
+#
+# + We begin with JavaScript: Write some code, and see it interact with your browser.
+# + Then Python: Write some code, and see it interact with the terminal.
+
+# badge:repl-driven-development|1.4|informational|https://github.com/alhassy/repl-driven-development|Gnu-Emacs
+
+#+begin_center
+badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs
+tweet:https://alhassy.com/repl-driven-development
+badge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+@@TODO: FIX contributions URL@@
+badge:contributions|welcome|green|https://github.com/alhassy/alhassy.github.io/issues
+badge:Warning|Incomplete_DRAFT|red||codeigniter
+#+end_center
+
+# @@html: <br> @@
+
+/tdlr:/ This library provides the Emacs built-in kbd:C-x_C-e behaviour for
+arbitrary languages, provided they have a primitive cli REPL.
+
+* A Rapid Overview of RDD
+** How do people usually code? 🌤️
+
+Either you,
+
+1. Use a code editor and edit multiple lines, then jump into a console to try
+   out what you wrote⏳, or
+
+2. You use an interactive command line, and work with one line at a time
+   ---continuously editing & evaluating 🔄
+
+The first approach sucks because your code and its resulting behaviour occur in
+different places 😢 The second is only realistic for small experimentation
+---after all, you're in a constrained environment and don't generally have the
+same features that your code editor provides 🧟‍♂️
+
+** If only we could have our cake, and eat it too! 🍰
+
+With an /editor-integrated REPL/, we get both approaches! No need to switch
+between the two any more! For example, Emacs out-of-the-box lets us just select
+some code and press kbd:C-x_C-e ---/E for Evaluate!/ 😉
+
+#+begin_src emacs-lisp
+;; Press “control and x, then control and e”, at the end of the line, to run the following code
+(message-box "hello world")
+#+end_src
+
+The melpa:repl-driven-development software gives us this feature /for any
+language/! For example, Press kbd:C-x_C-e at the end of the following line to get
+an Emacs-integrated REPL for Java ---i.e.,
+kbd:C-x_C-j will now
+evaluate a selection, or the entire line, as if it were Java code.
+- Why kbd:C-x_C-j  ?  Well, kbd:C-x_C-“e” for Emacs Lisp code, and kbd:C-x_C-“j”
+  for Java code!
+# - For instance, copy-paste the following examples into a Java file ---or just
+#  press kbd:C-x_C-j /in any buffer/ to evaluate them!
+
+#+begin_src emacs-lisp :tangle nil
+  ;; C-x C-j now evaluates arbitrary Java code
+  ;; ⟦Emacs spawns a new “jshell” process, then “C-x C-j” sends text to that process.⟧
+  (repl-driven-development [C-x C-j] "jshell" :prompt "jshell>")
+#+end_src
+
+We can now press kbd:C-x_C-j to execute any Java code, and see results echoed inline in an overlay, such as:
+#+begin_src java :tangle nil
+  1 + 2                     // ⇒ 3
+  System.out.println(2 + 3) // ⇒ 5
+  "hello"[0]                // 🚫 Type error: Java strings are not arrays
+
+  IntStream.range(0, 100).toArray() // A multi-line overlay of numbers 0..99
+
+  import javax.swing.*;     // (No output; this is an effectful operation)
+
+  var frame = new JFrame(){{ setAlwaysOnTop(true); }};  // ⇒ ‘frame’ is defined
+
+  JOptionPane.showMessageDialog(frame, "Super nice!");  // ⇒ A GUI appears 💝
+#+end_src
+
+#+html: <center>
+👀
+/This extension is an easy Emacs-integrated-REPL builder for any language!/
+😲
+#+html: </center>
+
+Learn more Java from
+badge:Java|Colourful PDF CheatSheet|success|https://alhassy.com/java-cheat-sheet.pdf|coffeescript
+.
+
+# Moreover, there is an =*REPL/python3 -i*= buffer created for your REPL so you can
+# see everything you've sent to it, and the output it sent back.  This is
+# particularly useful for lengthy error messages, such as those of Java, which
+# cannot be rendered nicely within an overlay.
+
+** Say that again, but use Python please! 🐍 :details:
+
+#+begin_center
+badge:Python|Colourful PDF CheatSheet|success|https://alhassy.github.io/PythonCheatSheet/CheatSheet.pdf|python
+#+end_center
+
+With an /editor-integrated REPL/, we get both approaches! No need to switch
+between the two any more! For example, Emacs out-of-the-box lets us just select
+some code and press kbd:C-x_C-e ---/E for Evaluate!/ 😉
+
+#+begin_src emacs-lisp
+;; Press “control and x, then control and e” to run the following code
+(message-box "hello world")
+#+end_src
+
+The melpa:repl-driven-development software gives us this feature /for any
+language/! For example, Press kbd:C-x_C-e on the following line to get
+an Emacs-integrated REPL for Python:
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-p now evaluates arbitrary Python code
+    (repl-driven-development [C-x C-p] "python3")
+#+end_src
+
+We can now press kbd:C-x_C-p to execute any Python code, such as:
+#+begin_src python
+import os                       # ⇒ Module OS imported
+f"Hello, {os.environ['USER']}!"  # ⇒ “Hello, musa!”
+
+#+end_src
+
+More exciting fun is to produce an increasing family of colourful circles, in a GUI:
+#+begin_src python
+# Ensure we have some GUI capabilities installed; press “C-x C-e”:
+# (async-shell-command "brew install python-tk")
+
+import turtle
+it = turtle.Turtle()  # This opens a new window
+
+# The following fragment was “discovered” by trying things out repeatedly with “C-x C-p”.
+for i in range(10):
+    it.pencolor("green" if i % 2 == 0 else "red")
+    it.pensize(i / 2)
+    it.circle(i * 10)
+
+
+# Note for Python, the above “for” loop is “complete” if we also send the extra
+# newline after it.
+#+end_src
+Learn more with [[https://realpython.com/beginners-guide-python-turtle/][The Beginner's Guide to Python Turtle]].
+
+TODO: Make this into a Gif, that incrementlly shows the turtle appearing?
+ie it starts off with an experiment of the loop body, then it wraps it
+in the for, then re-runs and all of this is _discovered live_!
+
+
+👀
+/This extension is an easy Emacs-integrated-REPL builder for any language!/
+😲
+
+** Technically speaking, how is Emacs /itself/ the REPL? 🤔
+
+Let's do what math-nerds call /proof by definition-chasing:/
+
+1. Definition: REPL is /any software/ that supports a Read-Evaluate-Print-Loop cycle.
+
+2. kbd:C-x_C-e / kbd:C-x_C-j will echo the results next to your cursor, in your
+   editor
+
+3. So it retains each of the read, eval, and print parts of the Read-Evaluate-Print-Loop
+
+4. Moreover, since the program doesn't terminate, you're still in the /loop part/
+   until you close Emacs
+
+** 🛗 Summarising Evaluator Pitch ⚾
+
+#+html: <center>
+/Make Emacs itself a REPL for your given language of choice/
+#+html: </center>
+
+Suppose you're exploring a Python/Ruby/Java/JS/TS/Haskell/Lisps/etc
+API, or experimenting with an idea and want immediate feedback.
+You could open a terminal and try things out there; with no editor
+support, and occasionally copy-pasting things back into your editor
+for future use. Better yet, why not use your editor itself as a REPL.
+
+The melpa:repl-driven-development software provides the Emacs built-in
+kbd:C-x_C-e behaviour for arbitrary languages, provided they have a primitive
+cli REPL.
+
+#+html: <center>
+*Benefits*
+#+html: </center>
+
+Whenever reading/refactoring some code, if you can make some of it
+self-contained, then you can immediately try it out! No need to
+load your entrie program; nor copy-paste into an external REPL. The
+benefits of Emacs' built-in “C-x C-e” for Lisp, and Lisp's Repl
+Driven Development philosophy, are essentially made possible for
+arbitrary languages (to some approximate degree, but not fully).
+
+Just as “C-u C-x C-e” inserts the resulting expression at the
+current cursour position, so too all repl-driven-development
+commands allow for a C-u prefix which inserts the result.
+This allows for a nice scripting experience where results
+are kept for future use ---e.g., when writing unit tests where you have an
+expression but do not know what it results to.
+
+** 🤖 💪 🤖 Features of RDD.el 💪 🤖 💪
+
++ 👀 Evaluation results are echoed at your cursor, in your editor, by your code, in an overlay
++ 🔑 You can specify whatever keys you want, for evaluating code.  That
+  keybinding is itself well-documented, just invoke kbd:C-h_k then your
+  keybinding.
++ 🩹 Press kbd:C-u_C-x_C-j to get the results of your evaluated expression
+  printed inline, at your cursor.
++ 📚 Documentation is supported out of the box: Put the cursor over a function
+  name (like "print" or "error"). Then press kbd:C-u_C-u_C-x_C-j and you get the
+  documentation of that function.
+# + TODO: More coming!
+# + ⋮
+# + 🚀
+
+* Implementation of [[doc:repl-driven-development]] :noexport:
+
+This article does /not/ discuss the source code, which can be found below, folded
+away. If you're interested, consider consulting
+badge:Elisp|Colourful PDF CheatSheet|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs.
+** Lisp Package Preamble                           :details_package_preamble:
+  :PROPERTIES:
+  :CUSTOM_ID: Preamble
+  :END:
+#+BEGIN_SRC emacs-lisp :tangle ~/repl-driven-development/repl-driven-development.el
+;;; repl-driven-development.el --- Send arbitrary code to a REPL in the background  -*- lexical-binding: t; -*-
+
+;; Copyright (c) 2023 Musa Al-hassy
+
+;; Author: Musa Al-hassy <alhassy@gmail.com>
+;; Version: 1.0.1
+;; Package-Requires: ((s "1.12.0") (dash "2.16.0") (eros "0.1.0") (bind-key "2.4.1") (emacs "27.1") (f "0.20.0") (devdocs "0.5") (pulsar "1.0.1"))
+;; Keywords: repl-driven-development, rdd, repl, lisp, java, python, ruby, programming, convenience
+;; Repo: https://github.com/alhassy/repl-driven-development
+;; Homepage: https://alhassy.com/repl-driven-development
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This library provides the Emacs built-in “C-x C-e” behaviour for
+;; arbitrary languages, provided they have a REPL shell command.
+;;
+;;
+;; Minimal Working Example [Java]:
+;;
+;;   ;; Set “C-x C-j” to evaluate Java code in a background REPL.
+;;   (repl-driven-development [C-x C-j] "jshell" :prompt "jshell>")
+;;
+;;   // Select this Java snippet, then press “C-x C-j” to evaluate it
+;;   import javax.swing.*;
+;;   var frame = new JFrame(){{ setAlwaysOnTop(true); }};
+;;   JOptionPane.showMessageDialog(frame, "Super nice!");
+;;
+;;   // REPL result values are shown as overlays:
+;;   2 + 4 // ⇒ 6
+;;
+;;
+;; Benefits:
+;;
+;; Whenever reading/refactoring some code, if you can make some of it
+;; self-contained, then you can immediately try it out! No need to
+;; load your entire program; nor copy-paste into an external REPL. The
+;; benefits of Emacs' built-in “C-x C-e” for Lisp, and Lisp's Repl
+;; Driven Development philosophy, are essentially made possible for
+;; arbitrary languages (to some approximate degree, but not fully).
+;;
+;; Just as “C-u C-x C-e” inserts the resulting expression at the
+;; current cursour position, so too all repl-driven-development
+;; commands allow for a C-u prefix which inserts the result.
+;; This allows for a nice scripting experience where results
+;; are kept for future use.
+;;
+;; This file has been tangled from a literate, org-mode, file.
+
+;;; Code:
+
+;; String and list manipulation libraries
+;; https://github.com/magnars/dash.el
+;; https://github.com/magnars/s.el
+
+(require 's)               ;; “The long lost Emacs string manipulation library”
+(require 'dash)            ;; “A modern list library for Emacs”
+(require 'cl-lib)          ;; New Common Lisp library; ‘cl-???’ forms.
+(require 'eros)            ;; Simple Emacs Overlays
+(require 'org)
+(require 'bind-key)
+
+(defconst repl-driven-development-version (package-get-version))
+(defun repl-driven-development-version ()
+  "Print the current repl-driven-development version in the minibuffer."
+  (interactive)
+  (message repl-driven-development-version))
+#+END_SRC
+
+#+RESULTS:
+: repl-driven-development-version
+
+** Implementation Code                            :details_source_code:
+
+# (repl-driven-development [C-x C-j] "node")
+# (repl-driven-development [C-x C-j] "jshell" :prompt "jshell>")
+
+#+name: startup-code
+#+begin_src emacs-lisp  :tangle ~/repl-driven-development/repl-driven-development.el
+(defvar rdd---current-input nil
+  "Used to avoid scenarios where input is echoed thereby accidentally treating it as a repl output.")
+
+(defvar rdd---current-output nil
+  "The output of the most recent repl call; this is used for testing.")
+
+  ;;;###autoload
+(cl-defun repl-driven-development (keys cli &key (prompt ">") docs (prologue ""))
+    "Make Emacs itself a REPL for your given language of choice.
+
+  Suppose you're exploring a Python/Ruby/Java/JS/TS/Haskell/Lisps/etc
+  API, or experimenting with an idea and want immediate feedback.
+  You could open a terminal and try things out there; with no editor
+  support, and occasionally copy-pasting things back into your editor
+  for future use. Better yet, why not use your editor itself as a REPL.
+
+  Implementation & behavioural notes can be found in the JavaScript
+  Example below.
+
+  ######################################################################
+  ### JavaScript Example ---Basic usage, and a minimal server ##########
+  ######################################################################
+
+     ;; C-x C-j now evaluates arbitrary JavaScript code
+     (repl-driven-development [C-x C-j] \"node\")
+
+  That's it! Press “C-x C-e” on the above line so that “C-x C-j”
+  will now evaluate a selection, or the entire line, as if it were
+  JavaScript code. ⟦Why C-x C-j? C-x C-“e” for Emacs Lisp code, and C-x
+  C-“j” for JavaScript code!⟧ For instance, copy-paste the
+  following examples into a JS file ---or just press “C-x C-j” to
+  evaluate them!
+
+      1 + 2                                     // ⮕ 3
+      1 + '2'                                   // ⮕ '12'
+      let me = {name: 'Jasim'}; Object.keys(me) // ⮕ ['name']
+      me.doesNotExist('whoops')                 // ⮕ Uncaught TypeError
+      [ ...Array(45).keys() ]          // ⮕ Multi-line overlay of 0..44
+
+  All of these results are echoed inline in an overlay, by default.
+  Moreover, there is a *REPL* buffer created for your REPL so you
+  can see everything you've sent to it, and the output it sent
+  back.  This is particularly useful for lengthy error messages,
+  such as those of Java, which cannot be rendered nicely within an
+  overlay.
+
+  How this works is that Emacs spawns a new “node” process, then
+  C-x C-j sends text to that process. Whenever the process emits
+  any output ---on stdout or stderr--- then we emit that to the
+  user via an overlay.
+
+  Finally, “C-h k  C-x C-j” will show you the name of the function
+  that is invoked when you press C-x C-j, along with minimal docs.
+
+  A useful example would be a minimal server, and requests for it.
+
+     // First get stuff with C-x C-e:
+     // (async-shell-command \"npm install -g express axios\")
+
+     let app = require('express')()
+     let clicked = 1
+     app.get('/hi', (req, res) => res.send(`Hello World × ${clicked++}`))
+
+     let server = app.listen(3000)
+     // Now visit   http://localhost:3000/hi   a bunch of times!
+
+    // Better yet, see the output programmatically...
+    let axios = require('axios')
+    // Press C-x C-j a bunch of times on the following expression ♥‿♥
+    console.log((await axios.get('http://localhost:3000/hi')).data)
+
+    // Consider closing the server when you're done with it.
+    server.close()
+
+  Just as “Emacs is a Lisp Machine”, one can use “VSCodeJS” to use
+  “VSCode as a JS Machine”.
+  See http://alhassy.com/vscode-is-itself-a-javascript-repl.
+
+  ######################################################################
+  ### Description of Arguments #########################################
+  ######################################################################
+
+  - KEYS [Vector]: A vector such as [C-x C-p] that declares the keybindings for
+    the new REPL evaluator.
+
+  - CLI [String]: A string denoting the terminal command to start your repl;
+    you may need an “-i” flag to force it to be interactive even though
+    we use it from a child process rather than a top-level shell.
+
+  - PROMPT [Regular Expression]:
+    What is the prompt that your REPL shows, e.g., “>”.
+    We try to ignore showing it in an overlay that would otherwise hide
+    useful output.
+
+  - DOCS [String]: A space-seperated string denoting a list of language documents
+    you'd like to associate with your repl.
+    Invoking your repl with “C-u C-u” will show the documentation
+    of the word at point. This is done using `devdocs'.
+
+    For example,
+      (repl-driven-development [C-x C-j] \"node\" :docs \"javascript express\")
+    Would allow us to invoke “C-u C-u C-x C-j” with the cursor on the
+    word, say, “listen” and we'll see some useful docs (along with
+    example uses) of this Express library method “listen”.
+
+    Visit https://devdocs.io/ to see the list of documented languages
+    and libraries.
+
+  - PROLOGUE [String | List<String>]: Any initial code you'd like your
+    repl to be initiated with. For example, imports of standard libraries
+    is probably something you'd always like to have on-hand; or perhaps
+    some useful variables/declarations/functions.
+
+  Finally, you may register callbacks via `repl-driven-development-output-hook'.
+
+  ### Misc Remarks #####################################################
+  VSCode has a similar utility for making in-editor REPLs, by the
+  same author: http://alhassy.com/making-vscode-itself-a-java-repl
+  "
+    (cl-assert (or (stringp prologue) (listp prologue)))
+    (when (listp prologue) (setq prologue (s-join "\n" prologue)))
+    (cl-assert (stringp prologue))
+    (-let* (((cmd . args) (s-split " " cli))
+            ;; Identifier "repl-driven-development" is made unique
+            ;; by start-process.
+            (repl (apply #'start-process "repl-driven-development"
+                         (format "*REPL/%s*" cli) cmd args)))
+
+      ;; https://stackoverflow.com/q/4120054
+      ;; (set-process-coding-system repl 'unix)
+      (with-current-buffer  (format "*REPL/%s*" cli)
+        (setq buffer-display-table (make-display-table))
+        (aset buffer-display-table ?\^M [])
+        (setq buffer-read-only t))
+
+     (setq docs (rdd---install-any-not-yet-installed-docs docs))
+     (eval `(rdd---make-repl-function ,repl ,keys ,cmd ,docs
+         (repl-driven-development ,keys ,cli :prompt ,prompt :docs ,(s-join " " docs) :prologue ,prologue)))
+
+     (process-send-string repl prologue)
+     (process-send-string repl "\n")
+
+     ;; Callback: Write the actual output to the REPL buffer and emit overlay.
+     (set-process-filter repl (rdd---main-callback prompt))
+
+     ;; Return the REPL process to the user.
+     repl))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun rdd---main-callback (prompt)
+ `(lambda (process output)
+
+           ;; The *REPL* buffer shows things exactly as they'd look like
+           ;; in a standard interaction in the terminal.
+           (rdd---insertion-filter process output)
+
+           ;; This is done to provide a richer, friendlier, interaction.
+           ;; ^M at the end of line in Emacs is indicating a carriage return (\r) followed by a line feed (\n).
+           (setq output (s-trim (s-replace-regexp ,prompt "" (s-replace "\r\n" "" output))))
+
+           ;; thread `output' through output hooks
+           ;; i.e., run all hooks on REPL output, each possibly modifying output
+           (require 'cl)
+           (cl-loop for fun in repl-driven-development/output-hook
+                    do (setq output (funcall fun output)))
+
+           (rdd---insert-or-echo output)))
+
+(defun rdd---install-any-not-yet-installed-docs (docs)
+  "Install any not-yet-installed docs; returns a List<String> of the intalled docs."
+  (when docs
+    (require 'devdocs)
+    (cl-assert (stringp docs))
+    (setq docs (--reject (s-blank? it) (s-split " " docs)))
+    (cl-assert (listp docs))
+    (-let [installed (mapcar #'f-base (f-entries devdocs-data-dir))]
+      (--map (unless (member it installed) (devdocs-install (list (cons 'slug it)))) docs))
+    docs))
+
+(defun rdd---insert-or-echo (output)
+  "If there's a C-u, then insert the output; else echo it in overlay"
+  (cl-assert (stringp output))
+  (pcase current-prefix-arg
+    ('(4) (unless (equal output (s-trim rdd---current-input)) (insert " " output)))
+    ;; All other prefixes are handled by repl-fun-name, above.
+    (_
+     ;; Show output as an overlay at the current cursor position
+     ;; ﴾ Since eros is intended to be used with ELisp, not arbitrary langs,
+     ;; it does some sexp look-about, which may not mix well with, say, JS
+     ;; arrow functions, so we freeze such movements, locally. ﴿
+     (setq output (rdd---ignore-ansi-color-codes output))
+     (unless (s-blank? (s-trim output))
+       (setq repl-driven-development-current--output output)
+       (thread-yield)
+       (require 'eros)
+       (cl-letf (((symbol-function 'backward-sexp) (lambda (&rest _) 0)))
+         (eros--make-result-overlay output
+           :format  " ⮕ %s"
+           :duration repl-driven-development/echo-duration)))))
+  )
+#+end_src
+
+#+RESULTS: startup-code
+: repl-driven-development/echo-duration
+
+*** repl-driven-development--make-repl-function and other helpers
+
+#+name: startup-code
+#+begin_src emacs-lisp :tangle ~/repl-driven-development/repl-driven-development.el
+(defvar repl-driven-development--insert-into-repl-buffer t)
+
+;; (fmakunbound #'repl-driven-development--make-repl-function)
+(defmacro rdd---make-repl-function (repl keys cmd docs incantation-to-restart-repl)
+ ;; cl-defmethod repl-driven-development--make-repl-function ((repl process) (cli string) (repl-fun-name string) (docs list))
+  "Constructs code denoting a function that sends a region to a REPL process"
+  (-let* ((repl-fun-name (intern (concat "repl/" cmd))))
+      `(progn
+    ;; TODO: Consider deleting this and setting the callback for repl testing directly a la set-process-filter.
+    (defun ,(intern (format "%s/sync" repl-fun-name)) (string)
+     "Block until we see the snetiantial marker; then emit the repl output. This is an sync call to the repl."
+     (thread-join (make-thread `(lambda ()
+       (setq DONE (format "\"DONE TEST %s\"" (gensym)))
+       ;; (process-send-string jshell (format "Thread.sleep(3000)\n1 + 9\n%s\n" DONE))
+       (process-send-string ,,repl (format "%s\n%s\n" ,string DONE))
+       (setq my/threshold 0)
+       (setq results nil)
+       (setq waiting-seconds .5) ;; half a second
+       (loop
+        (sleep-for .01)
+        (incf my/threshold)
+        (push repl-driven-development-current--output results)
+        (when (or (< 1000 (* my/threshold waiting-seconds)) (s-matches? DONE repl-driven-development-current--output))
+          (return)))
+       (thread-yield)
+       (cadr (-uniq results))))))
+
+ (bind-key* (s-join " " (mapcar #'pp-to-string ,keys))
+  (defun ,repl-fun-name (region-beg region-end)
+    ,(rdd---make-repl-function-docstring cmd "")
+    (interactive "r")
+
+    (require 'pulsar)
+    (setq pulsar-face 'pulsar-yellow)
+    (pulsar-mode +1)
+    (pulsar-pulse-line)
+
+    (pcase current-prefix-arg
+      ;; 0 ⇒ Jump to repl [TODO: Add a  keybinding for “C-u 0 C-x C-j” to return to original position.]
+      (0 (switch-to-buffer (--> (buffer-list) (--map (buffer-name it) it) (--filter (s-starts-with? "*REPL/jshell" it) it) car)))
+      (-1
+       ;; restart repl, [then send to repl --does not work since REPLs take a sec to load. That's OK, not a deal-breaker!]
+         (kill-buffer (process-buffer ,repl))
+         ,incantation-to-restart-repl)
+      ;; ('(4)  (insert " " output)) ;; C-u ;; handled when we actually have the output; see the process filter below
+      ('(16) ;; C-u C-u ⇒ documentation lookup
+       (rdd---docs-at-point (quote ,docs)))
+      (_
+       (if (use-region-p)
+           (deactivate-mark)
+         (beginning-of-line)
+         (setq region-beg (point))
+         (end-of-line)
+         (setq region-end (point)))
+       (setq rdd---current-input (s-trim-left (buffer-substring-no-properties region-beg region-end)))
+       (process-send-string ,repl rdd---current-input)
+       (process-send-string ,repl "\n")
+       ))
+    )))))
+
+(defun rdd---docs-at-point (docs)
+  ;; Test this by writing a word such as “IntStream.range(0, 44)” then M-: (rdd---docs-at-point '("openjdk~19"))
+  ;; anywhere on the phrase
+
+  ;; devdocs-lookup will ask to setup current docs when there's a current-prefix, so we null it.
+  ;; If user does have it setup, we want to temporarily change its value for use with the current repl.
+  (let ((devdocs-history nil) (current-prefix-arg nil) (devdocs-current-docs docs) (word (or (thing-at-point 'symbol) "")))
+    ;; (devdocs-lookup nil word) ⇒ Quits abruptly when keyword is not a valid candidate!
+    (minibuffer-with-setup-hook
+        `(lambda () (insert ,word))
+      (call-interactively #'devdocs-lookup))))
+
+;; TODO: Add docs about *REPL* buffer, its purpose, and alternatives
+(cl-defmethod rdd---make-repl-function-docstring ((cli string) (additional-remarks string))
+  "Makes the docstring for a repl function working with command CLI."
+  (s-replace-regexp "^\s+" ""
+  (format
+   "Executes the selected region, if any or otherwise the entire current line,
+    and evaluates it with the command-line tool “%s”.
+
+    Output is shown as an overlay at the current cursor position.
+    It is shown for `repl-driven-development/echo-duration' many seconds.
+
+    ## C-u Prefix: Insert result ###################################################
+
+    With a “C-u” prefix, the output is inserted at point
+    (and not echoed in an overlay).
+
+    ## C-u C-u Prefix: Documentation ##############################################
+
+    With a “C-u C-u” prefix, documentation is looked-up for the word at point.
+
+    This is done using `devdocs', and so the documentation generally provides
+    example uses as well. Visit https://devdocs.io/ to see the list of documented
+    languages and libraries.
+
+    ## “C-u 0” Prefix: See associated buffer #####################################
+
+    Sometimes it may be useful to look at a large output in a dedicated buffer.
+
+    ## “C-u -1” Prefix: Restart REPL #############################################
+
+    In the event you've messed-up your REPL, starting from a blank slate may be
+    helpful.
+
+    ## Implementation Notes ########################################################
+
+    The interactive method is asynchronous: Whenever you send text for evaluation,
+    you immediately regain control in Emacs; you may send more text and it will be
+    queued for evaluation. For example, evaluating a sleep command for 3 seconds
+    does not block Emacs.
+
+    ## See also ####################################################################
+
+    See `repl-driven-development' for more useful docs.
+
+    See www.alhassy.com/repl-driven-development to learn more about RDD and see
+    examples and many gifs.
+"
+   cli
+   )))
+
+(defun repl-driven-development--santise-output (output prompt input)
+  "Remove PROMPT from OUTPUT, and ensure OUTPUT does not contain a copy of INPUT."
+  (setq output (s-trim (s-replace "\r" "" (s-replace-regexp prompt "" output))))
+  (-let [no-input-echo (s-trim (s-chop-prefix input output))]
+    (if (s-blank? (s-trim (s-collapse-whitespace no-input-echo))) output no-input-echo)))
+
+(defvar repl-driven-development/output-hook nil
+  "A list of functions to execute after REPL output has been computed.
+
+Each function consumes a single argument: The output result, as a string.
+
+For example:
+
+     ;; I'd like “C-h e” to show eval result ---just as “C-x C-e” does.
+     (add-hook 'repl-driven-development/output-hook
+               (lambda (output)
+                (let ((inhibit-message t))
+                  (message \"REPL⇒ %s\" output))
+                output))
+")
+#+end_src
+
+*** Testing                                                        :noexport:
+#+name: startup-code
+#+begin_src emacs-lisp :tangle no
+(require 'ert) ;; Nice explanations when assertions fail.
+
+(ert-deftest java ()
+  (repl-driven-development [C-x C-j] "jshell" :prompt "jshell>")
+  (loop with ERROR = "|  Error:"
+        with NO_OUTPUT = "DONE TEST g" ;; The sentianl used to mark end of tests in repl/jshell/sync
+        for (input expected-output)
+        in `(;; We get a welcome message when the repl starts for the first time
+             ("" "|  Welcome to JShell -- Version 20.0.1\n|  For an introduction type: /help intro")
+             ;; We can use a REPL like a calculator
+             ("1 + 2 + 3" "6")
+             ;; Also for string arithmetic
+             ("\"hello\" + \" world\"" "\"hello world\"")
+             ;; Also supports array arithmetic
+             ("IntStream.range(0, 7).toArray()" "int[7] { 0, 1, 2, 3, 4, 5, 6 }")
+             ;; It has memory
+             ("var x = 3" "3")
+             ("2 * x" "6")
+             ;; It's operations are type-checked
+             ("2 * \"nope\"" ,ERROR)
+             ;; We can sequence expressions
+             ("Thread.sleep(10); 1 + 9" "10")
+             ;; Sending nothing results in nothing
+             (" \n \n \n" ,NO_OUTPUT)
+             ;; Imports result in no output
+             ("import java.util.stream.*" ,NO_OUTPUT)
+             ;; We can send multi-line input
+             ("System\n.out\n.println\n(\"Hiya buddo!\")" "\"Hiya buddo!\"")
+             ;; NOTE: Traditional cli repls, when consuming multi-line input, look for an empty line to indicate
+             ;; completition of multi-line input. As such, in the previous test, if we use \n\n anywhere instead of
+             ;; \n, then the multi-line input would be terminated prematurely. This is not ideal since someone
+             ;; might, say, write a for-loop with extra whitespace and still want it to evaluate.
+             ;; TODO/IMPROVEMENT: Make our repls strip out empty newlines.
+             ("System\n\n\n.out\n.println(\"Hiya buddo!\")" ,ERROR)
+             )
+        do (unless (or (equal expected-output ERROR) (s-matches? (format ".*%s.*" NO_OUTPUT) expected-output))
+             (should (equal expected-output (s-replace-regexp ".*==> " "" (repl/jshell/sync input)))))))
+#+end_src
+
+*** Tell me something about them there Emacs threads! :noexport:
+#+begin_src emacs-lisp :tangle no
+;; Press C-x C-e a few times and notice that there is no guaraentee that "Thread 2"
+;; is printed after "Thread 1"!
+(progn
+(make-thread (lambda ()
+   (message (format-time-string "Thread 1 ~ %H:%M:%S" (current-time)))
+   (thread-yield)))
+
+(make-thread (lambda ()
+   (message (format-time-string "Thread 2 ~ %H:%M:%S" (current-time)))
+   (thread-yield))))
+
+;; Let's block to enforce sequencing
+(progn
+(thread-join ;; block Emacs until this thread is done!
+(make-thread (lambda ()
+   (message (format-time-string "Thread 1 ~ %H:%M:%S" (current-time)))
+   (thread-yield))))
+
+(make-thread (lambda ()
+   (message (format-time-string "Thread 2 ~ %H:%M:%S" (current-time)))
+   (thread-yield))))
+#+end_src
+
+#+RESULTS:
+: #<thread 0x7ffb3f1ea9d8>
+
+*** rdd---ignore-ansi-color-codes && rdd---insertion-filter
+
+#+name: startup-code
+#+begin_src emacs-lisp  :tangle ~/repl-driven-development/repl-driven-development.el
+(defun rdd---ignore-ansi-color-codes (string-with-codes)
+  "Ignore ANSI color codes in a string"
+  (with-temp-buffer
+    (insert string-with-codes)
+    (ansi-color-apply-on-region (point-min) (point-max))
+    (buffer-string)))
+#+end_src
+
+#+RESULTS:
+: repl-driven-development
+
+#+name: startup-code
+#+begin_src emacs-lisp  :tangle ~/repl-driven-development/repl-driven-development.el
+(defun rdd---insertion-filter (proc string)
+  "Src: https://www.gnu.org/software/emacs/manual/html_node/elisp/Filter-Functions.html"
+  (when (and repl-driven-development--insert-into-repl-buffer (buffer-live-p (process-buffer proc)))
+    (with-current-buffer (process-buffer proc)
+      (let ((moving (= (point) (process-mark proc))))
+        (save-excursion
+          (goto-char (process-mark proc))
+         (let (buffer-read-only)(insert (rdd---ignore-ansi-color-codes string))) ;; Main difference
+          (set-marker (process-mark proc) (point)))
+        (if moving (goto-char (process-mark proc)))))))
+#+end_src
+
+#+RESULTS:
+: rdd---insertion-filter
+
+#+name: startup-code
+ #+begin_src emacs-lisp  :tangle ~/repl-driven-development/repl-driven-development.el
+(defvar repl-driven-development/echo-duration 5)
+ #+end_src
+
+ #+RESULTS:
+ : repl-driven-development/echo-duration
+
+** Lisp Postamble                                                 :noexport:
+  :PROPERTIES:
+  :CUSTOM_ID: Postamble
+  :END:
+#+BEGIN_SRC emacs-lisp   :tangle ~/repl-driven-development/repl-driven-development.el
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(provide 'repl-driven-development)
+
+;;; repl-driven-development.el ends here
+#+END_SRC
+* Teaching a runtime, *[[green:incrementally]]*, to be a web server 🍽️ 🔁 🤖
+
+#+html: <center> <em>
+/RDD by example/: Let's start with a JavaScript runtime and incrementally turn it
+into a web server.
+#+html: </em> </center>
+
+_“RDD ≈ Programming as Teaching”:_ Start from a program that already works and
+“teach it” to be the program we actually want. This makes /programming a
+goal-directed activity/.
+
+Below we demonstrate this idea by starting a runtime and, like talking to a
+person, we teach it new behaviours. Once it has all the desired behaviours, then
+we're done and the text we've written (in our editor) is the resulting program.
+Most importantly, we /actively interact with the running program as it evolves/;
+where each “teaching step” is influenced by observing the program's reactions
+to various stimuli (e.g., how things look, how they function, etc).
+
+# i.e., we add features to it until it becomes the program we want, moreover
+# each feature is immediately tested since the program is live.
+
+** The “𝒳 as teaching” meme :details:
+
++ The “𝒳 as teaching” meme is about /accomplishing the goal 𝒳 as if you were
+  talking to a friend in-person, explaining how to do something./
+
++ Almost everything in programming can stand-in for 𝒳; e.g., writing a function
+  or a git commit is a good way to ‘teach’ your colleagues how to improve the
+  code-base ---as such, if the function/commit does “too much” then it is a
+  “poor teacher” and so not ideal.
+
++ Related video: [[https://www.youtube.com/watch?v=VEXaUHNmpQw&t=1520s][“How to Write a Great Research Paper (7 Excellent Tips)” by Simon Peyton Jones]].
+
+** <em>Wait, I already do this RDD stuff everyday, in the shell!</em> :details:
+
+You /can/ *[[green:“discover”]]* a bash script by running various incantations at the
+terminal, pressing the up-arrow key, tweaking your incantation ---and repeating
+until you're happy with the result. In this way, you are teaching the shell a
+new skill ---by repeatedly checking whether it can perform the skill and if not,
+then refining your definitions.
+
+#+html: <center>
+/Anytime you execute a query, in some system, you're using a read-evaluate-print-loop!/
+#+html: </center>
+
+Examples include: Writing shell & SQL queries, visiting web-pages by writing
+URLs, exploring HTTP APIs using curl/[[https://httpie.io/docs/cli/json][httpie]], and using the JavaScript Console in
+your browser.
+
+:boring_details:
+Indeed, the following popular tools are either entirely
+driven by a REPL or make great use of a REPL:
++ SQL ::
+  You *[[green:“discover”]]* the query you want, by incrementlly (1) running a number
+  of queries, (2) seeing the results, then (3) tweaking the previous query;
+  until you're happy with the resulting output.
+  - You can “modify the running system” in this case by adding or dropping
+    tables to the database.
++ shell :: Query & modify your operating system
+  - You /can/ *[[green:“discover”]]* a bash script by running various incantations at
+    the terminal, pressing the up-arrow key, tweaking your incantation ---and
+    repeating until you're happy with the result.
++ curl/[[https://httpie.io/docs/cli/json][httpie]] :: Explore http APIs
+# + [[https://jqlang.github.io/jq/][jq]] :: Explor JSON blobs
++ JS Console in your browser :: Inspect the state of objects during a running system.
++ URL :: The URL text area in your web browser is used to see HTML documents
+  residing on machines located elsewhere, by using The Internet infrastructure.
+:End:
+
+*red:Sadly,* the /interface/ to such REPLs is generally very limited. There is no
+syntax highlighting, no code competition, it is difficult to work with
+multi-line input. This article proposes instead to use /your editor as the
+interface to a REPL/: You write some code in your feature-rich editor then press
+some keys to have /only the newly written code/ executed.
+
+** Actual example :ignore:
+
+# Make a server, start it, then with RDD alter the request handler
+# until we've made something we want!
+
+--------------------------------------------------------------------------------
+
+| Goal: Make an web server with a route =localhost:3030/about= that shows information about the user's environment variables. |
+
+First,
+
+#+begin_src emacs-lisp :tangle nil
+   ;; C-x C-j now evaluates arbitrary JavaScript code, I'd also like docs for JS and Express
+   (repl-driven-development [C-x C-j] "node" :docs "javascript express")
+#+end_src
+
+Then, here's how we do this ...
+
+Visit http://localhost:3030/about, if that works, then we're done!
+
+# Alternative to specifying full path:
+# export NODE_PATH=/usr/local/lib/node_modules
+#
+#+begin_src javascript
+// First get stuff with C-x C-e:
+// (async-shell-command "npm install -g express axios@0.21.1")
+
+let app = require('/usr/local/lib/node_modules/express')()
+let server = app.listen(3067) // 📚 Press “C-u C-u C-x C-j” to see docs about “listen” ;-)
+
+// Now visit http://localhost:3030/
+// ... and see “Cannot GET /”
+// ... Neat, it works but it does nothing! Importantly it works!
+
+// Let's add a route...
+let visited = 1
+app.get('/hi', (req, res) => res.send(`Hello × ${visited++}`))
+
+// Now visit:  http://localhost:3030/hi
+// Refresh the page a few times 😉
+
+// Excellent; let's add an end-point to return the variables in scope
+app.get('/about', (req, res) => res.send(html()) )
+
+// Whoops, there's no “html”! So we see an error!
+// Let's define that!
+let
+html = _ => "<div style='color:green; background-color:cyan'>" + info() + "</div>"
+
+// Whoops, there's no “info”! So we see an error!
+// Let's define that!
+let info = function () { return {visited, user: process.env.USER, time: new Date() } }
+
+// Uh-oh, we see “[object Object]” since we didn't convert the
+// JS object into a JSON string, so let's fix that!
+html = _ => "<div style='color:green; background-color:cyan'>" + JSON.stringify(info(), null, 3 /* indentation */) + "</div>"
+
+/* uh-oh, the output doesn't look good; let's redefine `html` using <pre> tags.
+
+   pre tells the browser engine that the content inside is pre-formatted and it can be displayed without any modification. So browser will not remove white spaces, new lines etc. code is for making it more semantic and denotes that the content inside is a code snippet. It has nothing to with formatting.
+ ,*/
+html = _ => `<h1>Welcome, visitor ${visited++}!</h1><pre style='color:green; background-color:cyan'>` + JSON.stringify(info(), null, 3 /* indentation */) + "</pre>"
+
+
+// Notice how we built this end-point from the top-down: We knew what we wanted, and saw some
+// errors ---on the client side--- then fixed them right here, with no reloading!
+
+// Actually, let's add more info: It's not enough to see the current user, let's see all environvment variable values
+info = _ => ({user: process.env, time: new Date(), platform: os.platform(), architecture: os.arch(), home: os.homedir(), user: os.userInfo(), machine: os.machine()})
+
+// So cool!
+
+// Eventually, consider closing the server!
+server.close()
+#+end_src
+
+TODO: Make the above into a short youtube video/*GIF*, where I keep
+“improving” the definition of =html= / =info= and see it live!
+# + Eg start with =html= referencing =info=, to see the “no defn error”,
+#  then define =info=, then inline it in =html=, then keep cycling on =html=.
+
+#+begin_box RDD is about Unobtrusive Redefining
+Notice that our demonstration above is mostly redefining things, making
+interactive observations about them, then redefining them to be better.
+
+Most importantly, this redefining cycle is not impeded by the need to restart
+the program each time.
+
+Instead, the already-working program “learns” what we have taught it ---and
+continues to be a working program.
+#+end_box
+* Programming   ≈   Definitions and re-definitions
+
+In the previous section we saw how easy it was to add & redefine things /without/
+having to restart our program; as such we have the motto “RDD ≈ Interactive
+Programming”.
+# Think Agda!
+
+#+begin_center
+/In RDD, we can green:re-define functions & types live, as the program is
+running! @@html:<br>@@ Future uses of the function/type will use the new definition!/
+#+end_center
+
+In stark contrast, the traditinal approach forces us to restart the whole
+program whenever we make a modification, no matter how small!
+That's like rebuilding your entire house when you only wanted to put up a shelf!
+🤮
+
+--------------------------------------------------------------------------------
+
+| Let's explore the issue of redefinitions a bit more. |
+#
+# In this section, minimal working code fragments will be in Java.  Since we
+# already have kbd:C-x_C-j in this article for “J”avaScript code, let's define
+# kbd:C-x_j to execute “J”ava code ---using only one “C-”.
+# #+begin_src emacs-lisp
+# ;; Now “C-x C-g” executes Java code
+# (repl-driven-development [C-x j] "jshell --enable-preview"
+#                          :prompt "\njshell>")
+# #+end_src
+
+# COMMENT Redefinitions in Java ---and Common Lisp
+
+If you define a function $f$ and declare $x = f()$, but then decide to redefine
+$f$, what should happen to $x$?  Well, $x$ is already declared and already has a
+value, so nothing happens to it!  If you want it to be the result of the
+re-defined $f$, then re-evaluate $x = f()$. 👍
+
+:Neato_aside:
+Thanks to the λ-Calculus, everything can be technically thought of as a function.
+As such, data-types are fancy functions (Aside: In JavaScript, functions can be used
+as “classes” that are instantiated with the “new” keyword!), and so re-defining
+a data-type does not impact any existing instances: Existing instances are objects
+of a class that we no longer have access to.
+:End:
+
+orange:However, when /re-defining a data-type/class/record/struct/, languages such
+as Java and Common Lisp, will insist that any previously defined instances now
+conform to the new data-type formulation! Likewise, for methods whose inputs are
+of the old formulation, they need to be updated to the new one.
+
+Take a look at this interactive Java session...
+#+begin_src java
+record Person(String name) { }
+var me = new Person("Musa"); // New instance.
+ // Can operate on it, using a functional *variable* or a *method*
+Function<Person, String> speak = p -> p.name() + " says HELLO!"
+String greet(Person p) { return "Hello, I'm " + p.name(); }
+
+
+// Redefining our data-type
+record Person(int age) { }
+//
+// ⇒
+//  record Person(int age) { }
+// |  replaced record Person
+// |    update replaced variable me which cannot be referenced until this error is corrected:
+// |      incompatible types: java.lang.String cannot be converted to int
+// |      var me = new Person("Musa");
+
+
+// ⇒ As such, since “me” cannot be updated to be an instance of the reformulated data-type, it is kicked out of scope!
+me    // ⇒ No such variable is declared!
+speak // ⇒ No such *variable* is declared!
+greet // ⇒ No problem, but can only run it if you define a  Person::name  instance method! 😲
+
+greet(new Person(12)) // ⇒ Attempted to call method greet(Person) which cannot be
+                      // invoked until method name() is declared
+#+end_src
+
+Whereas Java says you can no longer use stale instances, Common Lisp tries to
+“re-initialise” existing instances ---and prompts the user if it cannot do so
+automatically. The Common Lisp approach may have benefits, but it comes at a
+dangerous cost: /Your runtime is now no longer tied to text you've written!/ It is
+for this reason, that melpa:repl-driven-development intentionally does not allow
+users to run code in the ~*REPL/⋯*~ buffers: If you want to modify the running
+system, write your modification down (in your working buffer, then save,) then
+evaluate it.
+# (I.e., this is why I'm /not/ using Emacs’ comint.)
+# TODO: Then again, I could use comint and just make them read-only. Something
+# to think about.
+# Then again, I've never written a real Common Lisp program. 🤷‍♂️ 🙃
+
+* Concluding Remarks
+#+begin_box Some languages have tight integration with Emacs!
+Programs in these languages are essentially “constructed incrementally” by
+“interactive conversations” with Emacs (as the REPL).
+
+#+begin_center
+badge:Elisp|Colourful PDF CheatSheet|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs
+
+badge:Clojure|Colourful PDF CheatSheet|success|https://alhassy.github.io/ClojureCheatSheet/CheatSheet.pdf|awslambda
+
+badge:Agda|Colourful PDF CheatSheet|success|https://alhassy.github.io/AgdaCheatSheet/CheatSheet.pdf|haskell
+
+badge:Coq|Colourful PDF CheatSheet|success|https://alhassy.github.io/CoqCheatSheet/CheatSheet.pdf|twitter
+
+badge:Oz|Colourful PDF CheatSheet|success|https://alhassy.github.io/OzCheatSheet/CheatSheet.pdf|pastebin
+
+#+end_center
+
+The first such language is /Common Lisp/.
+Which also inspired a similar setup for Smalltalk ---e.g., Pharo and Squeak.
+#+end_box
+
+I hope you've enjoyed this article!
+
+Bye! 👋 🥳
+
+* Appendix: Recipes for a number of languages
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+** JavaScript ---and a minimal server             :details_javascript:
+
+#+begin_center
+badge:JavaScript|Colourful PDF CheatSheet|success|https://alhassy.github.io/JavaScriptCheatSheet/CheatSheet.pdf|javascript
+#+end_center
+
+We can set up a JavaScript REPL in the background as follows...
+#+begin_src emacs-lisp :tangle nil
+   ;; C-x C-j now evaluates arbitrary JavaScript code
+   (repl-driven-development [C-x C-j] "node -i")
+#+end_src
+
+That's it! Press kbd:C-x_C-e on the above line so that kbd:C-x C-j will now
+evaluate a selection, or the entire line, as if it were JavaScript code.
+- Why kbd:C-x C-j  ?  Well, kbd:C-x_C-“e” for Emacs Lisp code, and kbd:C-x_C-“j”
+  for JavaScript code!
+- For instance, copy-paste the following examples into a JavaScript file ---or just
+  press kbd:C-x C-j /in any buffer/ to evaluate them!
+
+#+begin_src javascript
+1 + 2                                     // ⮕ 3
+
+1 + '2'                                   // ⮕ '12'
+
+let me = {name: 'Jasim'}; Object.keys(me) // ⮕ ['name']
+
+me.doesNotExist('whoops')                 // ⮕ Uncaught TypeError
+#+end_src
+
+All of these results are echoed inline in an overlay, by default.
+Moreover, there is a *REPL* buffer created for your REPL so you
+can see everything you've sent to it, and the output it sent
+back.  This is particularly useful for lengthy error messages,
+such as those of Java, which cannot be rendered nicely within an
+overlay.
+
+How this works is that Emacs spawns a new “node -i” process, then
+kbd:C-x_C-j sends text to that process. Whenever the process emits
+any output ---on stdout or stderr--- then we emit that to the
+user via an overlay starting with “⮕”.
+
+Finally, “C-h k  C-x C-j” will show you the name of the function
+that is invoked when you press C-x C-j, along with minimal docs.
+
+A useful example would be a minimal server, and requests for it.
+
+#+begin_src javascript
+// First get stuff with C-x C-e:
+// (async-shell-command "npm install -g express axios")
+
+let app = require('express')()
+let clicked = 1
+app.get('/hi', (req, res) => res.send(`Hello World × ${clicked++}`))
+
+let server = app.listen(3000)
+// Now visit   http://localhost:3000/hi   a bunch of times!
+
+// Better yet, see the output programmatically...
+let axios = require('axios')
+// Press C-x C-j a bunch of times on the following expression ♥‿♥
+console.log((await axios.get('http://localhost:3000/hi')).data)
+
+// Consider closing the server when you're done with it.
+server.close()
+#+end_src
+
+# (use-package plz) ;; An HTTP library for Emacs
+# (plz 'get \"http://localhost:3000/hi\")
+
+Just as “Emacs is a Lisp Machine”, one can use “VSCodeJS” to use
+“VSCode as a JS Machine”.
+See http://alhassy.com/vscode-is-itself-a-javascript-repl.
+
+** Python :details_python_#add8e6:
+
+#+begin_center
+badge:Python|Colourful PDF CheatSheet|success|https://alhassy.github.io/PythonCheatSheet/CheatSheet.pdf|python
+#+end_center
+
+We can set up a Python REPL in the background as follows...
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-p now evaluates arbitrary Python code
+    (repl-driven-development [C-x C-p] "python3 -i")
+#+end_src
+
+Example use...
+#+begin_src python
+1 + 2             # ⮕ 3
+
+hello = 'world!'  # (No output; this is an effectful operation)
+
+print(hello)      # ⮕ world!
+
+2 + 'hi'          # 🚫 TypeError: unsupported operand type(s) for +
+#+end_src
+
+Learn more by reading...  [[https://cs.lmu.edu/~ray/notes/pythonnetexamples/][Python: A Gentle Introduction to Socket Programming]]
+
+** Java                                                        :details_java:
+
+#+begin_center
+badge:Java|Colourful PDF CheatSheet|success|https://alhassy.com/java-cheat-sheet.pdf|coffeescript
+#+end_center
+
+We can set up a Java REPL in the background as follows...
+#+begin_src emacs-lisp
+(repl-driven-development [C-x C-j] "jshell --enable-preview" :prompt "jshell>")
+#+end_src
+
+Now, we can select the following and press =C-x C-j= to evaluate the Java code:
+#+begin_src java :tangle no
+// Ensure you're not fullscreen, and you'll see a dialog window appear.
+import javax.swing.*;
+JOptionPane.showMessageDialog(new JFrame(), "Super nice!");
+#+end_src
+
+Or doing algebraic datatypes in Java:
+#+begin_src java :tangle no
+sealed interface Maybe {
+    record None() implements Maybe {}
+    record Just(int x) implements Maybe {}
+}
+
+var thisPrettyPrintsNicelyInTheREPL = new Maybe.Just(3);
+
+new Maybe.Just(3).equals(new Maybe.Just(3)) // yay
+#+end_src
+
+** Clojure                            :details_clojure:
+
+We can set up a REPL in the background as follows...
+#+begin_src emacs-lisp
+   ;; C-x C-k now evaluates arbitrary Clojure code
+   (repl-driven-development [C-x C-k] "clojure" :prompt "user=>")
+#+end_src
+
+For example...
+#+begin_src clojure
+(+ 1 2) ;; ⮕ 3
+
+(defn square [x] (* x x)) ;; ⮕ #'user/square
+(square 3) ;; ⮕ 9
+#+end_src
+
+** Haskell                                           :details_haskell_#add8e6:
+
+#+begin_center
+badge:Haskell|Colourful PDF CheatSheet|success|https://alhassy.github.io/HaskellCheatSheet/CheatSheet.pdf|awslambda
+#+end_center
+
+We can set up a REPL in the background as follows...
+#+begin_src emacs-lisp :tangle nil
+   ;; C-x C-h now evaluates arbitrary Haskell code
+   (repl-driven-development [C-x C-h] "ghci" :prompt "ghci>")
+#+end_src
+
+For example...
+#+begin_src haskell
+-- Sum of the first 100 squares
+sum [ x ** 2 | x <- [1..100]] -- ⇒ 338350.0
+
+-- The positive evens at-most 12
+[x | x <- [1..12], x `mod` 2 == 0] -- [2,4,6,8,10,12]
+
+-- Define a function...
+myLast = head . reverse
+
+-- Then use it...
+myLast [1, 2, 3] -- ⇒ 3
+#+end_src
+
+Note that Haskell has “typed holes” with the syntax =_A=:
+#+begin_src haskell :tangle nil
+1 + _A  -- ⇒ Found hole: _A::a; it :: forall {a}. Num a = a
+#+end_src
+
+Another language with typed holes is Arend...
+
+** Arend: Quickly making a terse Emacs interface for a language without one  :details_recipe:
+
+The [[https://arend-lang.github.io/download#console-application][Arend Theorem Prover]] has an IntelliJ interface (since it's a JetBrains proof
+assistant), but no Emacs counterpart ---which may be annoying for Agda/Coq
+programmers accustomed to Emacs but want to experiment with Arend.
+
+We can set up an Arend REPL in the background as follows...
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-a now evaluates arbitrary Arend code
+    (repl-driven-development [C-x C-a]
+                             (format "java -jar %s -i"
+                                     (f-expand "~/Downloads/Arend.jar")))
+#+end_src
+
+Then,
+#+begin_src arend :tangle nil
+1 Nat.+ 1 -- ⇒ 2
+:type 4  -- ⇒ Fin 5
+
+-- Declare a constant
+\\func f => 1
+:type f -- ⇒ Nat
+f -- ⇒ 1
+
+-- Declare a polymorphic identity function, then use it
+\\func id {A : \\Type} (a : A) => a
+id 12  -- ⇒ 12
+
+-- Arend has “typed holes”
+1 Nat.+ {?}  -- ⇒ Nat.+{?}: Goal: Expectedtype: Nat
+#+end_src
+
+** PureScript  :details_purescript_#add8e6:
+
+First =brew install spago=, then we can set up a PureScript REPL in the background
+as follows...
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-p now evaluates arbitrary PureScript code
+    (repl-driven-development [C-x C-p] "spago repl")
+#+end_src
+
+For example....
+#+begin_src purescript :tangle nil
+import Prelude
+
+-- Define a function
+add1 = (\x -> x + 1)
+
+-- Use the function
+add1 2    -- ⇒ 3
+
+-- Experiment with a typed hole
+1 + ?A  -- ⇒ Hole ?A has the inferred type Int
+#+end_src
+
+** Idris  :details_idris:
+
+First =brew install idris2=, then we can set up an Idris REPL in the background as
+follows...
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-i now evaluates arbitrary Idris code
+    (repl-driven-development [C-x C-i] "idris2")
+#+end_src
+
+Here's some random code...
+#+begin_src purescript :tangle nil
+-- Like Lisp, Idris uses “the” for type annotations
+the Nat 4  -- ⇒ 4 : Nat
+
+with List sum [1,2,3] -- ⇒ 6
+
+-- defining a new type (REPL specific notation)
+:let data Foo : Type where Bar : Foo
+
+:t Bar -- ⇒ Foo
+
+-- Experiment with a typed hole [Same notation as Haskell]
+1 + ?A -- prim__add_Integer 1 ?A
+#+end_src
+
+** Racket  :details_racket_#add8e6:
+
+| Racket is a modern programming language in the Lisp/Scheme family. |
+
+First =brew install --cask racket=, then we can set up an Racket REPL in the
+background as follows...
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-i now evaluates arbitrary Racket code
+    (repl-driven-development [C-x C-r] "racket -I slideshow")
+#+end_src
+
+Here's some random code...
+#+begin_src racket :tangle nil
+(define (series mk) (hc-append 4 (mk 5) (mk 10) (mk 20)))
+
+;; Shows 3 circles of increasing radius, in an external window
+(show-pict (series circle))
+#+end_src
+
+Meeting Racket for the first time is probably best done with /DrRacket/.
+# - Learning it can be done with a nice Emacs-integrated REPL ---see [[https://beautifulracket.com/][Beautiful Racket by Matthew Butterick]].
+
+** TODO COMMENT Prolog ---saving the REPL for future use         :not_ideal_use_case:
+
+#+begin_center
+badge:Prolog|Colourful PDF CheatSheet|success|https://alhassy.github.io/PrologCheatSheet/CheatSheet.pdf|prolog
+#+end_center
+
+First get the Prolog interpreter with =brew install swi-prolog=, then we can set
+up an Racket REPL in the background as follows...
+
+#+begin_src elisp
+    ;; C-x C-p now evaluates arbitrary Prolog code
+    (setq prolog (repl-driven-development [C-x C-p] "swipl"))
+#+end_src
+
+Notice that we saved the doc:prolog variable... 🤖
+- This is done since Prolog is “modal”: One /declares/ facts, then /queries/ them.
+- To avoid a query accidentally being considered a delaraction of a true fact,
+  we use =[user].= to begin declaring facts, then invoke :doc:process-send-eof to
+  the Prolog REPL to begin querying our database.
+
+:Idea_To_improve_RDD_el:
+#+begin_src elisp
+;; TODO: Let repl-driven-development take param :before, which is a function that looks at the input and decides what to do with it; e.g., by sending something specific to the process. Use case: If it sees “%\s*begin facts” then it sends “[user].” and echos “Now declaring facts, evaluate “% end facts” to begin querying your fact database.” Likewise “%\s* end facts” evaluates (process-send-eof prolog).
+;;
+;; Add another param :after, that does subsequent processing after a region is sent to the repl.
+;; USE CASE: In prolog, we repeatedly send “;” until we get empty feedback, and upon each send we move the curosr down so that the results are all on different lines. This is a way to see all possible solutions in prolog, with the saftey net of 30 “;” sent! (e.g., in case the user evaluates a massive predicate!)
+#+end_src
+:End:
+
+First, let's declare some facts.
+#+begin_src prolog
+% See: https://www.swi-prolog.org/FAQ/ToplevelMode.html
+% and: https://stackoverflow.com/questions/4084427/how-to-create-a-fact-in-swi-prolog
+[user].
+parent(musa, yusuf).
+parent(musa, zaynab).
+parent(malak, yusuf).
+% (process-send-eof prolog) ;; C-x C-e to finish declarations
+#+end_src
+
+Now, we can continue using kbd:C-x C-p to query facts.
+#+begin_src prolog
+% Who are the parents of yusuf?
+parent(X, yusuf).
+; % This shows more solutions: Press C-x C-p to see them!
+
+% Who are the children of musa?
+parent(musa, X).
+
+% Actually see all solutions
+findall(X, parent(musa, X), Xs).
+#+end_src
+** TODO COMMENT Ruby
+
+#+begin_center
+badge:Ruby|Colourful PDF CheatSheet|success|https://alhassy.github.io/RubyCheatSheet/CheatSheet.pdf|ruby
+#+end_center
+
+We can set up a REPL in the background as follows...
+#+begin_src emacs-lisp :tangle nil
+   ;; C-x C-r now evaluates arbitrary Ruby code
+   (repl-driven-development [C-x C-r] "irb --inf-ruby-mode" :prompt "irb(main):.*>")
+#+end_src
+
+For example...
+#+begin_src ruby
+2 + 2
+
+33 + 4
+
+5.times { print "Odelay!" } # ⮕ Odelay! Odelay! Odelay! Odelay! Odelay! 5
+
+['ruby', 'is', 'readable'].map { | food | food.capitalize } # ⮕ ["Ruby", "Is", "Readable"]
+
+require 'tk'
+#+end_src
+** TODO COMMENT TypeScript
+
+We can set up a REPL in the background as follows...
+#+begin_src emacs-lisp :tangle nil
+   ;; C-x C-j now evaluates arbitrary JavaScript code
+   (repl-driven-development [C-x C-t] "npx ts-node")
+#+end_src
+
+** COMMENT F#          :Does_not_work:fsharpi_requires_ansi_term__not_eshell:
+
+badge:F#|Colourful PDF CheatSheet|success|https://alhassy.github.io/FSharpCheatSheet/CheatSheet.pdf|f-sharp
+
+#+begin_center
+badge:OCaml|Colourful PDF CheatSheet|success|https://alhassy.github.io/OCamlCheatSheet/CheatSheet.pdf|OCaml
+#+end_center
+
+First =brew install mono=, then we can set up an F# REPL in the background as
+follows...
+#+begin_src emacs-lisp :tangle nil
+    ;; C-x C-j now evaluates arbitrary F#Script code
+    (repl-driven-development [C-x C-j] "fsharpi")
+#+end_src
+
+#+begin_src fsharp :tangle nil
+-- F# has “ranges with a step”
+[0..3..14];;     -- ⇒ [0; 3; 6; 9]
+
+-- Which are a shorthand for guarded comprehensions
+[for i in 0..14 do if i % 3 = 0 then yield i];;
+
+-- Experiment with a typed hole
+1 + __;;   -- ⇒ The type 'obj' does not match the type 'int'
+#+end_src
+
+If you like F#, take a look at [[https://fstar-lang.org/][F*: A Proof-Oriented Programming Language]].
+
+** TODO COMMENT Java MWE
+
+#+begin_center
+badge:Java|Colourful PDF CheatSheet|success|https://alhassy.com/java-cheat-sheet.pdf|coffeescript
+#+end_center
+
+We can set up a Java REPL in the background as follows...
+#+begin_src emacs-lisp
+(repl-driven-development [C-x C-j] "jshell --enable-preview" :prompt "jshell>")
+#+end_src
+
+Now, we can select the following and press =C-x C-j= to evaluate the Java code:
+#+begin_src java :tangle no
+// Ensure you're not fullscreen, and you'll see a dialog window appear.
+import javax.swing.*;
+JOptionPane.showMessageDialog(new JFrame(), "Super nice!");
+#+end_src
+
+Or doing algebraic datatypes in Java:
+#+begin_src java :tangle no
+sealed interface Maybe {
+    record None() implements Maybe {}
+    record Just(int x) implements Maybe {}
+}
+
+var thisPrettyPrintsNicelyInTheREPL = new Maybe.Just(3);
+
+new Maybe.Just(3).equals(new Maybe.Just(3)) // yay
+#+end_src
+
+* COMMENT MELPA Checks
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-MELPA-Checks
+  :END:
+https://github.com/riscy/melpazoid
+
+1. In Github repo: Add file ⇒ Create new file ⇒ License.txt ⇒ Select template ⇒ GNU 3
+2. Ensure first line ends with: -*- lexical-binding: t; -*-
+3. Include appropriate standard keywords;
+   #+begin_src emacs-lisp :tangle no
+(pp finder-known-keywords)
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   ((abbrev . "abbreviation handling, typing shortcuts, and macros")
+    (bib . "bibliography processors")
+    (c . "C and related programming languages")
+    (calendar . "calendar and time management tools")
+    (comm . "communications, networking, and remote file access")
+    (convenience . "convenience features for faster editing")
+    (data . "editing data (non-text) files")
+    (docs . "Emacs documentation facilities")
+    (emulations . "emulations of other editors")
+    (extensions . "Emacs Lisp language extensions")
+    (faces . "fonts and colors for text")
+    (files . "file editing and manipulation")
+    (frames . "Emacs frames and window systems")
+    (games . "games, jokes and amusements")
+    (hardware . "interfacing with system hardware")
+    (help . "Emacs help systems")
+    (hypermedia . "links between text or other media types")
+    (i18n . "internationalization and character-set support")
+    (internal . "code for Emacs internals, build process, defaults")
+    (languages . "specialized modes for editing programming languages")
+    (lisp . "Lisp support, including Emacs Lisp")
+    (local . "code local to your site")
+    (maint . "Emacs development tools and aids")
+    (mail . "email reading and posting")
+    (matching . "searching, matching, and sorting")
+    (mouse . "mouse support")
+    (multimedia . "images and sound")
+    (news . "USENET news reading and posting")
+    (outlines . "hierarchical outlining and note taking")
+    (processes . "processes, subshells, and compilation")
+    (terminals . "text terminals (ttys)")
+    (tex . "the TeX document formatter")
+    (tools . "programming tools")
+    (unix . "UNIX feature interfaces and emulators")
+    (vc . "version control")
+    (wp . "word processing"))
+   #+end_example
+4. Use #' instead of ' for function symbols
+5. Use ‘-’ as a separator, not ‘/’.
+6. Consider reading:
+   https://github.com/bbatsov/emacs-lisp-style-guide#the-emacs-lisp-style-guide
+7. Use cl-loop, cl-first, cl-second, cl-third instead of loop, first, second, third
+8. byte-compile and address any concerns
+9. =M-x checkdoc= on the lisp file to ensure it passes expected style issues.
+   - Symbols =nil, t= should not appear in single quotes.
+   - (progn (setq fill-column 80) (display-fill-column-indicator-mode))
+10. Ensure it byte-compiles without any problems.
+11. Ensure that package-linter raises no issues; i.e., the following has no result.
+     #+BEGIN_SRC emacs-lisp :tangle no
+ (use-package package-lint)
+ (-let [it "repl-driven-development.el"]
+  (ignore-errors (kill-buffer it))
+  (find-file-other-window it)
+  (package-lint-buffer it)
+  (switch-to-buffer "*Package-Lint*")) ;; Should say: “No issues found.”
+ #+END_SRC
+12. Commit and push everything in your project's repo!
+13. Create a recipe file by invoking: M-x package-build-create-recipe
+    ---first: (use-package package-build)
+    - Place it in: melpa/recipes/
+    - The name of the file should be the name of the package, no extension.
+
+    *Or:* Uncomment this section & just tangle the following.
+           #+BEGIN_SRC emacs-lisp :tangle ~/melpa/recipes/repl-driven-development
+    (repl-driven-development :fetcher github :repo "alhassy/repl-driven-development")
+        #+END_SRC
+14. Ensure the recipe builds successfully:
+    #+BEGIN_SRC shell :tangle no
+    cd ~/melpa; rm ~/melpa/packages/repl-driven-development-*; make recipes/repl-driven-development
+    #+END_SRC
+
+    If you have trouble, make a file "~/bin/emacs" with
+    the following which ensures “emacs” can be run
+    from the command line within macos.
+    #+begin_src shell :tangle "~/bin/emacs"
+#!/bin/sh
+/Applications/Emacs.app/Contents/MacOS/Emacs "$@"
+#+end_src
+
+15. Ensure the package installs properly from within Emacs:
+
+      #+BEGIN_SRC emacs-lisp :tangle no
+(package-install-file "~/melpa/packages/repl-driven-development-")
+#+END_SRC
+
+16. Produce a dedicated pull request branch
+
+    #+begin_src emacs-lisp :tangle no
+    (magit-status "~/melpa")
+    #+end_src
+
+    + ~F p~ to update the repo.
+    + Now =b c= to checkout a new branch: Select ~master~ then name the branch by
+      the name of the package, e.g., ~repl-driven-development~.
+    + Commit your recipe.
+    + Push this branch on your melpa fork: ~P p~.
+    + Go to the https://github.com/melpa/melpa repo and
+      there'll be a big green PR button ^_^
+* COMMENT Making ~README.org~
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-Making-README-org
+  :END:
+
+  Evaluate the following source block with ~C-c C-c~ to produce a ~README~ file.
+
+#+NAME: make-readme
+#+BEGIN_SRC emacs-lisp
+(with-temp-buffer
+
+,#+EXPORT_FILE_NAME: README.md
+,#+HTML: <h1> An Emacs interface to the Quran and the Bible: Interactive lookup, Org-mode links, tooltips, and Lisp look-ups </h1>
+# +HTML: <h2>  ¯\\_(ツ)_/¯  </h2>
+,#+OPTIONS: toc:nil d:nil broken-links:t
+,#+html: <div align=\"center\">
+#   +INCLUDE: ~/repl-driven-development/repl-driven-development.org::#Abstract :only-contents t
+,#+html: </div>
+
+,#+html: <div align=\"center\">
+Let's use Org-mode links to look-up Quranic and Biblical verses!
+
+“Live” examples & documentation: https://alhassy.github.io/repl-driven-development/
+
+badge:repl-driven-development|1.3|informational|https://github.com/alhassy/repl-driven-development|Gnu-Emacs
+
+# #+html: <a href=\"https://melpa.org/#/repl-driven-development\"><img alt=\"MELPA\" src=\"https://melpa.org/packages/repl-driven-development-badge.svg\"/></a>
+# #+html: </span>
+
+tweet:https://github.com/alhassy/repl-driven-development
+badge:contributions|welcome|green|https://github.com/alhassy/repl-driven-development/issues
+
+badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
+badge:|buy_me_a coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+
+badge:Hire|me|success|https://alhassy.github.io/about
+
+,#+html: </div>
+
+,#+TOC: headlines 2
+
+,* Short Example
+,#+attr_html: :width 600px
+file:images/short_example.png
+
+,* Long Example
+,#+attr_html: :width 600px
+file:images/long_example.png
+
+,* Summary
+,#+INCLUDE: ~/repl-driven-development/repl-driven-development.org::#Summary :only-contents t
+#  ,* Minimal working example
+#  #+INCLUDE: ~/repl-driven-development/repl-driven-development.org::#Minimal-working-example :only-contents t
+")
+    (let ((org-export-use-babel nil) (org-export-with-broken-links t))
+      (org-mode)
+      (org-md-export-to-markdown)))
+#+END_SRC
+
+#+RESULTS: make-readme
+: README.md
+
+*Then* use =grip= to see that this looks reasonable.
