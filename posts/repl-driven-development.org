@@ -6,7 +6,7 @@
 #+toc: headlines 2
 #+author: [[https://www.alhassy.com][Musa Al-hassy]]
 #+email: alhassy@gmail.com
-#+date: <2023-05-23 Tue>
+#+date: <2023-09-08 Fri>
 # #+filetags: java python lisp
 #+fileimage: rdd-benefits.png
 #+filetags: repl-driven-development vscode emacs javascript java python lisp clojure haskell arend purescript idris racket
@@ -991,6 +991,217 @@ multi-line input. This article proposes instead to use /your editor as the
 interface to a REPL/: You write some code in your feature-rich editor then press
 some keys to have /only the newly written code/ executed.
 
+** RDD ⇒ Use your favourite language as a Bash replacement scripting language :ignore:
+:PROPERTIES:
+:CUSTOM_ID: RDD-Use-your-favourite-language-as-a-Bash-replacement-scripting-language
+:END:
+
+#+html: <details> <summary> <strong style="color:green"> <em> RDD let's you use your favourite language as a Bash replacement scripting language</em></strong></summary>
+
+#+begin_quote
+/If your code-base is in language 𝐿, might as well write your scripts in 𝐿 as
+well!/
+#+end_quote
+
+For example, if you want to say run a simple for-loop on a payload of an
+HTTP request then might as well use your favourite language 𝐿 ---and /not/
+Bash. Likewise, want to run a for-loop on the results of a SQL query: Use your
+favourite language 𝐿, not a SQL scripting language that you're not terribly
+comfortable with.
+
+Why script in your favourite language 𝐿, and not Bash?
+1. If your an 𝐿 language developer, writing scripts in 𝐿 lets you make use of
+   all of your existing experience, knowledge, and familiar tool-set of 𝐿.
+2. Stay in the comfort of your favourite IDE: Autocomplete, syntax highlighting,
+   docs, tooltips, etc.
+3. Lots of libraries!
+4. The gain in expressivity & clarity & test-ability.
+5. Rich data structures, error checking, and /compositionality/.
+   - Since Bash only has /unstructured data via strings/, this means to compose
+     two different Bash programs you have to get them to “understand a common
+     structure” and this means you have to convert unstructured data to JSON
+     somehow (e.g., using [[https://github.com/kellyjonbrazil/jc][jc]], which /JSONifies the output of many CLI tools/) or
+     parse it yourself! Might as well use your favourite language, since it
+     probably has support for JSON and has real /structured/ objects.
+6. An 𝐿-REPL is a shell with 𝐿-syntax, and features! ---Since you're actually using 𝐿.
+7. Bash is imperative, but your favourite language is (probably) multi-paradigm
+   ---you can do imperative or more!
+8. /By trying out API calls in your language 𝐿 instead of Bash, you get working
+   code in your language right away that you can build an app around ---no need/
+   /to figure out how to do that later on in your language./
+
+#+begin_quote
+/The next time you need to write a loop in Bash, consider breaking out your REPL
+and seeing what you can come up with instead!/
+
+Slightly paraphrasing from: [[https://www.freecodecamp.org/news/python-for-system-administration-tutorial/][How to Replace Bash with Python as Your Go-To Command Line Language]]
+#+end_quote
+
+*“Bash ↦ JavaScript” Personal anecdote:* One time I automated a bunch of tedious
+tasks at work with Bash by using [[https://github.com/kellyjonbrazil/jc][jc]], which /JSONifies the output of many CLI
+tools/, alongside [[https://jqlang.github.io/jq/][jq]], a JSON query language; along with a friendly-alternative to
+curl known as [[https://github.com/httpie/cli][httpie]]. However, as the Bash incantations grew larger and larger,
+it became more practical to switch to JavaScript and read the http payloads as
+proper JavaScript objects (rather than use /jc/), and quickly work with them via
+the usual JS methods /.map, .filter, .reduce/. With Bash, I used /jq/ and it's
+special syntax, but with JavaScript I just use JS in both places 💐 Finally,
+this automated work required updating JSON configurations, but I wanted the
+result to be pretty-printed for future human readers. Since JSON is literally
+JS, it's most natural to use JS to work with JSON and so that's what I
+did. /Below are 2 very useful methods from this Bash↦JavaScript move/.
+# JSON is literally javascript, so messing with JSON in javascript is natural. Here’s how to pretty print a json file: process.stdout.write(JSON.stringify(JSON.parse(require('fs').readFileSync('myfile.json')),null,2))
+
+*** withJSON: Alter the contents of a JSON file as if it were a JavaScript object :details:
+:PROPERTIES:
+:CUSTOM_ID: withJSON-Alter-the-contents-of-a-JSON-file-as-if-it-were-a-JavaScript-object
+:END:
+#+begin_src javascript
+/** Alter the contents of a JSON file as if it were a JavaScript object.
+ *
+ * - `path : string` is a filepath to a `.json` file.
+ * - `callback : function` is a (possibly async) function that mutates a given JS object.
+ * - `newFile : boolean` indicates whether this is a completely new file, in which case `callback` is provided with an empty object.
+ *
+ * Trying to access a JSON file that does not exist, when not enabling `newFile`, will result in an error.
+ *
+ * Write the JSON file, and format it nicely.
+ *
+ * ### Example use
+ * ```
+ * // Add a new `WOAH` key to the configuration file.
+ * withJSON("~/myConfig.json", data => data.WOAH = 12)
+ * ```
+ *
+ * ### Warning! ---Also Design Decision Discussion
+ *
+ * A purely functional approach would require `callback` to have the shape `data => {...; return data}`.
+ * However, we anticipate that most uses will be to update a field of `data` and so `callback` will
+ * have the shape `data => {data.x = y; return data}` and we want to reduce the ceremony: We work with mutable references,
+ * so that `data => data.x = y` is a sufficient shape for `callback`. However, this comes at the cost that we cannot
+ * wholesale alter a JSON file ---which is an acceptable tradeoff, since this is likely a rare use case.
+ *
+ * ```
+ * withJSON(`~/myfile.json`, data => data = {x: 1, y: 2})      // BAD! Will not alter the underyling JSON file.
+ * withJSON(`~/myfile.json`, data => {data.x = 1; data.y = 2}) // GOOD!
+ * ```
+ *
+ * A program should not just compute, it should also motivate, justify & discuss.
+ * This human nature makes it easier to follow, detect errors, use elsewhere, or extend.
+ * After all, the larger part of the life of a piece of software is maintenance.
+ *
+ * Flawed programs with good discussion may be of more use in the development of related correct code,
+ * than working code that has no explanation.
+ */
+function withJSON(file, callback, newFile) {
+  file = file.replace(/~/g, process.env.HOME)
+  try {
+    let data = newFile ? {} : JSON.parse(fs.readFileSync(file))
+    callback(data)
+    fs.writeFileSync(file, JSON.stringify(data, null, 2))
+  } catch (error) {
+    console.error(`🤯 Oh no! ${error}`)
+    console.error(callback.toString())
+    process.exit(0)
+  }
+}
+#+end_src
+
+*** shell: Run a shell command and provide its result as a string; or crash when there's an error :details:
+:PROPERTIES:
+:CUSTOM_ID: shell-Run-a-shell-command-and-provide-its-result-as-a-string-or-crash-when-there's-an-error
+:END:
+#+begin_src javascript
+/** Run a shell command and provide its result as a string; or crash when there's an error.
+ * This is intentionally synchronous; i.e., everything stops until the command is done executing.
+ *
+ * @param {string} command - A Unix bash incantation to be executed.
+ * @param {boolean} ignore - Whether to actually avoid doing any execution; useful for testing/experimentation.
+ * @returns {string} The textual stdout result of executing the given command.
+ *
+ * - TODO: Consider switching to ShellJS.
+ * - Why ShellJS? https://julialang.org/blog/2012/03/shelling-out-sucks/
+ * - See also `Executing shell commands from Node.js`, https://2ality.com/2022/07/nodejs-child-process.html
+ *
+ * ### Examples
+ * ```
+ * // Who is the current user?
+ * console.log( shell('whoami') )
+ *
+ * // Make me smile!
+ * console.log( shell('fortune') )
+ *
+ * // See your Git credentials: Name, email, editor, etc.
+ * shell("git config --list")
+ *
+ * // Crashes if the provided command does not exist
+ * shell(`nonexistentprogram`); console.log(`You wont see this msg!`) // Boom!
+ *
+ * // Pass non-falsy second argument to invoke as a dry-run only
+ * shell(`nonexistentprogram`, true); console.log(`You WILL see this msg!`)
+ * ```
+ *
+ * Consider a program to be written primarily to explain to another human what it is that we want the computer to do,
+ * how it is to happen, and why we can believe that we have achievied our aim.
+ * (The “another human” might be you in a few months time when the details have escaped your mind.)
+ */
+function shell(command, ignore) {
+  return ignore
+    ? `\n🤖 This is a DRY RUN, so I haven't done anything but I would have:\n🧪🧪🧪\n${command}\n🧪🧪🧪`
+    : require('child_process').execSync(command).toString().trim()
+}
+
+/** NodeJS dislikes `~` in file paths, so this helper lets you read files with `~` in their path.
+ * @param {string} path - The (possibily relative) path to a file
+ * @returns {string} The contents of the file located at the given path
+ */
+function readFile(path) {
+  return fs.readFileSync(path.replace(/~/, process.env.HOME))
+}
+#+end_src
+
+*** Quick Example of using JS as a command-line-language            :details:
+:PROPERTIES:
+:CUSTOM_ID: Quick-Example-of-using-JS-as-a-command-line-language
+:END:
+#+begin_src javascript
+ var axios = require('axios')
+ var { name, blog, bio } = (await axios.get('https://api.github.com/users/alhassy')).data
+#+end_src
+
+*** Java: run a shell command and see the output                    :details:
+:PROPERTIES:
+:CUSTOM_ID: Java-run-a-shell-command-and-see-the-output
+:END:
+
+#+begin_src java
+execCmd("whoami")  // ==> "musa\n"
+
+// Source: https://stackoverflow.com/a/20624914/3550444
+public static String execCmd(String cmd) throws java.io.IOException {
+    java.util.Scanner s = new java.util.Scanner(Runtime.getRuntime().exec(cmd).getInputStream()).useDelimiter("\\A");
+    return s.hasNext() ? s.next() : "";
+}
+#+end_src
+*** Further reading :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Further-reading
+:UNNUMBERED: t
+:END:
+
+# <h>eadings cannot appear within a <details>.
+*Further reading*:
++ [[https://dev.to/taikedz/your-bash-scripts-are-rubbish-use-another-language-5dh7][Your bash scripts are rubbish, use another language]]
++ [[https://blog.developer.atlassian.com/scripting-with-node/][Building command line tools with Node.js - Atlassian Developer Blog]]
++ [[https://medium.com/capital-one-tech/bashing-the-bash-replacing-shell-scripts-with-python-d8d201bc0989][Bashing the Bash — Replacing Shell Scripts with Python  ⋋⋌  Medium]]
++ [[https://www.youtube.com/watch?v=TdkZ216R6Bw][Bashing the bash: Why the shell is awful & what you can do about it  ⋋⋌  YouTube]]
+
+# /tldr: Why Bash bad?/
+# Essentially only strings as data-structure, and so no support for stateful
+# objects; also no floating point numbers.
+
+# Close top-level tag for this section
+#+html: </details>
+
 ** Actual example :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Actual-example
@@ -1114,7 +1325,7 @@ the program each time.
 Instead, the already-working program “learns” what we have taught it ---and
 continues to be a working program.
 #+end_box
-* Programming   ≈   Definitions and re-definitions
+** Programming   ≈   Definitions and re-definitions :details:
 :PROPERTIES:
 :CUSTOM_ID: Programming-Definitions-and-re-definitions
 :END:
@@ -1208,208 +1419,6 @@ evaluate it.
 # TODO: Then again, I could use comint and just make them read-only. Something
 # to think about.
 # Then again, I've never written a real Common Lisp program. 🤷‍♂️ 🙃
-
-* RDD ⇒ Use your favourite language as a Bash replacement scripting language
-:PROPERTIES:
-:CUSTOM_ID: RDD-Use-your-favourite-language-as-a-Bash-replacement-scripting-language
-:END:
-
-#+begin_quote
-/If your code-base is in language 𝐿, might as well write your scripts in 𝐿 as
-well!/
-#+end_quote
-
-For example, if you want to say run a simple for-loop on a payload of an
-HTTP request then might as well use your favourite language 𝐿 ---and /not/
-Bash. Likewise, want to run a for-loop on the results of a SQL query: Use your
-favourite language 𝐿, not a SQL scripting language that you're not terribly
-comfortable with.
-
-Why script in your favourite language 𝐿, and not Bash?
-1. If your an 𝐿 language developer, writing scripts in 𝐿 lets you make use of
-   all of your existing experience, knowledge, and familiar tool-set of 𝐿.
-2. Stay in the comfort of your favourite IDE: Autocomplete, syntax highlighting,
-   docs, tooltips, etc.
-3. Lots of libraries!
-4. The gain in expressivity & clarity & test-ability.
-5. Rich data structures, error checking, and /compositionality/.
-   - Since Bash only has /unstructured data via strings/, this means to compose
-     two different Bash programs you have to get them to “understand a common
-     structure” and this means you have to convert unstructured data to JSON
-     somehow (e.g., using [[https://github.com/kellyjonbrazil/jc][jc]], which /JSONifies the output of many CLI tools/) or
-     parse it yourself! Might as well use your favourite language, since it
-     probably has support for JSON and has real /structured/ objects.
-6. An 𝐿-REPL is a shell with 𝐿-syntax, and features! ---Since you're actually using 𝐿.
-7. Bash is imperative, but your favourite language is (probably) multi-paradigm
-   ---you can do imperative or more!
-8. /By trying out API calls in your language 𝐿 instead of Bash, you get working
-   code in your language right away that you can build an app around ---no need/
-   /to figure out how to do that later on in your language./
-
-#+begin_quote
-/The next time you need to write a loop in Bash, consider breaking out your REPL
-and seeing what you can come up with instead!/
-
-Slightly paraphrasing from: [[https://www.freecodecamp.org/news/python-for-system-administration-tutorial/][How to Replace Bash with Python as Your Go-To Command Line Language]]
-#+end_quote
-
-*“Bash ↦ JavaScript” Personal anecdote:* One time I automated a bunch of tedious
-tasks at work with Bash by using [[https://github.com/kellyjonbrazil/jc][jc]], which /JSONifies the output of many CLI
-tools/, alongside [[https://jqlang.github.io/jq/][jq]], a JSON query language; along with a friendly-alternative to
-curl known as [[https://github.com/httpie/cli][httpie]]. However, as the Bash incantations grew larger and larger,
-it became more practical to switch to JavaScript and read the http payloads as
-proper JavaScript objects (rather than use /jc/), and quickly work with them via
-the usual JS methods /.map, .filter, .reduce/. With Bash, I used /jq/ and it's
-special syntax, but with JavaScript I just use JS in both places 💐 Finally,
-this automated work required updating JSON configurations, but I wanted the
-result to be pretty-printed for future human readers. Since JSON is literally
-JS, it's most natural to use JS to work with JSON and so that's what I
-did. /Below are 2 very useful methods from this Bash↦JavaScript move/.
-# JSON is literally javascript, so messing with JSON in javascript is natural. Here’s how to pretty print a json file: process.stdout.write(JSON.stringify(JSON.parse(require('fs').readFileSync('myfile.json')),null,2))
-
-** withJSON: Alter the contents of a JSON file as if it were a JavaScript object :details:
-:PROPERTIES:
-:CUSTOM_ID: withJSON-Alter-the-contents-of-a-JSON-file-as-if-it-were-a-JavaScript-object
-:END:
-#+begin_src javascript
-/** Alter the contents of a JSON file as if it were a JavaScript object.
- *
- * - `path : string` is a filepath to a `.json` file.
- * - `callback : function` is a (possibly async) function that mutates a given JS object.
- * - `newFile : boolean` indicates whether this is a completely new file, in which case `callback` is provided with an empty object.
- *
- * Trying to access a JSON file that does not exist, when not enabling `newFile`, will result in an error.
- *
- * Write the JSON file, and format it nicely.
- *
- * ### Example use
- * ```
- * // Add a new `WOAH` key to the configuration file.
- * withJSON("~/myConfig.json", data => data.WOAH = 12)
- * ```
- *
- * ### Warning! ---Also Design Decision Discussion
- *
- * A purely functional approach would require `callback` to have the shape `data => {...; return data}`.
- * However, we anticipate that most uses will be to update a field of `data` and so `callback` will
- * have the shape `data => {data.x = y; return data}` and we want to reduce the ceremony: We work with mutable references,
- * so that `data => data.x = y` is a sufficient shape for `callback`. However, this comes at the cost that we cannot
- * wholesale alter a JSON file ---which is an acceptable tradeoff, since this is likely a rare use case.
- *
- * ```
- * withJSON(`~/myfile.json`, data => data = {x: 1, y: 2})      // BAD! Will not alter the underyling JSON file.
- * withJSON(`~/myfile.json`, data => {data.x = 1; data.y = 2}) // GOOD!
- * ```
- *
- * A program should not just compute, it should also motivate, justify & discuss.
- * This human nature makes it easier to follow, detect errors, use elsewhere, or extend.
- * After all, the larger part of the life of a piece of software is maintenance.
- *
- * Flawed programs with good discussion may be of more use in the development of related correct code,
- * than working code that has no explanation.
- */
-function withJSON(file, callback, newFile) {
-  file = file.replace(/~/g, process.env.HOME)
-  try {
-    let data = newFile ? {} : JSON.parse(fs.readFileSync(file))
-    callback(data)
-    fs.writeFileSync(file, JSON.stringify(data, null, 2))
-  } catch (error) {
-    console.error(`🤯 Oh no! ${error}`)
-    console.error(callback.toString())
-    process.exit(0)
-  }
-}
-#+end_src
-
-** shell: Run a shell command and provide its result as a string; or crash when there's an error :details:
-:PROPERTIES:
-:CUSTOM_ID: shell-Run-a-shell-command-and-provide-its-result-as-a-string-or-crash-when-there's-an-error
-:END:
-#+begin_src javascript
-/** Run a shell command and provide its result as a string; or crash when there's an error.
- * This is intentionally synchronous; i.e., everything stops until the command is done executing.
- *
- * @param {string} command - A Unix bash incantation to be executed.
- * @param {boolean} ignore - Whether to actually avoid doing any execution; useful for testing/experimentation.
- * @returns {string} The textual stdout result of executing the given command.
- *
- * - TODO: Consider switching to ShellJS.
- * - Why ShellJS? https://julialang.org/blog/2012/03/shelling-out-sucks/
- * - See also `Executing shell commands from Node.js`, https://2ality.com/2022/07/nodejs-child-process.html
- *
- * ### Examples
- * ```
- * // Who is the current user?
- * console.log( shell('whoami') )
- *
- * // Make me smile!
- * console.log( shell('fortune') )
- *
- * // See your Git credentials: Name, email, editor, etc.
- * shell("git config --list")
- *
- * // Crashes if the provided command does not exist
- * shell(`nonexistentprogram`); console.log(`You wont see this msg!`) // Boom!
- *
- * // Pass non-falsy second argument to invoke as a dry-run only
- * shell(`nonexistentprogram`, true); console.log(`You WILL see this msg!`)
- * ```
- *
- * Consider a program to be written primarily to explain to another human what it is that we want the computer to do,
- * how it is to happen, and why we can believe that we have achievied our aim.
- * (The “another human” might be you in a few months time when the details have escaped your mind.)
- */
-function shell(command, ignore) {
-  return ignore
-    ? `\n🤖 This is a DRY RUN, so I haven't done anything but I would have:\n🧪🧪🧪\n${command}\n🧪🧪🧪`
-    : require('child_process').execSync(command).toString().trim()
-}
-
-/** NodeJS dislikes `~` in file paths, so this helper lets you read files with `~` in their path.
- * @param {string} path - The (possibily relative) path to a file
- * @returns {string} The contents of the file located at the given path
- */
-function readFile(path) {
-  return fs.readFileSync(path.replace(/~/, process.env.HOME))
-}
-#+end_src
-
-** Quick Example of using JS as a command-line-language :details:
-:PROPERTIES:
-:CUSTOM_ID: Quick-Example-of-using-JS-as-a-command-line-language
-:END:
-#+begin_src javascript
- var axios = require('axios')
- var { name, blog, bio } = (await axios.get('https://api.github.com/users/alhassy')).data
-#+end_src
-
-** Java: run a shell command and see the output :details:
-:PROPERTIES:
-:CUSTOM_ID: Java-run-a-shell-command-and-see-the-output
-:END:
-
-#+begin_src java
-execCmd("whoami")  // ==> "musa\n"
-
-// Source: https://stackoverflow.com/a/20624914/3550444
-public static String execCmd(String cmd) throws java.io.IOException {
-    java.util.Scanner s = new java.util.Scanner(Runtime.getRuntime().exec(cmd).getInputStream()).useDelimiter("\\A");
-    return s.hasNext() ? s.next() : "";
-}
-#+end_src
-** Further reading
-:PROPERTIES:
-:CUSTOM_ID: Further-reading
-:END:
-+ [[https://dev.to/taikedz/your-bash-scripts-are-rubbish-use-another-language-5dh7][Your bash scripts are rubbish, use another language]]
-+ [[https://blog.developer.atlassian.com/scripting-with-node/][Building command line tools with Node.js - Atlassian Developer Blog]]
-+ [[https://medium.com/capital-one-tech/bashing-the-bash-replacing-shell-scripts-with-python-d8d201bc0989][Bashing the Bash — Replacing Shell Scripts with Python  ⋋⋌  Medium]]
-+ [[https://www.youtube.com/watch?v=TdkZ216R6Bw][Bashing the bash: Why the shell is awful & what you can do about it  ⋋⋌  YouTube]]
-
-# /tldr: Why Bash bad?/
-# Essentially only strings as data-structure, and so no support for stateful
-# objects; also no floating point numbers.
 
 * Concluding Remarks
 :PROPERTIES:
