@@ -17,6 +17,14 @@
 # In-particular, besides some extra code in blog/style-setup, by breaking consistency, AlBasmala does not produce tag
 # pages /not/ contribute to them! This is probably a good enough reason to have it live alongside the other posts!
 
+# TODO: Following method crashes unexpectedly when there is no #image; this
+# should not be the case.
+# (blog/preview)
+
+* TODO
+
+(cl-defun select-safe-coding-system-interactively (&rest args) (setq last-coding-system-specified 'utf-8))
+
 * Abstract                                                           :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Abstract
@@ -79,6 +87,35 @@ image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
 #+end_src
 
 This will eventually be part of [[http://alhassy.com/org-special-block-extras/][org-special-block-extras]].
+
+* Automatically Generate PDFs upon Save :details_pdfs:
+
+Here is my =~/.latexmkrc= file: It previews PDFs using Emacs, uses LuaLaTeX for making PDFs, and to update the PDF viewer
+please change focus to the PDF file.
+
+#+begin_src shell :tangle "~/.latexmkrc"
+$pdf_previewer="emacsclient %S";
+$pdflatex = 'lualatex -interaction=nonstopmode -synctex=1 %O %S';
+$pdf_update_method = 4;
+$pdf_update_command = "emacsclient %S &";
+#+end_src
+# $pdf_update_command = "emacsclient -e '(progn (switch-to-buffer-other-window (find-buffer-visiting %S)) (pdf-view-revert-buffer nil t))'";
+
+Then files that want to have this feature should end with:
+#+begin_src org :tangle no
+,* Local Variables :ignore:
+# Ensure EmacsClient can connect to running emacs, enable automatic reverts for whenever PDFs change.
+# Local Variables:
+# eval: (server-start)
+# eval: (global-auto-revert-mode)
+# eval: (add-hook 'after-save-hook 'org-latex-export-to-latex nil t)
+# eval: (compile "latexmk -pdf -pvc -pdflatex='lualatex -shell-escape -interaction nonstopmode'")
+# End:
+#+end_src
+
+
+# alias emacsclient="/usr/local/Cellar/emacs-plus@29/29.0.90/bin/emacsclient"
+# export PATH="/usr/local/Cellar/emacs-plus@29/29.0.90/bin/:$PATH" # emacs & emacsclient
 
 * Redefining Org Section for purposes of blocks              :details_deftag:
 
