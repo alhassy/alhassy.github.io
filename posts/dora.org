@@ -17,6 +17,47 @@ A simple interface to watch the engaging children's show “Dora the Explorer”
 :CUSTOM_ID: مغامرات-دورا
 :END:
 
+:RDD_Experimentation:
+
+ (repl-driven-development [C-x C-n] javascript)
+(shell-command-to-string "npm install -g axios cheerio")
+
+// HTTP library, and HTML parsing library
+// axios = require('axios');
+cheerio = require('cheerio');
+
+shows = {
+  pokemon: {
+   title: "Pokemon ≈ بوكيمون",
+   first: 3468,
+   episodes: 82
+ }
+}
+
+episode = async function(show, ep) {
+   html = (await axios.get(`https://www.arteenz.com/watch-${show.first + ep}.html`)).data;
+   $ = cheerio.load(html);
+   title = $('title').text();
+   url = $('iframe').attr('src');
+   return {title, url};
+}
+
+episodes = async function(show) {
+  return await Promise.all([...Array(show.episodes - 1).keys()]
+        .map(function(ep) { return episode(show, ep) } ))
+}
+
+pokemonEps = await episodes(shows.pokemon)
+
+const fs = require('fs');
+
+fs.writeFile('./shows.json', JSON.stringify(pokemonEps, null, 2), (err) => {
+ if (err) throw err;
+ console.log('Data written to file');
+});
+
+:End:
+
 #+html: <p style="margin-bottom: 1cm;"></p>
 #+begin_export html
 <p hidden> See: https://alhassy.github.io/AngularJSCheatSheet/ </p>
@@ -27,10 +68,12 @@ A simple interface to watch the engaging children's show “Dora the Explorer”
     </script>
 
   <div ng-controller="MyVideoController">
-    <h1>  مغامرات دورا  </h1>
-    <p><input type=number ng-model="episode" min=1 max=85 value="{{episode}}"> الحلقة</p>
+    <!-- <h1 display=none>  مغامرات دورا  </h1> -->
+    <h1> {{selectedEpisode.title}} </h1>
 
-      <iframe src="{{ episodeURL() | trustAsResourceUrl}}" allowfullscreen="true" width="100%" height="500"></iframe>
+    <select ng-model="selectedEpisode" ng-options="show.title for show in shows"></select>
+
+      <iframe src="{{ selectedEpisode.url | trustAsResourceUrl}}" allowfullscreen="true" width="100%" height="500"></iframe>
 
     <script>
       var app = angular.module("myDoraApp", [])
@@ -41,17 +84,343 @@ A simple interface to watch the engaging children's show “Dora the Explorer”
             };
         }]);
 
-       app.controller("MyVideoController",
-         function($scope){
-           $scope.episode = Math.floor(Math.random() * 85) + 1
-           $scope.episodeURL = () =>
-`https://www.arteenz.com/plugins/server8/embed.php?url=V1hWQjUxdHdlMTRINWdrS3plMkdhZz09&amp;id=${25879 + $scope.episode}`
+      app.controller("MyVideoController",
+         async function($scope, $http){
+
+         $scope.shows = [
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 1",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=NVBzNnNXVGpsMDBJc284MGJWVjJ5Zz09&id=3468&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 2",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=MnQ4RHN0ZkM0aGF4ZUhJVWFRMklDZz09&id=3469&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 3",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=aFprQituRGdiODYwejEwY1RacUR1UT09&id=3470&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 4",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=OWhZazF0UDQ3Yjh5eDFET21DeXNzdz09&id=3471&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 5",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=WDU2d1dPQzZqQWJla1FoOU5tMU9YUT09&id=3472&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 6",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=clo4bkxZdDJ4Ti9WTk9FQitaZHo4UT09&id=3473&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 7",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=WFZhY3FsY1BHRS9BWUtJakVndHBzdz09&id=3474&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 8",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=V0FiaE03Vk10S2tiRFUyTklYbG9Vdz09&id=3475&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 9",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=QXdhWjdvM2xLUmN0bUYvWXN5RWJ3UT09&id=3476&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 10",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=T25iaDBTZ2JMbVdNa2JMcHNobG1XUT09&id=3477&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 11",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=VzMvNVBkVENEeG1URzhwMDNPaFRuUT09&id=3478&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 12",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=eEdVVHlabzJUOUszNjhaY1dNS1o1UT09&id=3479&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 13",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=cnpUMnRpOGxpSjdBU2l5bnlXaWhWUT09&id=3480&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 14",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=TkFBVGxZVGVkdm1LeTJaQk9OcndFUT09&id=3481&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 15",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=eXE3QWt4MWY2eEttdlJrUm51aDJPUT09&id=3482&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 16",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=LzhvOHJFZGIxaWNlYi80VjFCOXVHQT09&id=3483&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 17",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=K3pQK0VlQXdZM2V0YmZJeWdiUFhPUT09&id=3484&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 18",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=STdNc3NKSzNGWldHdFh1MXlSNnltQT09&id=3485&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 19",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=emI2VS9wbGpvZHJScmNkbW8wK2pSQT09&id=3486&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 20",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=ZEpxRXIvR3VhV2N5d1VjMlBJek1IUT09&id=3487&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 21",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=c3R2d044WHR0Szk0YTZZQloyVVhmZz09&id=3488&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 22",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=eFV3dVV5MTZvZVBCZG05b3lGZkVXUT09&id=3489&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 23",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=QWlUc0pLNDlNSndxU0E0LytqeXpjdz09&id=3490&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 24",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=eSs4ZHJmR1JmZEh3L002Y20rbkg0UT09&id=3491&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 25",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=VDBOM1lleVdKRmt6dENXMG5JRFpzdz09&id=3492&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 26",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=aEdqcVMyTmllalEvTkwvVmNqbFN4Zz09&id=3493&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 27",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=dVp0K3FxSDBlQ1hUQ1VFSldNMlhaUT09&id=3494&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 28",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=Qnp3YnR6NGpMVUo2bmxycjNtSlROQT09&id=3495&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 29",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=UVRGL2IxVkhMT3VRRTdhdmVqc3E5UT09&id=3496&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 30",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=ZlkwYVFKcmdRTnJmKy8vMDd2SllWQT09&id=3497&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 31",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=RzNGbkRkMkVOVUlRMWxORVh6VTI5Zz09&id=3498&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 32",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=cmNBM29rTCtsSW1rYXBSRHk1Tk0rZz09&id=3499&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 33",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=dWZQRUFCM3FMaHQxQjY3UWxSa1hvUT09&id=3500&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 34",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=VTNEeTVCRW5EUGlnaCtKRmJDRDRWZz09&id=3501&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 35",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=K1JaZnBXalVOcWlxSXcwdzV1eU40QT09&id=3502&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 36",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=cnd5T3RwZWVPeEdSbDNiMC9KMStjQT09&id=3503&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 37",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=L0hiTjFHeXNIelRWNU0zM3AzcXpVUT09&id=3504&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 38",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=bHdZNGlZOVZFbXgxQXc3TWp4OHk1dz09&id=3505&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 39",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=eUtNZnphRGNMRVVPb0NlQ01nVC9ldz09&id=3506&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 40",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=dlNZQlVqSjF5eUU2M05mdmxOSE95QT09&id=3507&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 41",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=RlBqZzJQZVBIVEFLK0ZTcTIxOHRqQT09&id=3508&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 42",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=cllKSks5cklJOTltUmxWTmlmdm90dz09&id=3509&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 43",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=MHQxNHdQY0xLTmRmZTlxak1kbTFIQT09&id=3510&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 44",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=YXdIZmJ1ZzBDQzlteFA1YVBVUTl1QT09&id=3511&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 45",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=cEYvYzNqM1lTWGsrM1dZWVFSY1kvQT09&id=3512&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 46",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=SEFKb05NSmlGZE1MSTQveDl1eHN0UT09&id=3513&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 47",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=Sm43YU83cldVNXJTNmlwOEZEVURjZz09&id=3514&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 48",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=S3lQSnVKbkJ4akY1ckFLWit3aXhwdz09&id=3515&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 49",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=a3JUMGY0YnUvOVZyTFA0N0Q3dThPUT09&id=3516&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 50",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=UmIybHdURk0vYTFUZDRsZFpqRzFFdz09&id=3517&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 51",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=ZXRFeDkraTViWFpZNG9JdXRyRC9xZz09&id=3518&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 52",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=QnlQb3dEN2VVaVZRYkZFN1VLY3lZUT09&id=3519&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 53",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=Z3dYbDUreXEzZ3RiQlFERkVZaFJsUT09&id=3520&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 54",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=ZEZ2ZnN2TStYUjJuU2RZQlp3c3JWdz09&id=3521&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 55",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=SzNtMnExM3lQUzZFYnlIa3NKNEpFdz09&id=3522&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 56",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=THA1Q2hxY1Zza3k0K1lwWVB5Vm0xUT09&id=3523&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 57",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=anEzVkhLUVAzUEFrbmgzN0t3V0lxdz09&id=3524&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 58",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=c3lYZGg0M2F6Z1p3QXlSaHFYUFBrdz09&id=3525&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 59",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=UlZldmh3Z2RzaCswK3Q0QmRCVE0zdz09&id=3526&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 60",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=VkRNZVJvZ0ZJeEdXRk9ydU1sYkl5UT09&id=3527&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 61",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=NytsTnJyUFNEdXNJM0o5R0ZnNnI4UT09&id=3528&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 62",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=R3ltcGpEQnhnNEVoekRHS1pmZFlLUT09&id=3529&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 63",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=b0p4ZHdhQ216WEhzcTVpVGNjdWRJQT09&id=3530&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 64",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=VnNPMTlhODV6S2hjaTI0MVhsWW1idz09&id=3531&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 65",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=bEcyK0hncWMwRlNmVUtlS2lEY2ZyZz09&id=3532&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 66",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=VDg4ZDRlVjRMSzhreW5HOXJHN1E4UT09&id=3533&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 67",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=dXdBbG1vcG5ESjNldks0WUtYUDE4UT09&id=3534&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 68",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=c3IvckdwbkhpQ1FMNkVLY2VlTU9sdz09&id=3535&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 69",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=clRHaDVoanM0VXJmMmJ2aVRiaXVDdz09&id=3536&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 70",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=Vm5STVo0ZEJHd0I3T2phclB0amxuQT09&id=3537&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 71",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=MEpFdkQyN1hwZDN5OHpCYUkrQ0k3dz09&id=3538&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 72",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=OFhiaFhzbVU2dm84S1JDMVEyaEVZUT09&id=3539&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 73",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=WFpPcElFYm1jVExla1VHV1RxZlg3dz09&id=3540&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 74",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=amR0NmlYb2hEWllPZ1hDVk1WSEMzdz09&id=3541&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 75",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=UVVWcW5jY1RuZDdIdlM2SDRLT1h0UT09&id=3542&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 76",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=MU5FOE1USGQ0SEpjUFhQeU0rb1BRdz09&id=3543&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 77",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=Z2ZibFppUEJNZ040WkdNWi9DNkREUT09&id=3544&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 78",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=OEV2T25QRlhJdDdraG1KbEJxK1dLdz09&id=3545&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 79",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=MzlMaUpITis2Q1BrMHpUd0dKdWhLdz09&id=3546&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 80",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=c2VlT0dzNXE3Q1BMcnRMdm9ZS05vdz09&id=3547&y=1"
+  },
+  {
+    "title": "بوكيمون الجزء 1 الحلقة 81",
+    "url": "https://www.arteenz.com/plugins/server6/embed.php?url=Qkd6YnN3WGwyVnIxeWtQLzUreE5Bdz09&id=3548&y=1"
+  }
+         ]
+
+             let rndmEpisodeIndex = Math.floor(Math.random() * $scope.shows.length) + 1
+             $scope.selectedEpisode = $scope.shows[rndmEpisodeIndex]
        })
     </script>
     </div>
   </center>
 #+end_export
-
 
 #+html: <p style="margin-bottom: 3cm;"></p>
 
