@@ -25,7 +25,7 @@
          (write-file "~/blog/posts.json"))
 
 ;; Load cached info about posts
-(setq posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer)))
+(setq blog/posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer)))
 
 ;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
 ;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
@@ -77,7 +77,7 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
                       (buffer-substring-no-properties (point) (point-max))))))))))
 #+end_src
 
-;; (length posts) ⇒ 16
+;; (length blog/posts) ⇒ 16
 
 # TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
 
@@ -1801,7 +1801,6 @@ variable for that ---consisting of Org-markup.
 
 The actual look and feel of ~index.html~ is due to the method doc:org-static-blog-assemble-multipost-page.
 
-#+begin_details
 The existing org-static-blog-assemble-index is really fast,
 since it just dumps articles wholesale into the landing page; not ideal.
 I'd rather have a ‘preview’ of articles.
@@ -1822,7 +1821,6 @@ summarised by their title, data & image, ‘abstract’, and a read-more badge.
 You can view the generated ~/blog/index.html by invoking:
    (progn (my/blog/style-setup/disable) (org-static-blog-assemble-index))
 "
-  (setq show-reading-time nil) ;; Experimental.
   (setq post-filenames
         (sort post-filenames (lambda (x y)
                                (time-less-p (org-static-blog-get-date y)
@@ -1857,21 +1855,8 @@ You can view the generated ~/blog/index.html by invoking:
                                       (org-static-blog-get-title it))
 
                               ;; ⟨1⟩ Tags and reading time
-                              (format "\n#+begin_export html\n<center>%s\n%s</center>\n#+end_export"
-                                      (blog/tags-of-file it)
-                                      ;; Experimenting.
-                                      (if (not show-reading-time)
-                                          ""
-                                        (format "\n%s %s mins read"
-                                                "octoicon:clock"
-                                                (with-temp-buffer (insert-file-contents it)
-                                                                  (org-ascii-export-as-ascii)
-                                                                  (setq __x
-                                                                        (count-words (point-min) (point-max)))
-                                                                  (kill-buffer "*Org ASCII Export*")
-                                                                  (delete-other-windows)
-                                                                  (/ __x 200)))) ;; 200 words per minute reading
-                                      )
+                              (format "\n#+begin_export html\n<center>%s\n</center>\n#+end_export"
+                                      (blog/tags-of-file it))
 
                               ;; ⟨2⟩ Article image
                               (format "\n@@html:%s@@\n" (my/org-static-blog-assemble-image it))
@@ -1902,7 +1887,7 @@ You can view the generated ~/blog/index.html by invoking:
       (org-mode)
       (org-html-export-to-html))))
 #+end_src
-#+end_details
+
 * Actually publishing an article
 :PROPERTIES:
 :CUSTOM_ID: Actually-publishing-an-article
