@@ -129,6 +129,8 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
                               (match-string 1)
                             prop.default))))
        (cons :url (concat "https://alhassy.com/" (f-base post-filename)))
+       (cons :history (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
+                              (f-base post-filename)))
        (cons :abstract (progn
                   (goto-char (point-min))
                   (when (re-search-forward "^\* Abstract" nil t)
@@ -139,6 +141,15 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
                       (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
                       (forward-line)
                       (buffer-substring-no-properties (point) (point-max))))))))))
+
+
+;; TODO: Axe `blog/history-of-file' since its subsumed by this method now
+(defun @history (json)
+  "Get an HTML badge that points to the Github history of a given file name, in my blog."
+  (concat
+   "<a class=\"tooltip\" title=\"See the various edits to this article over time\" href=\""
+   (map-elt json "history")
+   "\"><img src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
 #+end_src
 
 ;; (length blog/posts) ⇒ 16
