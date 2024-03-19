@@ -16,7 +16,9 @@
          when (s-ends-with? ".org" file)
          collect (blog/info file) into posts
          finally
-         ;; (f-write-text  (pp-to-string posts) 'utf-8 (f-expand "~/blog/posts.el"))
+         ;; Sorted in descending time; i.e., the latest article should be first
+         ;; Note: We use “:date” key here since we have alists with such keys; when we JSON encode, the keys become strings, eg “ "data" ”.
+         (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (map-elt older :date)) (date-to-time (map-elt newer :date))))))
          (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
          (find-file "~/blog/posts.json")
          (json-pretty-print-buffer)
@@ -24,8 +26,6 @@
 
 ;; Load cached info about posts
 (setq posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer)))
-;; Sorted in descending time; i.e., the latest article should be first
-(setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (@date older)) (date-to-time (@date newer))))))
 
 ;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
 ;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
@@ -75,9 +75,6 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
                       (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
                       (forward-line)
                       (buffer-substring-no-properties (point) (point-max))))))))))
-
-
-
 #+end_src
 
 ;; (length posts) ⇒ 16
