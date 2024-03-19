@@ -9,24 +9,78 @@
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
 
 # All posts
-(s-join "\n|" (--map (format "[[file:%s][%s]]" it it) (--filter (s-ends-with? ".org" it) (f-files "~/blog/posts"))))
-[[file:/Users/musa/blog/posts/HeytingAlgebra.org][/Users/musa/blog/posts/HeytingAlgebra.org]]
-| [[file:/Users/musa/blog/posts/InteractiveWayToC.org][/Users/musa/blog/posts/InteractiveWayToC.org]]                  |
-| [[file:/Users/musa/blog/posts/PathCat.org][/Users/musa/blog/posts/PathCat.org]]                            |
-| [[file:/Users/musa/blog/posts/TypedLisp.org][/Users/musa/blog/posts/TypedLisp.org]]                          |
-| [[file:/Users/musa/blog/posts/arabic-cheat-sheet.org][/Users/musa/blog/posts/arabic-cheat-sheet.org]]                 |
-| [[file:/Users/musa/blog/posts/arabic-glossary.org][/Users/musa/blog/posts/arabic-glossary.org]]                    |
-| [[file:/Users/musa/blog/posts/arabic-roots.org][/Users/musa/blog/posts/arabic-roots.org]]                       |
-| [[file:/Users/musa/blog/posts/arabic-word-order.org][/Users/musa/blog/posts/arabic-word-order.org]]                  |
-| [[file:/Users/musa/blog/posts/cartoon.org][/Users/musa/blog/posts/cartoon.org]]                            |
-| [[file:/Users/musa/blog/posts/family-tree.org][/Users/musa/blog/posts/family-tree.org]]                        |
-| [[file:/Users/musa/blog/posts/java-cheat-sheet.org][/Users/musa/blog/posts/java-cheat-sheet.org]]                   |
-| [[file:/Users/musa/blog/posts/karate.org][/Users/musa/blog/posts/karate.org]]                             |
-| [[file:/Users/musa/blog/posts/making-vscode-itself-a-java-repl.org][/Users/musa/blog/posts/making-vscode-itself-a-java-repl.org]]   |
-| [[file:/Users/musa/blog/posts/repl-driven-development.org][/Users/musa/blog/posts/repl-driven-development.org]]            |
-| [[file:/Users/musa/blog/posts/three-minute-thesis.org][/Users/musa/blog/posts/three-minute-thesis.org]]                |
-| [[file:/Users/musa/blog/posts/vscode-is-itself-a-javascript-repl.org][/Users/musa/blog/posts/vscode-is-itself-a-javascript-repl.org]] |
+#+begin_src emacs-lisp
+;; Cache info about posts
+(require 'json)
+(cl-loop for file in (f-files "~/blog/posts")
+         when (s-ends-with? ".org" file)
+         collect (blog/info file) into posts
+         finally
+         ;; (f-write-text  (pp-to-string posts) 'utf-8 (f-expand "~/blog/posts.el"))
+         (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
+         (find-file "~/blog/posts.json")
+         (json-pretty-print-buffer)
+         (write-file "~/blog/posts.json"))
 
+;; Load cached info about posts
+(setq posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer)))
+;; Sorted in descending time; i.e., the latest article should be first
+(setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (@date older)) (date-to-time (@date newer))))))
+
+;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
+;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
+(defun @title (json) (map-elt json "title"))
+(defun @date (json) (map-elt json "date"))
+(defun @file (json) (map-elt json "file"))
+(defun @image (json) (map-elt json "image"))
+(defun @description (json) (map-elt json "description"))
+(defun @tags (json) (s-split " " (map-elt json "tags")))
+(defun @url (json) (map-elt json "url"))
+(defun @abstract (json) (map-elt json "abstract"))
+
+;; Core helper to get the plist/JSON metadata about each post.
+(defun blog/info (post-filename)
+  "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
+
+Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
+"
+  (let ((case-fold-search t))
+    (with-temp-buffer
+      (insert-file-contents post-filename)
+      (-snoc
+       (cons
+       (cons :file (f-base post-filename))
+      (cl-loop for (prop.name prop.regex prop.default) on
+            `(:title "^\\#\\+title:[ ]*\\(.+\\)$" ,post-filename
+                     :date "^\\#\\+date:[ ]*<\\([^]>]+\\)>$" ,(time-since 0)
+                     :image "^\\#\\+fileimage: \\(.*\\)" "emacs-birthday-present.png 350 350"
+                     :description "^\\#\\+description:[ ]*\\(.+\\)$" "I learned something neat, and wanted to share!"
+                     :tags "^\\#\\+filetags:[ ]*\\(.+\\)$" "" ;; String; Space separated sequence of tags
+                     )
+            by 'cdddr
+            ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
+            do (goto-char (point-min))
+            collect (cons prop.name
+                          (if (search-forward-regexp prop.regex nil t)
+                              (match-string 1)
+                            prop.default))))
+       (cons :url (concat "https://alhassy.com/" (f-base post-filename)))
+       (cons :abstract (progn
+                  (goto-char (point-min))
+                  (when (re-search-forward "^\* Abstract" nil t)
+                    (beginning-of-line)
+                    (-let [start (point)]
+                      (org-narrow-to-subtree)
+                      (org-fold-show-entry)
+                      (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+                      (forward-line)
+                      (buffer-substring-no-properties (point) (point-max))))))))))
+
+
+
+#+end_src
+
+;; (length posts) ⇒ 16
 
 # TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
 
@@ -1217,7 +1271,7 @@ HERE PLS
 But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
 #+end_remark
 
-* Article Tile & Image
+* Article Title & Image
   :PROPERTIES:
   :CUSTOM_ID: Images
   :END:
