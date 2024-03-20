@@ -135,7 +135,6 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
 
  (setq org-static-blog-page-header
   (concat
-   org-html-head-extra  ;; Altered by ‘org-special-block-extras’
    (concat
    "<meta name=\"author\" content=\"Musa Al-hassy\">
     <meta name=\"referrer\" content=\"no-referrer\">"
@@ -148,9 +147,9 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
    /*
    @licstart  The following is the entire license notice for the
    JavaScript code in this tag.
-   
+
    Copyright (C) 2012-2020 Free Software Foundation, Inc.
-   
+
    The JavaScript code in this tag is free software: you can
    redistribute it and/or modify it under the terms of the GNU
    General Public License (GNU GPL) as published by the Free Software
@@ -158,14 +157,14 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
    any later version.  The code is distributed WITHOUT ANY WARRANTY;
    without even the implied warranty of MERCHANTABILITY or FITNESS
    FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-   
+
    As additional permission under GNU GPL version 3 section 7, you
    may distribute non-source (e.g., minimized or compacted) forms of
    that code without the copy of the GNU GPL normally required by
    section 4, provided you include this license notice and a URL
    through which recipients can access the Corresponding Source.
-   
-   
+
+
    @licend  The above is the entire license notice
    for the JavaScript code in this tag.
    */
@@ -194,7 +193,7 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
        MathJax.Hub.Config({
            displayAlign: \"center\",
            displayIndent: \"0em\",
-   
+
            \"HTML-CSS\": { scale: 100,
                            linebreaks: { automatic: \"false\" },
                            webFont: \"TeX\"
