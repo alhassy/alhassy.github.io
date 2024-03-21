@@ -2,157 +2,29 @@
 #+title: AlBasmala: @@html: <br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 #+description: How my blog is setup (•̀ᴗ•́)و
 #+date: <2020-05-03 Sun>
-# +filetags: emacs org html css javascript git
+#+filetags: emacs org html css javascript git lisp
 #+fileimage: org_logo.png 150 150 no-border
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
 
-# All posts
-#+begin_src emacs-lisp
-;; Cache info about posts
-(require 'json)
-(cl-loop for file in (f-files "~/blog/posts")
-         when (s-ends-with? ".org" file)
-         collect (blog/info file) into posts
-         finally
-         ;; Sorted in descending time; i.e., the latest article should be first
-         ;; Note: We use “:date” key here since we have alists with such keys; when we JSON encode, the keys become strings, eg “ "data" ”.
-         (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (map-elt older :date)) (date-to-time (map-elt newer :date))))))
-         (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
-         (find-file "~/blog/posts.json")
-         (json-pretty-print-buffer)
-         (write-file "~/blog/posts.json"))
+* COMMENT Speculative TODO-s
 
-;; Load cached info about posts
-(setq blog/posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer)))
-
-;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
-;; Later, we redefine these, for example `@image' will actually produces the HTML for the image.
-;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
-(defun @title (json) (map-elt json "title"))
-(defun @date (json) (map-elt json "date"))
-(defun @file (json) (map-elt json "file"))
-;; (defun @image (json) (map-elt json "image"))
-(defun @description (json) (map-elt json "description"))
-;; TODO. (defun @tags (json) (s-split " " (map-elt json "tags"))) ;; TODO Have this be a list, in the actual json for future AngularJS search by tags
-(defun @url (json) (map-elt json "url"))
-(defun @abstract (json) (map-elt json "abstract"))
-
-;; TODO: Axe `blog/tags-of-file' since it's now subsumed by this method.
-(defun @tags (json)
-  "Get an HTML listing of tags, as shields.io bages, associated with the given file.
-
-Example use:  (@tags (seq-elt blog/posts 0))
-"
-  (concat
-   ;; Straightforward implementation.
-   ;; "<div class=\"taglist\">"
-   ;; (org-static-blog-post-taglist file-name)
-   ;; "</div>"
-
-  ;; Badges implementation
-   (concat
-    (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
-            (org-link/octoicon "tag" nil 'html))
-    (s-join " "
-            (--map  (org-link/badge
-                     (format "|%s|grey|%stag-%s.html"
-                             (s-replace "-" "_" it)
-                             "https://alhassy.com" it)
-                     nil 'html)
-                    (s-split " " (map-elt json "tags")))))))
-
-
-;; TODO: Axe `my/org-static-blog-assemble-image' since it's now subsumed by this method.
-(cl-defun @image (json &optional explicit-image-path-prefix)
-  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
-
-By default, the image should be located in the top-level `images/' directory.
-If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
-in the image path.
-
-Example use:  (@image (seq-elt blog/posts 0))
-
-Here are 4 example uses:
-
-,#+fileimage: emacs-birthday-present.png
-,#+fileimage: ../images/emacs-birthday-present.png
-,#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
-,#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
-
-+ Notice that the second indicates explicit width and height.
-+ (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'. This requires a slash at the end.)
-+ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
-"
-  (-let [(image width height no-border?) (s-split " " (map-elt json "image"))]
-    (setq width (or width 350))
-    (setq height (or height 350))
-    (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
-    (cond
-     ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
-     (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
-     ((not (s-contains? "/" image)) (setq image (format "images/%s" image))))
-    (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
-      (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-      (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
-      (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
-      (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
-             %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
-              href title src no-border? width height))))
-
-;; Core helper to get the plist/JSON metadata about each post.
-(defun blog/info (post-filename)
-  "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
-
-Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
-"
-  (let ((case-fold-search t))
-    (with-temp-buffer
-      (insert-file-contents post-filename)
-      (-snoc
-       (cons
-       (cons :file (f-base post-filename))
-      (cl-loop for (prop.name prop.regex prop.default) on
-            `(:title "^\\#\\+title:[ ]*\\(.+\\)$" ,post-filename
-                     :date "^\\#\\+date:[ ]*<\\([^]>]+\\)>$" ,(time-since 0)
-                     :image "^\\#\\+fileimage: \\(.*\\)" "emacs-birthday-present.png 350 350"
-                     :description "^\\#\\+description:[ ]*\\(.+\\)$" "I learned something neat, and wanted to share!"
-                     :tags "^\\#\\+filetags:[ ]*\\(.+\\)$" "" ;; String; Space separated sequence of tags
-                     )
-            by 'cdddr
-            ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
-            do (goto-char (point-min))
-            collect (cons prop.name
-                          (if (search-forward-regexp prop.regex nil t)
-                              (match-string 1)
-                            prop.default))))
-       (cons :url (concat "https://alhassy.com/" (f-base post-filename)))
-       (cons :history (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
-                              (f-base post-filename)))
-       (cons :abstract (progn
-                  (goto-char (point-min))
-                  (when (re-search-forward "^\* Abstract" nil t)
-                    (beginning-of-line)
-                    (-let [start (point)]
-                      (org-narrow-to-subtree)
-                      (org-fold-show-entry)
-                      (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
-                      (forward-line)
-                      (buffer-substring-no-properties (point) (point-max))))))))))
+;; TODO: Axe `blog/tags-of-file' since it's now subsumed by the method: (defun @tags (json)
 
 
 ;; TODO: Axe `blog/history-of-file' since its subsumed by this method now
 (defun @history (json)
-  "Get an HTML badge that points to the Github history of a given file name, in my blog."
-  (concat
-   "<a class=\"tooltip\" title=\"See the various edits to this article over time\" href=\""
-   (map-elt json "history")
-   "\"><img src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
-#+end_src
 
-;; (length blog/posts) ⇒ 16
+
+;; TODO: Axe `my/org-static-blog-assemble-image' since it's now subsumed by this method.
+(cl-defun @image (json &optional explicit-image-path-prefix)
+
+
+;; TODO. (defun @tags (json) (s-split " " (map-elt json "tags"))) ;; TODO Have this be a list, in the actual json for future AngularJS search by tags
+
+
+# ;; (length blog/posts) ⇒ 16
 
 # TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
 
@@ -166,9 +38,12 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
 # should not be the case.
 # (blog/preview)
 
-* TODO COMMENT Add dates, and sort by them.
+** COMMENT TODO: Make the floating toc “Ξ” be aware of links...
+... so that “doc:blog/new-article” renders nicely in the floating doc!
 
-* TODO COMMENT avoid being asked for unicode encodings
+** TODO COMMENT Add dates, and sort by them.
+
+** TODO COMMENT avoid being asked for unicode encodings
 
 (cl-defun select-safe-coding-system-interactively (&rest args) (setq last-coding-system-specified 'utf-8))
 
@@ -176,7 +51,141 @@ Related:
 - https://github.com/abingham/emacs-ycmd/issues/496
 - https://stackoverflow.com/questions/63644928/emacs-failed-quit-with-error-of-utf-8-cannot-encode
 
-* Abstract                                                           :ignore:
+** TODO Misc                                                       :noexport:
+:PROPERTIES:
+:CUSTOM_ID: Misc
+:END:
+TODO: Add #+date when publishing, otherwise order's are all wonky.
+
+TODO:
+Find-replace all px with percentages, then ensure things look good!
+
+*** Magit and large HTML files
+:PROPERTIES:
+:CUSTOM_ID: Magit-and-large-HTML-files
+:END:
+Since I'm producing /massive/ HTML files for each post, trying to review changes with the default Magit buffer /which shows
+all changes in the repository/ can be painfully slow. As such, when I'm blogging, let's change my ~C-x g~ binding from
+doc:magit-status to doc:magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
+~C-x g D u~ to see the “u”nstaged “d”ifferences for the file, then stage what I like with ~s~, then ~C-x g c~ to “c”ommit whatever differences I have staged.
+#+begin_src emacs-lisp
+(bind-key "C-x g" #'magit-file-dispatch)
+#+end_src
+
+*** Column Width
+:PROPERTIES:
+:CUSTOM_ID: Column-Width
+:END:
+When blogging, I see live HTML previews whenever I save thanks to
+doc:blog/preview.  As such, I cannot have my lines being too wide. I'll settle
+for a modest 80 columns.  Then kbd:M-q will format my paragraphs to wrap nicely
+into this 80-column width.
+#+begin_src emacs-lisp
+(setq-default fill-column 80)
+#+end_src
+
+(When I'm coding with a single open window, I usually use a comfortable 120 columns.)
+
+*** Required loads
+:PROPERTIES:
+:CUSTOM_ID: Clean-this-section-up
+:END:
+#+begin_src emacs-lisp :exports none
+;; cl-lib was published as a better (namespaced!) alternative to cl, which has a deprecation warning in Emacs27.
+;; Yet some old pacakges require cl, and so the below setq silences the deprecation warning.
+(setq byte-compile-warnings '(cl-functions))
+(require 'cl-lib) ;; to get loop instead of cl-loop, etc.
+
+(require 'shortdoc) ;; Essentially "tldr" but for Emacs Lisp!
+;; (cl-defun define-short-documentation-group (&rest _))
+;; (cl-defun org-duration-to-minutes (&rest _) )
+;; (cl-defun org-id-find-id-file (&rest _))
+
+(ignore-errors
+  (use-package org-preview-html)
+  (setq org-preview-html-viewer 'xwidget)
+  ;; (xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
+  (advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
+  (advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
+  (advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
+                                                           (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
+                                                           )))
+  (use-package org-special-block-extras)
+  ;;(load-file "~/blog/AlBasmala.el")
+  ) ;; M-x blog/preview
+
+;; Required for Github Actions; i.e., testing.
+;; TODO Clean me!
+(defun quelpa-read-cache ()) ;; Used somewhere, but not defined.
+;; See: quelpa-persistent-cache-file
+(setq quelpa-cache nil)
+
+;; Eager macro-expansion failure: (void-function all-the-icons-faicon)
+;; Symbol’s function definition is void: all-the-icons-faicon
+#+end_src
+#+begin_src emacs-lisp :exports none
+;; Error in kill-emacs-hook (org-clock-save): (void-function org-clocking-buffer)
+(cl-defun org-clocking-buffer (&rest _))
+#+end_src
+
+*** COMMENT Arabic Setup    :Possibly_already_in_AlBasmala_so_just_load_that:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-Arabic-Setup
+:END:
+
+#+begin_src emacs-lisp
+(bind-key "M-x" #'execute-extended-command)
+
+(set-fontset-font "fontset-default" '(#x600 . #x6ff) "Amiri Quran Colored") ;; Makes all dots, hamza, diadiract marks colored!
+
+;; Note: "arabic" input method just changes my English query keyboard into an Arabic keyboard ---useful if one's mastered touch typing in Arabic!
+;; In contrast, the Perso-Arabic input method uses a system of transliteration: Ascii keys are phonetically mapped to Arabic letters.
+(bind-key* "M-SPC" (lambda () (interactive)
+   (message (if (not current-input-method)
+      (progn (set-input-method "farsi-transliterate-banan" t) "Perso-Arabic! Hint: M-x describe-input-method")
+      (progn (set-input-method nil) "English!")))))
+
+
+;; Press C-q on a word to quote it with nice unicode quotes.
+(bind-key* "C-q" (lambda () (interactive) (insert (format "“%s”" (thing-at-point 'word))) (kill-word 1)))
+#+end_src
+
+**** COMMENT [HERE TODAY] Rndm
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-HERE-TODAY-Rndm
+:END:
+
+    ;; After startup, if Emacs is idle for 10 seconds, then open my work file;
+    ;; which is a GPG file and so requires passphrase before other things can load.
+    ;; (run-with-idle-timer 10 nil (lambda () (find-file "~/Desktop/work.org.gpg")))
+
+
+
+;; NOTE: Will not work when doom-modeline is enabled!
+;; (xwidget-webkit-browse-url  "https://www.reddit.com/r/emacs/")
+
+
+;; Press C-q on a word to quote it with nice unicode quotes.
+(bind-key* "C-q" (lambda () (interactive) (insert (format "“%s”" (thing-at-point 'word))) (kill-word 1)))
+
+
+(load-file "~/blog/AlBasmala.el")
+
+#+begin_src emacs-lisp :exports code
+(org-deflink card
+ "Show one of 6 hardcoded phrases as a small inline image."
+ (-let [url
+        (pcase o-label
+          ("Let's take a break" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png")
+          ("Yes" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png")
+          ("No" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png")
+          ("Agree" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png")
+          ("Disagree" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png")
+          ("I have a question" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png"))]
+   (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
+#+end_src
+
+* COMMENT Abstract                                                           :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Abstract
 :END:
@@ -456,140 +465,6 @@ tree.
 
 (org-next-visible-heading 1)
 
-* TODO Misc                                                        :noexport:
-:PROPERTIES:
-:CUSTOM_ID: Misc
-:END:
-TODO: Add #+date when publishing, otherwise order's are all wonky.
-
-TODO:
-Find-replace all px with percentages, then ensure things look good!
-
-** Magit and large HTML files
-:PROPERTIES:
-:CUSTOM_ID: Magit-and-large-HTML-files
-:END:
-Since I'm producing /massive/ HTML files for each post, trying to review changes with the default Magit buffer /which shows
-all changes in the repository/ can be painfully slow. As such, when I'm blogging, let's change my ~C-x g~ binding from
-doc:magit-status to doc:magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
-~C-x g D u~ to see the “u”nstaged “d”ifferences for the file, then stage what I like with ~s~, then ~C-x g c~ to “c”ommit whatever differences I have staged.
-#+begin_src emacs-lisp
-(bind-key "C-x g" #'magit-file-dispatch)
-#+end_src
-
-** Column Width
-:PROPERTIES:
-:CUSTOM_ID: Column-Width
-:END:
-When blogging, I see live HTML previews whenever I save thanks to
-doc:blog/preview.  As such, I cannot have my lines being too wide. I'll settle
-for a modest 80 columns.  Then kbd:M-q will format my paragraphs to wrap nicely
-into this 80-column width.
-#+begin_src emacs-lisp
-(setq-default fill-column 80)
-#+end_src
-
-(When I'm coding with a single open window, I usually use a comfortable 120 columns.)
-
-** Required loads
-:PROPERTIES:
-:CUSTOM_ID: Clean-this-section-up
-:END:
-#+begin_src emacs-lisp :exports none
-;; cl-lib was published as a better (namespaced!) alternative to cl, which has a deprecation warning in Emacs27.
-;; Yet some old pacakges require cl, and so the below setq silences the deprecation warning.
-(setq byte-compile-warnings '(cl-functions))
-(require 'cl-lib) ;; to get loop instead of cl-loop, etc.
-
-(require 'shortdoc) ;; Essentially "tldr" but for Emacs Lisp!
-;; (cl-defun define-short-documentation-group (&rest _))
-;; (cl-defun org-duration-to-minutes (&rest _) )
-;; (cl-defun org-id-find-id-file (&rest _))
-
-(ignore-errors
-  (use-package org-preview-html)
-  (setq org-preview-html-viewer 'xwidget)
-  ;; (xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
-  (advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
-  (advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
-  (advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
-                                                           (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
-                                                           )))
-  (use-package org-special-block-extras)
-  ;;(load-file "~/blog/AlBasmala.el")
-  ) ;; M-x blog/preview
-
-;; Required for Github Actions; i.e., testing.
-;; TODO Clean me!
-(defun quelpa-read-cache ()) ;; Used somewhere, but not defined.
-;; See: quelpa-persistent-cache-file
-(setq quelpa-cache nil)
-
-;; Eager macro-expansion failure: (void-function all-the-icons-faicon)
-;; Symbol’s function definition is void: all-the-icons-faicon
-#+end_src
-#+begin_src emacs-lisp :exports none
-;; Error in kill-emacs-hook (org-clock-save): (void-function org-clocking-buffer)
-(cl-defun org-clocking-buffer (&rest _))
-#+end_src
-
-** COMMENT Arabic Setup    :Possibly_already_in_AlBasmala_so_just_load_that:
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-Arabic-Setup
-:END:
-
-#+begin_src emacs-lisp
-(bind-key "M-x" #'execute-extended-command)
-
-(set-fontset-font "fontset-default" '(#x600 . #x6ff) "Amiri Quran Colored") ;; Makes all dots, hamza, diadiract marks colored!
-
-;; Note: "arabic" input method just changes my English query keyboard into an Arabic keyboard ---useful if one's mastered touch typing in Arabic!
-;; In contrast, the Perso-Arabic input method uses a system of transliteration: Ascii keys are phonetically mapped to Arabic letters.
-(bind-key* "M-SPC" (lambda () (interactive)
-   (message (if (not current-input-method)
-      (progn (set-input-method "farsi-transliterate-banan" t) "Perso-Arabic! Hint: M-x describe-input-method")
-      (progn (set-input-method nil) "English!")))))
-
-
-;; Press C-q on a word to quote it with nice unicode quotes.
-(bind-key* "C-q" (lambda () (interactive) (insert (format "“%s”" (thing-at-point 'word))) (kill-word 1)))
-#+end_src
-
-*** COMMENT [HERE TODAY] Rndm
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-HERE-TODAY-Rndm
-:END:
-
-    ;; After startup, if Emacs is idle for 10 seconds, then open my work file;
-    ;; which is a GPG file and so requires passphrase before other things can load.
-    ;; (run-with-idle-timer 10 nil (lambda () (find-file "~/Desktop/work.org.gpg")))
-
-
-
-;; NOTE: Will not work when doom-modeline is enabled!
-;; (xwidget-webkit-browse-url  "https://www.reddit.com/r/emacs/")
-
-
-;; Press C-q on a word to quote it with nice unicode quotes.
-(bind-key* "C-q" (lambda () (interactive) (insert (format "“%s”" (thing-at-point 'word))) (kill-word 1)))
-
-
-(load-file "~/blog/AlBasmala.el")
-
-#+begin_src emacs-lisp :exports code
-(org-deflink card
- "Show one of 6 hardcoded phrases as a small inline image."
- (-let [url
-        (pcase o-label
-          ("Let's take a break" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png")
-          ("Yes" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png")
-          ("No" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png")
-          ("Agree" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png")
-          ("Disagree" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png")
-          ("I have a question" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png"))]
-   (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
-#+end_src
-
 * TODO COMMENT Glossary Library of Arabic Linguistic Jargon
 :PROPERTIES:
 :CUSTOM_ID: COMMENT-Glossary-Library-of-Arabic-Linguistic-Jargon
@@ -689,16 +564,13 @@ Hashnode. However, Hashnode does not respect my CSS nor my inline JS.  This was
 problematic, since I wanted to write a tiny [[https://alhassy.com/arabic-roots.html][root-meaning program to learn Arabic]]
 and to have a [[https://alhassy.com/cartoon][tiny web-app for Arabic shows for my kids]].
 
-* COMMENT TODO: Make the floating toc “Ξ” be aware of links...
-... so that “doc:blog/new-article” renders nicely in the floating doc!
-
 * “Goal-driven development” ---or, Getting Started: doc:blog/new-article
   :PROPERTIES:
   :CUSTOM_ID: blog-new-article
   :END:
 <<new-article>>
 
-Here's what an example looks like:
+Here's what an example article source looks like:
 #+begin_example org
 #+title: Example Article
 #+author: Musa Al-hassy
@@ -718,8 +590,10 @@ I like maths.
 I like programming.
 #+end_example
 
+
 Almost all ~#+keyword:⋯~ lines become part of the JSON file
-https://alhassy.com/posts.json:
+https://alhassy.com/posts.json, that I'll use to generate the index landing
+page.
 #+html: <div style="overflow-y: scroll; height:250px;">
 #+begin_src emacs-lisp :tangle no :results replace value :wrap src js :exports results
 (f-read-text "~/blog/posts.json")
@@ -911,22 +785,18 @@ https://alhassy.com/posts.json:
 
 <<unfurling>>
 
-The =#+description= is exported as HTML meta-data which is used to
-‘unfurl’ a link to an article: When a link to an article is pasted
-in a social media website, it /unfurls/ into a little card showing
-some information about the link, such as its image, description, and author.
+The =#+description= is exported, by standard Org-mode, as HTML meta-data which is
+used to ‘unfurl’ a link to an article: When a link to an article is pasted in a
+social media website, it /unfurls/ into a little card showing some information
+about the link, such as its image, description, and author.
 - For long descriptions, one can use multiple =#+description= lines;
   I'd like to have a terse one-liner with a longer description in the
   =Abstract= heading.
 
-#+begin_details Helper function to make a new article
+Below are the methods to make a new article, to get the meta-data about each
+article, to create the JSON file, and to load it.
+** blog/new-article: Helper function to make a new article          :details:
 #+BEGIN_SRC emacs-lisp -n
-(defvar blog/tags
-  '(emacs faith category-theory order-theory
-    lisp types packages haskell agda
-    c frama-c program-proving)
-  "Tags for my blog articles.")
-
 (defun blog/new-article ()
 "Make a new article for my blog; prompting for the necessary ingredients.
 
@@ -972,9 +842,166 @@ nearly instantaneously."
     (save-buffer)
     (blog/preview)))
 #+END_SRC
-#+end_details
 
-** COMMENT Example calculation from that MathJax Setup?
+** blog/create-posts-json-file                                      :details:
+#+begin_src emacs-lisp  -n
+(defun blog/create-posts-json-file ()
+  "Create cache info about posts."
+  (interactive)
+  (require 'json)
+  (cl-loop for file in (f-files "~/blog/posts")
+           when (s-ends-with? ".org" file)
+           collect (blog/info file) into posts
+           finally
+           ;; Sorted in descending time; i.e., the latest article should be first
+           ;; Note: We use “:date” key here since we have alists with such keys; when we JSON encode, the keys become strings, eg “ "data" ”.
+           (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (map-elt older :date)) (date-to-time (map-elt newer :date))))))
+           (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
+           (find-file "~/blog/posts.json")
+           (json-pretty-print-buffer)
+           (write-file "~/blog/posts.json")))
+
+
+(defvar blog/posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer))
+  "Load cached info about posts")
+
+
+(defvar blog/tags (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags"))) blog/posts))) #'string<)
+  "Tags for my blog articles.")
+#+end_src
+
+** Convenient accessor methods: Given a JSON hashmap, get the specified key values :details:
+
+Since “accessor” begins with ‘a’, and ‘@’ looks like an ‘a’, all these methods
+start with ‘@’.
++ The final 3 below not only access, but also produce HTMLized renditions of
+  what they access. This is useful for when we want to organise an index landing
+  page of all of my posts.
+
+#+begin_src emacs-lisp
+;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
+;; Later, we redefine these, for example `@image' will actually produces the HTML for the image.
+;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
+(defun @title       (json) (map-elt json "title"))
+(defun @date        (json) (map-elt json "date"))
+(defun @file        (json) (map-elt json "file"))
+(defun @description (json) (map-elt json "description"))
+(defun @url         (json) (map-elt json "url"))
+(defun @abstract    (json) (map-elt json "abstract"))
+
+
+(defun @history (json)
+  "Get an HTML badge that points to the Github history of a given file name, in my blog."
+  (concat
+   "<a class=\"tooltip\" title=\"See the various edits to this article over time\" href=\""
+   (map-elt json "history")
+   "\"><img src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
+
+
+(defun @tags (json)
+  "Get an HTML listing of tags, as shields.io bages, associated with the given file.
+
+Example use:  (@tags (seq-elt blog/posts 0))
+"
+  (concat
+   ;; Straightforward implementation.
+   ;; "<div class=\"taglist\">"
+   ;; (org-static-blog-post-taglist file-name)
+   ;; "</div>"
+
+  ;; Badges implementation
+   (concat
+    (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
+            (org-link/octoicon "tag" nil 'html))
+    (s-join " "
+            (--map  (org-link/badge
+                     (format "|%s|grey|%stag-%s.html"
+                             (s-replace "-" "_" it)
+                             "https://alhassy.com" it)
+                     nil 'html)
+                    (s-split " " (map-elt json "tags")))))))
+
+
+(cl-defun @image (json &optional explicit-image-path-prefix)
+  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
+
+By default, the image should be located in the top-level `images/' directory.
+If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
+in the image path.
+
+Example use:  (@image (seq-elt blog/posts 0))
+
+Here are 4 example uses:
+
+,#+fileimage: emacs-birthday-present.png
+,#+fileimage: ../images/emacs-birthday-present.png
+,#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
+,#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
+
++ Notice that the second indicates explicit width and height.
++ (To make the first approach work with local previews,
+   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'. This requires a slash at the end.)
++ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
+"
+  (-let [(image width height no-border?) (s-split " " (map-elt json "image"))]
+    (setq width (or width 350))
+    (setq height (or height 350))
+    (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
+    (cond
+     ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
+     (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
+     ((not (s-contains? "/" image)) (setq image (format "images/%s" image))))
+    (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
+      (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+      (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
+      (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+      (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
+              href title src no-border? width height))))
+#+end_src
+
+** blog/info: Core helper to get the plist/JSON metadata about each post :details:
+#+begin_src emacs-lisp
+(defun blog/info (post-filename)
+  "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
+
+Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
+"
+  (let ((case-fold-search t))
+    (with-temp-buffer
+      (insert-file-contents post-filename)
+      (-snoc
+       (cons
+       (cons :file (f-base post-filename))
+      (cl-loop for (prop.name prop.regex prop.default) on
+            `(:title "^\\#\\+title:[ ]*\\(.+\\)$" ,post-filename
+                     :date "^\\#\\+date:[ ]*<\\([^]>]+\\)>$" ,(time-since 0)
+                     :image "^\\#\\+fileimage: \\(.*\\)" "emacs-birthday-present.png 350 350"
+                     :description "^\\#\\+description:[ ]*\\(.+\\)$" "I learned something neat, and wanted to share!"
+                     :tags "^\\#\\+filetags:[ ]*\\(.+\\)$" "" ;; String; Space separated sequence of tags
+                     )
+            by 'cdddr
+            ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
+            do (goto-char (point-min))
+            collect (cons prop.name
+                          (if (search-forward-regexp prop.regex nil t)
+                              (match-string 1)
+                            prop.default))))
+       (cons :url (concat "https://alhassy.com/" (f-base post-filename)))
+       (cons :history (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
+                              (f-base post-filename)))
+       (cons :abstract (progn
+                  (goto-char (point-min))
+                  (when (re-search-forward "^\* Abstract" nil t)
+                    (beginning-of-line)
+                    (-let [start (point)]
+                      (org-narrow-to-subtree)
+                      (org-fold-show-entry)
+                      (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+                      (forward-line)
+                      (buffer-substring-no-properties (point) (point-max))))))))))
+#+end_src
+* COMMENT Example calculation from that MathJax Setup?
    :PROPERTIES:
    :CUSTOM_ID: COMMENT-Example-calculation-from-that-MathJax-Setup
    :END:
@@ -997,7 +1024,7 @@ Such as org-html-head-extra
 Then,
 \[\eqn{Constructive De Morgan}{¬(x \;⊔\; y) \quad=\quad ¬ x \;⊓\; ¬ y}\]
 
-* /Seamlessly/ Previewing Articles /within/ Emacs 😲
+* COMMENT /Seamlessly/ Previewing Articles /within/ Emacs 😲
 :PROPERTIES:
 :CUSTOM_ID: Seamlessly-Previewing-Articles-within-Emacs
 :END:
@@ -1175,7 +1202,7 @@ Look:
 #+begin_abstract
 words
 #+end_abstract
-* /Style/! ✨ What do we want to be inserted into the head of every page?
+* COMMENT /Style/! ✨ What do we want to be inserted into the head of every page?
   :PROPERTIES:
   :CUSTOM_ID: HTML-Header
   :END:
@@ -1262,7 +1289,7 @@ Where the =𝓍ᵢ= are the lines referenced by =𝓍𝓈=.
 Some Lisp code is required to string everything together.
 + Lisp fragments are tangled to [[https://alhassy.com/AlBasmala.el][AlBasmala.el]].
 
-* Ξ: Floating /Table of Contents/
+* COMMENT Ξ: Floating /Table of Contents/
   :PROPERTIES:
   :CUSTOM_ID: Floating-TOC
   :END:
@@ -1371,7 +1398,7 @@ How did I get here?
 
 # ( The Unicode whitespace ‘ ’ before and after =Ξ= is to appease the [[clickable-headlines][clickable headlines utility]], below. )
 
-* Org Marco: “This section has been #+include'd from my init.org” :ignore:
+* COMMENT Org Marco: “This section has been #+include'd from my init.org” :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Org-Marco-This-section-has-been-include'd-from-my-init-org
 :END:
@@ -1390,7 +1417,7 @@ How did I get here?
 #+macro: from-my-init-text /This section has been =#+include='d from my init.org/, {{{init}}}
 #+macro: from-my-init @@html: <center class="tiny" style="font-size: 15px">@@ {{{from-my-init-text}}} @@html: </center>@@
 
-* Ensuring Useful HTML Anchors
+* COMMENT Ensuring Useful HTML Anchors
 CLOSED: [2022-10-22 Sat 22:08]
   :PROPERTIES:
   :CUSTOM_ID: Ensuring-Useful-HTML-Anchors
@@ -1400,7 +1427,7 @@ CLOSED: [2022-10-22 Sat 22:08]
 <<ensuring-useful-html-anchors>>
 #+include: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
 
-* Clickable Headlines
+* COMMENT Clickable Headlines
 CLOSED: [2022-10-22 Sat 22:08]
   :PROPERTIES:
   :CUSTOM_ID: Clickable-Headlines
@@ -1410,7 +1437,7 @@ CLOSED: [2022-10-22 Sat 22:08]
 <<clickable-headlines>>
 #+include: "~/.emacs.d/init.org::*Clickable Headlines" :only-contents t
 
-* Curvy Source Blocks & Pink Inline
+* COMMENT Curvy Source Blocks & Pink Inline
   :PROPERTIES:
   :CUSTOM_ID: Curvy-Source-Blocks
   :END:
@@ -1514,7 +1541,7 @@ details {
 
 #+end_details
 
-* Blog Banner and Dynamic Code Highlighting
+* COMMENT Blog Banner and Dynamic Code Highlighting
   :PROPERTIES:
   :CUSTOM_ID: Blog-Banner
   :END:
@@ -1649,7 +1676,7 @@ HERE PLS
 But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
 #+end_remark
 
-* Article Title & Image
+* COMMENT Article Title & Image
   :PROPERTIES:
   :CUSTOM_ID: Images
   :END:
@@ -1773,7 +1800,7 @@ unsplash unsplash)))
 
 unsplash:XXX0GQfgMy8
 
-* MathJax Support --- $e^{i \cdot \pi} + 1 = 0$
+* COMMENT MathJax Support --- $e^{i \cdot \pi} + 1 = 0$
   :PROPERTIES:
   :CUSTOM_ID: MathJax-Support
   :END:
@@ -1885,7 +1912,7 @@ for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
 LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
 [[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
 :end:
-* Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
+* COMMENT Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
   :PROPERTIES:
   :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
   :END:
@@ -2272,7 +2299,7 @@ You can view the generated ~/blog/index.html by invoking:
     (org-html-export-to-html)))
 #+end_src
 
-* Actually publishing an article
+* COMMENT Actually publishing an article
 :PROPERTIES:
 :CUSTOM_ID: Actually-publishing-an-article
 :END:
