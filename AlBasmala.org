@@ -24,6 +24,13 @@
 ;; TODO. (defun @tags (json) (s-split " " (map-elt json "tags"))) ;; TODO Have this be a list, in the actual json for future AngularJS search by tags
 
 
+TODO: The sections that have been tangled from my init: Just move that code
+here. That code was written with my blog in mind, and so it deserves to be here,
+and not in my init.
+
+TODO: Look at stuff in my init and see what there is specifically serving my
+blog; and move that here. Can always link to AlBasmala.html.
+
 # ;; (length blog/posts) ⇒ 16
 
 # TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
@@ -2496,44 +2503,112 @@ How did I get here?
 
 # ( The Unicode whitespace ‘ ’ before and after =Ξ= is to appease the [[clickable-headlines][clickable headlines utility]], below. )
 
-* COMMENT Org Marco: “This section has been #+include'd from my init.org” :ignore:
+* Clickable Sections with Sensible Anchors
+** Ensuring Useful HTML Anchors
 :PROPERTIES:
-:CUSTOM_ID: Org-Marco-This-section-has-been-include'd-from-my-init-org
+:CUSTOM_ID: Ensuring-Useful-HTML-Anchors
 :END:
 
-# Some sections in this article come from my init.org.
-#
-# As such, the {{{from-my-init}}} macro is used to provide a nice, small, linkable, message.
+Upon HTML export, each tree heading is assigned an ID to be used for hyperlinks.
+Default IDs are something like ~org1957a9d~, which does not endure the test of time:
+Re-export will produce a different id. Here's a rough snippet to generate
+IDs from headings, by replacing spaces with hyphens, for headings without IDs.
 
-# Implementation below. ############################################################
+#+begin_details "blog/ensure-useful-section-anchors: Advised to Org Export"
+#+BEGIN_SRC emacs-lisp
+(defun blog/ensure-useful-section-anchors (&rest _)
+  "Org sections without an ID are given one based on its title.
 
-# This CSS rule targets all images within anchors within a <center> that has a class named “tiny”. In particular, it's used
-# to target badges so that they are about the same size as <small> text.
-#+html: <style> center.tiny a img { height: 15px } </style>
+All non-alphanumeric characters are cleverly replaced with ‘-’.
 
-#+macro: init badge:A_Life_Configuring|Emacs|green|https://alhassy.github.io/emacs.d|gnu-emacs
-#+macro: from-my-init-text /This section has been =#+include='d from my init.org/, {{{init}}}
-#+macro: from-my-init @@html: <center class="tiny" style="font-size: 15px">@@ {{{from-my-init-text}}} @@html: </center>@@
+If multiple trees end-up with the same id property, issue a
+message and undo any property insertion thus far.
 
-* COMMENT Ensuring Useful HTML Anchors
-CLOSED: [2022-10-22 Sat 22:08]
+E.g., ↯ We'll go on a ∀∃⇅ adventure
+   ↦  We'll-go-on-a-adventure
+"
+  (interactive)
+  (let ((ids))
+    (org-map-entries
+     (lambda ()
+       (org-with-point-at (point)
+         (let ((id (org-entry-get nil "CUSTOM_ID")))
+           (unless id
+             (thread-last (nth 4 (org-heading-components))
+               (s-replace-regexp "[^[:alnum:]']" "-")
+               (s-replace-regexp "-+" "-")
+               (s-chop-prefix "-")
+               (s-chop-suffix "-")
+               (setq id))
+             (if (not (member id ids))
+                 (push id ids)
+               (message-box "Oh no, a repeated id!\n\n\t%s" id)
+               (undo)
+               (setq quit-flag t))
+             (org-entry-put nil "CUSTOM_ID" id))))))))
+
+;; Whenever html & md export happens, ensure we have headline ids.
+(advice-add 'org-html-export-to-html   :before 'blog/ensure-useful-section-anchors)
+(advice-add 'org-md-export-to-markdown :before 'blog/ensure-useful-section-anchors)
+#+END_SRC
+#+end_details
+
+One may then use ~[[#my-custom-id]]~ to link to the entry with ~CUSTOM_ID~
+property ~my-custom-id~.
+
+Interestingly, ~org-set-property~, ~C-c C-x p~, lets us insert a property
+from a selection of available ones, then we'll be prompted for a value
+for it from a list of values you've used elsewhere. This is useful for
+remaining consistent for when trees share similar properties.
+
+** Clickable Headlines
+:PROPERTIES:
+:CUSTOM_ID: Clickable-Headlines
+:END:
+
+By default, HTML export generates ID's to headlines so they may be referenced
+to, but there is no convenient way to get at them to refer to a particular
+heading. The following spell fixes this issue: Headlines are now clickable,
+resulting in a link to the headline itself.
+
+#+begin_details org-html-format-headline-function
+#+begin_src emacs-lisp
+;; Src: https://writepermission.com/org-blogging-clickable-headlines.html
+(setq org-html-format-headline-function
+      (lambda (todo todo-type priority text tags info)
+        "Format a headline with a link to itself."
+        (let* ((headline (get-text-property 0 :parent text))
+               (id (or (org-element-property :CUSTOM_ID headline)
+                       (ignore-errors (org-export-get-reference headline info))
+                       (org-element-property :ID headline)))
+               (link (if id
+                         (format "<a href=\"#%s\">%s</a>" id text)
+                       text)))
+          (org-html-format-headline-default-function todo todo-type priority link tags info))))
+#+end_src
+#+end_details
+
+#+begin_box "Known Issues" :background-color cyan
+1. Need to have a custom id declared.
+   #+BEGIN_SRC org :tangle no
   :PROPERTIES:
-  :CUSTOM_ID: Ensuring-Useful-HTML-Anchors
+  :CUSTOM_ID: my-header
   :END:
+  #+END_SRC
 
-{{{from-my-init}}}
-<<ensuring-useful-html-anchors>>
-#+include: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
+2. Failing headers: =* [[link]]= nor =* ~code~= nor =* $math$=.
+   - Any non-link text /before/ it will work:  =ok [[link]]=.
+     * Using Unicode non-breaking space ‘ ’ is ok.
+   - Text /only after/ the link is insufficient.
 
-* COMMENT Clickable Headlines
-CLOSED: [2022-10-22 Sat 22:08]
-  :PROPERTIES:
-  :CUSTOM_ID: Clickable-Headlines
-  :END:
-
-{{{from-my-init}}}
-<<clickable-headlines>>
-#+include: "~/.emacs.d/init.org::*Clickable Headlines" :only-contents t
+#+begin_details Details on failing headers
+*Warning:* The header cannot already be a link!  Otherwise you get the cryptic and
+unhelpful error =(wrong-type-argument plistp :section-number)=; which then
+pollutes the current Emacs session resulting in strange =nil= errors after =C-x
+C-s=, thereby forcing a full Emacs restart.  Instead, you need at least one
+portion of each heading to be not a link.
+#+end_details
+#+end_box
 
 * COMMENT Curvy Source Blocks & Pink Inline
   :PROPERTIES:
@@ -3340,3 +3415,29 @@ That is, this is a variation on the traditional [[https://en.wikipedia.org/wiki/
 Further resources:
 - [[https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site][Managing a custom domain for your GitHub Pages site - GitHub Docs]]
 - [[https://richpauloo.github.io/2019-11-17-Linking-a-Custom-Domain-to-Github-Pages/][Linking A Custom Domain To Github Pages]]
+* COMMENT Archives
+** Org Marco: “This section has been #+include'd from my init.org”   :ignore:
+:PROPERTIES:
+:CUSTOM_ID: Org-Marco-This-section-has-been-include'd-from-my-init-org
+:END:
+
+# Some sections in this article come from my init.org.
+#
+# As such, the {{{from-my-init}}} macro is used to provide a nice, small, linkable, message.
+
+# Implementation below. ############################################################
+
+# This CSS rule targets all images within anchors within a <center> that has a class named “tiny”. In particular, it's used
+# to target badges so that they are about the same size as <small> text.
+#+html: <style> center.tiny a img { height: 15px } </style>
+
+#+macro: init badge:A_Life_Configuring|Emacs|green|https://alhassy.github.io/emacs.d|gnu-emacs
+#+macro: from-my-init-text /This section has been =#+include='d from my init.org/, {{{init}}}
+#+macro: from-my-init @@html: <center class="tiny" style="font-size: 15px">@@ {{{from-my-init-text}}} @@html: </center>@@
+
+*** COMMENT Example usage
+
+
+{{{from-my-init}}}
+<<ensuring-useful-html-anchors>>
+#+include: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
