@@ -1834,8 +1834,15 @@ Example use:  (@tags (seq-elt blog/posts 0))
                              "https://alhassy.com" it)
                      nil 'html)
                     (s-split " " (map-elt json "tags")))))))
+#+end_src
 
+<<Images>>
 
+Every article declaratively has an associated image ^_^
+- Images are loaded from the =~/blog/images/= directory, but may be explicit paths or URLs.
+- If none declared, we use =emacs-birthday-present.png= :-)
+  #+html: <center> <img src="http://alhassy.com/images/emacs-birthday-present.png" width=100 height=100> </center>
+#+begin_src emacs-lisp
 (cl-defun @image (json &optional explicit-image-path-prefix)
   "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
 
@@ -2394,6 +2401,107 @@ for the JavaScript code in this tag.
 #+end_src
 #+end_details
 
+** Miscellaneous Styles
+** Curvy Source Blocks & Pink Inline :details:
+
+<<curvy-blocks>>
+
+The =border-radius= property defines the radius of an
+element's corners, we use it to make curvy looking source blocks.
+Its behaviour [[https://www.w3schools.com/cssref/css3_pr_border-radius.asp][changes]] depending on how many arguments it is given.
+- We also style the code block's label to be curvy.
+- Both =.src= and =pre.src:before= are used by Org.
+
+#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval -n
+.src {
+  border: 0px !important;
+  /* 50px for top-left and bottom-right corners;
+     20px for top-right and bottom-left cornerns. */
+  border-radius: 50px 20px !important;
+}
+
+pre.src:before {
+    /* border: 0px !important; */
+    /* background-color: inherit !important; */
+    padding: 3px !important;
+    border-radius: 20px 50px !important;
+    font-weight:700
+}
+
+ /* wrap lengthy lines for code blocks */
+ pre{white-space:pre-wrap}
+
+ /* Also curvy inline code with ~ ⋯ ~ and = ⋯ = */
+ code {
+     /* background: Cyan !important; */
+     background: pink !important;
+     border-radius: 7px;
+     /* border: 1px solid lightgrey; background: #FFFFE9; padding: 2px */
+ }
+#+end_src
+
+Code such as ~(= 2 (+ 1 1))~ now sticks out with a pink background ♥‿♥
+
+** Pink Tables :details:
+#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
+table {
+     background: pink;
+     border-radius: 10px;
+     /* width:90% */
+
+     border-bottom: hidden;
+     border-top: hidden;
+
+     display: table !important;
+
+     /* Put table in the center of the page, horizontally. */
+     margin-left:auto !important;margin-right:auto !important;
+
+     font-family:"Courier New";
+     font-size:90%;
+ }
+
+ /* Styling for ‘t’able ‘d’ata and ‘h’eader elements */
+ th, td {
+     border: 0px solid red;
+ }
+#+end_src
+#+caption: Example table
+| Prime | 2^{Prime} |
+|-------+-----------|
+|  <c>  |    <c>    |
+|   1   |     2     |
+|   2   |     4     |
+|   3   |     8     |
+|   5   |    32     |
+|   7   |    128    |
+|  11   |   2048    |
+#+TBLFM: $2='(expt 2 $1);N
+
+# For the line wrapping, it may be useful to have
+# =#+PROPERTY: header-args -n= at the top of the file
+# to have all blocks displayed with line numbers.
+
+#+begin_src emacs-lisp
+;; Table captions should be below the tables
+(setq org-html-table-caption-above nil
+      org-export-latex-table-caption-above nil)
+#+end_src
+
+** Let's show folded, details, regions with a nice greenish colour :details:
+This is part of =org-special-block-extras=, and it's something like this:
+#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
+details {
+  padding: 1em;
+  background-color: #e5f5e5;
+  /* background-color: pink; */
+  border-radius: 15px;
+  color: hsl(157 75% 20%);
+  font-size: 0.9em;
+  box-shadow: 0.05em 0.1em 5px 0.01em  #00000057;
+}
+#+end_src
+
 * Ξ: Floating /Table of Contents/
   :PROPERTIES:
   :CUSTOM_ID: Floating-TOC
@@ -2609,234 +2717,6 @@ C-s=, thereby forcing a full Emacs restart.  Instead, you need at least one
 portion of each heading to be not a link.
 #+end_details
 #+end_box
-
-* COMMENT Curvy Source Blocks & Pink Inline
-  :PROPERTIES:
-  :CUSTOM_ID: Curvy-Source-Blocks
-  :END:
-
-<<curvy-blocks>>
-
-The =border-radius= property defines the radius of an
-element's corners, we use it to make curvy looking source blocks.
-Its behaviour [[https://www.w3schools.com/cssref/css3_pr_border-radius.asp][changes]] depending on how many arguments it is given.
-- We also style the code block's label to be curvy.
-- Both =.src= and =pre.src:before= are used by Org.
-
-#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval -n
-.src {
-  border: 0px !important;
-  /* 50px for top-left and bottom-right corners;
-     20px for top-right and bottom-left cornerns. */
-  border-radius: 50px 20px !important;
-}
-
-pre.src:before {
-    /* border: 0px !important; */
-    /* background-color: inherit !important; */
-    padding: 3px !important;
-    border-radius: 20px 50px !important;
-    font-weight:700
-}
-
- /* wrap lengthy lines for code blocks */
- pre{white-space:pre-wrap}
-
- /* Also curvy inline code with ~ ⋯ ~ and = ⋯ = */
- code {
-     /* background: Cyan !important; */
-     background: pink !important;
-     border-radius: 7px;
-     /* border: 1px solid lightgrey; background: #FFFFE9; padding: 2px */
- }
-#+end_src
-
-Code such as ~(= 2 (+ 1 1))~ now sticks out with a cyan background ♥‿♥
-
-#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
- table {
-     background: pink;
-     border-radius: 10px;
-     /* width:90% */
-
-     border-bottom: hidden;
-     border-top: hidden;
-
-     display: table !important;
-
-     /* Put table in the center of the page, horizontally. */
-     margin-left:auto !important;margin-right:auto !important;
-
-     font-family:"Courier New";
-     font-size:90%;
- }
-
- /* Styling for ‘t’able ‘d’ata and ‘h’eader elements */
- th, td {
-     border: 0px solid red;
- }
-#+end_src
-#+caption: Example table
-| Prime | 2^{Prime} |
-|-------+-----------|
-|  <c>  |    <c>    |
-|   1   |     2     |
-|   2   |     4     |
-|   3   |     8     |
-|   5   |    32     |
-|   7   |    128    |
-|  11   |   2048    |
-#+TBLFM: $2='(expt 2 $1);N
-
-# For the line wrapping, it may be useful to have
-# =#+PROPERTY: header-args -n= at the top of the file
-# to have all blocks displayed with line numbers.
-
-#+begin_src emacs-lisp
-;; Table captions should be below the tables
-(setq org-html-table-caption-above nil
-      org-export-latex-table-caption-above nil)
-#+end_src
-
-#+begin_details "Let's show folded, details, regions with a nice greenish colour"
-This is part of =org-special-block-extras=, and it's something like this:
-#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
-details {
-  padding: 1em;
-  background-color: #e5f5e5;
-  /* background-color: pink; */
-  border-radius: 15px;
-  color: hsl(157 75% 20%);
-  font-size: 0.9em;
-  box-shadow: 0.05em 0.1em 5px 0.01em  #00000057;
-}
-#+end_src
-
-#+end_details
-
-* COMMENT Article Title & Image
-  :PROPERTIES:
-  :CUSTOM_ID: Images
-  :END:
-
-<<Images>>
-
-Every article declaratively has an associated image ^_^
-- Images are loaded from the =~/blog/images/= directory, but may be explicit paths or URLs.
-- If none declared, we use =emacs-birthday-present.png= :-)
-  #+html: <center> <img src="http://alhassy.com/images/emacs-birthday-present.png" width=100 height=100> </center>
-
-  #+begin_src emacs-lisp
-(cl-defun my/org-static-blog-assemble-image (file &optional explicit-image-path-prefix)
-  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
-
-By default, the image should be located in the top-level `images/' directory.
-If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
-in the image path.
-
-Here are 4 example uses:
-
-,#+fileimage: emacs-birthday-present.png
-,#+fileimage: ../images/emacs-birthday-present.png
-,#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
-,#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
-
-+ Notice that the second indicates explicit width and height.
-+ (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'. This requires a slash at the end.)
-+ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
-"
- (with-temp-buffer
-   (insert-file-contents file)
-   (goto-char 0)
-   (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
-   (-let [(image width height no-border?)
-          (s-split " " (substring-no-properties
-                        (or (match-string 1)
-                            "emacs-birthday-present.png")))]
-     (setq width (or width 350))
-     (setq height (or height 350))
-     (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
-     (cond
-      ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
-      (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
-      ((not (s-contains? "/" image)) (setq image (format "images/%s" image)))
-       )
-
-     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
-       (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-       (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
-       (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
-       (format "<center><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
-             %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
-             href title src no-border? width height)))))
-#+end_src
-
-** Making this work with =org-notes-style= and =org-static-blog=
-:PROPERTIES:
-:CUSTOM_ID: Making-this-work-with-org-notes-style-and-org-static-blog
-:END:
-To make use of =org-notes-style=, I need the title to use the =title= class
-but =org-static-blog= uses the =post-title= blog, so I'll override the
-=org-static-blog= preamble method to simply use an auxiliary div.
-- Along the way, I'll position the article image under the article's title.
-- Line [[(fixTitle)]]: =org-notes-style= has too much vertical space after the title,
-  let's reduce it so that the article's data can follow it smoothly.
-# - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
-#  just dumps the title in-place; here I provide a support for just =<br>=.
-#+begin_src emacs-lisp -r -n -n
-;; MA: This can be deleted?? Do a search for post-title in this article to see why?
-(defun org-static-blog-post-preamble (post-filename)
-  "Returns the formatted date and headline of the post.
-This function is called for every post and prepended to the post body.
-Modify this function if you want to change a posts headline."
-  (concat
-   ;; The title
-   "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
-   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename)
-   "</a>"
-   "</h1></div>"
-   ;; The date
-   "<div style=\"text-align: center;\">"
-   (format-time-string (org-static-blog-gettext 'date-format)
-                       (org-static-blog-get-date post-filename))
-   "</div>"
-   ;; The article's image
-   (my/org-static-blog-assemble-image post-filename)
-   "<br><center><strong>Abstract</strong></center>"))
-#+end_src
-
-
-# Before we move on, Org-notes adds extra whitespace after the title, let's avoid
-# that.
-# #+begin_src css :tangle ~/blog/blog-banner.css :noeval
-#  .title { margin: 0 0 0 0 !important; }
-# #+end_src
-
-** COMMENT unsplash link setup                         :Leave_as_cute_remark:
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-unsplash-link-setup
-:END:
-#+begin_src emacs-lisp :exports code
-;; If you download images, from unspash, you'll have to host them somewhere!
-;; An alternative is just to provide direct links to the unsplash images themselves!
-;;
-;; Example usage:
-;;   unsplash:gySMaocSdqs
-;;
-;; This shows an image along with a useful tooltip; image size is 200x200 by default.
-;; The image is also a link, redirecting to the source, including whomever took the original photo.
-#+end_src
-
-(-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" "https://unsplash.com/photos/Vc2dD4l57og"))]
-(if unsplash
-  (format "<center><a href=\"https://unsplash.com/photos/%s\" class=\"tooltip\" title=\"Photo from Unsplash\"><img
-src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
-unsplash unsplash)))
-
-unsplash:XXX0GQfgMy8
 
 * MathJax Support --- $e^{i \cdot \pi} + 1 = 0$
   :PROPERTIES:
@@ -3441,3 +3321,68 @@ Further resources:
 {{{from-my-init}}}
 <<ensuring-useful-html-anchors>>
 #+include: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
+** COMMENT unsplash link setup                         :Leave_as_cute_remark:
+:PROPERTIES:
+:CUSTOM_ID: COMMENT-unsplash-link-setup
+:END:
+#+begin_src emacs-lisp :exports code
+;; If you download images, from unspash, you'll have to host them somewhere!
+;; An alternative is just to provide direct links to the unsplash images themselves!
+;;
+;; Example usage:
+;;   unsplash:gySMaocSdqs
+;;
+;; This shows an image along with a useful tooltip; image size is 200x200 by default.
+;; The image is also a link, redirecting to the source, including whomever took the original photo.
+#+end_src
+
+(-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" "https://unsplash.com/photos/Vc2dD4l57og"))]
+(if unsplash
+  (format "<center><a href=\"https://unsplash.com/photos/%s\" class=\"tooltip\" title=\"Photo from Unsplash\"><img
+src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
+unsplash unsplash)))
+
+unsplash:XXX0GQfgMy8
+
+** org-static-blog-post-preamble: Making this work with =org-notes-style= and =org-static-blog=
+:PROPERTIES:
+:CUSTOM_ID: Making-this-work-with-org-notes-style-and-org-static-blog
+:END:
+To make use of =org-notes-style=, I need the title to use the =title= class
+but =org-static-blog= uses the =post-title= blog, so I'll override the
+=org-static-blog= preamble method to simply use an auxiliary div.
+- Along the way, I'll position the article image under the article's title.
+- Line [[(fixTitle)]]: =org-notes-style= has too much vertical space after the title,
+  let's reduce it so that the article's data can follow it smoothly.
+# - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
+#  just dumps the title in-place; here I provide a support for just =<br>=.
+#+begin_src emacs-lisp -r -n -n
+;; MA: This can be deleted?? Do a search for post-title in this article to see why?
+(defun org-static-blog-post-preamble (post-filename)
+  "Returns the formatted date and headline of the post.
+This function is called for every post and prepended to the post body.
+Modify this function if you want to change a posts headline."
+  (concat
+   ;; The title
+   "<h1 class=\"post-title\">"
+   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
+   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
+   (org-static-blog-get-title post-filename)
+   "</a>"
+   "</h1></div>"
+   ;; The date
+   "<div style=\"text-align: center;\">"
+   (format-time-string (org-static-blog-gettext 'date-format)
+                       (org-static-blog-get-date post-filename))
+   "</div>"
+   ;; The article's image
+   (my/org-static-blog-assemble-image post-filename)
+   "<br><center><strong>Abstract</strong></center>"))
+#+end_src
+
+
+# Before we move on, Org-notes adds extra whitespace after the title, let's avoid
+# that.
+# #+begin_src css :tangle ~/blog/blog-banner.css :noeval
+#  .title { margin: 0 0 0 0 !important; }
+# #+end_src
