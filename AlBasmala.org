@@ -45,6 +45,7 @@
 # Low priority.
 
 
+** font for links
 #+html: <br>
 #+begin_remark
 Before we move on, I'd like to have heavy red font for links.
@@ -53,6 +54,12 @@ HERE PLS
 # +end_src
 But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
 #+end_remark
+
+** wrt floating toc:
+#+begin_remark Strange
+If I zoom in over 100% in my browser, the toc disappears until I zoom out.
+#+end_remark
+
 
 ** COMMENT TODO: Make the floating toc “Ξ” be aware of links...
 ... so that “doc:blog/new-article” renders nicely in the floating doc!
@@ -2046,7 +2053,7 @@ web-page in a JavaScript-supported browser /within/ Emacs.
   discussed in this article; for example, this includes the article image,
   abstract, and blog header and footer.
   - I'd like to have all of my styles /automatically/ loaded in the right places.
-+ This gives me a nonintrusive way to preview what I write.
++ This gives me a nonintrusive way to preview what I write; ≈WYSIWYG≈.
 
 We accomplish these goals via the following methods.
 ** org-link/blog: Using My Blog Styles Anywhere :details:
@@ -2391,6 +2398,8 @@ I would like to have a table of contents that floats so that it is accessible to
 the reader in case they want to jump elsewhere in the document quickly
 ---possibly going to the top of the document.
 
+#+html: <br><center> ★     ★     ★ </center><br>
+
 When we write =#+toc: headlines 2= in our Org, HTML export produces the following.
 #+begin_src html -n  :exports code :tangle no :noeval
 <div id="table-of-contents">
@@ -2406,6 +2415,7 @@ When we write =#+toc: headlines 2= in our Org, HTML export produces the followin
 #+end_src
 Hence, we can style the table of contents by writing rules that target those
 =id='s. We use the following rules, adapted from [[https://orgmode.org/worg/][the Worg community]].
+#+begin_details "CSS for a floating TOC"
 #+begin_src css -n  :tangle ~/blog/floating-toc.css :noeval
 /*TOC inspired by https://orgmode.org/worg/ */
 #table-of-contents {
@@ -2454,21 +2464,18 @@ Hence, we can style the table of contents by writing rules that target those
     padding: 0.5em;
     margin-top: -1.5em; }
 #+end_src
+#+end_details
 
 # /* TOC entries, unnumbered lists, should not be indented too much */
 # #text-table-of-contents ul { padding-left: 20px }
 
-#+begin_remark Strange
-If I zoom in over 100% in my browser, the toc disappears until I zoom out.
-#+end_remark
-
 Since the table of contents floats, the phrase /Table of Contents/ is rather
 ‘in your face’, so let's use the more subtle Greek [[https://en.wikipedia.org/wiki/Xi_(letter)][letter]] =Ξ=.
 #+begin_src emacs-lisp -n
-(advice-add 'org-html--translate :before-until 'display-toc-as-Ξ)
+(advice-add 'org-html--translate :before-until 'blog/display-toc-as-Ξ)
 ;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
 
-(defun display-toc-as-Ξ (phrase info)
+(defun blog/display-toc-as-Ξ (phrase info)
   (when (equal phrase "Table of Contents")
     (s-collapse-whitespace
     " <a href=\"javascript:window.scrollTo(0,0)\"
@@ -2483,7 +2490,7 @@ How did I get here?
 1. How does Org's HTML export TOCs? ⇒ doc:org-html-toc
 2. Looking at its source, we see doc:org-html--translate being
    the only place mentioning the string /Table of Contents/
-3. Let's advise it, with doc:advice-add, to return /Ξ/
+3. Let's advise it, with doc:advice-add, to return “Ξ”
    /only/ on that particular input string.
 4. Joy ♥‿♥
 
