@@ -10,6 +10,14 @@
 
 * COMMENT Speculative TODO-s
 
+:my-html-header__variable:
+See  [[the-html-header]] above
+In addition, we have two more pieces we would like to add to the header: Support
+for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
+LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
+[[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
+:end:
+
 ;; TODO: Axe `blog/tags-of-file' since it's now subsumed by the method: (defun @tags (json)
 
 
@@ -20,6 +28,16 @@
 ;; TODO: Axe `my/org-static-blog-assemble-image' since it's now subsumed by this method.
 (cl-defun @image (json &optional explicit-image-path-prefix)
 
+#+begin_remark "ლ(ಠ益ಠ)ლ"
+I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
+#+end_remark
+
+
+;; TODO: Consider a tag “draft”, such that articles with this tag are not considered
+;; for publication? Or better, they are published and have a badge “Warning: Incomplete Draft”, after all I think most articles are drafts since I want to be able to continously update them, that's why I have the “history” badge.
+;;
+;; Use “#+filetags: τ₁ τ₂ … τₙ”
+;; See (@tags ⋯) method.
 
 ;; TODO. (defun @tags (json) (s-split " " (map-elt json "tags"))) ;; TODO Have this be a list, in the actual json for future AngularJS search by tags
 
@@ -66,6 +84,11 @@ But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)�
 #+begin_remark Strange
 If I zoom in over 100% in my browser, the toc disappears until I zoom out.
 #+end_remark
+
+  (org-export-string-as
+     "*blog/new-article*"
+     'html
+     :body-only)
 
 
 ** COMMENT TODO: Make the floating toc “Ξ” be aware of links...
@@ -284,10 +307,10 @@ into this 80-column width.
 (maybe-clone "https://github.com/adithyaov/helm-org-static-blog")
 (load-file "~/helm-org-static-blog/helm-org-static-blog.el")
 
-(setq org-static-blog-publish-title "Life & Computing Science")
-(setq org-static-blog-publish-url "https://alhassy.github.io/")
-(setq org-static-blog-publish-directory "~/alhassy.github/posts/")
-(setq org-static-blog-posts-directory "~/alhassy.github/posts/")
+(setq blog/title "Life & Computing Science")
+(setq blog/url "https://alhassy.github.io/")
+(setq blog/publish-directory "~/alhassy.github/posts/")
+(setq blog/posts-directory "~/alhassy.github/posts/")
 (setq org-static-blog-drafts-directory "~/alhassy.github/drafts/")
 #+END_SRC
 
@@ -1099,6 +1122,16 @@ width="142" height="142" align="top"> </center>
 
  NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
 
+** Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
+  :PROPERTIES:
+  :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
+  :END:
+
+Let's use [[https://github.com/bastibe/org-static-blog][org-static-block]] to make our blog. Why?
+- It's a Lisp program smaller than 900 lines, its source is easy to read and
+  understand, and, most importantly, it was super easy to get started using it
+  using the [[https://github.com/bastibe/org-static-blog#examples][given example]].
+
 * COMMENT Abstract                                                           :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Abstract
@@ -1315,7 +1348,7 @@ See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
 @@html: <div style="padding-bottom: 30cm;"></div>@@
 ** Known bug and proposed fix.                                     :noexport:
 Warning!
-#+begin_src org
+#+begin_src org :tangle no
 ,* Useful notes :noexport:
 Be a good person.
 
@@ -1327,7 +1360,7 @@ tree which is not exported! This this tree wont be visible!
 
 TODO: Fix the above bug by ensuring all altered headings are preserved as
 follows.
-#+begin_src org
+#+begin_src org :tangle no
 ,* original heading :FOO:
 
 becomes
@@ -1484,6 +1517,8 @@ and to have a [[https://alhassy.com/cartoon][tiny web-app for Arabic shows for m
   :END:
 <<new-article>>
 
+<<initial-setup>>
+
 Here's what an example article source looks like:
 #+begin_example org
 #+title: Example Article
@@ -1504,17 +1539,17 @@ I like maths.
 I like programming.
 #+end_example
 
-
 Almost all ~#+keyword:⋯~ lines become part of the JSON file
 https://alhassy.com/posts.json, that I'll use to generate the index landing
 page.
+
 #+html: <div style="overflow-y: scroll; height:250px;">
-#+begin_src emacs-lisp :tangle no :results replace value :wrap src js :exports results
+#+begin_src emacs-lisp :tangle no :results replace value :wrap example js :exports results
 (f-read-text "~/blog/posts.json")
 #+end_src
 
 #+RESULTS:
-#+begin_src js
+#+begin_example js
 [
   {
     "file": "java-cheat-sheet",
@@ -1693,7 +1728,7 @@ page.
     "abstract": "\n#+toc: headlines 2\n\nWe attempt to motivate the structure of a Heyting Algebra\nby considering ‘inverse problems’.\n\nFor example,\n+ You have a secret number $x$ and your friend has a secret number $y$, which you've\n  communicated to each other in person.\n+ You communicate a ‘message’ to each other\n  by adding onto your secret number.\n+ Hence, if I receive a number $z$, then I can /undo/ the addition operation to find the ‘message’ $m = z - y$.\n\nWhat if we decided, for security, to change our protocol from using addition to using\nminimum. That is, we encode our message $m$ as $z = x ↓ m$. Since minimum is not\ninvertible, we decide to send our encoded messages with a ‘context’ $c$ as a pair $(z, c)$.\nFrom this pair, a unique number $m′$ can be extracted, which is not necessarily the original $m$.\nRead on, and perhaps you'll figure out which messages can be communicated 😉\n\n# For example, we wrote our message on a piece of paper and placed it on a cafe bulletin board --a context!\n\nThis exploration demonstrates that relative pseudo-complements\n+ Are admitted by the usual naturals precisely when infinity is considered a number;\n+ Are /exactly/ implication for the Booleans;\n+ /Internalises/ implication for sets;\n+ Yield /the largest complementary subgraph/ when considering subgraphs.\n# + Generalise the /deduction theorem/.\n\nIn some sense, the pseudo-complement is the “best approximate inverse” to forming meets, minima, intersections.\n\nAlong the way we develop a number of the theorems describing the relationships\nbetween different structural components of Heyting Algebras;\nmost notably the internalisation of much of its own structure.\n\nThe article aims to be self-contained, however it may be helpful to\nlook at [[https://alhassy.github.io/CatsCheatSheet/LatticesCheatSheet.pdf][this lattice cheat sheet]] (•̀ᴗ•́)و\n"
   }
 ]
-#+end_src
+#+end_example
 
 #+html: </div>
 
@@ -1709,6 +1744,31 @@ about the link, such as its image, description, and author.
 
 Below are the methods to make a new article, to get the meta-data about each
 article, to create the JSON file, and to load it.
+
+** Use-package declarations :details:
+  #+begin_src emacs-lisp -n :exports code
+(use-package org-static-blog)
+(use-package lf) ;; So we can use `lf-string' for multi-line strings supporting interpolation:
+;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
+#+end_src
+
+** Basic facts (global variables) of my blog                        :details:
+#+begin_src emacs-lisp :exports code
+(defvar blog/title "Life & Computing Science"
+  "Title of the blog.")
+
+(defvar blog/url "https://alhassy.com"
+  "URL of the blog.")
+
+(defvar blog/publish-directory "~/blog/"
+  "Directory containing published HTML files.")
+
+(defvar blog/posts-directory "~/blog/posts"
+  "Directory containing source Org files.
+
+When publishing, posts are rendered as HTML and included in the index and RSS feed.
+See `blog/create-index' and `blog/publish-directory'.")
+#+end_src
 ** blog/new-article: Helper function to make a new article          :details:
 #+BEGIN_SRC emacs-lisp -n
 (defun blog/new-article ()
@@ -1726,11 +1786,11 @@ nearly instantaneously."
   (interactive)
   (let (file desc)
 
-    (thread-last org-static-blog-posts-directory
+    (thread-last blog/posts-directory
       f-entries
       (mapcar #'f-filename)
       (completing-read "Filename (Above are existing): ")
-      (concat org-static-blog-posts-directory)
+      (concat blog/posts-directory)
       (setq file))
 
     ;; For some reason, ‘find-file’ in the thread above
@@ -2000,7 +2060,7 @@ You can view the generated ~/blog/index.html by invoking:
        ;; Org-mode header
        "#+EXPORT_FILE_NAME: ~/blog/index.html"
        "#+options: toc:nil title:nil html-postamble:nil"
-       (concat "#+title: " org-static-blog-publish-title)
+       (concat "#+title: " blog/title)
        "#+begin_export html"
        ;; MA: Not ideal, the sizes I've set in the actual article are best.
        ;; "<style>"
@@ -2081,7 +2141,7 @@ This is a minor alteration from the examples within the docstring of doc:org-def
   "Provide the styles for “www.alhassy.com”'s “header” and “footer”.
 
 The use of “blog:footer” aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
-and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function.
+and provides a Disqus comments sections. For details, consult the `blog/footer' function.
 
 Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
 We accomplish this with the help of some handy-dandy JavaScript: Just use “blog:sanitise-title”.
@@ -2098,7 +2158,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
                                 (s-replace-regexp "@@html:" "")
                                 (s-replace-regexp "@@" "")
                                 (format "<br><center><h1 class=\"post-title\">%s</h1></center>"))))
-        ("footer" (org-static-blog-post-postamble (buffer-file-name)))
+        ("footer" (blog/footer (buffer-file-name)))
         ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
         (_ "")))
 #+end_src
@@ -2106,7 +2166,6 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
 See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 
 ** blog/style-setup: A function to insert org-link/blog into a buffer :details:
-
 #+begin_src emacs-lisp
 (defun blog/style-setup (_backend)
   "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags).
@@ -2185,6 +2244,194 @@ which I place below at the top of the page.)
 
 Upon a save, kbd:C-x_C-s, a new HTML file is created ---bearing the same name as the Org file. It seems an /incremental/
 export is performed and so this is rather fast ---at least much faster than manually invoking kbd:C-c_C-e_h_o.
+
+** Article Footer: HTMLized Source and Git History :details:
+  :PROPERTIES:
+  :CUSTOM_ID: Article-Footers
+  :END:
+
+<<footers>>
+
+#+begin_src emacs-lisp -n
+(defun blog/footer (post-file-name)
+  "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
+
+This function is called for every post and the returned string is appended to the post body, as a postamble."
+  (concat
+   "<hr>"
+   "<center>"
+   (blog/htmlize-file post-file-name)
+   "&ensp;"
+   (blog/history-of-file post-file-name)
+   ;;
+   ;; TODO: Only add this to posts tagged “arabic”
+   (blog/css/arabic-font-setup)
+   ;;
+   "<br>"
+   "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
+   "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
+   "</a>"
+   ;;
+   "<br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
+   (blog/license)
+   ;; (blog/comments) ;; TODO. Not working as intended; low priority.
+   "</center>"
+   ;; The next line is required to make the org-static-blog-assemble-rss method work.
+   "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
+   (blog/read-remaining-js)))
+#+end_src
+
+** blog/tags-of-file: Get an HTML listing of tags, as shields.io bages, associated with the given file :details:
+#+begin_src emacs-lisp
+(defun blog/tags-of-file (file-name)
+  "Get an HTML listing of tags, as shields.io bages, associated with the given file."
+          (concat
+   ;; Straightforward implementation.
+   ;; "<div class=\"taglist\">"
+   ;; (org-static-blog-post-taglist file-name)
+   ;; "</div>"
+
+  ;; Badges implementation
+   (if (not file-name)
+       ""
+     (concat
+      (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
+              (org-link/octoicon "tag" nil 'html))
+      (s-join " "
+              (--map  (org-link/badge
+                       (format "|%s|grey|%stag-%s.html"
+                               (s-replace "-" "_" it)
+                               blog/url it)
+                       nil 'html)
+                      (org-static-blog-get-tags file-name)))))))
+
+#+end_src
+
+** blog/history-of-file :details:
+#+begin_src emacs-lisp
+(defun blog/history-of-file (file-name)
+  "Get an HTML badge that points to the Github history of a given file name, in my blog."
+  (concat
+     "<a class=\"tooltip\" title=\"See the various edits to this article over time\""
+     "href=\"https://github.com/alhassy/alhassy.github.io/commits/master/"
+   "posts/" (f-base file-name) ".org\"><img
+   src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
+#+end_src
+
+** blog/htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file :details:
+#+begin_src emacs-lisp
+(defun blog/htmlize-file (file-name)
+  "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file.
+
+We do not take the extra time to produce a colourised file when we are previewing an article."
+  (unless org-preview-html-mode
+(let ((org-hide-block-startup nil))
+  (with-temp-buffer
+    (find-file file-name)
+    ;; (insert "\n#+HTML_HEAD: <link href=\"../doom-solarized-light.css\" rel=\"stylesheet\">\n")
+    (org-mode)
+    (outline-show-all)
+    (switch-to-buffer (htmlize-buffer))
+    (write-file (concat "~/blog/" (f-base file-name) ".org.html"))
+    (kill-buffer))))
+(concat
+"<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
+   (f-base file-name) ".org.html\"><img
+   src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"))
+#+end_src
+
+** blog/license: HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License :details:
+<<Comments>>
+
+#+begin_src emacs-lisp
+(defun blog/license ()
+  "Get HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License."
+(s-collapse-whitespace (s-replace "\n" ""
+"
+<center style=\"font-size: 12px\">
+  <a rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/3.0/\">
+     <img alt=\"Creative Commons License\" style=\"border-width:0\"
+          src=\"https://i.creativecommons.org/l/by-sa/3.0/88x31.png\"/>
+  </a>
+
+  <br/>
+  <span xmlns:dct=\"https://purl.org/dc/terms/\"
+        href=\"https://purl.org/dc/dcmitype/Text\"
+        property=\"dct:title\" rel=\"dct:type\">
+     <em>Life & Computing Science</em>
+  </span>
+
+  by
+  <a xmlns:cc=\"https://creativecommons.org/ns#\"
+  href=\"https://alhassy.github.io/\"
+  property=\"cc:attributionName\" rel=\"cc:attributionURL\">
+    Musa Al-hassy
+  </a>
+
+  is licensed under a
+  <a rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/3.0/\">
+    Creative Commons Attribution-ShareAlike 3.0 Unported License
+  </a>
+</center>")))
+#+end_src
+
+** blog/comments: Embed Disqus Comments for my blog :details:
+#+begin_src emacs-lisp -n
+(defun blog/comments ()
+  "Embed Disqus Comments for my blog"
+(s-collapse-whitespace (s-replace "\n" ""
+"
+<div id=\"disqus_thread\"></div>
+<script type=\"text/javascript\">
+/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+var disqus_shortname = 'life-and-computing-science';
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+  var dsq = document.createElement('script');
+  dsq.type = 'text/javascript';
+  dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the
+    <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
+<a href=\"http://disqus.com\" class=\"dsq-brlink\">comments powered by <span class=\"logo-disqus\">Disqus</span></a>")))
+#+end_src
+
+** blog/read-remaining-js: HTML to use ReadRemaining.js :details:
+#+begin_src emacs-lisp
+(defun blog/read-remaining-js ()
+  "Get the HTML required to make use of ReadRemaining.js"
+
+  ;; [Maybe Not True] ReadReamining.js does not work well with xWidget browser within Emacs
+  (if (equal org-preview-html-viewer 'xwidget)
+      ""
+
+   ;; ReadRemaining.js ∷ How much time is left to finish reading this article?
+   ;;
+  ;; jQuery already loaded by org-special-block-extras.
+  ;; "<script
+  ;; src=\
+  ;; "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>"
+ "<link rel=\"stylesheet\" href=\"readremaining.js-readremainingjs/css/rr_light.css\"
+     type='text/css'/>
+  <script
+     src=\"readremaining.js-readremainingjs/src/readremaining.jquery.js\"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type=\"text/javascript\"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script>"))
+#+end_src
+
+
+[[https://aerolab.github.io/readremaining.js/][ReadRemaining.js]] gives us a little floating clock on the bottom left of the
+screen which says, e.g., /4m 9s left/ when reading an article.
++ It tells us how much time is left before the article is done.
++ The time adjusts /dynamically/ as the user scrolls down ---but not up.
++ Apparently it has to be at the end of the HTML =<body>=, otherwise it wont work
+  for me.
+  - It may be best to avoid loading jQuery multiple times; see [[https://alhassy.github.io/org-special-block-extras/#tooltipster][here]] for the necessary conditional.
 
 * /Style/! ✨ What do we want to be inserted into the head of every page?
   :PROPERTIES:
@@ -2299,8 +2546,8 @@ Note that we could have been needlessly more generic by using, say,
 instead of hardcoding the links.
 :End:
 :Also:
-org-static-blog-publish-url
-org-static-blog-publish-title
+blog/url
+blog/title
 :End:
 
 I want to style it as follows:
@@ -2611,6 +2858,13 @@ How did I get here?
 
 # ( The Unicode whitespace ‘ ’ before and after =Ξ= is to appease the [[clickable-headlines][clickable headlines utility]], below. )
 
+Finally,
+#+begin_src emacs-lisp :exports code
+;; I'd like to have tocs and numbered headings
+(setq org-export-with-toc t)
+(setq org-export-with-section-numbers t)
+#+end_src
+
 * Clickable Sections with Sensible Anchors
 ** Ensuring Useful HTML Anchors
 :PROPERTIES:
@@ -2728,7 +2982,16 @@ portion of each heading to be not a link.
 Org loads the [[https://math.meta.stackexchange.com/questions/5020/mathjax-basic-tutorial-and-quick-reference][MathJax]] display engine for mathematics whenever users write LaTeX-style math delimited by ~$...$~ or by
 =\[...\]=. Here is an example.
 
-#+begin_details "The CSS that Org loads by default"
+#+begin_org-demo
+\[ p ⊓ q = p \quad ≡ \quad p ⊔ q = q \label{Golden-Rule}\tag{Golden-Rule}\]
+
+Look at \ref{Golden-Rule}, it says, when specialised to numbers, /the minimum
+of two items is the first precisely when the maximum of the two is the second/
+---d'uh!
+#+end_org-demo
+
+#+html: <br>
+#+begin_details "The script that Org loads by default"
 #+begin_src emacs-lisp -n :noweb-ref my-html-header :tangle no
 "<script type=\"text/x-mathjax-config\">
     MathJax.Hub.Config({
@@ -2756,24 +3019,15 @@ Org loads the [[https://math.meta.stackexchange.com/questions/5020/mathjax-basic
 #+end_src
 #+end_details
 
-#+html: <br>
-#+begin_org-demo
-\[ p ⊓ q = p \quad ≡ \quad p ⊔ q = q \label{Golden-Rule}\tag{Golden-Rule}\]
-
-Look at \ref{Golden-Rule}, it says, when specialised to numbers, /the minimum
-of two items is the first precisely when the maximum of the two is the second/
----d'uh!
-#+end_org-demo
-
 ** Unicode Warning!
 :PROPERTIES:
 :CUSTOM_ID: Unicode-Warning
 :END:
-We can make an equation ℰ named 𝒩 and refer to it by ℒ by declaring
-=\[ℰ \tag{𝒩} \label{ℒ} \]= then refer to it with =\ref{ℒ}=.  However, if 𝒩 contains
-Unicode, then the reference will not generally be ‘clickable’ ---it wont take
-you to the equation's declaration site.  For example, \ref{⊑-Definition} (=⊑-Definition=) below
-has Unicode in both its tag and label, and so clicking that link wont go
+*We can make an equation ℰ named 𝒩 and refer to it by ℒ by declaring =\[ℰ \tag{𝒩}
+\label{ℒ} \]= then refer to it with =\ref{ℒ}=.  /However/,* if 𝒩 contains Unicode,
+then the reference will not generally be ‘clickable’ ---it wont take you to the
+equation's declaration site.  For example, \ref{⊑-Definition} (=⊑-Definition=)
+below has Unicode in both its tag and label, and so clicking that link wont go
 anywhere, whereas \ref{Order-Definition} has Unicode only in its tag, with the
 label being =\label{Order-Definition}=, and clicking it takes you to the formula.
 
@@ -2793,12 +3047,10 @@ The following rule for anchors =a {⋯}= resurrects =\ref{}= calls via MathJax
 a { white-space: pre !important; }
 #+end_src
 
-** /Making Math Stick-out with Spacing!/                   :TODO:LowPriority:
+** /Making Math Stick-out with Spacing!/
 :PROPERTIES:
 :CUSTOM_ID: COMMENT-nice-math-spacing
 :END:
-
-| This is low priority, since I'm not writing much math these days. |
 
 Notice how the /math expressions/ stick out in these following sentences:
 1. We use $x$ as the name of the unknown.
@@ -2807,29 +3059,27 @@ Notice how the /math expressions/ stick out in these following sentences:
 Nice, the following adds extra whitespace around MathJax,
 so that math elements have extra whitespace about them
 so as to make them stand-out.
+
 #+HTML_MATHJAX: padding: 25px 25px
-#+HTML_HEAD: <script type="text/x-mathjax-config">
-#+HTML_HEAD: MathJax.Hub.Config({
-#+HTML_HEAD:     "HTML-CSS": {
-#+HTML_HEAD:         styles: {
-#+HTML_HEAD:             ".MathJax nobr": {
-#+HTML_HEAD:                 padding: "0.5em 0.5em"
-#+HTML_HEAD:             },
-#+HTML_HEAD:         }
-#+HTML_HEAD:     }
-#+HTML_HEAD: });
-#+HTML_HEAD: </script>
+#+begin_details "The script that Org loads by default"
+#+begin_src emacs-lisp -n :noweb-ref my-html-header :tangle no
+"
+<script type=\"text/x-mathjax-config\">
+MathJax.Hub.Config({
+    \"HTML-CSS\": {
+        styles: {
+            \".MathJax nobr\": {
+                padding: \"0.5em 0.5em\"
+            },
+        }
+    }
+});
+</script>
+"
+#+end_src
+#+end_details
 
 
-*orange:TODO*: Actually add the required script to the header code section of my org-static-blog configuration. *OR* add it
-as CSS as was done for the MathJax styling above. *OR* add to my MathJax.org file? Something to think about.
-:One_route:
-See  [[the-html-header]] above
-In addition, we have two more pieces we would like to add to the header: Support
-for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
-LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
-[[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
-:end:
 ** COMMENT Example calculation from that MathJax Setup?
    :PROPERTIES:
    :CUSTOM_ID: COMMENT-Example-calculation-from-that-MathJax-Setup
@@ -2853,238 +3103,7 @@ Such as org-html-head-extra
 Then,
 \[\eqn{Constructive De Morgan}{¬(x \;⊔\; y) \quad=\quad ¬ x \;⊓\; ¬ y}\]
 
-* COMMENT Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
-  :PROPERTIES:
-  :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
-  :END:
-
-<<initial-setup>>
-
-Let's use [[https://github.com/bastibe/org-static-blog][org-static-block]] to make our blog. Why?
-- It's a Lisp program smaller than 900 lines, its source is easy to read and
-  understand, and, most importantly, it was super easy to get started using it
-  using the [[https://github.com/bastibe/org-static-blog#examples][given example]].
-
-#+begin_details "The necessary basic facts of our blog"
-  #+begin_src emacs-lisp -n :exports code
-(use-package org-static-blog)
-(use-package lf) ;; So we can use `lf-string' for multi-line strings supporting interpolation:
-;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
-
-(setq org-static-blog-publish-title "Life & Computing Science")
-(setq org-static-blog-publish-url "https://alhassy.com")
-(setq org-static-blog-publish-directory "~/blog/")
-(setq org-static-blog-posts-directory "~/blog/posts/")
-(setq org-static-blog-drafts-directory "~/blog/drafts/")
-
-;; Use “#+filetags: τ₁ τ₂ … τₙ”
-;; See (@tags ⋯) method.
-
-;; I'd like to have tocs and numbered headings
-(setq org-export-with-toc t)
-(setq org-export-with-section-numbers t)
-#+end_src
-#+end_details
-
-** Article Footers: HTMLized Source and Git History
-  :PROPERTIES:
-  :CUSTOM_ID: Article-Footers
-  :END:
-
-<<footers>>
-
-Here is the main function:
-#+begin_src emacs-lisp -n
-(defun org-static-blog-post-postamble (post-file-name)
-  "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
-
-This function is called for every post and the returned string is appended to the post body."
-  (concat
-   "<hr>"
-   "<center>"
-   (blog/htmlize-file post-file-name)
-   "&ensp;"
-   (blog/history-of-file post-file-name)
-   ;;
-   (blog/css/arabic-font-setup)
-   ;;
-   "<br>"
-   "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
-   "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
-   "</a>"
-   ;;
-   "<br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
-   ;; org-static-blog-page-postamble
-   (blog/license)
-   ;; (blog/comments) ;; TODO. Not working as intended; low priority.
-   "</center>"
-   ;; The next line is required to make the org-static-blog-assemble-rss method work.
-   "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
-   (blog/read-remaining-js)))
-#+end_src
-
-Where its helper methods are below:
-doc:blog/tags-of-file,
-doc:blog/history-of-file,
-doc:blog/htmlize-file,
-doc:blog/read-remaining-js
-doc:blog/license
-doc:blog/comments
-#+begin_details
-#+begin_src emacs-lisp
-(defun blog/tags-of-file (file-name)
-  "Get an HTML listing of tags, as shields.io bages, associated with the given file."
-          (concat
-   ;; Straightforward implementation.
-   ;; "<div class=\"taglist\">"
-   ;; (org-static-blog-post-taglist file-name)
-   ;; "</div>"
-
-  ;; Badges implementation
-   (if (not file-name)
-       ""
-     (concat
-      (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
-              (org-link/octoicon "tag" nil 'html))
-      (s-join " "
-              (--map  (org-link/badge
-                       (format "|%s|grey|%stag-%s.html"
-                               (s-replace "-" "_" it)
-                               org-static-blog-publish-url it)
-                       nil 'html)
-                      (org-static-blog-get-tags file-name)))))))
-
-#+end_src
-
-#+begin_src emacs-lisp
-(defun blog/history-of-file (file-name)
-  "Get an HTML badge that points to the Github history of a given file name, in my blog."
-  (concat
-     "<a class=\"tooltip\" title=\"See the various edits to this article over time\""
-     "href=\"https://github.com/alhassy/alhassy.github.io/commits/master/"
-   "posts/" (f-base file-name) ".org\"><img
-   src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
-#+end_src
-
-#+begin_src emacs-lisp
-(defun blog/htmlize-file (file-name)
-  "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file.
-
-We do not take the extra time to produce a colourised file when we are previewing an article."
-  (unless org-preview-html-mode
-(let ((org-hide-block-startup nil))
-  (with-temp-buffer
-    (find-file file-name)
-    ;; (insert "\n#+HTML_HEAD: <link href=\"../doom-solarized-light.css\" rel=\"stylesheet\">\n")
-    (org-mode)
-    (outline-show-all)
-    (switch-to-buffer (htmlize-buffer))
-    (write-file (concat "~/blog/" (f-base file-name) ".org.html"))
-    (kill-buffer))))
-(concat
-"<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
-   (f-base file-name) ".org.html\"><img
-   src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"))
-#+end_src
-
-# HTML Footer: Licensing & Comments
-<<Comments>>
-
-#+begin_src emacs-lisp
-(defun blog/license ()
-  "Get HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License."
-(s-collapse-whitespace (s-replace "\n" ""
-"
-<center style=\"font-size: 12px\">
-  <a rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/3.0/\">
-     <img alt=\"Creative Commons License\" style=\"border-width:0\"
-          src=\"https://i.creativecommons.org/l/by-sa/3.0/88x31.png\"/>
-  </a>
-
-  <br/>
-  <span xmlns:dct=\"https://purl.org/dc/terms/\"
-        href=\"https://purl.org/dc/dcmitype/Text\"
-        property=\"dct:title\" rel=\"dct:type\">
-     <em>Life & Computing Science</em>
-  </span>
-
-  by
-  <a xmlns:cc=\"https://creativecommons.org/ns#\"
-  href=\"https://alhassy.github.io/\"
-  property=\"cc:attributionName\" rel=\"cc:attributionURL\">
-    Musa Al-hassy
-  </a>
-
-  is licensed under a
-  <a rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/3.0/\">
-    Creative Commons Attribution-ShareAlike 3.0 Unported License
-  </a>
-</center>")))
-#+end_src
-
-#+begin_src emacs-lisp -n
-(defun blog/comments ()
-  "Embed Disqus Comments for my blog"
-(s-collapse-whitespace (s-replace "\n" ""
-"
-<div id=\"disqus_thread\"></div>
-<script type=\"text/javascript\">
-/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-var disqus_shortname = 'life-and-computing-science';
-/* * * DON'T EDIT BELOW THIS LINE * * */
-(function() {
-  var dsq = document.createElement('script');
-  dsq.type = 'text/javascript';
-  dsq.async = true;
-  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the
-    <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
-<a href=\"http://disqus.com\" class=\"dsq-brlink\">comments powered by <span class=\"logo-disqus\">Disqus</span></a>")))
-#+end_src
-
-#+begin_src emacs-lisp
-(defun blog/read-remaining-js ()
-  "Get the HTML required to make use of ReadRemaining.js"
-
-  ;; [Maybe Not True] ReadReamining.js does not work well with xWidget browser within Emacs
-  (if (equal org-preview-html-viewer 'xwidget)
-      ""
-
-   ;; ReadRemaining.js ∷ How much time is left to finish reading this article?
-   ;;
-  ;; jQuery already loaded by org-special-block-extras.
-  ;; "<script
-  ;; src=\
-  ;; "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>"
- "<link rel=\"stylesheet\" href=\"readremaining.js-readremainingjs/css/rr_light.css\"
-     type='text/css'/>
-  <script
-     src=\"readremaining.js-readremainingjs/src/readremaining.jquery.js\"></script>
-  <script src='readremaining.js/src/readremaining.jquery.js'
-     type='text/javascript'></script>
-  <script type=\"text/javascript\"> $('body').readRemaining({showGaugeDelay : 10,
-     showGaugeOnStart : true}); </script>"))
-#+end_src
-
-
-[[https://aerolab.github.io/readremaining.js/][ReadRemaining.js]] gives us a little floating clock on the bottom left of the
-screen which says, e.g., /4m 9s left/ when reading an article.
-+ It tells us how much time is left before the article is done.
-+ The time adjusts /dynamically/ as the user scrolls down ---but not up.
-+ Apparently it has to be at the end of the HTML =<body>=, otherwise it wont work
-  for me.
-  - It may be best to avoid loading jQuery multiple times; see [[https://alhassy.github.io/org-special-block-extras/#tooltipster][here]] for the necessary conditional.
-
-#+end_details
-
-#+begin_remark "ლ(ಠ益ಠ)ლ"
-I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
-#+end_remark
-
-** Arabic Font Setup
+* Arabic Font Setup
 :PROPERTIES:
 :CUSTOM_ID: Arabic-Font-Setup
 :END:
@@ -3212,7 +3231,7 @@ C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts
      (interactive "P")
      (pcase (or (car prefix) 0)
        (0  (org-static-blog-publish-file (f-full (buffer-file-name)))
-           (browse-url-of-file (format "file://%s%s.html" (file-truename org-static-blog-publish-directory)
+           (browse-url-of-file (format "file://%s%s.html" (file-truename blog/publish-directory)
                                        (f-base (buffer-file-name)))))
        ;; Apparently I have to publish the current buffer before trying
        ;; to publish the blog; otherwise I got some errors.
@@ -3231,6 +3250,48 @@ C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts
 
 Line [[(delAll)]]: To re-render an article, just remove its corresponding .html file ;-)
 
+* COMMENT [Part of publishing a file] org-static-blog-post-preamble: Making this work with =org-notes-style= and =org-static-blog=
+:PROPERTIES:
+:CUSTOM_ID: Making-this-work-with-org-notes-style-and-org-static-blog
+:END:
+To make use of =org-notes-style=, I need the title to use the =title= class
+but =org-static-blog= uses the =post-title= blog, so I'll override the
+=org-static-blog= preamble method to simply use an auxiliary div.
+- Along the way, I'll position the article image under the article's title.
+- Line [[(fixTitle)]]: =org-notes-style= has too much vertical space after the title,
+  let's reduce it so that the article's data can follow it smoothly.
+# - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
+#  just dumps the title in-place; here I provide a support for just =<br>=.
+#+begin_src emacs-lisp -r -n -n
+;; MA: This can be deleted?? Do a search for post-title in this article to see why?
+(defun org-static-blog-post-preamble (post-filename)
+  "Returns the formatted date and headline of the post.
+This function is called for every post and prepended to the post body.
+Modify this function if you want to change a posts headline."
+  (concat
+   ;; The title
+   "<h1 class=\"post-title\">"
+   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
+   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
+   (org-static-blog-get-title post-filename)
+   "</a>"
+   "</h1></div>"
+   ;; The date
+   "<div style=\"text-align: center;\">"
+   (format-time-string (org-static-blog-gettext 'date-format)
+                       (org-static-blog-get-date post-filename))
+   "</div>"
+   ;; The article's image
+   (my/org-static-blog-assemble-image post-filename)
+   "<br><center><strong>Abstract</strong></center>"))
+#+end_src
+
+
+# Before we move on, Org-notes adds extra whitespace after the title, let's avoid
+# that.
+# #+begin_src css :tangle ~/blog/blog-banner.css :noeval
+#  .title { margin: 0 0 0 0 !important; }
+# #+end_src
 * The name: [[https://en.wikipedia.org/wiki/Basmala][al-bas-mala]]
   :PROPERTIES:
   :CUSTOM_ID:  the-name
@@ -3343,46 +3404,3 @@ src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
 unsplash unsplash)))
 
 unsplash:XXX0GQfgMy8
-
-** org-static-blog-post-preamble: Making this work with =org-notes-style= and =org-static-blog=
-:PROPERTIES:
-:CUSTOM_ID: Making-this-work-with-org-notes-style-and-org-static-blog
-:END:
-To make use of =org-notes-style=, I need the title to use the =title= class
-but =org-static-blog= uses the =post-title= blog, so I'll override the
-=org-static-blog= preamble method to simply use an auxiliary div.
-- Along the way, I'll position the article image under the article's title.
-- Line [[(fixTitle)]]: =org-notes-style= has too much vertical space after the title,
-  let's reduce it so that the article's data can follow it smoothly.
-# - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
-#  just dumps the title in-place; here I provide a support for just =<br>=.
-#+begin_src emacs-lisp -r -n -n
-;; MA: This can be deleted?? Do a search for post-title in this article to see why?
-(defun org-static-blog-post-preamble (post-filename)
-  "Returns the formatted date and headline of the post.
-This function is called for every post and prepended to the post body.
-Modify this function if you want to change a posts headline."
-  (concat
-   ;; The title
-   "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
-   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename)
-   "</a>"
-   "</h1></div>"
-   ;; The date
-   "<div style=\"text-align: center;\">"
-   (format-time-string (org-static-blog-gettext 'date-format)
-                       (org-static-blog-get-date post-filename))
-   "</div>"
-   ;; The article's image
-   (my/org-static-blog-assemble-image post-filename)
-   "<br><center><strong>Abstract</strong></center>"))
-#+end_src
-
-
-# Before we move on, Org-notes adds extra whitespace after the title, let's avoid
-# that.
-# #+begin_src css :tangle ~/blog/blog-banner.css :noeval
-#  .title { margin: 0 0 0 0 !important; }
-# #+end_src
