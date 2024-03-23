@@ -94,131 +94,315 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
    (org-next-visible-heading 1)
    (insert "#+html: </details> </div>"))
 
-(bind-key "C-x g" #'magit-file-dispatch)
+(use-package org-static-blog)
+(use-package lf) ;; So we can use `lf-string' for multi-line strings supporting interpolation:
+;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
 
-(setq-default fill-column 80)
+(defvar blog/title "Life & Computing Science"
+  "Title of the blog.")
 
-;; cl-lib was published as a better (namespaced!) alternative to cl, which has a deprecation warning in Emacs27.
-;; Yet some old pacakges require cl, and so the below setq silences the deprecation warning.
-(setq byte-compile-warnings '(cl-functions))
-(require 'cl-lib) ;; to get loop instead of cl-loop, etc.
+(defvar blog/url "https://alhassy.com"
+  "URL of the blog.")
 
-(require 'shortdoc) ;; Essentially "tldr" but for Emacs Lisp!
-;; (cl-defun define-short-documentation-group (&rest _))
-;; (cl-defun org-duration-to-minutes (&rest _) )
-;; (cl-defun org-id-find-id-file (&rest _))
+(defvar blog/publish-directory "~/blog/"
+  "Directory containing published HTML files.")
 
-(ignore-errors
-  (use-package org-preview-html)
-  (setq org-preview-html-viewer 'xwidget)
-  ;; (xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
-  (advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
-  (advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
-  (advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
-                                                           (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
-                                                           )))
-  (use-package org-special-block-extras)
-  ;;(load-file "~/blog/AlBasmala.el")
-  ) ;; M-x blog/preview
+(defvar blog/posts-directory "~/blog/posts"
+  "Directory containing source Org files.
 
-;; Required for Github Actions; i.e., testing.
-;; TODO Clean me!
-(defun quelpa-read-cache ()) ;; Used somewhere, but not defined.
-;; See: quelpa-persistent-cache-file
-(setq quelpa-cache nil)
+When publishing, posts are rendered as HTML and included in the index and RSS feed.
+See `blog/create-index' and `blog/publish-directory'.")
 
-;; Eager macro-expansion failure: (void-function all-the-icons-faicon)
-;; Symbol’s function definition is void: all-the-icons-faicon
+(defun blog/new-article ()
+"Make a new article for my blog; prompting for the necessary ingredients.
 
-;; Error in kill-emacs-hook (org-clock-save): (void-function org-clocking-buffer)
-(cl-defun org-clocking-buffer (&rest _))
+If the filename entered already exists, we simply write to it.
+The user notices this and picks a new name.
 
- (setq org-static-blog-page-header
+This sets up a new article based on existing tags and posts.
++ Use C-SPC to select multiple tag items
+
+Moreover it also enables `org-preview-html-mode' so that on every alteration,
+followed by a save, C-x C-s, will result in a live preview of the blog article,
+nearly instantaneously."
+  (interactive)
+  (let (file desc)
+
+    (thread-last blog/posts-directory
+      f-entries
+      (mapcar #'f-filename)
+      (completing-read "Filename (Above are existing): ")
+      (concat blog/posts-directory)
+      (setq file))
+
+    ;; For some reason, ‘find-file’ in the thread above
+    ;; wont let the completing-read display the possible completions.
+    (find-file file)
+
+    (insert "#+title: " (read-string "Title: ")
+            "\n#+author: " user-full-name
+            "\n#+email: "  user-mail-address
+            ;; "\n#+date: " (format-time-string "<%Y-%m-%d %H:%M>")
+            "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
+                                                         blog/tags
+                                                         :marked-candidates t))
+            "\n#+fileimage: emacs-birthday-present.png"
+            ;; "\n#+fileimage: " (completing-read
+            ;;                    "Image: "
+            ;;                    (mapcar #'f-filename (f-entries "~/blog/images/")))
+            ;; "\n#+include: ../MathJaxPreamble.org" ;; TODO. Is this someting I actually want here? If so, then consider tangling it from AlBasmala! (and add the whitespace-MathJax setup from above!)
+            "\n#+description: "
+               (setq desc (read-string "Article Purpose: "))
+            "\n\n* Abstract :ignore: \n" desc
+            "\n\n* ???")
+    (save-buffer)
+    (blog/preview)))
+
+(defun blog/create-posts-json-file ()
+  "Create cache info about posts."
+  (interactive)
+  (require 'json)
+  (cl-loop for file in (f-files "~/blog/posts")
+           when (s-ends-with? ".org" file)
+           collect (blog/info file) into posts
+           finally
+           ;; Sorted in descending time; i.e., the latest article should be first
+           ;; Note: We use “:date” key here since we have alists with such keys; when we JSON encode, the keys become strings, eg “ "data" ”.
+           (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (map-elt older :date)) (date-to-time (map-elt newer :date))))))
+           (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
+           (find-file "~/blog/posts.json")
+           (json-pretty-print-buffer)
+           (write-file "~/blog/posts.json")))
+
+
+(defvar blog/posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer))
+  "Load cached info about posts")
+
+
+(defvar blog/tags (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags"))) blog/posts))) #'string<)
+  "Tags for my blog articles.")
+
+;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
+;; Later, we redefine these, for example `@image' will actually produces the HTML for the image.
+;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
+(defun @title       (json) (map-elt json "title"))
+(defun @date        (json) (map-elt json "date"))
+(defun @file        (json) (map-elt json "file"))
+(defun @description (json) (map-elt json "description"))
+(defun @url         (json) (map-elt json "url"))
+(defun @abstract    (json) (map-elt json "abstract"))
+
+
+(defun @history (json)
+  "Get an HTML badge that points to the Github history of a given file name, in my blog."
   (concat
+   "<a class=\"tooltip\" title=\"See the various edits to this article over time\" href=\""
+   (map-elt json "history")
+   "\"><img src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
+
+
+(defun @tags (json)
+  "Get an HTML listing of tags, as shields.io bages, associated with the given file.
+
+Example use:  (@tags (seq-elt blog/posts 0))
+"
+  (concat
+   ;; Straightforward implementation.
+   ;; "<div class=\"taglist\">"
+   ;; (org-static-blog-post-taglist file-name)
+   ;; "</div>"
+
+  ;; Badges implementation
    (concat
-   "<meta name=\"author\" content=\"Musa Al-hassy\">
-    <meta name=\"referrer\" content=\"no-referrer\">"
-   "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
-   "<link rel=\"icon\" href=\"images/favicon.png\">")
-   "<script type=\"text/javascript\">
-   /*
-   @licstart  The following is the entire license notice for the
-   JavaScript code in this tag.
+    (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
+            (org-link/octoicon "tag" nil 'html))
+    (s-join " "
+            (--map  (org-link/badge
+                     (format "|%s|grey|%stag-%s.html"
+                             (s-replace "-" "_" it)
+                             "https://alhassy.com" it)
+                     nil 'html)
+                    (s-split " " (map-elt json "tags")))))))
 
-   Copyright (C) 2012-2020 Free Software Foundation, Inc.
+(cl-defun @image (json &optional explicit-image-path-prefix)
+  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
 
-   The JavaScript code in this tag is free software: you can
-   redistribute it and/or modify it under the terms of the GNU
-   General Public License (GNU GPL) as published by the Free Software
-   Foundation, either version 3 of the License, or (at your option)
-   any later version.  The code is distributed WITHOUT ANY WARRANTY;
-   without even the implied warranty of MERCHANTABILITY or FITNESS
-   FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+By default, the image should be located in the top-level `images/' directory.
+If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
+in the image path.
 
-   As additional permission under GNU GPL version 3 section 7, you
-   may distribute non-source (e.g., minimized or compacted) forms of
-   that code without the copy of the GNU GPL normally required by
-   section 4, provided you include this license notice and a URL
-   through which recipients can access the Corresponding Source.
+Example use:  (@image (seq-elt blog/posts 0))
 
+Here are 4 example uses:
 
-   @licend  The above is the entire license notice
-   for the JavaScript code in this tag.
-   */
-   <!--/*--><![CDATA[/*><!--*/
-    function CodeHighlightOn(elem, id)
-    {
-      var target = document.getElementById(id);
-      if(null != target) {
-        elem.cacheClassElem = elem.className;
-        elem.cacheClassTarget = target.className;
-        target.className = \"code-highlighted\";
-        elem.className   = \"code-highlighted\";
-      }
-    }
-    function CodeHighlightOff(elem, id)
-    {
-      var target = document.getElementById(id);
-      if(elem.cacheClassElem)
-        elem.className = elem.cacheClassElem;
-      if(elem.cacheClassTarget)
-        target.className = elem.cacheClassTarget;
-    }
-   /*]]>*///-->
-   </script>"
-   "<script type=\"text/x-mathjax-config\">
-       MathJax.Hub.Config({
-           displayAlign: \"center\",
-           displayIndent: \"0em\",
+#+fileimage: emacs-birthday-present.png
+#+fileimage: ../images/emacs-birthday-present.png
+#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
+#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
 
-           \"HTML-CSS\": { scale: 100,
-                           linebreaks: { automatic: \"false\" },
-                           webFont: \"TeX\"
-                          },
-           SVG: {scale: 100,
-                 linebreaks: { automatic: \"false\" },
-                 font: \"TeX\"},
-           NativeMML: {scale: 100},
-           TeX: { equationNumbers: {autoNumber: \"AMS\"},
-                  MultLineWidth: \"85%\",
-                  TagSide: \"right\",
-                  TagIndent: \".8em\"
-                }
-   });
-   </script>
-   <script type=\"text/javascript\"
-           src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML\"></script>
-   "
-   ))
++ Notice that the second indicates explicit width and height.
++ (To make the first approach work with local previews,
+   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'. This requires a slash at the end.)
++ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
+"
+  (-let [(image width height no-border?) (s-split " " (map-elt json "image"))]
+    (setq width (or width 350))
+    (setq height (or height 350))
+    (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
+    (cond
+     ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
+     (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
+     ((not (s-contains? "/" image)) (setq image (format "images/%s" image))))
+    (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
+      (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
+      (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
+      (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+      (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
+              href title src no-border? width height))))
+
+(defun blog/info (post-filename)
+  "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
+
+Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
+"
+  (let ((case-fold-search t))
+    (with-temp-buffer
+      (insert-file-contents post-filename)
+      (-snoc
+       (cons
+       (cons :file (f-base post-filename))
+      (cl-loop for (prop.name prop.regex prop.default) on
+            `(:title "^\\#\\+title:[ ]*\\(.+\\)$" ,post-filename
+                     :date "^\\#\\+date:[ ]*<\\([^]>]+\\)>$" ,(time-since 0)
+                     :image "^\\#\\+fileimage: \\(.*\\)" "emacs-birthday-present.png 350 350"
+                     :description "^\\#\\+description:[ ]*\\(.+\\)$" "I learned something neat, and wanted to share!"
+                     :tags "^\\#\\+filetags:[ ]*\\(.+\\)$" "" ;; String; Space separated sequence of tags
+                     )
+            by 'cdddr
+            ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
+            do (goto-char (point-min))
+            collect (cons prop.name
+                          (if (search-forward-regexp prop.regex nil t)
+                              (match-string 1)
+                            prop.default))))
+       (cons :url (concat "https://alhassy.com/" (f-base post-filename)))
+       (cons :history (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
+                              (f-base post-filename)))
+       (cons :abstract (progn
+                  (goto-char (point-min))
+                  (when (re-search-forward "^\* Abstract" nil t)
+                    (beginning-of-line)
+                    (-let [start (point)]
+                      (org-narrow-to-subtree)
+                      (org-fold-show-entry)
+                      (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+                      (forward-line)
+                      (buffer-substring-no-properties (point) (point-max))))))))))
+
+(org-defblock abstract (main) nil
+  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
+
+   Supported backends: HTML. "
+   (format (concat
+            "<div class=\"abstract\" style=\"border: 1px solid black;"
+            "padding: 1%%; margin-top: 1%%; margin-bottom: 1%%;"
+            "margin-right: 10%%; margin-left: 10%%; background-color: lightblue;\">"
+            "<center> <strong class=\"tooltip\""
+            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
+            "%s </div>")
+           contents))
+
+(setq index-content-header
+  (concat
+   "Here are some of my latest thoughts..."
+   " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
+   " tweet:https://alhassy.github.io/"))
+
+(defun blog/make-index-page ()
+  "Assemble the blog index page.
+
+The index page contains blurbs of all of my articles.
+
+Precondition: `blog/posts' refers to all posts, in reverse chronological order.
+
+You can view the generated ~/blog/index.html by invoking:
+  (org-static-blog-assemble-index)
+"
+  (interactive)
+  (view-echo-area-messages)
+  (with-temp-buffer
+    (insert
+     (s-join
+      "\n"
+      (list
+       ;; TODO: Actually look at this concat result and notice that osbe is adding
+       ;; way too much content to the header!
+       ;; (progn (org-special-block-extras-mode -1) "")
+       (setq org-html-head-extra "")
+       ;; Org-mode header
+       "#+EXPORT_FILE_NAME: ~/blog/index.html"
+       "#+options: toc:nil title:nil html-postamble:nil"
+       (concat "#+title: " blog/title)
+       "#+begin_export html"
+       ;; MA: Not ideal, the sizes I've set in the actual article are best.
+       ;; "<style>"
+       ;; ".post-image { margin: auto; width: 30em !important; height: 30em !important; }"
+       ;; "</style>"
+       org-static-blog-page-preamble
+       org-static-blog-page-header
+       "#+end_export"
+       ;; TODO: Delete the following comment when things work and are done.
+       ;; Extra styling of abstracts.
+       ;; Works; but not needed.
+       ;; "\n#+HTML_HEAD_EXTRA: <style> div.abstract {background-color: pink !important;} </style>"
+
+       ;; Index landing page header
+       ;; "\n#+begin_export html"
+       ;; TODO: Rename `index-content-header' to have the `blog/' prefix
+       ;; Also make the “Made with Lisp” tagline refer to my Lisp cheat sheet.
+       ;; org-static-blog-page-header ;; TODO: This is used above, does it need to occur again?
+       ;; "#+end_export"
+       index-content-header
+
+       ;; TODO: Add this loop body to the info of each post, for future use via AngularJS view-by-tags.
+       ;; Blurbs of posts
+       (s-join "\n" (--map
+        (concat
+         (progn (message "Processing %s..." it) "") ;; Progress indicator
+
+         ;; ⟨0⟩ Title and link to article
+         (format "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>" (@url it) (@title it))
+
+         ;; ⟨1⟩ Tags and reading time
+         (format "\n#+begin_export html\n<center>%s\n</center>\n#+end_export" (@tags it))
+
+         ;; ⟨2⟩ Article image
+         (format "\n@@html:%s@@\n" (@image it))
+
+         ;; ⟨3⟩ Preview
+         (@abstract it)
+
+         ;; ⟨4⟩ “Read more” link
+         (format (concat "\n@@html:<p style=\"text-align:right\">@@" " badge:Read|more|green|%s|read-the-docs @@html:</p>@@") (@url it))
+         )
+        (seq--into-list blog/posts)))
+
+       ;; “Show older posts”
+       ;; This is the bottom-most matter in the index.html page
+       "#+begin_export html"
+       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em> </center> <br/>"
+       (blog/license) ;; TODO: Add a “proudly created with Emacs’ Org-mode” tagline?
+       "\n#+end_export"
+       )))
+    (org-mode)
+    (org-html-export-to-html)))
 
 (org-deflink blog
   "Provide the styles for “www.alhassy.com”'s “header” and “footer”.
 
 The use of “blog:footer” aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
-and provides a Disqus comments sections. For details, consult the `org-static-blog-post-postamble' function.
+and provides a Disqus comments sections. For details, consult the `blog/footer' function.
 
 Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
 We accomplish this with the help of some handy-dandy JavaScript: Just use “blog:sanitise-title”.
@@ -235,7 +419,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
                                 (s-replace-regexp "@@html:" "")
                                 (s-replace-regexp "@@" "")
                                 (format "<br><center><h1 class=\"post-title\">%s</h1></center>"))))
-        ("footer" (org-static-blog-post-postamble (buffer-file-name)))
+        ("footer" (blog/footer (buffer-file-name)))
         ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
         (_ "")))
 
@@ -298,7 +482,7 @@ which I place below at the top of the page.)
   ;; Let's ensure we have no xwidget buffer lying around, otherwise Emacs might hang.
   (-let [kill-buffer-query-functions nil]
     (mapcar #'kill-buffer (--filter (equal 'xwidget-webkit-mode (buffer-local-value 'major-mode it)) (buffer-list))))
-  ;; Inserting doc:org-link/blog /seamlessly/ via the export process
+  ;; Inserting org-link/blog /seamlessly/ via the export process
   (add-hook 'org-export-before-processing-hook  #'blog/style-setup)
   ;; Preview with every save
   (org-preview-html-mode))
@@ -309,134 +493,10 @@ which I place below at the top of the page.)
   (remove-hook 'org-export-before-processing-hook #'blog/style-setup)
   (org-preview-html-mode -1))
 
-(org-defblock abstract (main) nil
-  "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
-
-   Supported backends: HTML. "
-   (format (concat
-            "<div class=\"abstract\" style=\"border: 1px solid black;"
-            "padding: 1%%; margin-top: 1%%; margin-bottom: 1%%;"
-            "margin-right: 10%%; margin-left: 10%%; background-color: lightblue;\">"
-            "<center> <strong class=\"tooltip\""
-            "title=\"What's the goal of this article?\"> Abstract </strong> </center>"
-            "%s </div>")
-           contents))
-
-(advice-add 'org-html--translate :before-until 'display-toc-as-Ξ)
-;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
-
-(defun display-toc-as-Ξ (phrase info)
-  (when (equal phrase "Table of Contents")
-    (s-collapse-whitespace
-    " <a href=\"javascript:window.scrollTo(0,0)\"
-        style=\"color: black !important; border-bottom: none !important;\"
-        class=\"tooltip\"
-        title=\"Go to the top of the page\">
-      Ξ
-    </a> ")))
-
-;; Table captions should be below the tables
-(setq org-html-table-caption-above nil
-      org-export-latex-table-caption-above nil)
-
-(setq org-static-blog-page-preamble
-"<div class=\"header\">
-  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
-  <br>
-    <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
-    <a href=\"https://alhassy.github.io/archive\">Archive</a>
-    <a href=\"https://alhassy.github.io/tags\">Tags</a>
-    <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
-    <a href=\"https://alhassy.github.io/about\">About</a>
-</div>")
-
-(cl-defun my/org-static-blog-assemble-image (file &optional explicit-image-path-prefix)
-  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
-
-By default, the image should be located in the top-level `images/' directory.
-If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
-in the image path.
-
-Here are 4 example uses:
-
-#+fileimage: emacs-birthday-present.png
-#+fileimage: ../images/emacs-birthday-present.png
-#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
-#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
-
-+ Notice that the second indicates explicit width and height.
-+ (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog/style-setup'. This requires a slash at the end.)
-+ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
-"
- (with-temp-buffer
-   (insert-file-contents file)
-   (goto-char 0)
-   (search-forward-regexp "^\\#\\+fileimage: \\(.*\\)" nil t)
-   (-let [(image width height no-border?)
-          (s-split " " (substring-no-properties
-                        (or (match-string 1)
-                            "emacs-birthday-present.png")))]
-     (setq width (or width 350))
-     (setq height (or height 350))
-     (setq no-border? (if no-border? "" "style=\"border: 2px solid black;\""))
-     (cond
-      ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
-      (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
-      ((not (s-contains? "/" image)) (setq image (format "images/%s" image)))
-       )
-
-     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
-       (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-       (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
-       (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
-       (format "<center><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
-             %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
-             href title src no-border? width height)))))
-
-;; MA: This can be deleted?? Do a search for post-title in this article to see why?
-(defun org-static-blog-post-preamble (post-filename)
-  "Returns the formatted date and headline of the post.
-This function is called for every post and prepended to the post body.
-Modify this function if you want to change a posts headline."
-  (concat
-   ;; The title
-   "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"
-   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename)
-   "</a>"
-   "</h1></div>"
-   ;; The date
-   "<div style=\"text-align: center;\">"
-   (format-time-string (org-static-blog-gettext 'date-format)
-                       (org-static-blog-get-date post-filename))
-   "</div>"
-   ;; The article's image
-   (my/org-static-blog-assemble-image post-filename)
-   "<br><center><strong>Abstract</strong></center>"))
-
-(use-package org-static-blog)
-(use-package lf) ;; So we can use `lf-string' for multi-line strings supporting interpolation:
-;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
-
-(setq org-static-blog-publish-title "Life & Computing Science")
-(setq org-static-blog-publish-url "https://alhassy.github.io/")
-(setq org-static-blog-publish-directory "~/blog/")
-(setq org-static-blog-posts-directory "~/blog/posts/")
-(setq org-static-blog-drafts-directory "~/blog/drafts/")
-
-;; Use “#+filetags: τ₁ τ₂ … τₙ”
-(setq org-static-blog-enable-tags t)
-
-;; I'd like to have tocs and numbered headings
-(setq org-export-with-toc t)
-(setq org-export-with-section-numbers t)
-
-(defun org-static-blog-post-postamble (post-file-name)
+(defun blog/footer (post-file-name)
   "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
 
-This function is called for every post and the returned string is appended to the post body."
+This function is called for every post and the returned string is appended to the post body, as a postamble."
   (concat
    "<hr>"
    "<center>"
@@ -444,6 +504,7 @@ This function is called for every post and the returned string is appended to th
    "&ensp;"
    (blog/history-of-file post-file-name)
    ;;
+   ;; TODO: Only add this to posts tagged “arabic”
    (blog/css/arabic-font-setup)
    ;;
    "<br>"
@@ -452,7 +513,6 @@ This function is called for every post and the returned string is appended to th
    "</a>"
    ;;
    "<br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
-   ;; org-static-blog-page-postamble
    (blog/license)
    ;; (blog/comments) ;; TODO. Not working as intended; low priority.
    "</center>"
@@ -478,7 +538,7 @@ This function is called for every post and the returned string is appended to th
               (--map  (org-link/badge
                        (format "|%s|grey|%stag-%s.html"
                                (s-replace "-" "_" it)
-                               org-static-blog-publish-url it)
+                               blog/url it)
                        nil 'html)
                       (org-static-blog-get-tags file-name)))))))
 
@@ -582,6 +642,179 @@ var disqus_shortname = 'life-and-computing-science';
   <script type=\"text/javascript\"> $('body').readRemaining({showGaugeDelay : 10,
      showGaugeOnStart : true}); </script>"))
 
+ (setq org-static-blog-page-header
+  (concat
+   ;; NOPE: org-html-head-extra  ;; Altered by ‘org-special-block-extras’
+   (concat
+   "<meta name=\"author\" content=\"Musa Al-hassy\">
+    <meta name=\"referrer\" content=\"no-referrer\">"
+   "<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link rel=\"icon\" href=\"images/favicon.png\">")
+   "<script type=\"text/javascript\">
+   /*
+   @licstart  The following is the entire license notice for the
+   JavaScript code in this tag.
+   
+   Copyright (C) 2012-2020 Free Software Foundation, Inc.
+   
+   The JavaScript code in this tag is free software: you can
+   redistribute it and/or modify it under the terms of the GNU
+   General Public License (GNU GPL) as published by the Free Software
+   Foundation, either version 3 of the License, or (at your option)
+   any later version.  The code is distributed WITHOUT ANY WARRANTY;
+   without even the implied warranty of MERCHANTABILITY or FITNESS
+   FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+   
+   As additional permission under GNU GPL version 3 section 7, you
+   may distribute non-source (e.g., minimized or compacted) forms of
+   that code without the copy of the GNU GPL normally required by
+   section 4, provided you include this license notice and a URL
+   through which recipients can access the Corresponding Source.
+   
+   
+   @licend  The above is the entire license notice
+   for the JavaScript code in this tag.
+   */
+   <!--/*--><![CDATA[/*><!--*/
+    function CodeHighlightOn(elem, id)
+    {
+      var target = document.getElementById(id);
+      if(null != target) {
+        elem.cacheClassElem = elem.className;
+        elem.cacheClassTarget = target.className;
+        target.className = \"code-highlighted\";
+        elem.className   = \"code-highlighted\";
+      }
+    }
+    function CodeHighlightOff(elem, id)
+    {
+      var target = document.getElementById(id);
+      if(elem.cacheClassElem)
+        elem.className = elem.cacheClassElem;
+      if(elem.cacheClassTarget)
+        target.className = elem.cacheClassTarget;
+    }
+   /*]]>*///-->
+   </script>"
+   "<script type=\"text/x-mathjax-config\">
+       MathJax.Hub.Config({
+           displayAlign: \"center\",
+           displayIndent: \"0em\",
+   
+           \"HTML-CSS\": { scale: 100,
+                           linebreaks: { automatic: \"false\" },
+                           webFont: \"TeX\"
+                          },
+           SVG: {scale: 100,
+                 linebreaks: { automatic: \"false\" },
+                 font: \"TeX\"},
+           NativeMML: {scale: 100},
+           TeX: { equationNumbers: {autoNumber: \"AMS\"},
+                  MultLineWidth: \"85%\",
+                  TagSide: \"right\",
+                  TagIndent: \".8em\"
+                }
+   });
+   </script>
+   <script type=\"text/javascript\"
+           src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML\"></script>
+   "
+   "
+   <script type=\"text/x-mathjax-config\">
+   MathJax.Hub.Config({
+       \"HTML-CSS\": {
+           styles: {
+               \".MathJax nobr\": {
+                   padding: \"0.5em 0.5em\"
+               },
+           }
+       }
+   });
+   </script>
+   "
+   ))
+
+(setq org-static-blog-page-preamble
+"<div class=\"header\">
+  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
+  <br/>
+  <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
+  <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
+  <a href=\"https://alhassy.github.io/about\">About</a>
+</div>")
+
+;; Table captions should be below the tables
+(setq org-html-table-caption-above nil
+      org-export-latex-table-caption-above nil)
+
+(advice-add 'org-html--translate :before-until 'blog/display-toc-as-Ξ)
+;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
+
+(defun blog/display-toc-as-Ξ (phrase info)
+  (when (equal phrase "Table of Contents")
+    (s-collapse-whitespace
+    " <a href=\"javascript:window.scrollTo(0,0)\"
+        style=\"color: black !important; border-bottom: none !important;\"
+        class=\"tooltip\"
+        title=\"Go to the top of the page\">
+      Ξ
+    </a> ")))
+
+;; I'd like to have tocs and numbered headings
+(setq org-export-with-toc t)
+(setq org-export-with-section-numbers t)
+
+(defun blog/ensure-useful-section-anchors (&rest _)
+  "Org sections without an ID are given one based on its title.
+
+All non-alphanumeric characters are cleverly replaced with ‘-’.
+
+If multiple trees end-up with the same id property, issue a
+message and undo any property insertion thus far.
+
+E.g., ↯ We'll go on a ∀∃⇅ adventure
+   ↦  We'll-go-on-a-adventure
+"
+  (interactive)
+  (let ((ids))
+    (org-map-entries
+     (lambda ()
+       (org-with-point-at (point)
+         (let ((id (org-entry-get nil "CUSTOM_ID")))
+           (unless id
+             (thread-last (nth 4 (org-heading-components))
+               (s-replace-regexp "[^[:alnum:]']" "-")
+               (s-replace-regexp "-+" "-")
+               (s-chop-prefix "-")
+               (s-chop-suffix "-")
+               (setq id))
+             (if (not (member id ids))
+                 (push id ids)
+               (message-box "Oh no, a repeated id!\n\n\t%s" id)
+               (undo)
+               (setq quit-flag t))
+             (org-entry-put nil "CUSTOM_ID" id))))))))
+
+;; Whenever html & md export happens, ensure we have headline ids.
+(advice-add 'org-html-export-to-html   :before 'blog/ensure-useful-section-anchors)
+(advice-add 'org-md-export-to-markdown :before 'blog/ensure-useful-section-anchors)
+
+;; Src: https://writepermission.com/org-blogging-clickable-headlines.html
+(setq org-html-format-headline-function
+      (lambda (todo todo-type priority text tags info)
+        "Format a headline with a link to itself."
+        (let* ((headline (get-text-property 0 :parent text))
+               (id (or (org-element-property :CUSTOM_ID headline)
+                       (ignore-errors (org-export-get-reference headline info))
+                       (org-element-property :ID headline)))
+               (link (if id
+                         (format "<a href=\"#%s\">%s</a>" id text)
+                       text)))
+          (org-html-format-headline-default-function todo todo-type priority link tags info))))
+
 (defun blog/css/arabic-font-setup ()
   "Setup the CSS/HTML required to make my Arabic writing look nice.
 
@@ -594,200 +827,3 @@ of this function."
      body {font-family: 'Amiri', sans-serif;}
      table {font-family:  'Scheherazade'; font-size: 105%; }
    </style>")
-
-(setq index-content-header
-  (concat
-   "Here are some of my latest thoughts..."
-   " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
-   " tweet:https://alhassy.github.io/"))
-
-(defun org-static-blog-assemble-multipost-page
-    (pub-filename post-filenames &optional front-matter)
-  "Assemble a page that contains multiple posts “previews” one after another.
-
-- Each “preview” consists of a post's title, tags, image, and abstract.
-- Previews are sorted in descending time.
-
-You can view the generated ~/blog/index.html by invoking:
-   (progn (my/blog/style-setup/disable) (org-static-blog-assemble-index))
-"
-  (setq show-reading-time nil) ;; Experimental.
-  (setq post-filenames
-        (sort post-filenames (lambda (x y)
-                               (time-less-p (org-static-blog-get-date y)
-                                            (org-static-blog-get-date x)))))
-
-  (let ((org-header (concat "#+EXPORT_FILE_NAME: " pub-filename
-                            "\n#+options: toc:nil title:nil html-postamble:nil"
-                            "\n#+title: " (if (equal "index" (f-base pub-filename))
-                                              org-static-blog-publish-title
-                                            (f-base pub-filename))
-                            "\n#+begin_export html\n "
-                            org-static-blog-page-preamble
-                            org-static-blog-page-header
-                            (if front-matter front-matter "")
-                            "\n#+end_export"
-                            ;; Extra styling of abstracts.
-                            ;; Works; but not needed.
-                            ;; "\n#+HTML_HEAD_EXTRA: <style> div.abstract {background-color: pink !important;} </style>"
-                            ))
-        (index-header (if (equal "index" (f-base pub-filename))
-                          (format "#+begin_export html\n%s\n#+end_export\n%s"
-                                  org-static-blog-page-header index-content-header)
-                        ""))
-        (_ (view-echo-area-messages))
-        (abstracts-of-posts (--map
-                             (concat
-                              (progn (message "Processing %s..." it) "") ;; Progress indicator
-
-                              ;; ⟨0⟩ Title and link to article
-                              (format "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>"
-                                      (concat org-static-blog-publish-url (f-base it))
-                                      (org-static-blog-get-title it))
-
-                              ;; ⟨1⟩ Tags and reading time
-                              (format "\n#+begin_export html\n<center>%s\n%s</center>\n#+end_export"
-                                      (blog/tags-of-file it)
-                                      ;; Experimenting.
-                                      (if (not show-reading-time)
-                                          ""
-                                        (format "\n%s %s mins read"
-                                                "octoicon:clock"
-                                                (with-temp-buffer (insert-file-contents it)
-                                                                  (org-ascii-export-as-ascii)
-                                                                  (setq __x
-                                                                        (count-words (point-min) (point-max)))
-                                                                  (kill-buffer "*Org ASCII Export*")
-                                                                  (delete-other-windows)
-                                                                  (/ __x 200)))) ;; 200 words per minute reading
-                                      )
-
-                              ;; ⟨2⟩ Article image
-                              (format "\n@@html:%s@@\n" (my/org-static-blog-assemble-image it))
-
-                              ;; ⟨3⟩ Preview
-                              (format "\n#+INCLUDE: \"%s::*Abstract\" :only-contents t" it)
-
-                              ;; ⟨4⟩ “Read more” link
-                              (format (concat "\n@@html:<p style=\"text-align:right\">@@"
-                                              " badge:Read|more|green|%s|read-the-docs @@html:</p>@@")
-                                      (concat org-static-blog-publish-url (f-base it))))
-                             post-filenames))
-        ;; This is the bottom-most matter in the index.html page
-        (show-older-posts (concat  "\n#+begin_export html\n"
-                                   "<hr> <div id=\"archive\">"
-                                   "<a href=\""
-                                   (org-static-blog-get-absolute-url org-static-blog-archive-file)
-                                   "\">" (org-static-blog-gettext 'other-posts) "</a>"
-                                   "</div>"
-                                   "</div>"
-                                   (blog/license)
-                                   "\n#+end_export")))
-    (with-temp-buffer
-      (insert (s-join "\n\n" (list org-header
-                                   index-header
-                                   (s-join "\n\n" abstracts-of-posts)
-                                   show-older-posts)))
-      (org-mode)
-      (org-html-export-to-html))))
-
-(cl-defun blog/git (cmd &rest args)
-  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
-  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
-
-(cl-defun blog/publish-current-article ()
-  "Place HTML files in the right place, update arhives, index, rss, tags; git push!"
-  (interactive)
-    (blog/git "add %s" (buffer-file-name))
-  ;; Placed article html into the published blog directory
-  (blog/preview)
-  (save-buffer)
-  (-let [article (concat (f-base (buffer-file-name)) ".html")]
-    (shell-command (concat "mv " article " ~/blog/"))
-    (blog/git "add %s %s" (buffer-file-name) article)
-    (when (equal (f-base (buffer-file-name)) "AlBasmala")
-      (blog/git "add AlBasmala.el")))
-
-  ;; Updated index.html, tags, archive, and rss to now include this new article
-
-  ;; Need to disable my export-preprocessing hooks, when using org-static-blog utils.
-  (blog/preview/disable)
-  (view-echo-area-messages)
-
-  (message "⇒ HTMLizing article...")
-  (blog/htmlize-file (buffer-file-name))
-  (blog/git "add %s.org.html" (f-base (buffer-file-name)))
-
-  (message "⇒ Assembling tags...")
-  (org-static-blog-assemble-tags)
-  (blog/git "add tag*")
-
-  (message "⇒ Assembling archive...")
-  (org-static-blog-assemble-archive)
-  (blog/git "add archive.html")
-
-  (message "⇒ Assembling RSS feed...")
-  (org-static-blog-assemble-rss)
-  (blog/git "add rss.xml")
-
-  (message "⇒ Assembling landing page...")
-  (org-static-blog-assemble-index)
-  (blog/git "add index.html")
-
-  (blog/git "commit -m \"%s\"; git push"
-            (if current-prefix-arg
-                (read-string "Commit message: ")
-              (format "Publish: Article %s.org" (f-base (buffer-file-name)))))
-
-  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
-
-(defvar blog/tags
-  '(emacs faith category-theory order-theory
-    lisp types packages haskell agda
-    c frama-c program-proving)
-  "Tags for my blog articles.")
-
-(defun blog/new-article ()
-"Make a new article for my blog; prompting for the necessary ingredients.
-
-If the filename entered already exists, we simply write to it.
-The user notices this and picks a new name.
-
-This sets up a new article based on existing tags and posts.
-+ Use C-SPC to select multiple tag items
-
-Moreover it also enables `org-preview-html-mode' so that on every alteration,
-followed by a save, C-x C-s, will result in a live preview of the blog article,
-nearly instantaneously."
-  (interactive)
-  (let (file desc)
-
-    (thread-last org-static-blog-posts-directory
-      f-entries
-      (mapcar #'f-filename)
-      (completing-read "Filename (Above are existing): ")
-      (concat org-static-blog-posts-directory)
-      (setq file))
-
-    ;; For some reason, ‘find-file’ in the thread above
-    ;; wont let the completing-read display the possible completions.
-    (find-file file)
-
-    (insert "#+title: " (read-string "Title: ")
-            "\n#+author: " user-full-name
-            "\n#+email: "  user-mail-address
-            ;; "\n#+date: " (format-time-string "<%Y-%m-%d %H:%M>")
-            "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
-                                                         blog/tags
-                                                         :marked-candidates t))
-            "\n#+fileimage: emacs-birthday-present.png"
-            ;; "\n#+fileimage: " (completing-read
-            ;;                    "Image: "
-            ;;                    (mapcar #'f-filename (f-entries "~/blog/images/")))
-            ;; "\n#+include: ../MathJaxPreamble.org" ;; TODO. Is this someting I actually want here? If so, then consider tangling it from AlBasmala! (and add the whitespace-MathJax setup from above!)
-            "\n#+description: "
-               (setq desc (read-string "Article Purpose: "))
-            "\n\n* Abstract :ignore: \n" desc
-            "\n\n* ???")
-    (save-buffer)
-    (blog/preview)))
