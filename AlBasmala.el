@@ -167,8 +167,7 @@ nearly instantaneously."
            collect (blog/info file) into posts
            finally
            ;; Sorted in descending time; i.e., the latest article should be first
-           ;; Note: We use “:date” key here since we have alists with such keys; when we JSON encode, the keys become strings, eg “ "data" ”.
-           (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (map-elt older :date)) (date-to-time (map-elt newer :date))))))
+           (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (@date older)) (date-to-time (@date newer))))))
            (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
            (find-file "~/blog/posts.json")
            (json-pretty-print-buffer)
@@ -185,13 +184,25 @@ nearly instantaneously."
 ;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
 ;; Later, we redefine these, for example `@image' will actually produces the HTML for the image.
 ;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
+
+;; Extract the ‘#+title:‘ from POST-FILENAME.
 (defun @title       (json) (map-elt json "title"))
-(defun @date        (json) (map-elt json "date"))
+
+;; TODO: Consider using: (format-time-string "%d %b %Y" ⋯) to have the same format across all articles.
+(defun @date (json)
+  "Extract the “#+date:” from JSON."
+  (map-elt json "date"))
+
 (defun @file        (json) (map-elt json "file"))
 (defun @description (json) (map-elt json "description"))
-(defun @url         (json) (map-elt json "url"))
 (defun @abstract    (json) (map-elt json "abstract"))
 
+;; Returns absolute URL to the published POST-FILENAME.
+;;
+;; This function concatenates publish URL and generated custom filepath to the
+;; published HTML version of the post.
+;;
+(defun @url         (json) (map-elt json "url"))
 
 (defun @history (json)
   "Get an HTML badge that points to the Github history of a given file name, in my blog."
@@ -199,7 +210,6 @@ nearly instantaneously."
    "<a class=\"tooltip\" title=\"See the various edits to this article over time\" href=\""
    (map-elt json "history")
    "\"><img src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
-
 
 (defun @tags (json)
   "Get an HTML listing of tags, as shields.io bages, associated with the given file.
@@ -257,9 +267,10 @@ Here are 4 example uses:
       (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
       (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
       (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
-      (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+      (s-collapse-whitespace
+       (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
              %s width=\"%s\" height=\"%s\" align=\"top\"/></a></center>"
-              href title src no-border? width height))))
+              href title src no-border? width height)))))
 
 (defun blog/info (post-filename)
   "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
@@ -271,13 +282,13 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
       (insert-file-contents post-filename)
       (-snoc
        (cons
-       (cons :file (f-base post-filename))
+       (cons "file" (f-base post-filename))
       (cl-loop for (prop.name prop.regex prop.default) on
-            `(:title "^\\#\\+title:[ ]*\\(.+\\)$" ,post-filename
-                     :date "^\\#\\+date:[ ]*<\\([^]>]+\\)>$" ,(time-since 0)
-                     :image "^\\#\\+fileimage: \\(.*\\)" "emacs-birthday-present.png 350 350"
-                     :description "^\\#\\+description:[ ]*\\(.+\\)$" "I learned something neat, and wanted to share!"
-                     :tags "^\\#\\+filetags:[ ]*\\(.+\\)$" "" ;; String; Space separated sequence of tags
+            `("title" "^\\#\\+title:[ ]*\\(.+\\)$" ,post-filename
+                     "date" "^\\#\\+date:[ ]*<\\([^]>]+\\)>$" ,(time-since 0)
+                     "image" "^\\#\\+fileimage: \\(.*\\)" "emacs-birthday-present.png 350 350"
+                     "description" "^\\#\\+description:[ ]*\\(.+\\)$" "I learned something neat, and wanted to share!"
+                     "tags" "^\\#\\+filetags:[ ]*\\(.+\\)$" "" ;; String; Space separated sequence of tags
                      )
             by 'cdddr
             ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
@@ -286,10 +297,10 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
                           (if (search-forward-regexp prop.regex nil t)
                               (match-string 1)
                             prop.default))))
-       (cons :url (concat "https://alhassy.com/" (f-base post-filename)))
-       (cons :history (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
+       (cons "url" (concat "https://alhassy.com/" (f-base post-filename)))
+       (cons "history" (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
                               (f-base post-filename)))
-       (cons :abstract (progn
+       (cons "abstract" (progn
                   (goto-char (point-min))
                   (when (re-search-forward "^\* Abstract" nil t)
                     (beginning-of-line)
@@ -431,7 +442,8 @@ Notice that if you explicitly provide options to change the toc, date, or show d
 then your options will be honoured. (Since they will technically come /after/ the default options,
 which I place below at the top of the page.)
 "
-    (goto-char (point-min))
+  (goto-char (point-min))
+  (let ((post (blog/info (buffer-file-name))))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
             "\n#+date: " (format-time-string "%Y-%m-%d" (current-time))
             (if (buffer-narrowed-p) "\n#+options: broken-links:t" "")
@@ -439,25 +451,18 @@ which I place below at the top of the page.)
             "\n* Tags, then Image :ignore:"
             "\n#+html: "
             "<center>"
-            (blog/tags-of-file (buffer-file-name))
+            (@tags post)
             "</center>"
             "\n#+html: "
-            (-let [art (buffer-file-name)]
-              ;; Need this conditional since AlBasmala lives in ~/blog whereas usually articles live in ~/blog/posts.
-              ;; TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think there's any real reason for breaking consistency.
-              (thread-last (if (equal (f-base art) "AlBasmala") "./images/" "../images/")
-                           (my/org-static-blog-assemble-image art)
-                           s-collapse-whitespace))
+            (@image post
+                    ;; Need this conditional since AlBasmala lives in ~/blog whereas usually articles live in ~/blog/posts.
+                    ;; TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think there's any real reason for breaking consistency.
+                    (if (equal (f-base (@file post)) "AlBasmala") "./images/" "../images/"))
             "\n")
 
-    ;; It seems I have essentially 3 different ways to handle things: Preview, Publish, Index. Consider brining those closer
-    ;; together. If I decided to switch to the org-static-blog-publish-file approach, then I would need to
-    ;; explicitly write #+begin_abstract...#+end_abstract, due to how I've defined
-    ;; org-static-blog-post-preamble. (See also org-static-blog-assemble-multipost-page for how I handle the abstract there.)
-    ;;
     ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
     ;; (In case we are narrowed, we only act when we can find the Abstract.)
-
+    ;; TODO: Replace this with (@abstract (blog/info (buffer-file-name))), or: (@abstract post)
     (when (re-search-forward "^\* Abstract" nil t)
       (beginning-of-line)
       (-let [start (point)]
@@ -474,7 +479,7 @@ which I place below at the top of the page.)
 
     (goto-char (point-max))
     ;; The Org file's title is already shown via blog:header, above, so we disable it in the preview.
-    (insert (format "\n* footer :ignore: \n blog:footer \n #+options: title:nil \n")))
+    (insert (format "\n* footer :ignore: \n blog:footer \n #+options: title:nil \n"))))
 
 (cl-defun blog/preview ()
   "Enable preview-on-save, and add blog/style-setup from Org's export hook."
@@ -485,6 +490,7 @@ which I place below at the top of the page.)
   ;; Inserting org-link/blog /seamlessly/ via the export process
   (add-hook 'org-export-before-processing-hook  #'blog/style-setup)
   ;; Preview with every save
+  (setq org-preview-html-viewer 'xwidget)
   (org-preview-html-mode))
 
 (cl-defun blog/preview/disable ()
@@ -497,17 +503,18 @@ which I place below at the top of the page.)
   "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
 
 This function is called for every post and the returned string is appended to the post body, as a postamble."
-  (concat
-   "<hr>"
-   "<center>"
-   (blog/htmlize-file post-file-name)
-   "&ensp;"
-   (blog/history-of-file post-file-name)
-   ;;
-   ;; TODO: Only add this to posts tagged “arabic”
-   (blog/css/arabic-font-setup)
-   ;;
-   "<br>"
+  (let ((post (blog/info (buffer-file-name))))
+    (concat
+     "<hr>"
+     "<center>"
+     (blog/htmlize-file post-file-name)
+     "&ensp;"
+     (@history post)
+     ;;
+     ;; Consider only add this to posts tagged “arabic”?
+     (blog/css/arabic-font-setup)
+     ;;
+     "<br>"
    "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
    "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
    "</a>"
@@ -518,37 +525,7 @@ This function is called for every post and the returned string is appended to th
    "</center>"
    ;; The next line is required to make the org-static-blog-assemble-rss method work.
    "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
-   (blog/read-remaining-js)))
-
-(defun blog/tags-of-file (file-name)
-  "Get an HTML listing of tags, as shields.io bages, associated with the given file."
-          (concat
-   ;; Straightforward implementation.
-   ;; "<div class=\"taglist\">"
-   ;; (org-static-blog-post-taglist file-name)
-   ;; "</div>"
-
-  ;; Badges implementation
-   (if (not file-name)
-       ""
-     (concat
-      (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
-              (org-link/octoicon "tag" nil 'html))
-      (s-join " "
-              (--map  (org-link/badge
-                       (format "|%s|grey|%stag-%s.html"
-                               (s-replace "-" "_" it)
-                               blog/url it)
-                       nil 'html)
-                      (org-static-blog-get-tags file-name)))))))
-
-(defun blog/history-of-file (file-name)
-  "Get an HTML badge that points to the Github history of a given file name, in my blog."
-  (concat
-     "<a class=\"tooltip\" title=\"See the various edits to this article over time\""
-     "href=\"https://github.com/alhassy/alhassy.github.io/commits/master/"
-   "posts/" (f-base file-name) ".org\"><img
-   src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
+   (blog/read-remaining-js))))
 
 (defun blog/htmlize-file (file-name)
   "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file.

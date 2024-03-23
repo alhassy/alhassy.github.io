@@ -18,17 +18,9 @@ LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
 [[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
 :end:
 
-;; TODO: Axe `blog/history-of-file' since its subsumed by this method now
-(defun @history (json)
-
-
-;; TODO: Axe `my/org-static-blog-assemble-image' since it's now subsumed by this method.
-(cl-defun @image (json &optional explicit-image-path-prefix)
-
 #+begin_remark "ლ(ಠ益ಠ)ლ"
 I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
 #+end_remark
-
 
 ;; TODO: Consider a tag “draft”, such that articles with this tag are not considered
 ;; for publication? Or better, they are published and have a badge “Warning: Incomplete Draft”, after all I think most articles are drafts since I want to be able to continously update them, that's why I have the “history” badge.
@@ -1852,15 +1844,28 @@ start with ‘@’.
 ;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
 ;; Later, we redefine these, for example `@image' will actually produces the HTML for the image.
 ;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
+
+;; Extract the ‘#+title:‘ from POST-FILENAME.
 (defun @title       (json) (map-elt json "title"))
-(defun @date        (json) (map-elt json "date"))
+
+;; TODO: Consider using: (format-time-string "%d %b %Y" ⋯) to have the same format across all articles.
+(defun @date (json)
+  "Extract the “#+date:” from JSON."
+  (map-elt json "date"))
+
 (defun @file        (json) (map-elt json "file"))
 (defun @description (json) (map-elt json "description"))
-(defun @url         (json) (map-elt json "url"))
 (defun @abstract    (json) (map-elt json "abstract"))
+
+;; Returns absolute URL to the published POST-FILENAME.
+;;
+;; This function concatenates publish URL and generated custom filepath to the
+;; published HTML version of the post.
+;;
+(defun @url         (json) (map-elt json "url"))
 #+end_src
 
-** @history
+** @history: Get an HTML badge that points to the Github history of a given file name, in my blog :details:
 #+begin_src emacs-lisp
 (defun @history (json)
   "Get an HTML badge that points to the Github history of a given file name, in my blog."
@@ -2168,7 +2173,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
 
 See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 
-** blog/posts FUNCTION
+** COMMENT blog/posts FUNCTION
 #+begin_src emacs-lisp
 (defun blog/posts (file-name)
   "Retrieve the JSON cache from `blog/posts' regarding FILE-NAME.
@@ -2190,10 +2195,6 @@ which I place below at the top of the page.)
 "
   (goto-char (point-min))
   (let ((post (blog/info (buffer-file-name))))
-
-    ;;
-
-
     (insert "#+options: toc:2 html-postamble:nil d:nil"
             "\n#+date: " (format-time-string "%Y-%m-%d" (current-time))
             (if (buffer-narrowed-p) "\n#+options: broken-links:t" "")
@@ -2269,17 +2270,18 @@ export is performed and so this is rather fast ---at least much faster than manu
   "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
 
 This function is called for every post and the returned string is appended to the post body, as a postamble."
-  (concat
-   "<hr>"
-   "<center>"
-   (blog/htmlize-file post-file-name)
-   "&ensp;"
-   (blog/history-of-file post-file-name)
-   ;;
-   ;; TODO: Only add this to posts tagged “arabic”
-   (blog/css/arabic-font-setup)
-   ;;
-   "<br>"
+  (let ((post (blog/info (buffer-file-name))))
+    (concat
+     "<hr>"
+     "<center>"
+     (blog/htmlize-file post-file-name)
+     "&ensp;"
+     (@history post)
+     ;;
+     ;; Consider only add this to posts tagged “arabic”?
+     (blog/css/arabic-font-setup)
+     ;;
+     "<br>"
    "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
    "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
    "</a>"
@@ -2290,18 +2292,7 @@ This function is called for every post and the returned string is appended to th
    "</center>"
    ;; The next line is required to make the org-static-blog-assemble-rss method work.
    "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
-   (blog/read-remaining-js)))
-#+end_src
-
-** blog/history-of-file :details:
-#+begin_src emacs-lisp
-(defun blog/history-of-file (file-name)
-  "Get an HTML badge that points to the Github history of a given file name, in my blog."
-  (concat
-     "<a class=\"tooltip\" title=\"See the various edits to this article over time\""
-     "href=\"https://github.com/alhassy/alhassy.github.io/commits/master/"
-   "posts/" (f-base file-name) ".org\"><img
-   src=\"https://img.shields.io/badge/-History-informational?logo=github\"></a>"))
+   (blog/read-remaining-js))))
 #+end_src
 
 ** blog/htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file :details:
@@ -3249,27 +3240,27 @@ but =org-static-blog= uses the =post-title= blog, so I'll override the
 # - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
 #  just dumps the title in-place; here I provide a support for just =<br>=.
 #+begin_src emacs-lisp -r -n -n
-;; MA: This can be deleted?? Do a search for post-title in this article to see why?
 (defun org-static-blog-post-preamble (post-filename)
   "Returns the formatted date and headline of the post.
 This function is called for every post and prepended to the post body.
 Modify this function if you want to change a posts headline."
-  (concat
-   ;; The title
-   "<h1 class=\"post-title\">"
-   "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
-   "<a href=\"" (org-static-blog-get-post-url post-filename) "\">"
-   (org-static-blog-get-title post-filename)
-   "</a>"
-   "</h1></div>"
-   ;; The date
-   "<div style=\"text-align: center;\">"
-   (format-time-string (org-static-blog-gettext 'date-format)
-                       (org-static-blog-get-date post-filename))
-   "</div>"
-   ;; The article's image
-   (my/org-static-blog-assemble-image post-filename)
-   "<br><center><strong>Abstract</strong></center>"))
+  (let ((post (blog/info (buffer-file-name))))
+    (concat
+     ;; The title
+     "<h1 class=\"post-title\">"
+     "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
+     "<a href=\"" (@url post) "\">"
+     (@title post)
+     "</a>"
+     "</h1></div>"
+     ;; The date
+     "<div style=\"text-align: center;\">"
+     (@date post)
+     "</div>"
+     ;; The article's image
+     (@image post)
+     "<br><center><strong>Abstract</strong></center>")))
+
 #+end_src
 
 
