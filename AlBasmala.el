@@ -111,7 +111,7 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
   "Directory containing source Org files.
 
 When publishing, posts are rendered as HTML and included in the index and RSS feed.
-See `blog/create-index' and `blog/publish-directory'.")
+See `blog/make-index-page' and `blog/publish-directory'.")
 
 (defun blog/new-article ()
 "Make a new article for my blog; prompting for the necessary ingredients.
@@ -230,7 +230,7 @@ Example use:  (@tags (seq-elt blog/posts 0))
             (--map  (org-link/badge
                      (format "|%s|grey|%stag-%s.html"
                              (s-replace "-" "_" it)
-                             "https://alhassy.com" it)
+                             "https://alhassy.com/" it)
                      nil 'html)
                     (s-split " " (map-elt json "tags")))))))
 
@@ -324,13 +324,7 @@ Example use: (blog/info \"~/blog/posts/HeytingAlgebra.org\")
             "%s </div>")
            contents))
 
-(setq index-content-header
-  (concat
-   "Here are some of my latest thoughts..."
-   " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
-   " tweet:https://alhassy.github.io/"))
-
-(defun blog/make-index-page ()
+(cl-defun blog/make-index-page ()
   "Assemble the blog index page.
 
 The index page contains blurbs of all of my articles.
@@ -338,10 +332,50 @@ The index page contains blurbs of all of my articles.
 Precondition: `blog/posts' refers to all posts, in reverse chronological order.
 
 You can view the generated ~/blog/index.html by invoking:
-  (org-static-blog-assemble-index)
+
+  (blog/make-index-page)
+"
+  (interactive)
+  (blog/make-tags-page :export-file-name "~/blog/index.html"))
+
+(defun blog/make-all-tag-pages ()
+  "Make tag pages for all of my tags"
+  (interactive)
+  (loop for total = (length blog/tags)
+        for tag in blog/tags
+        for n from 0
+        for progress = (* (/ (* n 1.0) total) 100)
+        do
+        (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
+        (message "Progress ... %d%%" progress)
+        ;; Slightly faster to generate all pages, /then/ to git add them all.
+        finally (shell-command "cd ~/blog; git add \"tag-*.html\"")))
+        ;; NOTE: Slightly faster if I get rid of the “Progress…” notifications.
+
+(cl-defun blog/make-tags-page
+    (&key
+     (tag nil)
+     (title (if tag (format "Posts   tagged   “%s”" tag) ""))
+     (greeting (format "Here are some of my latest thoughts %s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"
+
+                       (if tag (concat "on " tag) "")))
+     (export-file-name
+      (concat-to-dir blog/publish-directory
+                     (if tag (concat "tag-" (downcase tag) ".html")
+                       "index.html"))))
+  "Assemble a page of only articles tagged TAG blog index page.
+
+The page contains blurbs of all of my articles tagged TAG.
+
+Precondition: `blog/posts' refers to all posts, in reverse chronological order.
+
+Example uses:
+1. (blog/make-tags-page :export-file-name \"~/blog/index.html\" :title \"Hello world\" :tag \"arabic\")
+2. (blog/make-tags-page :tag \"arabic\")
 "
   (interactive)
   (view-echo-area-messages)
+  (blog/preview/disable)
   (with-temp-buffer
     (insert
      (s-join
@@ -352,9 +386,8 @@ You can view the generated ~/blog/index.html by invoking:
        ;; (progn (org-special-block-extras-mode -1) "")
        (setq org-html-head-extra "")
        ;; Org-mode header
-       "#+EXPORT_FILE_NAME: ~/blog/index.html"
+       (concat "#+EXPORT_FILE_NAME: " export-file-name)
        "#+options: toc:nil title:nil html-postamble:nil"
-       (concat "#+title: " blog/title)
        "#+begin_export html"
        ;; MA: Not ideal, the sizes I've set in the actual article are best.
        ;; "<style>"
@@ -363,41 +396,43 @@ You can view the generated ~/blog/index.html by invoking:
        org-static-blog-page-preamble
        org-static-blog-page-header
        "#+end_export"
+       (concat "#+html: <br><center style=\"font-size: 3em; font-weight: bolder;\">" title "</center>")
        ;; TODO: Delete the following comment when things work and are done.
        ;; Extra styling of abstracts.
        ;; Works; but not needed.
        ;; "\n#+HTML_HEAD_EXTRA: <style> div.abstract {background-color: pink !important;} </style>"
 
-       ;; Index landing page header
-       ;; "\n#+begin_export html"
-       ;; TODO: Rename `index-content-header' to have the `blog/' prefix
-       ;; Also make the “Made with Lisp” tagline refer to my Lisp cheat sheet.
-       ;; org-static-blog-page-header ;; TODO: This is used above, does it need to occur again?
-       ;; "#+end_export"
-       index-content-header
+       ;; The greeting message that informs viewers what this page is about.
+       "#+html: <br>" greeting "#+html: <br>"
 
        ;; TODO: Add this loop body to the info of each post, for future use via AngularJS view-by-tags.
        ;; Blurbs of posts
        (s-join "\n" (--map
-        (concat
-         (progn (message "Processing %s..." it) "") ;; Progress indicator
+        (if (and tag (not (seq-contains-p (s-split " " (map-elt it "tags")) tag)))
+            ""
+          (concat
+           (progn (message "Processing %s..." it) "") ;; Progress indicator
 
-         ;; ⟨0⟩ Title and link to article
-         (format "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>" (@url it) (@title it))
+           ;; TODO: Make this concat of ⟨0⟩-⟨4⟩ into a method `@preview'
 
-         ;; ⟨1⟩ Tags and reading time
-         (format "\n#+begin_export html\n<center>%s\n</center>\n#+end_export" (@tags it))
+           ;; ⟨0⟩ Title and link to article
+           (format "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>" (@url it) (@title it))
+           ;; TODO: Look at all uses of @title and maybe move this @@html@@ into it.
+           ;; NOTE: This is still a Phase Split since the JSON has the raw data, and the @ABC methods produce @@html⋯@@ code ^_^
 
-         ;; ⟨2⟩ Article image
-         (format "\n@@html:%s@@\n" (@image it))
+           ;; ⟨1⟩ Tags and reading time
+           (format "\n#+begin_export html\n<center>%s\n</center>\n#+end_export" (@tags it)) ;; TODO: Look at all uses of @tags and maybe move this @@html@@ into it.
 
-         ;; ⟨3⟩ Preview
-         (@abstract it)
+           ;; ⟨2⟩ Article image
+           (format "\n@@html:%s@@\n" (@image it)) ;; TODO: Look at all uses of @image and maybe move this @@html@@ into it.
 
-         ;; ⟨4⟩ “Read more” link
-         (format (concat "\n@@html:<p style=\"text-align:right\">@@" " badge:Read|more|green|%s|read-the-docs @@html:</p>@@") (@url it))
-         )
-        (seq--into-list blog/posts)))
+           ;; ⟨3⟩ Preview
+           (@abstract it)
+
+           ;; ⟨4⟩ “Read more” link
+           ;; TODO: Make a @read-more method.
+           (format (concat "\n@@html:<p style=\"text-align:right\">@@" " badge:Read|more|green|%s|read-the-docs @@html:</p>@@") (@url it))))
+          (seq--into-list blog/posts)))
 
        ;; “Show older posts”
        ;; This is the bottom-most matter in the index.html page

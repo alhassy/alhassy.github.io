@@ -1902,7 +1902,7 @@ Example use:  (@tags (seq-elt blog/posts 0))
                     (s-split " " (map-elt json "tags")))))))
 #+end_src
 
-** @image
+** @image :details:
 <<Images>>
 
 Every article declaratively has an associated image ^_^
@@ -2029,16 +2029,6 @@ In this article, we learn to have fun!
 
 <<Index>>
 
-I'd like to be able to quickly change the blurb on the index page, so we make a
-variable for that ---consisting of Org-markup.
-#+begin_src emacs-lisp -n
-(setq index-content-header
-  (concat
-   "Here are some of my latest thoughts..."
-   " badge:Made_with|Lisp such as doc:thread-first and doc:loop (•̀ᴗ•́)و"
-   " tweet:https://alhassy.github.io/"))
-#+end_src
-
 The actual look and feel of ~index.html~ is due to the method
 doc:blog/make-index-page. It summarises all of my articles by their title, data
 & image, ‘abstract’, and a read-more badge.
@@ -2059,18 +2049,25 @@ You can view the generated ~/blog/index.html by invoking:
   (blog/make-tags-page :export-file-name "~/blog/index.html"))
 #+end_src
 
-
+** blog/make-tags-page & blog/make-all-tag-pages: Generating “tag-𝑻.html” pages            :details:
 #+begin_src emacs-lisp
-;; Make tag pages for all of my tags
-(loop for total = (length blog/tags)
-      for tag in blog/tags
-      for n from 0
-      for progress = (* (/ (* n 1.0) total) 100)
-      do
-      (let ((inhibit-message t)) (shell-command (concat "cd ~/blog; git add " (blog/make-tags-page :tag tag))))
-      (message "Progress ... %d%%" progress))
+(defun blog/make-all-tag-pages ()
+  "Make tag pages for all of my tags"
+  (interactive)
+  (loop for total = (length blog/tags)
+        for tag in blog/tags
+        for n from 0
+        for progress = (* (/ (* n 1.0) total) 100)
+        do
+        (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
+        (message "Progress ... %d%%" progress)
+        ;; Slightly faster to generate all pages, /then/ to git add them all.
+        finally (shell-command "cd ~/blog; git add \"tag-*.html\"")))
+        ;; NOTE: Slightly faster if I get rid of the “Progress…” notifications.
+#+end_src
 
-
+where
+#+begin_src emacs-lisp
 (cl-defun blog/make-tags-page
     (&key
      (tag nil)
