@@ -349,7 +349,8 @@ You can view the generated ~/blog/index.html by invoking:
         (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
         (message "Progress ... %d%%" progress)
         ;; Slightly faster to generate all pages, /then/ to git add them all.
-        finally (shell-command "cd ~/blog; git add \"tag-*.html\"")))
+        ;; TODO: I'm doing a “git commit” here, where else? Maybe merge them all together? Likewise with “git add”s.
+        finally (shell-command "cd ~/blog; git add \"tag-*.html\"; git commit -m \"Generated tags file\"")))
         ;; NOTE: Slightly faster if I get rid of the “Progress…” notifications.
 
 (cl-defun blog/make-tags-page
@@ -839,3 +840,39 @@ of this function."
      body {font-family: 'Amiri', sans-serif;}
      table {font-family:  'Scheherazade'; font-size: 105%; }
    </style>")
+
+(cl-defun blog/git (cmd &rest args)
+  "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
+  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
+
+
+
+(cl-defun blog/publish-current-article ()
+  "Place HTML files in the right place, update index, rss, tags; git push!"
+  (interactive)
+    (blog/git "add %s" (buffer-file-name))
+  ;; Placed article html into the published blog directory
+  (blog/preview)
+  (save-buffer)
+  (-let [article (concat (f-base (buffer-file-name)) ".html")]
+    (shell-command (concat "mv " article " ~/blog/"))
+    (blog/git "add %s %s" (buffer-file-name) article)
+    ;; Make AlBasmala live with the other posts to avoid this conditional.
+    (when (equal (f-base (buffer-file-name)) "AlBasmala")
+      (blog/git "add AlBasmala.el")))
+
+  ;; Need to disable my export-preprocessing hooks.
+  (blog/preview/disable) (view-echo-area-messages)
+  (message "⇒ HTMLizing article...") (blog/htmlize-file (buffer-file-name))
+  (message "⇒ Assembling tags...") (blog/make-all-tag-pages) ;; TODO: I only need to update the tags pages relevant to the current article!
+  (message "⇒ Assembling RSS feed...") (org-static-blog-assemble-rss)
+  (message "⇒ Assembling landing page...") (blog/make-index-page)
+  (blog/git "add  %s.org.html tag* rss.xml index.html" (f-base (buffer-file-name)))
+
+  ;; TODO: If we're updating an existing article, prompt for a message.
+  (blog/git "commit -m \"%s\"; git push"
+            (if current-prefix-arg
+                (read-string "Commit message: ")
+              (format "Publish: Article %s.org" (f-base (buffer-file-name)))))
+
+  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
