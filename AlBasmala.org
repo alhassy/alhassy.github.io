@@ -1897,7 +1897,7 @@ Example use:  (@tags (seq-elt blog/posts 0))
             (--map  (org-link/badge
                      (format "|%s|grey|%stag-%s.html"
                              (s-replace "-" "_" it)
-                             "https://alhassy.com" it)
+                             "https://alhassy.com/" it)
                      nil 'html)
                     (s-split " " (map-elt json "tags")))))))
 #+end_src
@@ -2057,7 +2057,18 @@ You can view the generated ~/blog/index.html by invoking:
 "
   (interactive)
   (blog/make-tags-page :export-file-name "~/blog/index.html"))
+#+end_src
 
+
+#+begin_src emacs-lisp
+;; Make tag pages for all of my tags
+(loop for total = (length blog/tags)
+      for tag in blog/tags
+      for n from 0
+      for progress = (* (/ (* n 1.0) total) 100)
+      do
+      (let ((inhibit-message t)) (shell-command (concat "cd ~/blog; git add " (blog/make-tags-page :tag tag))))
+      (message "Progress ... %d%%" progress))
 
 
 (cl-defun blog/make-tags-page
