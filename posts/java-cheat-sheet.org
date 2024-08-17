@@ -1834,6 +1834,312 @@ since older versions of Java do not have type parameters and so, at run time, al
 parameters are ‘erased’. That is, /type parameters only exist at compile time and so cannot
 be inspected/observed at run-time./
 
+* Typecasting
+
+Let is write “A ≤ B” to mean that “A is a subclass of B”.
+Declarations src_java[:exports code]{class A extends B {...}}
+mean “A ≤ B”. The ‘subclass’ relation ‘≤’ behaves just like the
+usual ‘≤’ on numbers: $A ≤ A$ and $A ≤ B ≤ C ⇒ A ≤ C$
+and $A ≤ B ≤ A ⇒ A = B$.
+The rules are intuitively understood by reading
+“A ≤ B” as
+/“Every instance of A has all the features of B (and, possibly more!)”/.
+
+** Basic rules of subtyping “≤”
+
+Assume $A ≤ B$ ---for example, “Dog ≤ Animal”---, then:
+- Cast :: $(τ)(x) : τ$ :: Any reference $x$ can be *dangerously* transformed into
+  a reference of any type $τ$. If $x$ is actually a value of $τ$, then this does
+  nothing to $x$ but /communicates/ to Java that it has a more specific type.  If
+  $x$ is not a value of $τ$, then the cast will throw an error.
++ Upcast,  $a : A ≤ B ⇒ a : B$ :: All $A$'s are $B$'s, so whenever we want a $B$
+  we can just /(up)cast/ an $A$ to be a $B$.
+  - This is done automatically by Java.
++ Downcast, $A ≤ B, b : B ⇒ (A)(a) : A$ ::
+  If you have a $B$ and you actually know that it is an $A$, then you can
+  /(down)cast/ it to be an $A$.
+
+** Methods and ≤
+For methods, whenever
+$I′ ≤ I, O ≤ O′$ then $(I → O) ≤ (I′ → O′)$.
+/“Giving a method something more specific than requested is fine; treating the
+output of a method by forgetting some details is also fine.”/
+Here's some code to demonstrate this:
+#+begin_src java
+// Output types
+class OO { }
+class O extends OO { }
+
+// Input types
+class I { }
+class II extends I { }
+
+O f(I i) { return null; }
+
+I i   = new I();
+O o   = f(i);     // usual usage
+OO oo = f(i);     // upcast
+
+II ii = new II();
+OO oo = f(ii); // Subtyping rules for methods
+#+end_src
+
+Since =Consumer, Supplier= are essentially functions:
+- $I′ ≤ I ⇒ Consumer<I′> ≤ Consumer<I>$
+- $O ≤ O′ ⇒ Supplier<O> ≤ Supplier<O′>$
+
+/“≤” is only true for concrete types, not generic type parameters!/
+
+** Generics and ≤
+
+#+begin_src java
+class OO {}
+class O extends OO {}
+
+class I {}
+class II extends I {}
+
+
+O eval(Function<I, O> f, I i) { return f.apply(i); }
+
+// Normal usage
+Function<I, O> f = i -> null;
+O o = eval(f, null);
+
+Function<I, OO> g = i -> null;
+OO o = eval(g, null); // CRASH: g has the wrong type for `eval`!
+
+
+// Better definition
+<IN extends I, OUT super O> OUT eval(Function<IN, OUT> f, IN i) { return f.apply(i); }
+#+end_src
+
+
+** Variance
+
+If $A ≤ B$ then does that mean $List<A> ≤ List<B>$?
+
+Yup, we just convert to functions then use the ≤-rule for functions:
+List<A> ≅ (ℕ → A) ≤ (ℕ → B) ≅ List<B>.
+
+* *Monads ≈ Fluent Method Chaining*
+
+# In Haskell, Monads ≈ Programmable Semicolon
+
+It turns out that monads are all around us, even in a standard Java library
+---e.g., CompletableFuture and Observable and Optional and Stream (and things
+that convert to stream then can be collected)!
+
+** Functors ≈ API for unwrapping, transforming, then re-wrapping
+Before we explain what a monad is, let's explore simpler construct called a
+functor . A functor is a typed data structure that encapsulates some
+value(s). From a syntactic perspective a functor is a container with the
+following API:
+
+#+begin_src java
+interface Functor<T, F extends Functor<?,?>> {
+    <R> F map(Function<T,R> f);
+}
+#+end_src
+
+
+This function receives whatever is inside a box, transforms it and wraps the
+result as-is into a second functor.
+
+Often Functor<T> is compared to a box holding instance of T where the only way
+of interacting with this value is by transforming it.  Functors generalize
+multiple common idioms like collections, promises, optionals, etc. with a
+single, uniform API that works across all of them.
+
+Let me introduce a couple of functors to make you more fluent with this API:
+
+** Identity Functor, and Optional
+#+begin_src java
+record Identity<T>(T value) implements Functor<T, Identity<?>> {
+    public <R> Identity<R> map(Function<T, R> f) { return new Identity<>(f.apply(value)); }
+}
+
+// Example usage
+Identity<String>  one   = new Identity<>("one");
+Identity<Integer> three = one.map(String::length);
+Identity<Boolean> odd   = one.map(String::length).map(it -> it % 2 == 0);
+#+end_src
+
+The only way to interact with functor is by applying sequences of type-safe
+transformations.
+
+From this perspective mapping over a functor is not much different than just
+invoking chained functions. (In JavaScript, functors appear with the use of
+“.then” or via “await”; in C#, they appear via the beautiful Linq syntax;
+in SQL, “.map” is just a =select= clause.)
+
+This kind of method chaining radically increases readability when using Optional
+---the type-safe way of encoding =null=.
+
+We can implement =Optional= as an intance from scratch, eg using ADTs:
+#+begin_src java
+sealed interface Optional<T> extends Functor<T, Optional<?>> {
+    record Empty<T>() implements Optional<T> {}
+    record Of<T>(T get) implements Optional<T> {}
+    default <R> Optional<R> map(Function<T, R> f) {
+        return switch(this) {
+           case Empty<T> __ -> new Empty<>();
+           case Of<T>    it -> new Of<>(f.apply(it.get));
+        };
+    }
+}
+
+
+// Example usage
+var num = new Optional.Of<>(1);
+var one = num.map(x -> x + 2).map(String::valueOf).map(String::length);
+
+// Without .map, we have ugly checks & casts:
+Optional<Integer> one = new Optional.Empty<>();
+if(num instanceof Optional.Of<Integer>) {
+    one = new Optional.Of<>(((Optional.Of<Integer>)num).get() + 2);
+}
+#+end_src
+
+Likewise, streams are also functors (and anything that can convert to a stream,
+then collect)!
+
+** Let's derive “Functor” in stages...
+#+begin_src java
+// Let's derive “Functor” in stages...
+/**
+   [0] Type constructor F is a “functor” when it has a function
+   map : (T → R) → F<T> → F<R>
+
+   [1] If we make F a type parameter, there is no way to specify that
+   it is a type constructor and so we cannot use “<>” with it.
+
+   [2] So, let's ‘pair’ up the semantic application F<T> with syntax,
+   such as “$<F, T>” to denote an application.
+
+   interface $<F, T> { }
+
+   [3] Now, lets add in the “map” method.
+
+   interface $<F, T> {
+    <R> $<F, R> map(Function<T,R> f);
+   }
+
+   Since the result is an instance of $<F, R>, we can chain calls to “map”! Yay (｡◕‿◕｡)
+
+   [4] Since this interface is to model functors, let's rename “$” to “Functor”:
+   interface Functor<F, T> {
+    <R> Functor<F, R> map(Function<T,R> f);
+    }
+
+    We may read “F<T>” as “the application of the type constructor F to type T”,
+    and read “Functor<F, T>” as “the functorial application of F to T”.
+
+   [5] If we actually try to use this, we find that implementations look ugly
+   and actual usages are impractical:
+
+   // Direct implementation
+   record Identity<T>(T value) implements Functor<Identity<?>, T> {
+      public <R> Functor<Identity<?>, R> map(Function<T, R> f) { return new Identity<R>(f.apply(value)); }
+   }
+
+   Functor<Identity<?>, Integer> usage = new Identity<String>("Hello").map(String::length).map(x -> x + 2);
+
+   // Implementation with insight: Since “Functor<F, T>” denotes “F<T>”, let's just use that!
+   // (Which works since F<T> extends Functor<F, T>!)
+   record Identity<T>(T value) implements Functor<Identity<?>, T> {
+      public <R> Identity<R> map(Function<T, R> f) { return new Identity<R>(f.apply(value)); }
+   }
+
+  Identity<Integer> usage = new Identity<String>("Hello").map(String::length).map(x -> x + 2);
+
+  So there are two ways to write an implementation, which could be confusing.
+  Moreover, instance methods are covariant in their outputs, but contravariant
+  in their inputs! This means, if we decide to write something like
+  “Monad<M, R> flatMap(Function<T, Monad<M, R> f)”, then our implementations
+  cannot make this readable viz “M<R> flatMap(Function<T, M<R>> f) {⋯}”
+  since M<R> extends Monad<M, R> and so we cannot weaken the output of the
+  Function parameter!
+
+  The solution is to just drop the types altogether, whcih is fine due to run-time type erasurer.
+
+   [MORE-5] Since the purpose of the syntax “$<F, R>” is to denote the semantic
+   application F<R>. However, since Java erases type arguments at run-time,
+   all actual uses of F<R> will become just “F”. As such, we could replace
+   the one occurrence of “$<F, R>” with just “F”. Doing so means we need to
+   add a constraint “Functor<F extends Functor<?, ?>, T> { ⋯ }” so that
+   we can continue to chain calls to “map”. Sadly, this leaves us with the
+   declaration “<R> F map(Function<T, R> f);” which does not explicitly communicate
+   that the return type should be “F<R>”. Just some things to think about; e.g.,
+       <R> Monad<M, R> flatMap(Function<T, Monad<M, R> f);
+   vs  M flatMap(Function<T, M> f);
+
+   The latter is way less scary, but requires way more background knowledge.
+
+
+  Thus, here's the final implementation of Functor:
+ ,*/
+  // **********************************************************************
+  interface Functor<F extends Functor<?, ?>, T> {
+      <R> F map(Function<T, R> f);
+  }
+  // **********************************************************************
+#+end_src
+
+** From Functors to Monads
+
+However imagine you have this handy method for parsing Strings:
+
+1
+FOptional<Integer> tryParse(String s) {
+2
+    try {
+3
+        final int i = Integer.parseInt(s);
+4
+        return FOptional.of(i);
+5
+    } catch (NumberFormatException e) {
+6
+        return FOptional.empty();
+7
+    }
+8
+}
+
+Exceptions are side-effects that undermine type system and functional purity. In
+pure functional languages, there is no place for exceptions. After all, we never
+heard about throwing exceptions during math classes, right? Errors and illegal
+conditions are represented explicitly using values and wrappers. For example
+tryParse() takes a String but does not simply return an int or silently throw an
+exception at runtime. We explicitly tell, through the type system, that
+tryParse() can fail, there is nothing exceptional or erroneous in having a
+malformed string. This semi-failure is represented by an optional
+result. Interestingly Java has checked exceptions, the ones that must be
+declared and handled, so in some sense, Java is purer in that regard, it does
+not hide side-effects. But for better or worse checked exceptions are often
+discouraged in Java, so let's get back to tryParse().
+
+#+begin_src java
+interface Monad<T, M extends Monad<?,?>> extends Functor<M, T> {
+    // We want to say “M<R> flatMap(Function<T, M<M<R>>> f)” but after generic types are erased, any implementation
+    // would have the following type and overloads must be unique up-to-erasure.
+    M flatMap(Function<T,M> f);
+
+    // Note: If there is a factory method M::of that lifts boring R values into M<R> values,
+    // then we can define “map” easily: (Function<T, R> f) → flatMap(t → of(f.apply(t)))
+}
+
+// Identity Monad
+record Identity<T>(T value) implements Functor<Identity<?>, T> {
+    public <R> Identity<R> map(Function<T, R> f) { return new Identity<>(f.apply(value)); }
+    public <R> Identity<R> flatMap(Function<T, Identity<R>> f) { return f.apply(value); }
+}
+
+Identity<Integer> x = new Identity<>(4).flatMap(x -> new Identity<>(x + 3));
+#+end_src
+
+
 * COMMENT Methods
 
 #+latex: {\color{white}.}\vspace{-1em}
