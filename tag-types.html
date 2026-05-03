@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-05-03 Sun 10:27 -->
+<!-- 2026-05-03 Sun 13:47 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
@@ -287,9 +287,11 @@
 <br><center style="font-size: 3em; font-weight: bolder;">Posts   tagged   “types”</center>
 <br>
 <p>
-Here are some of my latest thoughts on types&hellip; <a href="https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf"><img src="https://img.shields.io/badge/Made_with-Lisp-success?logo=Gnu-Emacs"></a> such as <abbr class="tooltip" title="Thread FORMS elements as the first argument of their successor.<br>Example:<br>&emsp;&emsp;(thread-first<br>&emsp;&emsp;&emsp;5<br>&emsp;&emsp;&emsp;(+ 20)<br>&emsp;&emsp;&emsp;(<em> 25)<br>&emsp;&emsp;&emsp;-<br>&emsp;&emsp;&emsp;(+ 40))<br>Is equivalent to:<br>&emsp;&emsp;(+ (- (</em> (+ 5 20) 25)) 40)<br>Note how the single ‘-’ got converted into a list before<br>threading.<br><br>(fn &rest FORMS)">thread-first</abbr> and <abbr class="tooltip" title="The Common Lisp ‘loop’ macro.<br>Valid clauses include:<br>&emsp;For clauses:<br>&emsp;&emsp;for VAR from/upfrom/downfrom EXPR1 to/upto/downto/above/below EXPR2<br>&emsp;&emsp;&emsp;&emsp;[by EXPR3]<br>&emsp;&emsp;for VAR = EXPR1 then EXPR2<br>&emsp;&emsp;for VAR in/on/in-ref LIST [by FUNC]<br>&emsp;&emsp;for VAR across/across-ref ARRAY<br>&emsp;&emsp;for VAR being:<br>&emsp;&emsp;&emsp;the elements of/of-ref SEQUENCE [using (index VAR2)]<br>&emsp;&emsp;&emsp;the symbols [of OBARRAY]<br>&emsp;&emsp;&emsp;the hash-keys/hash-values of HASH-TABLE [using (hash-values/hash-keys V2)]<br>&emsp;&emsp;&emsp;the key-codes/key-bindings/key-seqs of KEYMAP [using (key-bindings VAR2)]<br>&emsp;&emsp;&emsp;the overlays/intervals [of BUFFER] [from POS1] [to POS2]<br>&emsp;&emsp;&emsp;the frames/buffers<br>&emsp;&emsp;&emsp;the windows [of FRAME]<br>&emsp;Iteration clauses:<br>&emsp;&emsp;repeat INTEGER<br>&emsp;&emsp;while/until/always/never/thereis CONDITION<br>&emsp;Accumulation clauses:<br>&emsp;&emsp;collect/append/nconc/concat/vconcat/count/sum/maximize/minimize FORM<br>&emsp;&emsp;&emsp;[into VAR]<br>&emsp;Miscellaneous clauses:<br>&emsp;&emsp;with VAR = INIT<br>&emsp;&emsp;if/when/unless COND CLAUSE [and CLAUSE]... else CLAUSE [and CLAUSE...]<br>&emsp;&emsp;named NAME<br>&emsp;&emsp;initially/finally [do] EXPRS...<br>&emsp;&emsp;do EXPRS...<br>&emsp;&emsp;[finally] return EXPR<br><br>For more details, see Info node ‘(cl)Loop Facility’.<br><br>(fn CLAUSE...)">loop</abbr> (•̀ᴗ•́)و <a href="https://twitter.com/intent/tweet?text=This looks super neat (•̀ᴗ•́)و::&url=https://alhassy.com"><img src="https://img.shields.io/twitter/url?url=https://alhassy.com"></a> <br><br>
+Here are some of my latest thoughts on types&hellip; <a href="https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf"><img src="https://img.shields.io/badge/Made_with-Lisp-success?logo=Gnu-Emacs"></a> such as <abbr class="tooltip" title="Thread FORMS elements as the first argument of their successor.<br>Example:<br>&emsp;&emsp;(thread-first<br>&emsp;&emsp;&emsp;5<br>&emsp;&emsp;&emsp;(+ 20)<br>&emsp;&emsp;&emsp;(<em> 25)<br>&emsp;&emsp;&emsp;-<br>&emsp;&emsp;&emsp;(+ 40))<br>Is equivalent to:<br>&emsp;&emsp;(+ (- (</em> (+ 5 20) 25)) 40)<br>Note how the single ‘-’ got converted into a list before<br>threading.<br><br>(fn &rest FORMS)">thread-first</abbr> and <abbr class="tooltip" title="zsh:1: command not found: wn<br>">loop</abbr> (•̀ᴗ•́)و <a href="https://twitter.com/intent/tweet?text=This looks super neat (•̀ᴗ•́)و::&url=https://alhassy.com"><img src="https://img.shields.io/twitter/url?url=https://alhassy.com"></a> <br><br>
 </p>
 <br>
+
+
 
 
 
@@ -364,6 +366,40 @@ that we attempt to tackle by considering their ‘algebraic’ counterpart: Cate
 In our exploration of what graphs could possibly be and their relationships to lists are,
 we shall <i>mechanise,</i> or <i>implement,</i> our claims since there will be many details and it is easy
 to make mistakes &ndash;moreover as a self-learning project, I'd feel more confident to make
+<b>bold</b> claims when I have a proof assistant checking my work ;-)
+</p>
+
+<p>
+Assuming slight familiarity with the Agda programming language, we motivate the need for
+basic concepts of category theory with the aim of discussing adjunctions with
+a running example of a detailed construction and proof of a free functor.
+Moreover, the article contains a host of <code>exercises</code> whose solutions can be found in the
+literate source file. Raw Agda code can be found <a href="https://github.com/alhassy/AgdaCheatSheet/blob/master/PathCat.agda">here</a>.
+</p>
+
+<p>
+Since the read time for this article is more than two hours, excluding the interspersed
+exercises, it may help to occasionally consult a some reference sheets:
+</p>
+<div class="org-center">
+<p>
+<a href="https://alhassy.github.io/CatsCheatSheet/CheatSheet.pdf"><img src="https://img.shields.io/badge/Category_Theory-CheatSheet-success?logo=gimp"></a>
+<a href="https://alhassy.github.io/AgdaCheatSheet/CheatSheet.pdf"><img src="https://img.shields.io/badge/Agda-CheatSheet-success?logo=haskell"></a>
+</p>
+</div>
+
+<p>
+Coming from a background in order theory, I love Galois Connections and so
+our categorical hammer will not be terminal objects nor limits, but rather adjunctions.
+As such, <i>everything is an adjunction</i> is an apt slogan for us :-)
+</p>
+
+<div class="org-src-container">
+<pre class="src src-haskell"><code><span style="color: #a89984;">-- </span><span style="color: #a89984;">This file has been extracted from https://alhassy.github.io/PathCat/
+</span><span style="color: #a89984;">-- </span><span style="color: #a89984;">Type checks with Agda version 2.6.0.</span>
+</code></pre>
+</div>
+<p>
 <p style="text-align:right"> <a href="https://alhassy.com/PathCat"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
 </p>
 
