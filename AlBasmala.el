@@ -195,41 +195,30 @@ a draft until you remove it before publishing."
     (unless (member #'blog/preview/subtree after-save-hook)
       (blog/preview))))
 
-(defun blog/create-posts-json-file ()
-  "Create cache info about posts.
+(defun blog/compute-posts ()
+  "Return all post metadata as a sorted list (newest first).
+Scans ~/blog/posts/*.org directly — no disk cache."
+  (let ((posts
+         (cl-loop for file in (f-files "~/blog/posts")
+                  when (s-ends-with? ".org" file)
+                  if (equal "multiple" (blog/article-style file))
+                    append (blog/info/multiple file)
+                  else
+                    collect (blog/info file))))
+    (sort posts (lambda (a b)
+                  (time-less-p (date-to-time (@date b))
+                               (date-to-time (@date a)))))))
 
-Handles both article styles:
-- standalone (default): one .org file = one post entry, as before.
-- multiple (#+article_style: multiple): one .org file = N post entries,
-  one per top-level heading.  Uses `blog/info/multiple'."
-  (interactive)
-  (require 'json)
-  (cl-loop for file in (f-files "~/blog/posts")
-           when (s-ends-with? ".org" file)
-           if (equal "multiple" (blog/article-style file))
-             ;; Container file: expand to N entries (one per heading)
-             append (blog/info/multiple file) into posts
-           else
-             ;; Standalone: exactly as before
-             collect (blog/info file) into posts
-           finally
-           ;; Warn about cross-file slug collisions (don't abort)
-           (let ((urls (mapcar (lambda (p) (cdr (assoc "url" p))) posts)))
-             (seq-do (lambda (url)
-                       (when (> (length (seq-filter (lambda (u) (equal u url)) urls)) 1)
-                         (message "WARNING: Duplicate URL in posts: %s" url)))
-                     (seq-uniq urls)))
-           ;; Sorted in descending time; i.e., the latest article should be first
-           (setq posts (sort posts (lambda (newer older) (time-less-p (date-to-time (@date older)) (date-to-time (@date newer))))))
-           (f-write-text (json-encode posts)  'utf-8 (f-expand "~/blog/posts.json"))
-           (find-file "~/blog/posts.json")
-           (json-pretty-print-buffer)
-           (write-file "~/blog/posts.json")))
+(defun blog/refresh-posts ()
+  "Recompute blog/posts and blog/tags from source org files."
+  (setq blog/posts (blog/compute-posts))
+  (setq blog/tags
+        (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
+                                           blog/posts)))
+              #'string<)))
 
-
-(defvar blog/posts (with-temp-buffer (insert-file-contents "~/blog/posts.json") (json-parse-buffer))
-  "Load cached info about posts")
-
+(defvar blog/posts (blog/compute-posts)
+  "All post metadata, sorted newest-first. Refresh with (blog/refresh-posts).")
 
 (defvar blog/tags (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags"))) blog/posts))) #'string<)
   "Tags for my blog articles.")
@@ -590,7 +579,8 @@ You can view the generated ~/blog/index.html by invoking:
   (blog/make-tags-page :export-file-name "~/blog/index.html"))
 
 (defun blog/make-all-tag-pages ()
-  "Make tag pages for all of my tags"
+  "Regenerate tag pages for every known tag. For manual full rebuilds.
+Does not commit — callers handle git."
   (interactive)
   (cl-loop for total = (length blog/tags)
            for tag in blog/tags
@@ -598,11 +588,16 @@ You can view the generated ~/blog/index.html by invoking:
            for progress = (* (/ (* n 1.0) total) 100)
            do
            (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
-           (message "Progress ... %d%%" progress)
-           ;; Slightly faster to generate all pages, /then/ to git add them all.
-           ;; TODO: I'm doing a "git commit" here, where else? Maybe merge them all together? Likewise with "git add"s.
-           finally (shell-command "cd ~/blog; git add \"tag-*.html\"; git commit -m \"Generated tags file\"")))
-        ;; NOTE: Slightly faster if I get rid of the "Progress…" notifications.
+           (message "Progress ... %d%%" progress)))
+
+(defun blog/make-tag-pages-for-tags (tags)
+  "Regenerate tag pages only for TAGS (list of strings), then rebuild the index.
+Faster than blog/make-all-tag-pages when only a few tags are affected."
+  (dolist (tag tags)
+    (when (member tag blog/tags)
+      (let ((inhibit-message t))
+        (blog/make-tags-page :tag tag))))
+  (blog/make-index-page))
 
 (cl-defun blog/make-tags-page
     (&key
@@ -826,6 +821,43 @@ Called automatically by the buffer-local after-save-hook set up by `blog/preview
                             (buffer-list))))
         (when (file-exists-p html-out)
           (browse-url (concat "file://" (expand-file-name html-out))))))))
+
+(defun blog/publish-current-subtree ()
+  "Publish just the top-level heading at point from a multiple-style container.
+
+Fast path: only this article is exported, only its tags' pages are
+regenerated, and a single targeted git commit is made.
+
+Mirrors blog/preview/subtree but goes all the way to git push."
+  (interactive)
+  (unless (equal "multiple" (blog/article-style (buffer-file-name)))
+    (user-error "Not a multiple-style file; use blog/publish-current-article instead"))
+  (save-excursion
+    (unless (org-at-heading-p) (outline-previous-heading))
+    (while (> (org-outline-level) 1) (org-up-heading-safe))
+    (let* ((heading-tags (mapcar #'downcase (org-get-tags)))
+           (_ (when (member "noexport" heading-tags)
+                (user-error "Heading tagged :noexport: — nothing to publish")))
+           (title        (org-get-heading t t t t))
+           (slug         (blog/make-slug (or (org-entry-get (point) "TITLE") title)))
+           (container    (buffer-file-name))
+           (all-infos    (blog/info/multiple container))
+           (info         (seq-find (lambda (a) (equal (cdr (assoc "slug" a)) slug))
+                                   all-infos))
+           (article-tags (s-split " " (cdr (assoc "tags" info)))))
+      (message "=> Publishing subtree: %s (%s)..." title slug)
+      (save-buffer)
+      (blog/preview/disable)
+      (blog/publish-single-subtree (point) container all-infos slug)
+      (blog/refresh-posts)
+      (blog/make-tag-pages-for-tags article-tags)
+      (blog/git "add %s ~/blog/%s.html ~/blog/%s.org.html tag* rss.xml index.html"
+                container slug slug)
+      (blog/git "commit -m \"%s\"; git push"
+                (if current-prefix-arg
+                    (read-string "Commit message: ")
+                  (format "Publish: %s" title)))
+      (message "=> Live in ~1 minute at alhassy.com/%s" slug))))
 
 (defun blog/footer (post-file-name)
   "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
@@ -1154,11 +1186,67 @@ of this function."
 
 
 
+(defvar my/blog-mode-map
+  (let ((m (make-sparse-keymap)))
+    (define-key m (kbd "C-x C-s")
+      (lambda ()
+        (interactive)
+        (save-buffer)
+        (if (equal "multiple" (blog/article-style (buffer-file-name)))
+            (blog/preview/subtree)
+          (blog/preview))))
+    (define-key m (kbd "M-RET")
+      (lambda ()
+        (interactive)
+        (if (equal "multiple" (blog/article-style (buffer-file-name)))
+            (blog/new-post)
+          (blog/new-article))))
+    (define-key m (kbd "C-c C-p") #'blog/publish-current-article)
+    m)
+  "Keymap for my/blog-mode.")
+
+(define-minor-mode my/blog-mode
+  "Buffer-local minor mode for editing blog articles in AlBasmala style.
+
+Binds:
+  C-x C-s  — save + live preview (dispatches on article style)
+  M-RET    — new article / new post (dispatches on article style)
+  C-c C-p  — publish current article (full file)
+  P        — (Org speed key, at heading start) publish subtree or article
+
+On activation:
+  - enables org-special-block-extras-mode (badges, doc: links, tooltips)
+  - switches browse-url to xwidget-webkit for in-Emacs previews
+
+On deactivation:
+  - disables org-special-block-extras-mode
+  - restores browse-url to the system browser (Arc/Chrome etc.)"
+  :lighter " Blog"
+  :keymap my/blog-mode-map
+  (if my/blog-mode
+      (progn
+        (require 'org-special-block-extras)
+        (require 'org-preview-html)
+        (org-special-block-extras-mode 1)
+        (setq browse-url-browser-function 'xwidget-webkit-browse-url)
+        (setq-local org-speed-commands
+                    (cons '("P" . (lambda ()
+                                    (if (equal "multiple"
+                                               (blog/article-style (buffer-file-name)))
+                                        (blog/publish-current-subtree)
+                                      (blog/publish-current-article))))
+                          org-speed-commands)))
+    (org-special-block-extras-mode -1)
+    (setq browse-url-browser-function 'browse-url-default-browser)
+    (setq-local org-speed-commands
+                (assoc-delete-all "P" org-speed-commands))))
+
+
 (cl-defun blog/publish-current-article ()
-  "Place HTML files in the right place, update index, rss, tags; git push!
+  "Place HTML files in the right place, update index, tags; git push!
 
 Dispatches on #+article_style:
-- standalone (default): existing behaviour, unchanged.
+- standalone (default): one file → one HTML file.
 - multiple: exports each top-level heading as its own article via
   `blog/publish-current-article/multiple'."
   (interactive)
@@ -1167,28 +1255,33 @@ Dispatches on #+article_style:
     (blog/publish-current-article/standalone)))
 
 (cl-defun blog/publish-current-article/standalone ()
-  "Publish the current standalone article.  (Former body of blog/publish-current-article.)"
+  "Publish the current standalone article."
   (interactive)
-    (blog/git "add %s" (buffer-file-name))
-  ;; Placed article html into the published blog directory
-  (blog/preview)
   (save-buffer)
+  ;; Export to HTML and move into ~/blog/.
+  (blog/preview)
   (-let [article (concat (f-base (buffer-file-name)) ".html")]
-    (shell-command (concat "mv " article " ~/blog/"))
-    (blog/git "add %s %s" (buffer-file-name) article)
-    ;; Make AlBasmala live with the other posts to avoid this conditional.
-    (when (equal (f-base (buffer-file-name)) "AlBasmala")
-      (blog/git "add AlBasmala.el")))
+    (shell-command (concat "mv " article " ~/blog/")))
 
-  ;; Need to disable my export-preprocessing hooks.
+  ;; Disable preview hooks before further processing.
   (blog/preview/disable) (view-echo-area-messages)
-  (message "⇒ HTMLizing article...") (blog/htmlize-file (buffer-file-name))
-  (message "⇒ Assembling tags...") (blog/make-all-tag-pages) ;; TODO: I only need to update the tags pages relevant to the current article!
-  ;; TODO: (message "⇒ Assembling RSS feed...") (org-static-blog-assemble-rss)
-  (message "⇒ Assembling landing page...") (blog/make-index-page)
-  (blog/git "add  %s.org.html tag* rss.xml index.html" (f-base (buffer-file-name)))
 
-  ;; TODO: If we're updating an existing article, prompt for a message.
+  ;; Refresh in-memory post list so the index sees current metadata.
+  (blog/refresh-posts)
+
+  ;; Htmlize source, then rebuild only the tag pages this article touches.
+  (message "⇒ HTMLizing article...") (blog/htmlize-file (buffer-file-name))
+  (-let* ((info         (blog/info (buffer-file-name)))
+          (article-tags (s-split " " (cdr (assoc "tags" info)))))
+    (message "⇒ Assembling tags (%s)..." (s-join ", " article-tags))
+    (blog/make-tag-pages-for-tags article-tags))
+
+  ;; Single git add covering everything, then one commit + push.
+  (blog/git "add %s %s.html %s.org.html tag* rss.xml index.html%s"
+            (buffer-file-name)
+            (f-base (buffer-file-name))
+            (f-base (buffer-file-name))
+            (if (equal (f-base (buffer-file-name)) "AlBasmala") " AlBasmala.el" ""))
   (blog/git "commit -m \"%s\"; git push"
             (if current-prefix-arg
                 (read-string "Commit message: ")
@@ -1336,28 +1429,36 @@ Returns the list of slugs that were published."
   (interactive)
   (let* ((container (buffer-file-name))
          (base      (f-base container)))
-    (blog/git "add %s" container)
     (save-buffer)
     (blog/preview/disable)
 
-    ;; Export every heading and collect slugs.
+    ;; Export every heading and collect slugs + infos.
     (message "=> Exporting all articles from %s..." base)
-    (let ((slugs (blog/publish-multiple-articles container)))
+    (let* ((all-infos (blog/info/multiple container))
+           (slugs     (blog/publish-multiple-articles container))
+           ;; Union of all tags across published articles.
+           (all-tags  (seq-uniq
+                       (-flatten
+                        (mapcar (lambda (slug)
+                                  (-let [info (seq-find (lambda (a) (equal (cdr (assoc "slug" a)) slug))
+                                                        all-infos)]
+                                    (s-split " " (cdr (assoc "tags" info)))))
+                                slugs)))))
 
-      ;; Git-add each generated HTML pair.
-      (dolist (slug slugs)
-        (blog/git "add ~/blog/%s.html ~/blog/%s.org.html" slug slug))
+      ;; Refresh in-memory post list.
+      (message "=> Refreshing post index...")
+      (blog/refresh-posts)
 
-      ;; Rebuild posts.json so the new entries appear in the index.
-      (message "=> Rebuilding posts.json...")
-      (blog/create-posts-json-file)
+      ;; Targeted tag page rebuild, then index.
+      (message "=> Assembling tags (%s)..." (s-join ", " all-tags))
+      (blog/make-tag-pages-for-tags all-tags)
 
-      ;; Rebuild tag pages and the landing index.
-      (message "=> Assembling tags...") (blog/make-all-tag-pages)
-      (message "=> Assembling landing page...") (blog/make-index-page)
-
-      (blog/git "add tag* rss.xml index.html posts.json")
-
+      ;; Single git add + one commit + push.
+      (blog/git "add %s tag* rss.xml index.html%s"
+                container
+                (s-join "" (mapcar (lambda (slug)
+                                     (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
+                                   slugs)))
       (blog/git "commit -m \"%s\"; git push"
                 (if current-prefix-arg
                     (read-string "Commit message: ")
