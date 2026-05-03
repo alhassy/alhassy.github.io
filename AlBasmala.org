@@ -2520,17 +2520,17 @@ You can view the generated ~/blog/index.html by invoking:
 (defun blog/make-all-tag-pages ()
   "Make tag pages for all of my tags"
   (interactive)
-  (loop for total = (length blog/tags)
-        for tag in blog/tags
-        for n from 0
-        for progress = (* (/ (* n 1.0) total) 100)
-        do
-        (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
-        (message "Progress ... %d%%" progress)
-        ;; Slightly faster to generate all pages, /then/ to git add them all.
-        ;; TODO: I'm doing a “git commit” here, where else? Maybe merge them all together? Likewise with “git add”s.
-        finally (shell-command "cd ~/blog; git add \"tag-*.html\"; git commit -m \"Generated tags file\"")))
-        ;; NOTE: Slightly faster if I get rid of the “Progress…” notifications.
+  (cl-loop for total = (length blog/tags)
+           for tag in blog/tags
+           for n from 0
+           for progress = (* (/ (* n 1.0) total) 100)
+           do
+           (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
+           (message "Progress ... %d%%" progress)
+           ;; Slightly faster to generate all pages, /then/ to git add them all.
+           ;; TODO: I'm doing a "git commit" here, where else? Maybe merge them all together? Likewise with "git add"s.
+           finally (shell-command "cd ~/blog; git add \"tag-*.html\"; git commit -m \"Generated tags file\"")))
+        ;; NOTE: Slightly faster if I get rid of the "Progress…" notifications.
 #+end_src
 
 where

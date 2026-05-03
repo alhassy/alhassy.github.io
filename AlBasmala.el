@@ -382,15 +382,15 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
                         (buffer-substring-no-properties (point) (point-max)))))))))))
 
 (defvar blog/tag-image-alist
-  '(("emacs"    . "emacs-birthday-present.png 350 350")
-    ("lisp"     . "emacs-birthday-present.png 350 350")
-    ("org"      . "org_logo.png 350 350")
-    ("haskell"  . "haskell-logo.png 350 350")
-    ("java"     . "modern-java.png 350 350")
-    ("arabic"   . "arabic-irab.png 350 350")
-    ("life"     . "musa_pink.jpg 350 350")
-    ("family"   . "family-tree.png 350 350")
-    ("karate"   . "fukyu-kata.png 350 350"))
+  '(("emacs"    . "./images/emacs-birthday-present.png 350 350")
+    ("lisp"     . "./images/emacs-birthday-present.png 350 350")
+    ("org"      . "./images/org_logo.png 350 350")
+    ("haskell"  . "./images/haskell-logo.png 350 350")
+    ("java"     . "./images/modern-java.png 350 350")
+    ("arabic"   . "./images/arabic-irab.png 350 350")
+    ("life"     . "./images/musa_pink.jpg 350 350")
+    ("family"   . "./images/family-tree.png 350 350")
+    ("karate"   . "./images/fukyu-kata.png 350 350"))
   "Alist mapping Org heading tags to default image specs for blog posts.
 First match wins.  The image spec is anything #+fileimage: accepts.
 Used by `blog/image-for-tags' to avoid requiring an explicit :IMAGE: property
@@ -402,7 +402,7 @@ Checks `blog/tag-image-alist' in order; returns the first match.
 Falls back to the global default image when no tag matches."
   (or (cdr (seq-find (lambda (pair) (member (car pair) tags))
                      blog/tag-image-alist))
-      "emacs-birthday-present.png 350 350"))
+      "./images/emacs-birthday-present.png 350 350"))
 
 (defun blog/article-style (&optional filename)
   "Return the #+article_style keyword for FILENAME (default: current buffer file).
@@ -592,17 +592,17 @@ You can view the generated ~/blog/index.html by invoking:
 (defun blog/make-all-tag-pages ()
   "Make tag pages for all of my tags"
   (interactive)
-  (loop for total = (length blog/tags)
-        for tag in blog/tags
-        for n from 0
-        for progress = (* (/ (* n 1.0) total) 100)
-        do
-        (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
-        (message "Progress ... %d%%" progress)
-        ;; Slightly faster to generate all pages, /then/ to git add them all.
-        ;; TODO: I'm doing a “git commit” here, where else? Maybe merge them all together? Likewise with “git add”s.
-        finally (shell-command "cd ~/blog; git add \"tag-*.html\"; git commit -m \"Generated tags file\"")))
-        ;; NOTE: Slightly faster if I get rid of the “Progress…” notifications.
+  (cl-loop for total = (length blog/tags)
+           for tag in blog/tags
+           for n from 0
+           for progress = (* (/ (* n 1.0) total) 100)
+           do
+           (let ((inhibit-message t)) (blog/make-tags-page :tag tag))
+           (message "Progress ... %d%%" progress)
+           ;; Slightly faster to generate all pages, /then/ to git add them all.
+           ;; TODO: I'm doing a "git commit" here, where else? Maybe merge them all together? Likewise with "git add"s.
+           finally (shell-command "cd ~/blog; git add \"tag-*.html\"; git commit -m \"Generated tags file\"")))
+        ;; NOTE: Slightly faster if I get rid of the "Progress…" notifications.
 
 (cl-defun blog/make-tags-page
     (&key
