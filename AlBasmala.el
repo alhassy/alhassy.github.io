@@ -11,7 +11,7 @@ image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
   (-let [(image width height center? credit?) (s-split "|" o-label)]
     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
       (let* ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-            (title (format "Image credit “%s”" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
+            (title (format "Image credit %s" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
             (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
             (it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/></a>"
@@ -29,13 +29,13 @@ We redefine Org sections for the same purposes as Org special blocks.
 Anyhow:
 ARGS are the sequence of items seperated by underscores after the NAME of the new tag.
 BODY is a form that may anaphorically mention:
-- O-BACKEND: The backend we are exporting to, such as `latex' or `html'.
+- O-BACKEND: The backend we are exporting to, such as latex or html.
 - O-HEADING: The string denoting the title of the tagged section heading.
 
 DOCSTRING is mandatory; everything should be documented for future maintainability.
 
-The result of this anaphoric macro is a symbolic function name `org-deftag/NAME',
-which is added to `org-export-before-parsing-hook'.
+The result of this anaphoric macro is a symbolic function name org-deftag/NAME,
+which is added to org-export-before-parsing-hook.
 
 ----------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ Here is the actual implementation:
                 (-let [,args (cdr (s-split "_" (car (s-match (format "%s[^:]*" (quote ,name)) o-heading))))]
                   (setq o-heading (s-replace-regexp (format ":%s[^:]*:" (quote ,name)) "" o-heading))
                   ,@body)
-                ;; Otherwise we impede on the auto-inserted “* footer :ignore:”
+                ;; Otherwise we impede on the auto-inserted "* footer :ignore:"
                 (insert "\n"))))))
        (add-hook 'org-export-before-parsing-hook (quote ,func-name))
        (quote ,func-name))))
@@ -81,9 +81,9 @@ Here is the actual implementation:
    arguments indicating the anchor for this block as well as the background colour of the resulting block.
 
 For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
-friendly-soft-red to denote it as an “advanced” content that could be ignored
+friendly-soft-red to denote it as an "advanced" content that could be ignored
 on a first reading of my article.
-Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
+Incidentally, orange and `#f2b195' are also nice 'warning' colours."
    (insert "\n#+html:"
            (format "<div>%s <details class=\"float-child\" style=\"background-color: %s\">"
                    (if anchor (format "<a style=\"width: 1%%;float: left; padding: 0px\" id=\"%s\" href=\"#%s\">🔗</a>" anchor anchor) "")
@@ -95,13 +95,13 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
    (insert "#+html: </details> </div>"))
 
 (use-package org-static-blog)
-(use-package lf) ;; So we can use `lf-string' for multi-line strings supporting interpolation:
+(use-package lf) ;; So we can use lf-string for multi-line strings supporting interpolation:
 ;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
 
 (defvar blog-title "Life & Computing Science"
   "Title of the blog.")
 
-(defvar blog/url "https://alhassy.com"
+(defvar blog-url "https://alhassy.com"
   "URL of the blog.")
 
 (defvar blog-publish-directory "~/blog/"
@@ -111,7 +111,7 @@ Incidentally, `orange' and `#f2b195' are also nice ‘warning’ colours."
   "Directory containing source Org files.
 
 When publishing, posts are rendered as HTML and included in the index and RSS feed.
-See `blog-make-index-page' and `blog-publish-directory'.")
+See blog-make-index-page and blog-publish-directory.")
 
 (defun blog-new-article ()
 "Make a new article for my blog; prompting for the necessary ingredients.
@@ -122,7 +122,7 @@ The user notices this and picks a new name.
 This sets up a new article based on existing tags and posts.
 + Use C-SPC to select multiple tag items
 
-Moreover it also enables `org-preview-html-mode' so that on every alteration,
+Moreover it also enables org-preview-html-mode so that on every alteration,
 followed by a save, C-x C-s, will result in a live preview of the blog article,
 nearly instantaneously."
   (interactive)
@@ -135,7 +135,7 @@ nearly instantaneously."
       (concat blog-posts-directory)
       (setq file))
 
-    ;; For some reason, ‘find-file’ in the thread above
+    ;; For some reason, 'find-file' in the thread above
     ;; wont let the completing-read display the possible completions.
     (find-file file)
 
@@ -162,7 +162,7 @@ nearly instantaneously."
   "Insert a new article skeleton at point in a multiple-style container file.
 
 Prompts for title, description, and (optionally) tags.  The image is
-selected automatically from `blog-tag-image-alist' based on the tags entered
+selected automatically from blog-tag-image-alist based on the tags entered
 -- no image prompt required.  It can be overridden afterwards by editing the
 :IMAGE: property in the drawer.
 
@@ -195,47 +195,20 @@ a draft until you remove it before publishing."
     (unless (member #'blog-preview-subtree after-save-hook)
       (blog-preview))))
 
-(defun blog--compute-posts ()
-  "Return all post metadata as a sorted list (newest first).
-Scans ~/blog/posts/*.org directly — no disk cache."
-  (let ((posts
-         (cl-loop for file in (f-files "~/blog/posts")
-                  when (s-ends-with? ".org" file)
-                  if (equal "multiple" (blog--article-style file))
-                    append (blog--info-multiple file)
-                  else
-                    collect (blog--info file))))
-    (sort posts (lambda (a b)
-                  (time-less-p (date-to-time (@date b))
-                               (date-to-time (@date a)))))))
-
-(defun blog--refresh-posts ()
-  "Recompute blog-posts and blog-tags from source org files."
-  (setq blog-posts (blog--compute-posts))
-  (setq blog-tags
-        (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
-                                           blog-posts)))
-              #'string<)))
-
-(defvar blog-posts nil
-  "All post metadata, sorted newest-first. Initialized at end of file; refresh with (blog--refresh-posts).")
-
-(defvar blog-tags nil
-  "Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts).")
-
 ;; Convenient accessor methods: Given a JSON hashmap, get the specified key values.
 ;; Later, we redefine these, for example `@image' will actually produces the HTML for the image.
 ;; Example usage: (@title (seq-elt posts 0))  ⇒  "Java CheatSheet"
 
-;; Extract the ‘#+title:‘ from POST-FILENAME.
+;; Extract the '#+title:' from POST-FILENAME.
 (defun @title       (json) (map-elt json "title"))
 
 ;; TODO: Consider using: (format-time-string "%d %b %Y" ⋯) to have the same format across all articles.
 (defun @date (json)
-  "Extract the “#+date:” from JSON."
+  "Extract the #+date: field from JSON."
   (map-elt json "date"))
 
 (defun @file        (json) (map-elt json "file"))
+(defun @slug        (json) (map-elt json "slug"))
 (defun @description (json) (map-elt json "description"))
 (defun @abstract    (json) (map-elt json "abstract"))
 
@@ -282,9 +255,9 @@ Example use:  (@tags (seq-elt blog-posts 0))
                     (s-split " " (map-elt json "tags")))))))
 
 (cl-defun @image (json &optional explicit-image-path-prefix)
-  "Assemble the value of ‘#+fileimage: image width height border?’ as an HTML form.
+  "Assemble the value of '#+fileimage: image width height border?' as an HTML form.
 
-By default, the image should be located in the top-level `images/' directory.
+By default, the image should be located in the top-level images/ directory.
 If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
 in the image path.
 
@@ -299,7 +272,7 @@ Here are 4 example uses:
 
 + Notice that the second indicates explicit width and height.
 + (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in `my/blog--style-setup'. This requires a slash at the end.)
+   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in my/blog--style-setup. This requires a slash at the end.)
 + The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
 "
   (-let [(image width height no-border?) (s-split " " (map-elt json "image"))]
@@ -312,7 +285,7 @@ Here are 4 example uses:
      ((not (s-contains? "/" image)) (setq image (format "images/%s" image))))
     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
       (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-      (setq title (format "Image credit “%s”" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
+      (setq title (format "Image credit %s" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
       (setq src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
       (s-collapse-whitespace
        (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
@@ -382,12 +355,12 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
     ("karate"   . "./images/fukyu-kata.png 350 350"))
   "Alist mapping Org heading tags to default image specs for blog posts.
 First match wins.  The image spec is anything #+fileimage: accepts.
-Used by `blog--image-for-tags' to avoid requiring an explicit :IMAGE: property
+Used by blog--image-for-tags to avoid requiring an explicit :IMAGE: property
 on every container sub-article.")
 
 (defun blog--image-for-tags (tags)
   "Return a default image spec for the given list of TAGS (strings, lowercased).
-Checks `blog-tag-image-alist' in order; returns the first match.
+Checks blog-tag-image-alist in order; returns the first match.
 Falls back to the global default image when no tag matches."
   (or (cdr (seq-find (lambda (pair) (member (car pair) tags))
                      blog-tag-image-alist))
@@ -462,7 +435,7 @@ Priority:
   "Extract post metadata for HEADLINE-NODE from CONTAINER-FILE with SLUG.
 
 Returns nil when the headline carries a :noexport: tag.
-Returns an alist with the same keys as `blog--info' plus \"slug\" and \"container\"."
+Returns an alist with the same keys as blog--info plus \"slug\" and \"container\"."
   (let* ((heading-tags (mapcar #'downcase
                                (org-element-property :tags headline-node))))
     (unless (member "noexport" heading-tags)
@@ -569,7 +542,7 @@ Headings tagged :draft: are included but marked."
 
 The index page contains blurbs of all of my articles.
 
-Precondition: `blog-posts' refers to all posts, in reverse chronological order.
+Precondition: blog-posts refers to all posts, in reverse chronological order.
 
 You can view the generated ~/blog/index.html by invoking:
 
@@ -577,6 +550,34 @@ You can view the generated ~/blog/index.html by invoking:
 "
   (interactive)
   (blog-make-tags-page :export-file-name "~/blog/index.html"))
+
+(defun blog--compute-posts ()
+  "Return all post metadata as a sorted list (newest first).
+Scans ~/blog/posts/*.org directly; no disk cache."
+  (let ((posts
+         (cl-loop for file in (f-files "~/blog/posts")
+                  when (s-ends-with? ".org" file)
+                  if (equal "multiple" (blog--article-style file))
+                    append (blog--info-multiple file)
+                  else
+                    collect (blog--info file))))
+    (sort posts (lambda (a b)
+                  (time-less-p (date-to-time (@date b))
+                               (date-to-time (@date a)))))))
+
+(defun blog--refresh-posts ()
+  "Recompute blog-posts and blog-tags from source org files."
+  (setq blog-posts (blog--compute-posts))
+  (setq blog-tags
+        (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
+                                           blog-posts)))
+              #'string<)))
+
+(defvar blog-posts nil
+  "All post metadata, sorted newest-first. Initialized at end of file; refresh with (blog--refresh-posts).")
+
+(defvar blog-tags nil
+  "Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts).")
 
 (defun blog-make-all-tag-pages ()
   "Regenerate tag pages for every known tag. For manual full rebuilds.
@@ -593,16 +594,18 @@ Does not commit — callers handle git."
 (defun blog--make-tag-pages-for-tags (tags)
   "Regenerate tag pages only for TAGS (list of strings), then rebuild the index.
 Faster than blog-make-all-tag-pages when only a few tags are affected."
-  (dolist (tag tags)
-    (when (member tag blog-tags)
-      (let ((inhibit-message t))
-        (blog-make-tags-page :tag tag))))
-  (blog-make-index-page))
+  (let (rebuilt)
+    (dolist (tag tags)
+      (when (member tag blog-tags)
+        (let ((inhibit-message t))
+          (blog-make-tags-page :tag tag))
+        (setq rebuilt t)))
+    (when rebuilt (blog-make-index-page))))
 
 (cl-defun blog-make-tags-page
     (&key
      (tag nil)
-     (title (if tag (format "Posts   tagged   “%s”" tag) ""))
+     (title (if tag (format "Posts   tagged   "%s"" tag) ""))
      (greeting (format "Here are some of my latest thoughts %s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"
 
                        (if tag (concat "on " tag) "")))
@@ -614,7 +617,7 @@ Faster than blog-make-all-tag-pages when only a few tags are affected."
 
 The page contains blurbs of all of my articles tagged TAG.
 
-Precondition: `blog-posts' refers to all posts, in reverse chronological order.
+Precondition: blog-posts refers to all posts, in reverse chronological order.
 
 Example uses:
 1. (blog-make-tags-page :export-file-name \"~/blog/index.html\" :title \"Hello world\" :tag \"arabic\")
@@ -676,29 +679,29 @@ Example uses:
            ;; ⟨3⟩ Preview
            (@abstract it)
 
-           ;; ⟨4⟩ “Read more” link
+           ;; ⟨4⟩ "Read more" link
            ;; TODO: Make a @read-more method.
            (format (concat "\n@@html:<p style=\"text-align:right\">@@" " badge:Read|more|green|%s|read-the-docs @@html:</p>@@") (@url it))))
           (seq--into-list blog-posts)))
 
-       ;; “Show older posts”
+       ;; "Show older posts"
        ;; This is the bottom-most matter in the index.html page
        "#+begin_export html"
        "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em> </center> <br/>"
-       (blog--license) ;; TODO: Add a “proudly created with Emacs’ Org-mode” tagline?
+       (blog--license) ;; TODO: Add a "proudly created with Emacs' Org-mode" tagline?
        "\n#+end_export"
        )))
     (org-mode)
     (org-html-export-to-html)))
 
 (org-deflink blog
-  "Provide the styles for “www.alhassy.com”'s “header” and “footer”.
+  "Provide the styles for "www.alhassy.com"'s "header" and "footer".
 
-The use of “blog:footer” aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
-and provides a Disqus comments sections. For details, consult the `blog--footer' function.
+The use of "blog:footer" aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
+and provides a Disqus comments sections. For details, consult the blog--footer function.
 
 Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
-We accomplish this with the help of some handy-dandy JavaScript: Just use “blog:sanitise-title”.
+We accomplish this with the help of some handy-dandy JavaScript: Just use "blog:sanitise-title".
 "
       (pcase o-label
         ("header" (concat
@@ -707,7 +710,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
                    "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   ;; The use of the “post-title” class is so that the org-static-blog-assemble-rss method can work as intended.
+                   ;; The use of the "post-title" class is so that the org-static-blog-assemble-rss method can work as intended.
                    (thread-last (org-static-blog-get-title (buffer-file-name))
                                 (s-replace-regexp "@@html:" "")
                                 (s-replace-regexp "@@" "")
@@ -717,7 +720,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use “blo
         (_ "")))
 
 (defun blog--style-setup (_backend)
-  "Insert blog header (fancy title), tags, blog image (before “* Abstract”), and footer (links to tags).
+  "Insert blog header (fancy title), tags, blog image (before "* Abstract"), and footer (links to tags).
 
 There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
 Notice that if you explicitly provide options to change the toc, date, or show drawers, etc;
@@ -742,7 +745,7 @@ which I place below at the top of the page.)
                     (if (equal (f-base (@file post)) "AlBasmala") "./images/" "../images/"))
             "\n")
 
-    ;; Wrap contents of “* Abstract” section in the “abstract” Org-special-block
+    ;; Wrap contents of "* Abstract" section in the "abstract" Org-special-block
     ;; (In case we are narrowed, we only act when we can find the Abstract.)
     ;; TODO: Replace this with (@abstract (blog--info (buffer-file-name))), or: (@abstract post)
     (when (re-search-forward "^\* Abstract" nil t)
@@ -770,7 +773,7 @@ For standalone files (default): existing behaviour — hooks blog--style-setup a
 enables org-preview-html-mode so every C-x C-s regenerates the preview.
 
 For multiple-style files: adds a buffer-local after-save-hook that calls
-`blog-preview-subtree', which previews just the heading at point."
+blog-preview-subtree, which previews just the heading at point."
   (interactive)
   ;; Let's ensure we have no xwidget buffer lying around, otherwise Emacs might hang.
   (-let [kill-buffer-query-functions nil]
@@ -784,7 +787,7 @@ For multiple-style files: adds a buffer-local after-save-hook that calls
     (org-preview-html-mode)))
 
 (cl-defun blog-preview-disable ()
-  "Disable preview-on-save, removing all hooks set by `blog-preview'."
+  "Disable preview-on-save, removing all hooks set by blog-preview."
   (interactive)
   ;; Remove the multiple-style buffer-local hook (no-op if not set).
   (remove-hook 'after-save-hook #'blog-preview-subtree t)
@@ -796,7 +799,7 @@ For multiple-style files: adds a buffer-local after-save-hook that calls
   "Preview the top-level heading at point as a standalone blog article.
 
 For use in multiple-style (#+article_style: multiple) files.
-Called automatically by the buffer-local after-save-hook set up by `blog-preview'."
+Called automatically by the buffer-local after-save-hook set up by blog-preview."
   (interactive)
   (let ((kill-buffer-query-functions nil))
     (unless (equal "multiple" (blog--article-style (buffer-file-name)))
@@ -830,7 +833,7 @@ regenerated, and a single targeted git commit is made.
 
 Mirrors blog-preview-subtree but goes all the way to git push."
   (interactive)
-  (unless (equal "multiple" (blog--article-style (buffer-file-name)))
+  (unless (blog--multiple-style-p)
     (user-error "Not a multiple-style file; use blog-publish-current-article instead"))
   (save-excursion
     (unless (org-at-heading-p) (outline-previous-heading))
@@ -841,22 +844,18 @@ Mirrors blog-preview-subtree but goes all the way to git push."
            (title        (org-get-heading t t t t))
            (slug         (blog--make-slug (or (org-entry-get (point) "TITLE") title)))
            (container    (buffer-file-name))
-           (all-infos    (blog--info-multiple container))
-           (info         (seq-find (lambda (a) (equal (cdr (assoc "slug" a)) slug))
-                                   all-infos))
-           (article-tags (s-split " " (cdr (assoc "tags" info)))))
+           (all-infos    (blog--info-multiple container)))
       (message "=> Publishing subtree: %s (%s)..." title slug)
       (save-buffer)
       (blog-preview-disable)
       (blog--publish-single-subtree (point) container all-infos slug)
       (blog--refresh-posts)
-      (blog--make-tag-pages-for-tags article-tags)
+      (-let [article-tags (s-split " " (map-elt (blog--find-info-by-slug slug blog-posts) "tags"))]
+        (blog--make-tag-pages-for-tags article-tags))
       (blog--git "add %s ~/blog/%s.html ~/blog/%s.org.html tag* rss.xml index.html"
                 container slug slug)
       (blog--git "commit -m \"%s\"; git push"
-                (if current-prefix-arg
-                    (read-string "Commit message: ")
-                  (format "Publish: %s" title)))
+                (blog--commit-message (format "Publish: %s" title)))
       (message "=> Live in ~1 minute at alhassy.com/%s" slug))))
 
 (defun blog--footer (post-file-name)
@@ -886,7 +885,7 @@ temp file path."
      "&ensp;"
      (@history post)
      ;;
-     ;; Consider only add this to posts tagged “arabic”?
+     ;; Consider only add this to posts tagged "arabic"?
      (blog--css-arabic-font-setup)
      ;;
      "<br>"
@@ -996,7 +995,7 @@ var disqus_shortname = 'life-and-computing-science';
 
  (setq org-static-blog-page-header
   (concat
-   ;; NOPE: org-html-head-extra  ;; Altered by ‘org-special-block-extras’
+   ;; NOPE: org-html-head-extra  ;; Altered by 'org-special-block-extras'
    (concat
    "<meta name=\"author\" content=\"Musa Al-hassy\">
     <meta name=\"referrer\" content=\"no-referrer\">"
@@ -1122,7 +1121,7 @@ var disqus_shortname = 'life-and-computing-science';
 (defun blog--ensure-useful-section-anchors (&rest _)
   "Org sections without an ID are given one based on its title.
 
-All non-alphanumeric characters are cleverly replaced with ‘-’.
+All non-alphanumeric characters are cleverly replaced with '-'.
 
 If multiple trees end-up with the same id property, issue a
 message and undo any property insertion thus far.
@@ -1168,11 +1167,8 @@ E.g., ↯ We'll go on a ∀∃⇅ adventure
           (org-html-format-headline-default-function todo todo-type priority link tags info))))
 
 (defun blog--css-arabic-font-setup ()
-  "Setup the CSS/HTML required to make my Arabic writing look nice.
-
-For a one-off use in an article, just place an “#+html:” in front of the result
-of this function."
-
+  "Return CSS/HTML for Arabic font rendering.
+For a one-off use in an article, prepend #+html: to the result."
   "
   <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
   <style>
@@ -1184,6 +1180,17 @@ of this function."
   "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
   (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
 
+(defun blog--multiple-style-p ()
+  "Return non-nil when the current buffer is a multiple-style container."
+  (equal "multiple" (blog--article-style (buffer-file-name))))
+
+(defun blog--commit-message (default)
+  "Return a git commit message: prompt if C-u prefix, else use DEFAULT."
+  (if current-prefix-arg (read-string "Commit message: ") default))
+
+(defun blog--find-info-by-slug (slug infos)
+  "Return the first entry in INFOS whose slug matches SLUG, or nil."
+  (seq-find (lambda (a) (equal (@slug a) slug)) infos))
 
 
 (defvar my/blogging-mode-map
@@ -1192,15 +1199,11 @@ of this function."
       (lambda ()
         (interactive)
         (save-buffer)
-        (if (equal "multiple" (blog--article-style (buffer-file-name)))
-            (blog-preview-subtree)
-          (blog-preview))))
+        (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd "M-RET")
       (lambda ()
         (interactive)
-        (if (equal "multiple" (blog--article-style (buffer-file-name)))
-            (blog-new-post)
-          (blog-new-article))))
+        (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
     (define-key m (kbd "C-c C-p") #'blog-publish-current-article)
     m)
   "Keymap for my/blogging-mode.")
@@ -1231,8 +1234,7 @@ On deactivation:
         (setq browse-url-browser-function 'xwidget-webkit-browse-url)
         (setq-local org-speed-commands
                     (cons '("P" . (lambda ()
-                                    (if (equal "multiple"
-                                               (blog--article-style (buffer-file-name)))
+                                    (if (blog--multiple-style-p)
                                         (blog-publish-current-subtree)
                                       (blog-publish-current-article))))
                           org-speed-commands)))
@@ -1248,47 +1250,29 @@ On deactivation:
 Dispatches on #+article_style:
 - standalone (default): one file → one HTML file.
 - multiple: exports each top-level heading as its own article via
-  `blog-publish-multiple'."
+  blog-publish-multiple."
   (interactive)
-  (if (equal "multiple" (blog--article-style (buffer-file-name)))
-      (blog-publish-multiple)
-    (blog-publish-standalone)))
+  (if (blog--multiple-style-p) (blog-publish-multiple) (blog-publish-standalone)))
 
 (cl-defun blog-publish-standalone ()
   "Publish the current standalone article."
   (interactive)
   (save-buffer)
-  ;; Export to HTML and move into ~/blog/.
   (blog-preview)
-  (-let [article (concat (f-base (buffer-file-name)) ".html")]
-    (shell-command (concat "mv " article " ~/blog/")))
-
-  ;; Disable preview hooks before further processing.
-  (blog-preview-disable) (view-echo-area-messages)
-
-  ;; Refresh in-memory post list so the index sees current metadata.
-  (blog--refresh-posts)
-
-  ;; Htmlize source, then rebuild only the tag pages this article touches.
-  (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))
-  (-let* ((info         (blog--info (buffer-file-name)))
-          (article-tags (s-split " " (cdr (assoc "tags" info)))))
-    (message "⇒ Assembling tags (%s)..." (s-join ", " article-tags))
-    (blog--make-tag-pages-for-tags article-tags))
-
-  ;; Single git add covering everything, then one commit + push.
-  (blog--git "add %s %s.html %s.org.html tag* rss.xml index.html%s"
-            (buffer-file-name)
-            (f-base (buffer-file-name))
-            (f-base (buffer-file-name))
-            (if (equal (f-base (buffer-file-name)) "AlBasmala") " AlBasmala.el" ""))
-  (blog--git "commit -m \"%s\"; git push"
-            (if current-prefix-arg
-                (read-string "Commit message: ")
-              (format "Publish: Article %s.org" (f-base (buffer-file-name)))))
-
-  (blog--validate-no-orphan-html)
-  (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!"))
+  (-let [base (f-base (buffer-file-name))]
+    (shell-command (format "mv %s.html ~/blog/" base))
+    (blog-preview-disable) (view-echo-area-messages)
+    (blog--refresh-posts)
+    (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))
+    (-let [article-tags (s-split " " (map-elt (blog--find-info-by-slug base blog-posts) "tags"))]
+      (message "⇒ Assembling tags (%s)..." (s-join ", " article-tags))
+      (blog--make-tag-pages-for-tags article-tags))
+    (blog--git "add %s %s.html %s.org.html tag* rss.xml index.html%s"
+              (buffer-file-name) base base
+              (if (equal base "AlBasmala") " AlBasmala.el" ""))
+    (blog--git "commit -m \"%s\"; git push"
+              (blog--commit-message (format "Publish: Article %s.org" base)))
+    (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!")))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
@@ -1323,7 +1307,7 @@ SLUG is the pre-computed slug for this heading (from ALL-INFOS).
 
 The subtree is copied into a temp .org file populated with synthetic
 file-level keywords so that blog--style-setup runs unchanged."
-  (let* ((info    (seq-find (lambda (a) (equal (cdr (assoc "slug" a)) slug)) all-infos))
+  (let* ((info    (blog--find-info-by-slug slug all-infos))
          (tmp-org (make-temp-file "albasmala-" nil ".org"))
          (tmp-buf (find-file-noselect tmp-org)))
     (unwind-protect
@@ -1409,24 +1393,23 @@ file-level keywords so that blog--style-setup runs unchanged."
 An HTML file is \"known\" if its basename matches a slug in blog-posts or is a
 reserved file (index, tag pages, AlBasmala, rss, sitemap, etc.).
 Reports orphans but does not abort — the user decides what to do."
-  (let* ((known-slugs  (mapcar (lambda (p) (cdr (assoc "slug" p)))
-                               (seq-filter (lambda (p) (assoc "slug" p)) blog-posts)))
-         (known-bases  (mapcar (lambda (p) (f-base (cdr (assoc "file" p))))
-                               (seq-filter (lambda (p) (assoc "file" p)) blog-posts)))
-         (all-known    (seq-uniq (append known-slugs known-bases)))
+  (let* ((all-known    (seq-uniq
+                        (cl-loop for p in blog-posts
+                                 when (@slug p) collect (@slug p)
+                                 when (@file p) collect (f-base (@file p)))))
          (reserved-rx  (rx bos (or "index" "rss" "sitemap" "404" "AlBasmala"
                                    (seq "tag-" (+ anything)))
                            eos))
-         (html-files   (f-glob "*.html" "~/blog/"))
          (orphans      (seq-filter
                         (lambda (f)
                           (let ((base (f-base f)))
                             (and (not (string-match-p reserved-rx base))
                                  (not (member base all-known)))))
-                        html-files)))
+                        (f-glob "*.html" "~/blog/"))))
     (when orphans
-      (message "⚠ Orphan HTML files (no Org source): %s"
-               (s-join ", " (mapcar #'f-filename orphans))))))
+      (let ((msg (format "Orphan HTML files (no Org source): %s"
+                         (s-join ", " (mapcar #'f-filename orphans)))))
+        (if noninteractive (error msg) (message "⚠ %s" msg))))))
 
 (defun blog--publish-multiple-articles (container-file)
   "Publish each top-level heading of CONTAINER-FILE as a separate HTML article.
@@ -1465,41 +1448,23 @@ Returns the list of slugs that were published."
          (base      (f-base container)))
     (save-buffer)
     (blog-preview-disable)
-
-    ;; Export every heading and collect slugs + infos.
     (message "=> Exporting all articles from %s..." base)
-    (let* ((all-infos (blog--info-multiple container))
-           (slugs     (blog--publish-multiple-articles container))
-           ;; Union of all tags across published articles.
-           (all-tags  (seq-uniq
-                       (-flatten
-                        (mapcar (lambda (slug)
-                                  (-let [info (seq-find (lambda (a) (equal (cdr (assoc "slug" a)) slug))
-                                                        all-infos)]
-                                    (s-split " " (cdr (assoc "tags" info)))))
-                                slugs)))))
-
-      ;; Refresh in-memory post list.
-      (message "=> Refreshing post index...")
-      (blog--refresh-posts)
-
-      ;; Targeted tag page rebuild, then index.
+    (let* ((slugs    (blog--publish-multiple-articles container))
+           (_ (progn (message "=> Refreshing post index...") (blog--refresh-posts)))
+           (all-tags (seq-uniq
+                      (-flatten
+                       (mapcar (lambda (slug)
+                                 (s-split " " (map-elt (blog--find-info-by-slug slug blog-posts) "tags")))
+                               slugs)))))
       (message "=> Assembling tags (%s)..." (s-join ", " all-tags))
       (blog--make-tag-pages-for-tags all-tags)
-
-      ;; Single git add + one commit + push.
       (blog--git "add %s tag* rss.xml index.html%s"
                 container
                 (s-join "" (mapcar (lambda (slug)
                                      (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
                                    slugs)))
       (blog--git "commit -m \"%s\"; git push"
-                (if current-prefix-arg
-                    (read-string "Commit message: ")
-                  (format "Publish: Multiple articles from %s.org" base)))
-
-      (blog--validate-no-orphan-html))
-
+                (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
     (message "=> It may take up to 1 minute for changes to be live at alhassy.com; congratulations!")))
 
 ;; Initialize blog-posts and blog-tags now that all helpers are defined.
