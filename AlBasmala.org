@@ -6,6 +6,7 @@
 #+date: <2020-05-03 Sun>
 #+filetags: emacs org html css javascript git lisp
 #+fileimage: org_logo.png 150 150 no-border
+#+site_nav: AlBasmala
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
@@ -1622,6 +1623,8 @@ need no changes; they just see more entries.
 | =blog-publish-multiple= | Full publish cycle (export → posts.json → index → git push) |
 | =blog-preview-subtree= | Previews heading at point via xwidget on every save |
 | =blog-new-post= | Inserts a heading skeleton (2 prompts: title + description) |
+| =blog--compute-posts-and-pages= | Scans posts/*.org; returns =(posts . pages)= separating =:SITE_NAV: t= subtrees |
+| =blog--rebuild-preamble= | Regenerates =org-static-blog-page-preamble= from =blog-pages= |
 
 #+html: <div style="overflow-y: scroll; height:250px;">
 #+begin_src emacs-lisp :tangle no :results replace value :wrap example js :exports results
@@ -2088,6 +2091,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
                       "tags"                 "^\\#\\+filetags:[ ]*\\(.+\\)$"             "" ;; String; Space-separated
                       "history_url"          "^\\#\\+history_url:[ ]*\\(.+\\)$"          nil
                       "htmlized_source_url"  "^\\#\\+htmlized_source_url:[ ]*\\(.+\\)$"  nil
+                      "site_nav"             "^\\#\\+site_nav:[ ]*\\(.+\\)$"             nil
                       )
                   by 'cdddr
                   ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
@@ -2315,7 +2319,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons "history"     history)
               (cons "abstract"    abstract)
               (cons "draft"       (if draft? "t" nil))
-              (cons "redirect"    (org-element-property :REDIRECT headline-node)))))))
+              (cons "redirect"    (org-element-property :REDIRECT headline-node))
+              (cons "site_nav"    (org-element-property :SITE_NAV headline-node)))))))
 
 (defun blog--info-multiple (container-file)
   "Return a list of post-alists for all publishable top-level headings in CONTAINER-FILE.
@@ -2496,6 +2501,50 @@ Both branches push the slug into =results= so the calling =blog-publish-multiple
 still refreshes the index, RSS, and tag pages for /all/ articles — just without
 touching HTML that is already current.
 
+** SITE_NAV: data-driven site navigation from container subtrees :details:
+:PROPERTIES:
+:CUSTOM_ID: SITE_NAV-section
+:END:
+
+Previously the site header — the links that appear at the top of every page — was
+a hardcoded HTML string in =org-static-blog-page-preamble=.  Adding or renaming a
+nav link meant editing that string by hand, with no connection to the rest of the
+blog's metadata.
+
+We replace this with a =:SITE_NAV: t= property on container subtrees.  Any heading
+in any =#+article_style: multiple= file that carries this property is treated as a
+/site navigation page/ rather than a blog post: it is collected into =blog-pages=
+(not =blog-posts=), excluded from the index and tag pages, and its URL and title
+are rendered as a link in the preamble of every page.
+
+A typical nav page heading looks like:
+
+#+begin_src org
+,* AlBasmala :emacs:lisp:
+:PROPERTIES:
+:DATE:        <2020-01-01>
+:DESCRIPTION: How this blog works.
+:SLUG:        AlBasmala
+:SITE_NAV:    AlBasmala
+:END:
+#+end_src
+
+The nav is rebuilt automatically by =blog--rebuild-preamble=, which is called at
+the end of every =blog--refresh-posts= invocation.  The order of links in the
+header matches the order of =blog-pages=, which is the order the headings appear
+in their container files.
+
+Forcing a nav rebuild without a full publish: =(blog--refresh-posts)= suffices.
+
+The implementation lives in three new/modified functions (all in the
+=blog-posts, blog-tags, and their consumers= section):
+
+| Function | Role |
+|---|---|
+| =blog--compute-posts-and-pages= | Replaces =blog--compute-posts=; returns =(posts . pages)= cons |
+| =blog--rebuild-preamble= | Generates =org-static-blog-page-preamble= from =blog-pages= |
+| =blog--refresh-posts= | Updated to populate =blog-pages= and call =blog--rebuild-preamble= |
+
 ** The <code>#+begin_abstract</code> is an Org-mode Special Block :details_orange:
 
 Every article is intended to have a section named =Abstract=, whose contents are
@@ -2567,30 +2616,73 @@ Both are initialized once at the bottom of this file (after all helpers are
 defined) via =(blog--refresh-posts)=, and refreshed after every publish.
 
 #+begin_src emacs-lisp  -n
-(defun blog--compute-posts ()
-  "Return all post metadata as a sorted list (newest first).
-Scans ~/blog/posts/*.org directly; no disk cache."
-  (let ((posts
-         (cl-loop for file in (f-files "~/blog/posts")
-                  when (s-ends-with? ".org" file)
-                  if (equal "multiple" (blog--article-style file))
-                    append (blog--info-multiple file)
-                  else
-                    collect (blog--info file))))
-    (sort posts (lambda (a b)
-                  (time-less-p (date-to-time (@date b))
-                               (date-to-time (@date a)))))))
+(defun blog--compute-posts-and-pages ()
+  "Scan ~/blog/posts/*.org (and root ~/blog/*.org for nav-only pages) and return (posts . pages).
+
+posts — all non-#+site_nav: entries from posts/, sorted newest-first.
+pages — all #+site_nav: <short-title> / :SITE_NAV: <short-title> entries from both directories, unsorted.
+
+Root-level ~/blog/*.org files (e.g. AlBasmala.org, about.org) are only included
+when they carry #+site_nav: <short-title>; they are never added to posts."
+  (let ((posts '())
+        (pages '()))
+    ;; posts/ directory: container files yield many articles, standalone yield one.
+    (dolist (file (f-files "~/blog/posts"))
+      (when (s-ends-with? ".org" file)
+        (let ((infos (if (equal "multiple" (blog--article-style file))
+                         (blog--info-multiple file)
+                       (list (blog--info file)))))
+          (dolist (info infos)
+            (if (map-elt info "site_nav")
+                (push info pages)
+              (push info posts))))))
+    ;; Root ~/blog/*.org: only collect entries that opt in via #+site_nav: <short title>.
+    (dolist (file (f-files "~/blog"))
+      (when (and (s-ends-with? ".org" file)
+                 (equal "standalone" (blog--article-style file)))
+        (let ((info (blog--info file)))
+          (when (map-elt info "site_nav")
+            (push info pages)))))
+    (cons (sort posts (lambda (a b)
+                        (time-less-p (date-to-time (@date b))
+                                     (date-to-time (@date a)))))
+          pages)))
+
+(defun blog--rebuild-preamble ()
+  "Regenerate org-static-blog-page-preamble from blog-pages.
+Falls back to blog--preamble-fallback when blog-pages is empty.
+Called automatically by blog--refresh-posts; also useful to call
+interactively after editing :SITE_NAV: headings."
+  (setq org-static-blog-page-preamble
+        (if (null blog-pages)
+            (blog--preamble-fallback)
+          (concat
+           "<div class=\"header\">\n"
+           "  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>\n"
+           "  <br/>\n"
+           (mapconcat (lambda (p)
+                        (format "  <a href=\"%s\">%s</a>\n" (@url p) (map-elt p "site_nav")))
+                      blog-pages "")
+           "</div>"))))
 
 (defun blog--refresh-posts ()
-  "Recompute blog-posts and blog-tags from source org files."
-  (setq blog-posts (blog--compute-posts))
-  (setq blog-tags
-        (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
-                                           blog-posts)))
-              #'string<)))
+  "Recompute blog-posts, blog-pages, and blog-tags from source org files."
+  (let ((result (blog--compute-posts-and-pages)))
+    (setq blog-posts (car result))
+    (setq blog-pages (cdr result))
+    (setq blog-tags
+          (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
+                                             blog-posts)))
+                #'string<))
+    (blog--rebuild-preamble)))
 
 (defvar blog-posts nil
   "All post metadata, sorted newest-first. Initialized at end of file; refresh with (blog--refresh-posts).")
+
+(defvar blog-pages nil
+  "Site navigation page metadata (subtrees with :SITE_NAV: t).
+These appear as header links on every page but not as blog post cards.
+Initialized at end of file; refresh with (blog--refresh-posts).")
 
 (defvar blog-tags nil
   "Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts).")
@@ -2708,7 +2800,9 @@ Example uses:
        ;; "Show older posts"
        ;; This is the bottom-most matter in the index.html page
        "#+begin_export html"
-       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em> </center> <br/>"
+       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em>"
+       " &nbsp;|&nbsp; <a href=\"https://alhassy.github.io/rss.xml\">RSS feed</a>"
+       " </center> <br/>"
        (blog--license) ;; TODO: Add a "proudly created with Emacs' Org-mode" tagline?
        "\n#+end_export"
        )))
@@ -3201,21 +3295,36 @@ Some Lisp code is required to string everything together.
 
 I want to have a nice banner at the top of every page, which should link
 to useful parts of my blog.
+
+The banner is no longer hardcoded — it is data-driven via =:SITE_NAV: t= subtrees
+collected by =blog--refresh-posts= into =blog-pages=.  Any container subtree carrying
+=:SITE_NAV: t= will appear as a header link on every page; axing it from the
+drawer removes it from the nav.  See §[[SITE_NAV-section]] for the full design.
+
+The initial preamble is populated at file-load time after =blog--refresh-posts= runs.
+When =blog-pages= is still empty (e.g. on a fresh load before any =:SITE_NAV:= subtrees
+exist) we fall back to the hardcoded string so the blog remains functional:
+
 #+begin_src emacs-lisp -n
-(setq org-static-blog-page-preamble
-"<div class=\"header\">
+(defun blog--preamble-fallback ()
+  "Hardcoded fallback preamble used when blog-pages is not yet populated."
+  "<div class=\"header\">
   <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
   <br/>
   <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
   <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
   <a href=\"https://alhassy.github.io/about\">About</a>
 </div>")
+
+;; Seed the preamble; blog--refresh-posts (called at end of file) will
+;; rebuild it from :SITE_NAV: t entries once blog-pages is populated.
+(setq org-static-blog-page-preamble (blog--preamble-fallback))
 #+end_src
 
 :Lisp_Remark:
-Note that we could have been needlessly more generic by using, say,
-=(org-static-blog-get-absolute-url org-static-blog-rss-file)=,
-instead of hardcoding the links.
+Previously this was a bare hardcoded string.  The fallback function preserves
+that content during initial load; =blog--rebuild-preamble= overwrites it with
+the data-driven version as soon as =blog-pages= is non-nil.
 :End:
 :Also:
 blog-url

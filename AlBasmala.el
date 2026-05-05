@@ -317,6 +317,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
                       "tags"                 "^\\#\\+filetags:[ ]*\\(.+\\)$"             "" ;; String; Space-separated
                       "history_url"          "^\\#\\+history_url:[ ]*\\(.+\\)$"          nil
                       "htmlized_source_url"  "^\\#\\+htmlized_source_url:[ ]*\\(.+\\)$"  nil
+                      "site_nav"             "^\\#\\+site_nav:[ ]*\\(.+\\)$"             nil
                       )
                   by 'cdddr
                   ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
@@ -486,7 +487,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons "history"     history)
               (cons "abstract"    abstract)
               (cons "draft"       (if draft? "t" nil))
-              (cons "redirect"    (org-element-property :REDIRECT headline-node)))))))
+              (cons "redirect"    (org-element-property :REDIRECT headline-node))
+              (cons "site_nav"    (org-element-property :SITE_NAV headline-node)))))))
 
 (defun blog--info-multiple (container-file)
   "Return a list of post-alists for all publishable top-level headings in CONTAINER-FILE.
@@ -583,30 +585,73 @@ You can view the generated ~/blog/index.html by invoking:
   (interactive)
   (blog-make-tags-page :export-file-name "~/blog/index.html"))
 
-(defun blog--compute-posts ()
-  "Return all post metadata as a sorted list (newest first).
-Scans ~/blog/posts/*.org directly; no disk cache."
-  (let ((posts
-         (cl-loop for file in (f-files "~/blog/posts")
-                  when (s-ends-with? ".org" file)
-                  if (equal "multiple" (blog--article-style file))
-                    append (blog--info-multiple file)
-                  else
-                    collect (blog--info file))))
-    (sort posts (lambda (a b)
-                  (time-less-p (date-to-time (@date b))
-                               (date-to-time (@date a)))))))
+(defun blog--compute-posts-and-pages ()
+  "Scan ~/blog/posts/*.org (and root ~/blog/*.org for nav-only pages) and return (posts . pages).
+
+posts — all non-#+site_nav: entries from posts/, sorted newest-first.
+pages — all #+site_nav: <short-title> / :SITE_NAV: <short-title> entries from both directories, unsorted.
+
+Root-level ~/blog/*.org files (e.g. AlBasmala.org, about.org) are only included
+when they carry #+site_nav: <short-title>; they are never added to posts."
+  (let ((posts '())
+        (pages '()))
+    ;; posts/ directory: container files yield many articles, standalone yield one.
+    (dolist (file (f-files "~/blog/posts"))
+      (when (s-ends-with? ".org" file)
+        (let ((infos (if (equal "multiple" (blog--article-style file))
+                         (blog--info-multiple file)
+                       (list (blog--info file)))))
+          (dolist (info infos)
+            (if (map-elt info "site_nav")
+                (push info pages)
+              (push info posts))))))
+    ;; Root ~/blog/*.org: only collect entries that opt in via #+site_nav: <short title>.
+    (dolist (file (f-files "~/blog"))
+      (when (and (s-ends-with? ".org" file)
+                 (equal "standalone" (blog--article-style file)))
+        (let ((info (blog--info file)))
+          (when (map-elt info "site_nav")
+            (push info pages)))))
+    (cons (sort posts (lambda (a b)
+                        (time-less-p (date-to-time (@date b))
+                                     (date-to-time (@date a)))))
+          pages)))
+
+(defun blog--rebuild-preamble ()
+  "Regenerate org-static-blog-page-preamble from blog-pages.
+Falls back to blog--preamble-fallback when blog-pages is empty.
+Called automatically by blog--refresh-posts; also useful to call
+interactively after editing :SITE_NAV: headings."
+  (setq org-static-blog-page-preamble
+        (if (null blog-pages)
+            (blog--preamble-fallback)
+          (concat
+           "<div class=\"header\">\n"
+           "  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>\n"
+           "  <br/>\n"
+           (mapconcat (lambda (p)
+                        (format "  <a href=\"%s\">%s</a>\n" (@url p) (map-elt p "site_nav")))
+                      blog-pages "")
+           "</div>"))))
 
 (defun blog--refresh-posts ()
-  "Recompute blog-posts and blog-tags from source org files."
-  (setq blog-posts (blog--compute-posts))
-  (setq blog-tags
-        (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
-                                           blog-posts)))
-              #'string<)))
+  "Recompute blog-posts, blog-pages, and blog-tags from source org files."
+  (let ((result (blog--compute-posts-and-pages)))
+    (setq blog-posts (car result))
+    (setq blog-pages (cdr result))
+    (setq blog-tags
+          (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags")))
+                                             blog-posts)))
+                #'string<))
+    (blog--rebuild-preamble)))
 
 (defvar blog-posts nil
   "All post metadata, sorted newest-first. Initialized at end of file; refresh with (blog--refresh-posts).")
+
+(defvar blog-pages nil
+  "Site navigation page metadata (subtrees with :SITE_NAV: t).
+These appear as header links on every page but not as blog post cards.
+Initialized at end of file; refresh with (blog--refresh-posts).")
 
 (defvar blog-tags nil
   "Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts).")
@@ -719,7 +764,9 @@ Example uses:
        ;; "Show older posts"
        ;; This is the bottom-most matter in the index.html page
        "#+begin_export html"
-       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em> </center> <br/>"
+       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em>"
+       " &nbsp;|&nbsp; <a href=\"https://alhassy.github.io/rss.xml\">RSS feed</a>"
+       " </center> <br/>"
        (blog--license) ;; TODO: Add a "proudly created with Emacs' Org-mode" tagline?
        "\n#+end_export"
        )))
@@ -1120,14 +1167,19 @@ var disqus_shortname = 'life-and-computing-science';
    "
    ))
 
-(setq org-static-blog-page-preamble
-"<div class=\"header\">
+(defun blog--preamble-fallback ()
+  "Hardcoded fallback preamble used when blog-pages is not yet populated."
+  "<div class=\"header\">
   <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
   <br/>
   <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
   <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
   <a href=\"https://alhassy.github.io/about\">About</a>
 </div>")
+
+;; Seed the preamble; blog--refresh-posts (called at end of file) will
+;; rebuild it from :SITE_NAV: t entries once blog-pages is populated.
+(setq org-static-blog-page-preamble (blog--preamble-fallback))
 
 ;; Table captions should be below the tables
 (setq org-html-table-caption-above nil
