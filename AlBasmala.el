@@ -1077,10 +1077,11 @@ the temp buffer by `blog--info'."
       (find-file file-name)
       (org-mode)
       (outline-show-all)
-      (let ((inhibit-message t))
-        (switch-to-buffer (htmlize-buffer)))
-      (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
-      (kill-buffer)))
+      (let* ((inhibit-message t)
+             (html-buf (htmlize-buffer)))
+        (with-current-buffer html-buf
+          (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
+          (kill-buffer))))
 (concat
 "<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
    (f-base file-name) ".org.html\"><img src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"))
@@ -1465,11 +1466,11 @@ htmlize, and write the result."
           (org-mode)
           (org-paste-subtree 1)
           (outline-show-all)
-          (let ((inhibit-message t))
-            (switch-to-buffer (htmlize-buffer)))
-          (write-file (expand-file-name (concat slug ".org.html") blog-publish-directory))
-          (set-buffer-modified-p nil)
-          (kill-buffer))
+          (let* ((inhibit-message t)
+                 (html-buf (htmlize-buffer)))
+            (with-current-buffer html-buf
+              (write-file (expand-file-name (concat slug ".org.html") blog-publish-directory))
+              (kill-buffer))))
       (when (buffer-live-p tmp-buf)
         (with-current-buffer tmp-buf (set-buffer-modified-p nil))
         (kill-buffer tmp-buf)))))
