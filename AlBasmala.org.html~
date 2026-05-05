@@ -264,7 +264,8 @@
 (</span><span class="org-block"><span class="keyword">require</span></span><span class="org-block"> '</span><span class="org-block"><span class="constant">org-static-blog</span></span><span class="org-block">)
 (</span><span class="org-block"><span class="keyword">require</span></span><span class="org-block"> '</span><span class="org-block"><span class="constant">htmlize</span></span><span class="org-block">)
 (</span><span class="org-block"><span class="keyword">require</span></span><span class="org-block"> '</span><span class="org-block"><span class="constant">org-special-block-extras</span></span><span class="org-block">)
-</span><span class="org-block-end-line">#+end_src
+(</span><span class="org-block"><span class="keyword">require</span></span><span class="org-block"> '</span><span class="org-block"><span class="constant">xml</span></span><span class="org-block">)  </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">xml-escape-string for blog--make-one-rss-feed
+</span></span><span class="org-block-end-line">#+end_src
 </span>
 
 <span class="org-level-1">* </span><span class="org-level-1"><span class="org-special-keyword">COMMENT</span></span><span class="org-level-1"> Speculative TODO-s</span>
@@ -2815,28 +2816,29 @@ The actual look and feel of <span class="org-code">~index.html~</span> is due to
           (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> tag (concat </span><span class="org-block"><span class="string">" on "</span></span><span class="org-block"> tag) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)))
 
 (</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--card</span></span><span class="org-block"> (post)
-  </span><span class="org-block"><span class="doc">"Return the Org source for one article card as a tagged top-level heading.
+  </span><span class="org-block"><span class="doc">"Return the Org source for one article card.
 
-The heading carries the post's tags so per-tag exports can be built
-by filtering blog-posts directly &#8212; no copy-then-delete needed.
-The heading text does not appear in the HTML output (title:nil)."</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((tags (s-join </span><span class="org-block"><span class="string">":"</span></span><span class="org-block"> (s-split </span><span class="org-block"><span class="string">" "</span></span><span class="org-block"> (map-elt post </span><span class="org-block"><span class="string">"tags"</span></span><span class="org-block">) t))))
-    (concat
-     (format </span><span class="org-block"><span class="string">"* %s %s\n"</span></span><span class="org-block"> (@title post) (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (s-blank? tags) </span><span class="org-block"><span class="string">""</span></span><span class="org-block"> (format </span><span class="org-block"><span class="string">":%s:"</span></span><span class="org-block"> tags)))
-     </span><span class="org-block"><span class="string">"#+begin_export html\n"</span></span><span class="org-block">
-     (format </span><span class="org-block"><span class="string">"&lt;h2 class=\"title\"&gt;&lt;a href=\"%s\"&gt;%s&lt;/a&gt;&lt;/h2&gt;\n"</span></span><span class="org-block"> (@url post) (@title post))
-     (format </span><span class="org-block"><span class="string">"&lt;center&gt;%s&lt;/center&gt;\n"</span></span><span class="org-block"> (@tags post))
-     (@image post </span><span class="org-block"><span class="string">"resources/"</span></span><span class="org-block">)
-     </span><span class="org-block"><span class="string">"\n#+end_export\n"</span></span><span class="org-block">
-     </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
-     (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> (@abstract post) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)
-     </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
-     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">badge:&#8230; is an org-special-block-extras link type, so it must sit in
-</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Org territory &#8212; not inside #+begin_export html, which would ship it
-</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">verbatim to the HTML output.  The @@html:&#8230;@@ wrappers give us the
-</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">surrounding &lt;p&gt; while keeping the badge: link itself as Org syntax.
-</span></span><span class="org-block">     (format </span><span class="org-block"><span class="string">"@@html:&lt;p style=\"text-align:right\"&gt;@@ <a href="badge:Read|more|green|%s|read-the-docs">badge:Read|more|green|%s|read-the-docs</a> @@html:&lt;/p&gt;@@\n"</span></span><span class="org-block">
-             (@url post)))))
+No Org heading is emitted &#8212; Org would render it as an &lt;h2&gt; *in addition*
+to our own &lt;h2 class=\"title\"&gt; inside the export block, giving every
+card a duplicated title.  Per-tag filtering is done in Elisp before
+cards are built (see `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-make-index-page</span></span></span><span class="org-block"><span class="doc">'), so the Org tag machinery
+earns us nothing here."</span></span><span class="org-block">
+  (concat
+   </span><span class="org-block"><span class="string">"#+begin_export html\n"</span></span><span class="org-block">
+   (format </span><span class="org-block"><span class="string">"&lt;h2 class=\"title\"&gt;&lt;a href=\"%s\"&gt;%s&lt;/a&gt;&lt;/h2&gt;\n"</span></span><span class="org-block"> (@url post) (@title post))
+   (format </span><span class="org-block"><span class="string">"&lt;center&gt;%s&lt;/center&gt;\n"</span></span><span class="org-block"> (@tags post))
+   (@image post </span><span class="org-block"><span class="string">"resources/"</span></span><span class="org-block">)
+   </span><span class="org-block"><span class="string">"\n#+end_export\n"</span></span><span class="org-block">
+   </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
+   (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> (@abstract post) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)
+   </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
+   </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">badge:&#8230; is an org-special-block-extras link type, so it must sit in
+</span></span><span class="org-block">   </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Org territory &#8212; not inside #+begin_export html, which would ship it
+</span></span><span class="org-block">   </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">verbatim to the HTML output.  The @@html:&#8230;@@ wrappers give us the
+</span></span><span class="org-block">   </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">surrounding &lt;p&gt; while keeping the badge: link itself as Org syntax.
+</span></span><span class="org-block">   (format </span><span class="org-block"><span class="string">"@@html:&lt;p style=\"text-align:right\"&gt;@@ <a href="badge:Read|more|green|%s|read-the-docs">badge:Read|more|green|%s|read-the-docs</a> @@html:&lt;/p&gt;@@\n"</span></span><span class="org-block">
+           (@url post))
+   </span><span class="org-block"><span class="string">"\n@@html:&lt;hr&gt;@@\n"</span></span><span class="org-block">))
 
 (</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-page-buffer</span></span><span class="org-block"> (posts greeting export-file-name)
   </span><span class="org-block"><span class="doc">"Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
@@ -2889,6 +2891,55 @@ the relevant subset of blog-posts &#8212; no copy-then-delete."</span></span><sp
                                blog-posts)
                    (blog--greeting tag)
                    (concat-to-dir blog-publish-directory (concat </span><span class="org-block"><span class="string">"tag-"</span></span><span class="org-block"> (blog--tag-slug tag) </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">))))))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--rss-date</span></span><span class="org-block"> (date-str)
+  </span><span class="org-block"><span class="doc">"Format DATE-STR (an Org date string) as an RFC-822 pubDate for RSS."</span></span><span class="org-block">
+  (format-time-string </span><span class="org-block"><span class="string">"%a, %d %b %Y %H:%M:%S %z"</span></span><span class="org-block">
+                      (</span><span class="org-block"><span class="keyword">condition-case</span></span><span class="org-block"> _
+                          (date-to-time date-str)
+                        (</span><span class="org-block"><span class="warning">error</span></span><span class="org-block"> (current-time)))))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-one-rss-feed</span></span><span class="org-block"> (posts filename </span><span class="org-block"><span class="type">&amp;optional</span></span><span class="org-block"> channel-title)
+  </span><span class="org-block"><span class="doc">"Emit `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-publish-directory</span></span></span><span class="org-block"><span class="doc">'/FILENAME from POSTS.
+
+A minimal RSS 2.0 feed &#8212; title, link, pubDate, description per item.
+Body is intentionally a short #+description rather than the full article
+HTML, so readers click through to alhassy.com.  CHANNEL-TITLE defaults
+to `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-title</span></span></span><span class="org-block"><span class="doc">'.
+
+Text fields are run through `</span></span><span class="org-block"><span class="doc"><span class="constant">xml-escape-string</span></span></span><span class="org-block"><span class="doc">' so &lt;, &gt;, &amp; in titles
+and descriptions do not break feed readers."</span></span><span class="org-block">
+  (</span><span class="org-block"><span class="keyword">cl-flet</span></span><span class="org-block"> ((esc (s) (xml-escape-string (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> s </span><span class="org-block"><span class="string">""</span></span><span class="org-block">))))
+    (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((dest  (concat-to-dir blog-publish-directory filename))
+          (title (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> channel-title blog-title)))
+      (</span><span class="org-block"><span class="keyword">with-temp-file</span></span><span class="org-block"> dest
+        (insert </span><span class="org-block"><span class="string">"&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n"</span></span><span class="org-block">
+                </span><span class="org-block"><span class="string">"&lt;rss version=\"2.0\"&gt;\n"</span></span><span class="org-block">
+                </span><span class="org-block"><span class="string">"&lt;channel&gt;\n"</span></span><span class="org-block">
+                </span><span class="org-block"><span class="string">"&lt;title&gt;"</span></span><span class="org-block">       (esc title) </span><span class="org-block"><span class="string">"&lt;/title&gt;\n"</span></span><span class="org-block">
+                </span><span class="org-block"><span class="string">"&lt;link&gt;"</span></span><span class="org-block">        (esc blog-url) </span><span class="org-block"><span class="string">"&lt;/link&gt;\n"</span></span><span class="org-block">
+                </span><span class="org-block"><span class="string">"&lt;description&gt;"</span></span><span class="org-block"> (esc title) </span><span class="org-block"><span class="string">"&lt;/description&gt;\n"</span></span><span class="org-block">
+                </span><span class="org-block"><span class="string">"&lt;language&gt;en-us&lt;/language&gt;\n"</span></span><span class="org-block">)
+        (</span><span class="org-block"><span class="keyword">dolist</span></span><span class="org-block"> (post posts)
+          (insert </span><span class="org-block"><span class="string">"&lt;item&gt;\n"</span></span><span class="org-block">
+                  </span><span class="org-block"><span class="string">"&lt;title&gt;"</span></span><span class="org-block">       (esc (@title post))       </span><span class="org-block"><span class="string">"&lt;/title&gt;\n"</span></span><span class="org-block">
+                  </span><span class="org-block"><span class="string">"&lt;link&gt;"</span></span><span class="org-block">        (esc (@url post))         </span><span class="org-block"><span class="string">"&lt;/link&gt;\n"</span></span><span class="org-block">
+                  </span><span class="org-block"><span class="string">"&lt;guid&gt;"</span></span><span class="org-block">        (esc (@url post))         </span><span class="org-block"><span class="string">"&lt;/guid&gt;\n"</span></span><span class="org-block">
+                  </span><span class="org-block"><span class="string">"&lt;pubDate&gt;"</span></span><span class="org-block">     (blog--rss-date (@date post)) </span><span class="org-block"><span class="string">"&lt;/pubDate&gt;\n"</span></span><span class="org-block">
+                  </span><span class="org-block"><span class="string">"&lt;description&gt;"</span></span><span class="org-block"> (esc (@description post)) </span><span class="org-block"><span class="string">"&lt;/description&gt;\n"</span></span><span class="org-block">
+                  </span><span class="org-block"><span class="string">"&lt;/item&gt;\n"</span></span><span class="org-block">))
+        (insert </span><span class="org-block"><span class="string">"&lt;/channel&gt;\n&lt;/rss&gt;\n"</span></span><span class="org-block">)))))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-rss-feed</span></span><span class="org-block"> ()
+  </span><span class="org-block"><span class="doc">"Emit rss.xml (all posts) plus one &lt;tag&gt;-rss.xml per tag."</span></span><span class="org-block">
+  (blog--make-one-rss-feed blog-posts </span><span class="org-block"><span class="string">"rss.xml"</span></span><span class="org-block">)
+  (</span><span class="org-block"><span class="keyword">dolist</span></span><span class="org-block"> (tag blog-tags)
+    (blog--make-one-rss-feed
+     (seq-filter (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> (p)
+                   (member tag (s-split </span><span class="org-block"><span class="string">" "</span></span><span class="org-block"> (map-elt p </span><span class="org-block"><span class="string">"tags"</span></span><span class="org-block">) t)))
+                 blog-posts)
+     (concat (blog--tag-slug tag) </span><span class="org-block"><span class="string">"-rss.xml"</span></span><span class="org-block">)
+     (format </span><span class="org-block"><span class="string">"%s &#8212; %s"</span></span><span class="org-block"> blog-title tag))))
 
 (</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog-make-all-tag-pages</span></span><span class="org-block"> ()
   </span><span class="org-block"><span class="doc">"Regenerate index.html and all tag pages. Calls blog-make-index-page."</span></span><span class="org-block">
@@ -4502,6 +4553,7 @@ Dispatches on #+article_style: per file &#8212;
           (message </span><span class="org-block"><span class="string">"&#8658; HTMLizing article %s..."</span></span><span class="org-block"> base)
           (blog--htmlize-file f)))))
   (blog-make-index-page)
+  (blog--make-rss-feed)
   (blog--sync-assets))
 </span><span class="org-block-end-line">#+end_src
 </span>
