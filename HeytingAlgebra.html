@@ -1,0 +1,1294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-05-05 Tue 21:39 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Discovering Heyting Algebra</title>
+<meta name="author" content="Musa Al-hassy" />
+<meta name="description" content="How do friends communicate secretly using non-invertible operations such as minimum? An introduction to Heyting Algebra --an instance of Cartesian Closed Categories!" />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+        
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style>
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+        
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+        
+          <script type="text/javascript">
+              if (typeof jQuery == 'undefined') {
+                  document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+              }
+          </script>
+        
+           <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+        
+            <script>
+                   $(document).ready(function() {
+                       $('.tooltip').tooltipster({
+                           theme: 'tooltipster-punk',
+                           contentAsHTML: true,
+                           animation: 'grow',
+                           delay: [100,500],
+                           // trigger: 'click'
+                           trigger: 'custom',
+                           triggerOpen: {
+                               mouseenter: true
+                           },
+                           triggerClose: {
+                               originClick: true,
+                               scroll: true
+                           }
+           });
+                   });
+               </script>
+        
+          <style>
+             abbr {color: red;}
+        
+             .tooltip { border-bottom: 1px dotted #000;
+                        color:red;
+                        text-decoration: none;}
+          </style>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'left',
+      displayIndent: '5em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'left',
+      displayIndent: '5em'
+    },
+    output: {
+      font: 'mathjax-euler',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="content" class="content">
+<div id="table-of-contents-1" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents-1" role="doc-toc">
+<ul>
+<li><a href="#org2b1e347">1. Tags, then Image&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a>
+<ul>
+<li><a href="#org6629ef9">1.1. BEGIN Invisible&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgd08c507">1.2. Calculations&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#org141d763">1.3. Equations&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgc729467">1.4. Givens and Requireds&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgd2d23d7">1.5. Logical Operators with Spacing&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#org591acf1">1.6. Category Theory keywords&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgab7fd3c">1.7. END Invisible, for latex&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#org6a2379e">1.8. LaTeX Setup&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#end"><a href="#end">END Invisible, for HTML</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+</ul>
+</li>
+<li><a href="#orgca79451">2. Abstract&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#Photograph-Credit">3. <a href="#Photograph-Credit">Photograph Credit</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#Meet-Semi-Lattices">4. <a href="#Meet-Semi-Lattices">Meet Semi-Lattices</a></a>
+<ul>
+<li><a href="#Examples">4.1. <a href="#Examples">Examples</a></a></li>
+<li><a href="#The-Principle-of-Indirect-Equality">4.2. <a href="#The-Principle-of-Indirect-Equality">The Principle of Indirect Equality</a></a></li>
+</ul>
+</li>
+<li><a href="#Relative-Pseudo-complements">5. <a href="#Relative-Pseudo-complements">Relative Pseudo-complements</a></a></li>
+<li><a href="#Theorems-Generalising-Observations-from-the-Examples">6. <a href="#Theorems-Generalising-Observations-from-the-Examples">Theorems &#x2014; Generalising Observations from the Examples</a></a></li>
+<li><a href="#Furnishes">7. <a href="#Furnishes">→ Furnishes ⊓</a></a></li>
+<li><a href="#Internalising-and">8. <a href="#Internalising-and">Internalising ⊑ and ⊓</a></a></li>
+<li><a href="#Flipping-the-Inclusions-Around">9. <a href="#Flipping-the-Inclusions-Around">Flipping the Inclusions Around</a></a></li>
+<li><a href="#Almost-True-Complements">10. <a href="#Almost-True-Complements">Almost <i>True</i> Complements</a></a></li>
+<li><a href="#So-long-and-thanks-for-the-fish">11. <a href="#So-long-and-thanks-for-the-fish">So long and thanks for the fish</a></a></li>
+<li><a href="#org4ce15c5">12. footer&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+</ul>
+</div>
+</div>
+<p>
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/my-cool-quotes">quote-tastic!</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+</div><meta name="author" content="Musa Al-hassy">
+    <meta name="referrer" content="no-referrer"><link href="resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="resources/blog-banner.css" rel="stylesheet" type="text/css" /><link rel="icon" href="resources/favicon.png"><script type="text/javascript">
+   /*
+   @licstart  The following is the entire license notice for the
+   JavaScript code in this tag.
+   
+   Copyright (C) 2012-2020 Free Software Foundation, Inc.
+   
+   The JavaScript code in this tag is free software: you can
+   redistribute it and/or modify it under the terms of the GNU
+   General Public License (GNU GPL) as published by the Free Software
+   Foundation, either version 3 of the License, or (at your option)
+   any later version.  The code is distributed WITHOUT ANY WARRANTY;
+   without even the implied warranty of MERCHANTABILITY or FITNESS
+   FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+   
+   As additional permission under GNU GPL version 3 section 7, you
+   may distribute non-source (e.g., minimized or compacted) forms of
+   that code without the copy of the GNU GPL normally required by
+   section 4, provided you include this license notice and a URL
+   through which recipients can access the Corresponding Source.
+   
+   
+   @licend  The above is the entire license notice
+   for the JavaScript code in this tag.
+   */
+   <!--/*--><![CDATA[/*><!--*/
+    function CodeHighlightOn(elem, id)
+    {
+      var target = document.getElementById(id);
+      if(null != target) {
+        elem.cacheClassElem = elem.className;
+        elem.cacheClassTarget = target.className;
+        target.className = "code-highlighted";
+        elem.className   = "code-highlighted";
+      }
+    }
+    function CodeHighlightOff(elem, id)
+    {
+      var target = document.getElementById(id);
+      if(elem.cacheClassElem)
+        elem.className = elem.cacheClassElem;
+      if(elem.cacheClassTarget)
+        target.className = elem.cacheClassTarget;
+    }
+   /*]]>*///-->
+   </script><script type="text/x-mathjax-config">
+       MathJax.Hub.Config({
+           displayAlign: "center",
+           displayIndent: "0em",
+   
+           "HTML-CSS": { scale: 100,
+                           linebreaks: { automatic: "false" },
+                           webFont: "TeX"
+                          },
+           SVG: {scale: 100,
+                 linebreaks: { automatic: "false" },
+                 font: "TeX"},
+           NativeMML: {scale: 100},
+           TeX: { equationNumbers: {autoNumber: "AMS"},
+                  MultLineWidth: "85%",
+                  TagSide: "right",
+                  TagIndent: ".8em"
+                }
+   });
+   </script>
+   <script type="text/javascript"
+           src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+   
+   <script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+       "HTML-CSS": {
+           styles: {
+               ".MathJax nobr": {
+                   padding: "0.5em 0.5em"
+               },
+           }
+       }
+   });
+   </script>
+   <link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">Discovering Heyting Algebra</h1></center> <script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script> 
+</p>
+<div id="outline-container-org2b1e347" class="outline-2">
+<h2 id="org2b1e347"><span class="section-number-2">1.</span> <a href="#org2b1e347">Tags, then Image</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h2>
+<div class="outline-text-2" id="text-1">
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-order-theory.html"><img src="https://img.shields.io/badge/-order--theory-grey?logo=nil"></a> <a href="https://alhassy.com/tag-category-theory.html"><img src="https://img.shields.io/badge/-category--theory-grey?logo=nil"></a></center>
+<center class="post-image"><a href="resources/HeytingAlgebra.png" class="tooltip" title="Image credit resources/HeytingAlgebra.png"><img src="resources/HeytingAlgebra.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+</div>
+<div id="outline-container-org6629ef9" class="outline-3">
+<h3 id="org6629ef9"><span class="section-number-3">1.1.</span> <a href="#org6629ef9">BEGIN Invisible</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-1">
+<div id="myMathJaxStuff" style="display: none;">
+<p>
+We do not want the MathJax declarations to use vertical whitespace;
+so we do not display their residual whitespace.
+</p>
+
+<p>
+Moreover the form of MathJax declarations differs from usual LaTeX
+declarations, so we iffalse&#x2026;fi these ones.
+</p>
+
+<p>
+Commenting the MathJax using &lt;!&#x2013; HTML comments &#x2013;&gt;
+makes the commands inaccessible elsewhere.
+</p>
+
+<p>
+The alternative is to declare a <a href="https://stackoverflow.com/questions/1992114/how-do-you-create-a-hidden-div-that-doesnt-create-a-line-break-or-horizontal-sp">non-displayed ~div</a>~.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd08c507" class="outline-3">
+<h3 id="orgd08c507"><span class="section-number-3">1.2.</span> <a href="#orgd08c507">Calculations</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+\[\newcommand{\step}[1]{ \\ = \;\; & \qquad \color{maroon}{⟨ \text{ #1 } ⟩} \\ & }\]
+\[\newcommand{\stepWith}[2]{ \\ #1 \;\; & \qquad \color{maroon}{⟨ \text{ #2 } ⟩} \\ & }\]
+\[\newenvironment{calc}{\begin{align*} & }{\end{align*}}\]
+</p>
+</div>
+</div>
+<div id="outline-container-org141d763" class="outline-3">
+<h3 id="org141d763"><span class="section-number-3">1.3.</span> <a href="#org141d763">Equations</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+Having identical label references for different equations will break rendering!
+</p>
+
+<p>
+eqn            := display name, then display formula.
+eqnColour      := display name, then display formula, then colour
+eqnLabel       := display name, then display formula, then label
+eqnLabelColour := display name, then display formula, then label, then colour
+eqnLabelColour := display name, then display formula, then colour, then label &#x2013; safe redundancy!
+</p>
+
+<p>
+\[\newcommand{\eqnLabelColour}[4]{ \begin{equation} \color{#4}{#2} \label{#3}\tag{$\color{#4}{\text{#1}}$} \end{equation} }\]
+</p>
+
+<p>
+\[\newcommand{\eqnColourLabel}[4]{ \eqnLabelColour{#1}{#2}{#4}{#3} }\]
+</p>
+
+<p>
+Default equation colour is: navy
+\[\newcommand{\eqnLabel}[3]{ \eqnLabelColour{#1}{#2}{#3}{navy} }\]
+</p>
+
+<p>
+Default label is the display name
+\[\newcommand{\eqnColour}[3]{ \eqnLabelColour{#1}{#2}{#1}{#3} }\]
+</p>
+
+<p>
+\[\newcommand{\eqn}[2]{ \eqnLabel{#1}{#2}{#1} }\]
+</p>
+
+<p>
+Notice that \ref{Label} and \ref{Label2} have the same displayed name,
+but <b>cannot</b> have the same label!
+</p>
+</div>
+</div>
+<div id="outline-container-orgc729467" class="outline-3">
+<h3 id="orgc729467"><span class="section-number-3">1.4.</span> <a href="#orgc729467">Givens and Requireds</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+\[\newcommand{\givens}[1]{ \color{teal}{#1} }\]
+\[\newcommand{\requireds}[1]{ \color{navy}{#1} }\]
+</p>
+</div>
+</div>
+<div id="outline-container-orgd2d23d7" class="outline-3">
+<h3 id="orgd2d23d7"><span class="section-number-3">1.5.</span> <a href="#orgd2d23d7">Logical Operators with Spacing</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+\[\def\lands{\;\land\;}\]
+\[\def\landS{\quad\land\quad}\]
+</p>
+
+<p>
+\[\def\impliess{\;\Rightarrow\;}\]
+\[\def\impliesS{\quad\Rightarrow\quad}\]
+</p>
+
+<p>
+\[\def\equivs{\;\equiv\;}\]
+\[\def\equivS{\quad\equiv\quad}\]
+</p>
+
+<p>
+\[\def\eqs{\;=\;}\]
+\[\def\eqS{\quad=\quad}\]
+</p>
+
+<p>
+\[\def\sqleqs{\;\sqsubseteq\;}\]
+\[\def\sqleqS{\quad\sqsubseteq\quad}\]
+</p>
+</div>
+</div>
+<div id="outline-container-org591acf1" class="outline-3">
+<h3 id="org591acf1"><span class="section-number-3">1.6.</span> <a href="#org591acf1">Category Theory keywords</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-6">
+<p>
+\[\def\foldr{\mathsf{foldr}}\]
+\[\def\edge{\mathsf{edge}}\]
+\[\def\Func{\mathsf{Func}}\]
+\[\def\Id{\mathsf{Id}}\]
+\[\def\src{\mathsf{src}}\]
+\[\def\tgt{\mathsf{tgt}}\]
+\[\def\obj{\mathsf{obj}}\]
+\[\def\mor{\mathsf{mor}}\]
+\[\def\natTo{\overset{.}{→}}\]
+\[\def\Obj{\mathsf{Obj}\,}\]
+\[\def\List{\mathsf{List}\,}\]
+</p>
+</div>
+</div>
+<div id="outline-container-orgab7fd3c" class="outline-3">
+<h3 id="orgab7fd3c"><span class="section-number-3">1.7.</span> <a href="#orgab7fd3c">END Invisible, for latex</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-7">
+<p>
+After this, only pure latex commands should exist.
+</p>
+
+<p>
+However, the whitespace they produce via MathJax is ignored
+since the HTML div is not yet closed.
+</p>
+</div>
+</div>
+<div id="outline-container-org6a2379e" class="outline-3">
+<h3 id="org6a2379e"><span class="section-number-3">1.8.</span> <a href="#org6a2379e">LaTeX Setup</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-1-8">
+</div>
+</div>
+<div id="outline-container-end" class="outline-3">
+<h3 id="end"><a href="#end">END Invisible, for HTML</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h3>
+<div class="outline-text-3" id="text-end">
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgca79451" class="outline-2">
+<h2 id="orgca79451"><span class="section-number-2">2.</span> <a href="#orgca79451">Abstract</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h2>
+<div class="outline-text-2" id="text-2">
+<div class="abstract" style="border: 1px solid black;padding: 1%; margin-top: 1%; margin-bottom: 1%;margin-right: 10%; margin-left: 10%; background-color: lightblue;"><center> <strong class="tooltip"title="What's the goal of this article?"> Abstract </strong> </center>
+<div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org2b1e347">1. Tags, then Image&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a>
+<ul>
+<li><a href="#org6629ef9">1.1. BEGIN Invisible&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgd08c507">1.2. Calculations&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#org141d763">1.3. Equations&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgc729467">1.4. Givens and Requireds&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgd2d23d7">1.5. Logical Operators with Spacing&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#org591acf1">1.6. Category Theory keywords&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#orgab7fd3c">1.7. END Invisible, for latex&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#org6a2379e">1.8. LaTeX Setup&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#end"><a href="#end">END Invisible, for HTML</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+</ul>
+</li>
+<li><a href="#orgca79451">2. Abstract&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#Photograph-Credit">3. <a href="#Photograph-Credit">Photograph Credit</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+<li><a href="#Meet-Semi-Lattices">4. <a href="#Meet-Semi-Lattices">Meet Semi-Lattices</a></a>
+<ul>
+<li><a href="#Examples">4.1. <a href="#Examples">Examples</a></a></li>
+<li><a href="#The-Principle-of-Indirect-Equality">4.2. <a href="#The-Principle-of-Indirect-Equality">The Principle of Indirect Equality</a></a></li>
+</ul>
+</li>
+<li><a href="#Relative-Pseudo-complements">5. <a href="#Relative-Pseudo-complements">Relative Pseudo-complements</a></a></li>
+<li><a href="#Theorems-Generalising-Observations-from-the-Examples">6. <a href="#Theorems-Generalising-Observations-from-the-Examples">Theorems &#x2014; Generalising Observations from the Examples</a></a></li>
+<li><a href="#Furnishes">7. <a href="#Furnishes">→ Furnishes ⊓</a></a></li>
+<li><a href="#Internalising-and">8. <a href="#Internalising-and">Internalising ⊑ and ⊓</a></a></li>
+<li><a href="#Flipping-the-Inclusions-Around">9. <a href="#Flipping-the-Inclusions-Around">Flipping the Inclusions Around</a></a></li>
+<li><a href="#Almost-True-Complements">10. <a href="#Almost-True-Complements">Almost <i>True</i> Complements</a></a></li>
+<li><a href="#So-long-and-thanks-for-the-fish">11. <a href="#So-long-and-thanks-for-the-fish">So long and thanks for the fish</a></a></li>
+<li><a href="#org4ce15c5">12. footer&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></a></li>
+</ul>
+</div>
+</div>
+
+<p>
+We attempt to motivate the structure of a Heyting Algebra
+by considering ‘inverse problems’.
+</p>
+
+<p>
+For example,
+</p>
+<ul class="org-ul">
+<li>You have a secret number \(x\) and your friend has a secret number \(y\), which you've
+communicated to each other in person.</li>
+<li>You communicate a ‘message’ to each other
+by adding onto your secret number.</li>
+<li>Hence, if I receive a number \(z\), then I can <i>undo</i> the addition operation to find the ‘message’ \(m = z - y\).</li>
+</ul>
+
+<p>
+What if we decided, for security, to change our protocol from using addition to using
+minimum. That is, we encode our message \(m\) as \(z = x ↓ m\). Since minimum is not
+invertible, we decide to send our encoded messages with a ‘context’ \(c\) as a pair \((z, c)\).
+From this pair, a unique number \(m′\) can be extracted, which is not necessarily the original \(m\).
+Read on, and perhaps you'll figure out which messages can be communicated 😉
+</p>
+
+<p>
+This exploration demonstrates that relative pseudo-complements
+</p>
+<ul class="org-ul">
+<li>Are admitted by the usual naturals precisely when infinity is considered a number;</li>
+<li>Are <i>exactly</i> implication for the Booleans;</li>
+<li><i>Internalises</i> implication for sets;</li>
+<li>Yield <i>the largest complementary subgraph</i> when considering subgraphs.</li>
+</ul>
+
+<p>
+In some sense, the pseudo-complement is the “best approximate inverse” to forming meets, minima, intersections.
+</p>
+
+<p>
+Along the way we develop a number of the theorems describing the relationships
+between different structural components of Heyting Algebras;
+most notably the internalisation of much of its own structure.
+</p>
+
+<p>
+The article aims to be self-contained, however it may be helpful to
+look at <a href="https://alhassy.github.io/CatsCheatSheet/LatticesCheatSheet.pdf">this lattice cheat sheet</a> (•̀ᴗ•́)و
+</p>
+
+
+</div>
+</div>
+</div>
+<div id="outline-container-Photograph-Credit" class="outline-2">
+<h2 id="Photograph-Credit"><span class="section-number-2">3.</span> <a href="#Photograph-Credit">Photograph Credit</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h2>
+<div class="outline-text-2" id="text-Photograph-Credit">
+<small> <center>
+<p>
+( Photo by
+<a href="https://unsplash.com/@ludovicphoto?utm_medium=referral&amp;utm_campaign=photographer-credit&amp;utm_content=creditBadge">Ludovic Fremondiere</a>
+on <a href="https://unsplash.com/">Unsplash</a> )
+</p>
+</center> </small>
+</div>
+</div>
+<div id="outline-container-Meet-Semi-Lattices" class="outline-2">
+<h2 id="Meet-Semi-Lattices"><span class="section-number-2">4.</span> <a href="#Meet-Semi-Lattices">Meet Semi-Lattices</a></h2>
+<div class="outline-text-2" id="text-Meet-Semi-Lattices">
+<p>
+Recall that an <i>order</i> is nothing more than a type \(Carrier\) with a relation
+\(\_⊑\_\) such that the following list of axioms holds: For any \(x,y,z : Carrier\),
+</p>
+
+<p>
+\[\eqn{⊑-reflexive}{x ⊑ x}\]
+</p>
+
+<p>
+\[\eqn{⊑-transitive}{x ⊑ y \landS y ⊑ z \impliesS x ⊑ z}\]
+</p>
+
+<p>
+\[\eqn{⊑-antisymmetric}{x ⊑ y \landS y ⊑ x \impliesS x = y}\]
+</p>
+
+<p>
+This models notions of containment, inclusion, hierarchy, and approximation.
+</p>
+
+<p>
+Recall that a <i>meet</i> is an additional operation \(\_⊓\_\) specified by
+\[\eqnColour{Meet Characterisation}{ z \;⊑\; x ⊓ y \equivS z ⊑ x \landS z ⊑ y}{green}\]
+</p>
+
+<p>
+Meets model notions of <i>greatest lower bounds</i>, or <i>infima</i>.
+</p>
+
+<p>
+Observe that <i>meets allow us to encode a pair of inclusions as a single inclusion!</i>
+That is, an <i>external</i> conjunction \(∧\) is equivalent to an <i>internal</i> meet \(⊓\).
+</p>
+
+<p>
+In computing parlance, think of a top-level ‘method’ that takes and yields
+data. In many languages, the method itself can be thought of as data!
+It is this kind of external-internal duality we are alluding to
+&#x2013;and is captured nicely by exponential objects in category theory,
+of which we are considering a special case.
+</p>
+</div>
+<div id="outline-container-Examples" class="outline-3">
+<h3 id="Examples"><span class="section-number-3">4.1.</span> <a href="#Examples">Examples</a></h3>
+<div class="outline-text-3" id="text-Examples">
+<ul class="org-ul">
+<li>(ℕ, ≤, ↓)   &#x2014;where ↓ denotes minimum.</li>
+<li>(ℕ, ∣, gcd)  &#x2013;the naturals ordered by divisibility.</li>
+<li>(Sets, ⊆, ∩)</li>
+<li>(𝔹, ⇒, ∧)</li>
+<li>Formulae of a logic ordered by the <i>proves</i>, or <i>syntactic consequence</i>, relationship \(\_⊢\_\) with
+syntactic conjunction as meet.</li>
+<li>(Sets, →, ×): Sets with “A atmost B” meaning there is a function \(f : A → B\),
+then the Cartesian product can be used as meet.
+<ul class="org-ul">
+<li>This is not strictly a semi-lattice, as defined here, but it is when we consider ‘setoids’.</li>
+<li>Moreover it provides excellent intuition!</li>
+</ul></li>
+<li>Subgraphs of a given simple graph \(G = (V,E)\) &#x2013;which is just a relation \(E\) on a set of vertices \(V\).
+<ul class="org-ul">
+<li>The ordering is obtained by subset inclusion, \[(V₁, E₁) ⊑ (V₂, E₂) \equivS V₁ ⊆ V₂ \lands E₁ ⊆ E₂\]
+and so the meet is obtained by intersection, \[(V₁, E₁) ⊓ (V₂, E₂) = (V₁ ∩ V₂, E₁ ∩ E₂)\]</li>
+<li><p>
+However, we cannot define complement in the same fashion, since the resulting relation
+is not over the resulting vertex set!
+</p>
+
+<p>
+Indeed suppose we define \(∼ (V′, E′) \;:=\; (V - V′, E - E′)\), then
+the discrete graph \((V, ø)\) has complement \((ø, E)\) which is a ‘graph’
+with many edges \(E\) but no vertices! &#x2014;Provided \((V,E)\) has edges.
+</p>
+
+<p>
+However, the edges can be <i>relativised</i> to the vertices to produce the pseudo-complement.
+</p></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-The-Principle-of-Indirect-Equality" class="outline-3">
+<h3 id="The-Principle-of-Indirect-Equality"><span class="section-number-3">4.2.</span> <a href="#The-Principle-of-Indirect-Equality">The Principle of Indirect Equality</a></h3>
+<div class="outline-text-3" id="text-The-Principle-of-Indirect-Equality">
+<p>
+It is not clear how \(\ref{Meet Characterisation}\) can be used to <i>prove</i>
+properties about meet.
+</p>
+
+<p>
+The laws \ref{⊑-antisymmetric} and \ref{⊑-reflexive} can be fused together
+into one law:
+\[\eqnColour{Indirect Equality}{ x = y \equivS \left(∀ z \;•\quad ⊑\; z ⊑ x \equivs z ⊑ y\right)}{green}\]
+</p>
+
+<p>
+That is, <i>for all practical purposes, \(x = y\) precisely when they have the same sub-parts!</i>
+</p>
+
+<p>
+Using this, we can prove that meet is idempotent \(x ⊓ x = x\),
+symmetric \(x ⊓ y = y ⊓ x\), associative \(x ⊓ (y ⊓ z) = (x ⊓ y) ⊓ z\),
+and monotonic: \(a ⊑ b \landS c ⊑ d \impliesS a ⊓ c \sqleqS b ⊓ c\).
+</p>
+
+<p>
+Below we use this principle in a number of places, for example \ref{Distributivity of → over ⊓}.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-Relative-Pseudo-complements" class="outline-2">
+<h2 id="Relative-Pseudo-complements"><span class="section-number-2">5.</span> <a href="#Relative-Pseudo-complements">Relative Pseudo-complements</a></h2>
+<div class="outline-text-2" id="text-Relative-Pseudo-complements">
+<p>
+The <i>relative pseudo-complement of \(a\) wrt \(b\)</i>, \((a ⟶ b)\),
+is <i>“the largest element \(x\) that ensures modus ponens”</i>, i.e.,
+<i>“the largest element \(x\) whose meet with \(a\) is contained in \(b\)”</i>:
+</p>
+
+<p>
+\[\eqnColour{Relative Pseudo-Complement Characterisation}{\hspace{-5em} a ⊓ x \;⊑\; b  \equivS  x \;⊑\; (a → b)}{green}\]
+</p>
+
+<p>
+This is also sometimes denoted \(a ➩ b\) or \(a \backslash b\).
+</p>
+
+<p>
+In five of the above settings this becomes,
+</p>
+<ul class="org-ul">
+<li><p>
+\(m ↓ x ≤ n  \equivS  x ≤ (m → n)\)
+</p>
+
+<p>
+Not at all clear what to do so looking for a counterexample
+shows that pseduocomplements cannot exist for the naturals
+otherwise selecting \(m ≔ n\) yields:
+</p>
+
+\begin{calc}
+   ∀ x \;•\quad  n ↓ x \;≤\; n \equivS x \;≤\; (n → n)
+\step{ Weakening: The minimum is at least both its arguments }
+   ∀ x \;•\quad  \mathsf{true} \equivS x \;≤\; (n → n)
+\step{ Identity of ≡ }
+   ∀ x \;•\quad  x \;≤\; (n → n)
+\step{ Definition of Infinity }
+   (n → n) \;=\; +∞
+\end{calc}
+
+<p>
+Thus the existence of psquedo-complements implies the existence of a top element “\((n ⟶ n) = +∞\)”!
+</p>
+
+<p>
+Okay, no problem: Let's consider 𝒩, the set of natural numbers along with a new maximum element “+∞”;
+then we can define a relative pseudo-complement.
+\[\eqn{Definition of → for 𝒩}{m → n \quad=\quad \mathsf{if}\; m > n \;\mathsf{then}\; n \;\mathsf{else}\; +∞ \;\mathsf{fi}}\]
+We now have a way to approximate an inverse to minima, which is in general not invertible.
+</p>
+
+<p>
+&#x2013;This definition works for any linear order with a top element&#x2014;
+</p></li>
+
+<li><p>
+\(p ∧ x ⇒ q  \equivS  x ⇒ (p → q)\)
+</p>
+
+<p>
+Starting with the right side,
+</p>
+\begin{calc}
+   x \impliesS (p → q)
+\step{ Characterisation of pseudo-complement }
+   p ∧ x \impliesS q
+\step{ Symmetry of ∧ }
+   x ∧ p \impliesS q
+\step{ Shunting }
+   x \impliesS (p ⇒ q)
+\end{calc}
+
+<p>
+Hence, by indirect equality, \(p → q \;=\; p ⇒ q \;=\; ¬ p ∨ q\).
+</p></li>
+
+<li><p>
+\((A ∩ X)  \;⊆\;  B  \equivS  X  \;⊆\;  (A → B)\)
+</p>
+
+<p>
+Where we can similarly verify \((A → B) \;\;=\;\; ∼ A ∪ B\).
+</p>
+
+<p>
+It is interesting to note that \(x ∈ (A → B) \equivS x ∈ A \impliess x ∈ B\).
+</p></li>
+
+<li><p>
+\(G ⊓ X \;⊑\; G′  \equivS  X \;⊑\; (G → G′)\)
+</p>
+
+<p>
+We disclosed earlier that subgraph difference did not yield valid subgraphs,
+but if we relativised the resulting edge relationship to only consider the
+resulting vertex set, then we do have a subgraph.
+</p>
+
+<p>
+That is, subgraphs admit relative pseduo-complements, by
+\((V₁, E₁) → (V₂, E₂) \equivS (V₁ - V₂, (E₁ - E₂) ∩ (V₃ × V₃))\) where \(V₃ = V₁ - V₂\).
+</p>
+
+<p>
+<i>The result of \(G₁ → G₂\) is the largest subgraph of \(G₁\) that does not overlap with \(G₂\).</i>
+</p></li>
+
+<li><p>
+\((A × B → C) \equivS A → (B → C)\)
+</p>
+
+<p>
+In the setting of functions, this says that a function taking a pair of inputs
+can be considered as a function that takes one input, of type \(A\), then yields
+another function that takes the second input. That is, the two inputs no longer
+need to be provided at the same time. This is known as currying.
+</p></li>
+
+<li><p>
+\(P, Q ⊢ R \equivS P ⊢ (Q → R)\)
+</p>
+
+<p>
+In the logical formulae setting,
+the characterisation is known as <i>the deduction theorem</i> and allows us
+to ‘suppose’ an antecedent in the process of a proof.
+</p></li>
+</ul>
+
+<p>
+In the above we have witnessed that the usual naturals admit pseudo-complements precisely
+when infinity is considered a number, that it is <i>exactly</i> implication for the Booleans,
+that it <i>internalises</i> implication for sets, and for subgraphs it is encodes
+<i>the largest complementary subgraph</i>.
+</p>
+
+<p>
+In some sense, the pseudo-complement is the “best approximate inverse” to forming minima.
+</p>
+
+<p>
+We leave the remaining example as an exercise 😉
+</p>
+</div>
+</div>
+<div id="outline-container-Theorems-Generalising-Observations-from-the-Examples" class="outline-2">
+<h2 id="Theorems-Generalising-Observations-from-the-Examples"><span class="section-number-2">6.</span> <a href="#Theorems-Generalising-Observations-from-the-Examples">Theorems &#x2014; Generalising Observations from the Examples</a></h2>
+<div class="outline-text-2" id="text-Theorems-Generalising-Observations-from-the-Examples">
+<p>
+Recall the \ref{Relative Pseudo-Complement Characterisation} says
+\[a ⊓ x \;⊑\; b  \equivS  x \;⊑\; (a → b)\]
+</p>
+
+<p>
+We readily obtain some results by making parts of the characterisation true.
+E.g., making the left/right part true by instantiating the variables.
+</p>
+
+<p>
+For example, taking \(x ≔ (a → b)\) yields
+\[\eqn{Modus Ponens}{a ⊓ (a → b) \quad⊑\quad b}\]
+Exercise: Prove this directly!
+</p>
+
+<ul class="org-ul">
+<li>In the Boolean setting, this reads “if \(a\) is true and \(a\) implies \(b\), then \(b\) is true”.</li>
+<li>In the functional setting, this reads “if \(f : A → B\) and we have an element \(a : A\), then
+we have an element \(f(a) \, : \, B\)”. In this setting, this operation is known as ‘evaluation’,
+or <i>function application</i>.</li>
+</ul>
+
+<p>
+Using the principle of indirect equality, we can strengthen this into an equality
+and also obtain a close variant.
+\[\eqn{Strong Modus Ponens}{a ⊓ (a → b) \quad=\quad a ⊓ b}\]
+</p>
+<p>
+\[\eqn{Absorption}{b ⊓ (a → b) \quad=\quad b}\]
+</p>
+
+<p>
+\ref{Modus Ponens} suggest an order preservation property:
+</p>
+\begin{calc}
+   a → x \quad⊑\quad a → y
+\step{ \ref{Relative Pseudo-Complement Characterisation} }
+   a ⊓ (a → x) \quad⊑\quad y
+\stepWith{\Leftarrow}{ \ref{⊑-transitive} }
+   a ⊓ (a → x) \quad⊑\quad x \landS x \quad⊑\quad y
+\step{ \ref{Modus Ponens} and Identity of ∧ }
+   x \quad⊑\quad y
+\end{calc}
+<p>
+Hence we have derived the following <i>consequent weakening rule</i>,
+\[\eqn{Monotonicity₂}{a → x \quad⊑\quad a → y \qquad\Leftarrow\qquad x \;⊑\; y}\]
+</p>
+
+<p>
+An immediate sequel is,
+\[\eqn{Weakening₂}{a → (x ⊓ y) \quad⊑\quad a → y}\]
+</p>
+
+<p>
+Here are a few more properties for you to get familiar with this,
+the first three are immediate instantiation of the characterisation,
+while the fourth one may require using monotonicity properties of meet,
+and the final one uses indirect equality.
+</p>
+
+<p>
+\[\eqn{Top Element}{x \quad⊑\quad a → a}\]
+</p>
+
+<p>
+\[\eqn{Strengthening}{b \quad⊑\quad a → b}\]
+</p>
+
+<p>
+\[\eqn{UnCurrying}{x \quad⊑\quad a → a ⊓ x}\]
+</p>
+
+<p>
+\[\eqn{Weakening}{x \quad⊑\quad (a ⊓ b) → b}\]
+</p>
+
+<p>
+\[\eqn{Antitonicity₁}{a → x \quad⊑\quad b → x \qquad\Leftarrow\qquad b \;⊑\; a}\]
+</p>
+<p>
+\[\eqn{Self-Sub-Distributive}{a → (b → c)  \sqleqS  (a → b) → (a → c)}\]
+</p>
+<p>
+Observe that, in the functional case, \ref{UnCurrying} says we have a function
+\[X → (A → (A × X)) \;\;:\;\; x \mapsto (a \mapsto (a, x))\]
+</p>
+</div>
+</div>
+<div id="outline-container-Furnishes" class="outline-2">
+<h2 id="Furnishes"><span class="section-number-2">7.</span> <a href="#Furnishes">→ Furnishes ⊓</a></h2>
+<div class="outline-text-2" id="text-Furnishes">
+<p>
+Recall \ref{Top Element} said that we have a greatest element in the order.
+Suppose our universe, \(Carrier\), is non-empty and has some element \(c₀\).
+Then we may <i>define</i> \(⊤ = (c₀ → c₀)\). This element is in-fact invariant
+over \(c₀\):
+</p>
+
+<p>
+\[\eqn{Top Element Invariance}{ ∀ x \;•\quad ⊤ \quad=\quad (x → x) }\]
+The proof is simply an appeal to \ref{⊑-antisymmetric} then \ref{Top Element}
+twice.
+</p>
+
+<p>
+From this, we obtain two immediate properties about meets.
+</p>
+
+<p>
+\[\eqn{Identity of ⊓}{ x ⊓ ⊤ \quad=\quad x }\]
+</p>
+<p>
+\[\eqn{Shunting}{x \;⊑\; a → (b → c) \equivS x \;⊑\; (a ⊓ b) → c}\]
+</p>
+<p>
+Along with two properties about top element.
+</p>
+
+<p>
+\[\eqn{Right Zero of →}{ x → ⊤ \quad=\quad ⊤ }\]
+</p>
+
+<p>
+\[\eqn{Left Identity of →}{ ⊤ → x \quad=\quad x }\]
+</p>
+<p>
+Notice that \ref{Right Zero of →} <i>internalises</i> what it means to
+be a \ref{Top Element}; namely \(∀ x \;•\; x ≤ ⊤\).
+</p>
+
+<p>
+A bit more interestingly, we can <i>fuse</i> a meet with a pseudo-complement:
+</p>
+
+<p>
+\[\eqn{Sub-mutual Associtivity of ⊓ and →}{\hspace{-3em}x ⊓ (a → b)  \sqleqS (x ⊓ a) → b}\]
+</p>
+<p>
+The converse of this statement is not true in general.
+In particular, in the presence of bottoms, the converse,
+\((x ⊓ a) → b   \;\;⊑\;\;   x ⊓ (a → b)\), implies that there is only
+one possible value: ⊥!
+</p>
+
+<p>
+Exercise: Show that the converse statement implies \(⊥ = ⊤\)
+then from this conclude that \(x = ⊥\), for all \(x\).
+</p>
+</div>
+</div>
+<div id="outline-container-Internalising-and" class="outline-2">
+<h2 id="Internalising-and"><span class="section-number-2">8.</span> <a href="#Internalising-and">Internalising ⊑ and ⊓</a></h2>
+<div class="outline-text-2" id="text-Internalising-and">
+<p>
+We have seen how relative pseudo-complements allowed us to reflect
+external characterisations such as \ref{Top Element} that use
+logical connectives into internal forms such as \ref{Right Zero of →}
+which only <i>uses the symbols of the language</i>, namely →, ⊓, ⊤.
+</p>
+
+<p>
+Even the order, which takes two elements and yields a Boolean, can be internalised:
+\[\eqn{Internalising}{a ⊑ b  \equivS  (a → b) = ⊤}\]
+</p>
+<p>
+Notice the striking resemblance to the \ref{Definition of → for 𝒩}!
+</p>
+
+<p>
+\ref{Meet Characterisation} can also be internalised:
+</p>
+\begin{calc}
+x \sqleqS (a → c) \;⊓\; (a → b)
+  \step{ \ref{Meet Characterisation} }
+x ⊑ (a → c) \landS  x ⊑ (a → b)
+  \step{ \ref{Relative Pseudo-Complement Characterisation} }
+a ⊓ x ⊑ c   \landS  a ⊓ x ⊑ b
+  \step{ \ref{Meet Characterisation} }
+a ⊓ x \sqleqS c ⊓ b
+  \step{ \ref{Relative Pseudo-Complement Characterisation} }
+x \sqleqS  a → (c ⊓ b)
+\end{calc}
+<p>
+Hence, by the principle of \ref{Indirect Equality}, we have
+\[\eqn{Distributivity of → over ⊓}{ a → (c ⊓ b) \quad=\quad (a → c) \;⊓\; (a → b) }\]
+</p>
+</div>
+</div>
+<div id="outline-container-Flipping-the-Inclusions-Around" class="outline-2">
+<h2 id="Flipping-the-Inclusions-Around"><span class="section-number-2">9.</span> <a href="#Flipping-the-Inclusions-Around">Flipping the Inclusions Around</a></h2>
+<div class="outline-text-2" id="text-Flipping-the-Inclusions-Around">
+<p>
+Recall \ref{Meet Characterisation} says
+\[ z \;⊑\; x ⊓ y \equivS z ⊑ x \landS z ⊑ y \]
+If we now mirror ‘⊑’ with ‘⊒’ we obtain &#x2013;after renaming ⊓ with ⊔&#x2013;
+\[ z \;⊒\; x ⊔ y \equivS z ⊒ x \landS z ⊒ y \]
+That is, we obtain upper bounds!
+\[\eqnColour{Join Characterisation}{ x ⊔ y \;⊑\; z \equivS x ⊑ z \landS y ⊑ z}{green}\]
+</p>
+
+<p>
+Moreover, using →, it can be shown that joins and meets distribute over each other.
+</p>
+
+<p>
+\[\eqn{Distributivity₁}{a \;⊔\; (b ⊓ c) \quad=\quad (a ⊔ b) \;⊓\; (a ⊔ c)}\]
+\[\eqn{Distributivity₂}{a \;⊓\; (b ⊔ c) \quad=\quad (a ⊓ b) \;⊔\; (a ⊓ c)}\]
+</p>
+</div>
+</div>
+<div id="outline-container-Almost-True-Complements" class="outline-2">
+<h2 id="Almost-True-Complements"><span class="section-number-2">10.</span> <a href="#Almost-True-Complements">Almost <i>True</i> Complements</a></h2>
+<div class="outline-text-2" id="text-Almost-True-Complements">
+<p>
+Can we obtain the usual De Morgan's law?
+</p>
+
+<p>
+Suppose we have a <i>least element</i> \(⊥ : Carrier\), i.e., for any \(x\),
+\[\eqn{Bottom Element}{ ⊥ \sqleqs x}\]
+</p>
+
+<p>
+For usual ℕ, 𝔹, sets, and graphs this amounts to 0, \(\mathsf{false}\), \(\emptyset\), and the
+empty graph with no nodes nor any edges, respectively.
+</p>
+
+<p>
+Unsurprising this can also be internalised!
+\[\eqn{ex falso quod libet}{⊥ → a \quad=\quad ⊤}\]
+</p>
+<p>
+Moreover we can now define an operation \(¬\_\) as follows,
+\[\eqn{Pseudo-Complement Definition}{ ¬ x \quad=\quad (x → ⊥) }\]
+</p>
+
+<p>
+<i>A complement</i> of an element \(x\) is an element \(y\) that is
+disjoint from \(x\) and together their join is the top element.
+</p>
+
+<p>
+<i>A <a href="https://en.wikipedia.org/wiki/Pseudocomplement">pseudo-complement</a></i> generalises this idea by discarding the second half
+of that conjunction; i.e., instead requiring a greatest element \(y\)
+disjoint from \(x\).
+</p>
+
+<p>
+Indeed this is the case here,
+</p>
+\begin{calc}
+   x \;⊓\; ¬ x \quad=\quad ⊥
+\step{ \ref{⊑-antisymmetric} }
+   (x \;⊓\; ¬ x) \sqleqs ⊥
+   \landS ⊥ \sqleqs (x \;⊓\; ¬ x)
+\step{ \ref{Bottom Element} }
+   x \;⊓\; ¬ x \sqleqS ⊥
+\step{ \ref{Modus Ponens} }
+   \mathsf{true}
+\end{calc}
+
+<p>
+We now have the linguistic prerequisites to actually express De Morgan's laws.
+\[\eqn{Constructive De Morgan}{¬(x \;⊔\; y) \quad=\quad ¬ x \;⊓\; ¬ y}\]
+</p>
+
+<p>
+The other form \(¬(x ⊓ y) \;=\; ¬ x ⊔ ¬ y\) however is not true in general.
+Likewise neither are double negation, \(¬¬x \;=\; x\), nor the law of the
+the excluded middle \(x \;⊔\; ¬ x \;=\; ⊤\).
+</p>
+
+<p>
+Indeed for 𝒩, the natural numbers extended with +∞, the law of the exluded middle
+is falsified as follows:
+</p>
+
+\begin{calc}
+   3 ↑ ¬ 3
+\step{ \ref{Pseudo-Complement Definition} }
+   3 ↑ (3 → 0)
+\step{ \ref{Definition of → for 𝒩} }
+   3 ↑ 0
+\step{ Maximum }
+   3
+\end{calc}
+
+<p>
+Likewise double negation is falsified by \(¬ ¬ 3 \;=\; 0\).
+</p>
+
+<p>
+Exercise: Find an example to falsify the other De Morgan's law.
+</p>
+
+<p>
+Having ⊓, ⊔, ⊥, ⊤, → together constitutes a <a href="https://en.wikipedia.org/wiki/Heyting_algebra">Heyting Algebra</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-So-long-and-thanks-for-the-fish" class="outline-2">
+<h2 id="So-long-and-thanks-for-the-fish"><span class="section-number-2">11.</span> <a href="#So-long-and-thanks-for-the-fish">So long and thanks for the fish</a></h2>
+<div class="outline-text-2" id="text-So-long-and-thanks-for-the-fish">
+<p>
+It took a while, but we've more or less shimmied our
+way to the structure needed for Heyting Algebras.
+</p>
+
+<p>
+Hope you had fun!
+</p>
+</div>
+</div>
+<div id="outline-container-org4ce15c5" class="outline-2">
+<h2 id="org4ce15c5"><span class="section-number-2">12.</span> <a href="#org4ce15c5">footer</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h2>
+<div class="outline-text-2" id="text-12">
+<p>
+<hr><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="HeytingAlgebra.org.html"><img
+   src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/alhassy.github.io/commits/master/HeytingAlgebra.org"><img src="https://img.shields.io/badge/-History-informational?logo=github"></a>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><br><a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a><br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script> 
+</p>
+</div>
+</div>
+</div>
+</body>
+</html>

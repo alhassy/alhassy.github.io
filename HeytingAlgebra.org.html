@@ -1,0 +1,721 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in css mode. -->
+<html>
+  <head>
+    <title>HeytingAlgebra.org</title>
+    <style type="text/css">
+    <!--
+      body {
+        color: #000000;
+        background-color: #ffffff;
+      }
+      .comment {
+        /* font-lock-comment-face */
+        font-weight: bold;
+        font-style: italic;
+      }
+      .italic {
+        /* italic */
+        font-style: italic;
+      }
+      .org-document-info {
+      }
+      .org-document-info-keyword {
+      }
+      .org-document-title {
+        /* org-document-title */
+        font-weight: bold;
+      }
+      .org-drawer {
+        /* org-drawer */
+        font-weight: bold;
+      }
+      .org-level-1 {
+        /* org-level-1 */
+        font-weight: bold;
+      }
+      .org-level-2 {
+        /* org-level-2 */
+        font-weight: bold;
+        font-style: italic;
+      }
+      .org-link {
+        /* org-link */
+        text-decoration: underline;
+      }
+      .org-meta-line {
+        /* org-meta-line */
+        font-weight: bold;
+        font-style: italic;
+      }
+      .org-property-value {
+      }
+      .org-special-keyword {
+        /* org-special-keyword */
+        font-weight: bold;
+      }
+      .org-tag {
+        /* org-tag */
+        font-weight: bold;
+      }
+
+      a {
+        color: inherit;
+        background-color: inherit;
+        font: inherit;
+        text-decoration: inherit;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    -->
+    </style>
+  </head>
+  <body>
+    <pre>
+<span class="org-document-info-keyword">#+TITLE:</span> <span class="org-document-title">Discovering Heyting Algebra
+</span><span class="org-document-info-keyword">#+DATE:</span> <span class="org-document-info">&lt;2018-11-14 19:29&gt;
+</span><span class="org-document-info-keyword">#+AUTHOR:</span> <span class="org-document-info">Musa Al-hassy
+</span><span class="org-document-info-keyword">#+EMAIL:</span> <span class="org-document-info">alhassy@gmail.com
+</span><span class="org-meta-line">#+filetags: order-theory category-theory</span>
+<span class="org-meta-line">#+fileimage: HeytingAlgebra.png 350 350</span>
+<span class="org-meta-line">#+DESCRIPTION: How do friends communicate secretly using non-invertible operations such as minimum? An introduction to Heyting Algebra --an instance of Cartesian Closed Categories!</span>
+<span class="org-document-info-keyword">#+date:</span> <span class="org-document-info">&lt;2018-11-14 Wed&gt;
+</span><span class="org-meta-line">#+INCLUDE: MathJaxPreamble.org</span>
+
+<span class="org-level-1">* Abstract                                                           </span><span class="org-level-1"><span class="org-tag">:ignore:</span></span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Abstract</span>
+<span class="org-drawer">:END:</span>
+
+<span class="org-meta-line">#+toc: headlines 2</span>
+
+We attempt to motivate the structure of a Heyting Algebra
+by considering &#8216;inverse problems&#8217;.
+
+For example,
++ You have a secret number $x$ and your friend has a secret number $y$, which you've
+  communicated to each other in person.
++ You communicate a &#8216;message&#8217; to each other
+  by adding onto your secret number.
++ Hence, if I receive a number $z$, then I can <span class="italic">/undo/</span> the addition operation to find the &#8216;message&#8217; $m = z - y$.
+
+What if we decided, for security, to change our protocol from using addition to using
+minimum. That is, we encode our message $m$ as $z = x &#8595; m$. Since minimum is not
+invertible, we decide to send our encoded messages with a &#8216;context&#8217; $c$ as a pair $(z, c)$.
+From this pair, a unique number $m&#8242;$ can be extracted, which is not necessarily the original $m$.
+Read on, and perhaps you'll figure out which messages can be communicated &#128521;
+
+<span class="comment"># For example, we wrote our message on a piece of paper and placed it on a cafe bulletin board --a context!</span>
+
+This exploration demonstrates that relative pseudo-complements
++ Are admitted by the usual naturals precisely when infinity is considered a number;
++ Are <span class="italic">/exactly/</span> implication for the Booleans;
++ <span class="italic">/Internalises/</span> implication for sets;
++ Yield <span class="italic">/the largest complementary subgraph/</span> when considering subgraphs.
+<span class="comment"># + Generalise the /deduction theorem/.</span>
+
+In some sense, the pseudo-complement is the &#8220;best approximate inverse&#8221; to forming meets, minima, intersections.
+
+Along the way we develop a number of the theorems describing the relationships
+between different structural components of Heyting Algebras;
+most notably the internalisation of much of its own structure.
+
+The article aims to be self-contained, however it may be helpful to
+look at <span class="org-link"><a href="https://alhassy.github.io/CatsCheatSheet/LatticesCheatSheet.pdf">this lattice cheat sheet</a></span> (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;
+
+<span class="org-level-1">* Photograph Credit                                                  </span><span class="org-level-1"><span class="org-tag">:ignore:</span></span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Photograph-Credit</span>
+<span class="org-drawer">:END:</span>
+
+<span class="org-meta-line">#+LaTeX: \iffalse</span>
+<span class="org-meta-line">#+HTML: &lt;small&gt; &lt;center&gt;</span>
+( Photo by
+<span class="org-link"><a href="https://unsplash.com/@ludovicphoto?utm_medium=referral&amp;utm_campaign=photographer-credit&amp;utm_content=creditBadge">Ludovic Fremondiere</a></span>
+on <span class="org-link"><a href="https://unsplash.com/">Unsplash</a></span> )
+<span class="org-meta-line">#+HTML: &lt;/center&gt; &lt;/small&gt;</span>
+<span class="org-meta-line">#+LaTeX: \fi</span>
+
+<span class="comment"># "Download free do whatever you want high-resolution photos from Unsplash."</span>
+
+<span class="org-level-1">* Meet Semi-Lattices</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Meet-Semi-Lattices</span>
+<span class="org-drawer">:END:</span>
+
+Recall that an <span class="italic">/order/</span> is nothing more than a type $Carrier$ with a relation
+$\_&#8849;\_$ such that the following list of axioms holds: For any $x,y,z : Carrier$,
+
+\[\eqn{&#8849;-reflexive}{x &#8849; x}\]
+
+\[\eqn{&#8849;-transitive}{x &#8849; y \landS y &#8849; z \impliesS x &#8849; z}\]
+
+\[\eqn{&#8849;-antisymmetric}{x &#8849; y \landS y &#8849; x \impliesS x = y}\]
+
+This models notions of containment, inclusion, hierarchy, and approximation.
+
+Recall that a <span class="italic">/meet/</span> is an additional operation $\_&#8851;\_$ specified by
+\[\eqnColour{Meet Characterisation}{ z \;&#8849;\; x &#8851; y \equivS z &#8849; x \landS z &#8849; y}{green}\]
+
+Meets model notions of <span class="italic">/greatest lower bounds/</span>, or <span class="italic">/infima/</span>.
+
+Observe that <span class="italic">/meets allow us to encode a pair of inclusions as a single inclusion!/</span>
+That is, an <span class="italic">/external/</span> conjunction $&#8743;$ is equivalent to an <span class="italic">/internal/</span> meet $&#8851;$.
+
+In computing parlance, think of a top-level &#8216;method&#8217; that takes and yields
+data. In many languages, the method itself can be thought of as data!
+It is this kind of external-internal duality we are alluding to
+--and is captured nicely by exponential objects in category theory,
+of which we are considering a special case.
+
+<span class="org-level-2">** Examples</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Examples</span>
+<span class="org-drawer">:END:</span>
++ (&#8469;, &#8804;, &#8595;)   ---where &#8595; denotes minimum.
++ (&#8469;, &#8739;, gcd)  --the naturals ordered by divisibility.
++ (Sets, &#8838;, &#8745;)
++ (&#120121;, &#8658;, &#8743;)
++ Formulae of a logic ordered by the <span class="italic">/proves/</span>, or <span class="italic">/syntactic consequence/</span>, relationship $\_&#8866;\_$ with
+  syntactic conjunction as meet.
++ (Sets, &#8594;, &#215;): Sets with &#8220;A atmost B&#8221; meaning there is a function $f : A &#8594; B$,
+  then the Cartesian product can be used as meet.
+   - This is not strictly a semi-lattice, as defined here, but it is when we consider &#8216;setoids&#8217;.
+   - Moreover it provides excellent intuition!
++ Subgraphs of a given simple graph $G = (V,E)$ --which is just a relation $E$ on a set of vertices $V$.
+  - The ordering is obtained by subset inclusion, \[(V&#8321;, E&#8321;) &#8849; (V&#8322;, E&#8322;) \equivS V&#8321; &#8838; V&#8322; \lands E&#8321; &#8838; E&#8322;\]
+    and so the meet is obtained by intersection, \[(V&#8321;, E&#8321;) &#8851; (V&#8322;, E&#8322;) = (V&#8321; &#8745; V&#8322;, E&#8321; &#8745; E&#8322;)\]
+<span class="comment">    # Likewise joins are given by unions.</span>
+  - However, we cannot define complement in the same fashion, since the resulting relation
+    is not over the resulting vertex set!
+
+    Indeed suppose we define $&#8764; (V&#8242;, E&#8242;) \;:=\; (V - V&#8242;, E - E&#8242;)$, then
+    the discrete graph $(V, &#248;)$ has complement $(&#248;, E)$ which is a &#8216;graph&#8217;
+    with many edges $E$ but no vertices! ---Provided $(V,E)$ has edges.
+
+    However, the edges can be <span class="italic">/relativised/</span> to the vertices to produce the pseudo-complement.
+
+<span class="comment"># Every interior algebra provides a Heyting algebra in the form of its lattice of open elements. Every Heyting algebra is of this form as a Heyting algebra can be completed to a Boolean algebra by taking its free Boolean extension as a bounded distributive lattice and then treating it as a generalized topology in this Boolean algebra.</span>
+<span class="comment">#</span>
+<span class="comment"># The global elements of the subobject classifier &#937; of an elementary topos form a Heyting algebra; it is the Heyting algebra of truth values of the intuitionistic higher-order logic induced by the topos.</span>
+<span class="comment">#</span>
+
+<span class="org-level-2">** The Principle of Indirect Equality</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">The-Principle-of-Indirect-Equality</span>
+<span class="org-drawer">:END:</span>
+
+It is not clear how $\ref{Meet Characterisation}$ can be used to <span class="italic">/prove/</span>
+properties about meet.
+<span class="comment"># Recall it says, for any $x, y, z$,</span>
+<span class="comment"># \[ z \;&#8849;\; x &#8851; y \equivS z &#8849; x \landS z &#8849; y \]</span>
+
+The laws \ref{&#8849;-antisymmetric} and \ref{&#8849;-reflexive} can be fused together
+into one law:
+\[\eqnColour{Indirect Equality}{ x = y \equivS \left(&#8704; z \;&#8226;\quad &#8849;\; z &#8849; x \equivs z &#8849; y\right)}{green}\]
+
+That is, <span class="italic">/for all practical purposes, $x = y$ precisely when they have the same sub-parts!/</span>
+
+Using this, we can prove that meet is idempotent $x &#8851; x = x$,
+symmetric $x &#8851; y = y &#8851; x$, associative $x &#8851; (y &#8851; z) = (x &#8851; y) &#8851; z$,
+and monotonic: $a &#8849; b \landS c &#8849; d \impliesS a &#8851; c \sqleqS b &#8851; c$.
+
+Below we use this principle in a number of places, for example \ref{Distributivity of &#8594; over &#8851;}.
+
+<span class="org-level-1">* Relative Pseudo-complements</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Relative-Pseudo-complements</span>
+<span class="org-drawer">:END:</span>
+
+The <span class="italic">/relative pseudo-complement of $a$ wrt $b$/</span>, $(a &#10230; b)$,
+is <span class="italic">/&#8220;the largest element $x$ that ensures modus ponens&#8221;/</span>, i.e.,
+<span class="italic">/&#8220;the largest element $x$ whose meet with $a$ is contained in $b$&#8221;/</span>:
+
+\[\eqnColour{Relative Pseudo-Complement Characterisation}{\hspace{-5em} a &#8851; x \;&#8849;\; b  \equivS  x \;&#8849;\; (a &#8594; b)}{green}\]
+
+This is also sometimes denoted $a &#10153; b$ or $a \backslash b$.
+
+In five of the above settings this becomes,
++ $m &#8595; x &#8804; n  \equivS  x &#8804; (m &#8594; n)$
+
+   Not at all clear what to do so looking for a counterexample
+   shows that pseduocomplements cannot exist for the naturals
+   otherwise selecting $m &#8788; n$ yields:
+<span class="comment">   # $n &#8595; x &#8804; n  &#8801;  x &#8804; (n &#8594; n)$ i.e., $true &#8801; x &#8804; (n &#8594; n)$</span>
+<span class="comment">   # and so existence of psquedo-complements implies the existence of a top element &#8220;$(n &#10230; n) = +&#8734;$&#8221;!</span>
+<span class="comment">   #  Question: Why does this pass `quickCheck $ \m -&gt; \n -&gt; \x -&gt; (m `min` x &lt;= n) === (x &lt;= n)`?</span>
+
+    \begin{calc}
+       &#8704; x \;&#8226;\quad  n &#8595; x \;&#8804;\; n \equivS x \;&#8804;\; (n &#8594; n)
+    \step{ Weakening: The minimum is at least both its arguments }
+       &#8704; x \;&#8226;\quad  \mathsf{true} \equivS x \;&#8804;\; (n &#8594; n)
+    \step{ Identity of &#8801; }
+       &#8704; x \;&#8226;\quad  x \;&#8804;\; (n &#8594; n)
+    \step{ Definition of Infinity }
+       (n &#8594; n) \;=\; +&#8734;
+    \end{calc}
+
+    Thus the existence of psquedo-complements implies the existence of a top element &#8220;$(n &#10230; n) = +&#8734;$&#8221;!
+
+    Okay, no problem: Let's consider &#119977;, the set of natural numbers along with a new maximum element &#8220;+&#8734;&#8221;;
+    then we can define a relative pseudo-complement.
+    \[\eqn{Definition of &#8594; for &#119977;}{m &#8594; n \quad=\quad \mathsf{if}\; m &gt; n \;\mathsf{then}\; n \;\mathsf{else}\; +&#8734; \;\mathsf{fi}}\]
+    We now have a way to approximate an inverse to minima, which is in general not invertible.
+
+    --This definition works for any linear order with a top element---
+
++ $p &#8743; x &#8658; q  \equivS  x &#8658; (p &#8594; q)$
+
+  Starting with the right side,
+    \begin{calc}
+       x \impliesS (p &#8594; q)
+    \step{ Characterisation of pseudo-complement }
+       p &#8743; x \impliesS q
+    \step{ Symmetry of &#8743; }
+       x &#8743; p \impliesS q
+    \step{ Shunting }
+       x \impliesS (p &#8658; q)
+    \end{calc}
+
+    Hence, by indirect equality, $p &#8594; q \;=\; p &#8658; q \;=\; &#172; p &#8744; q$.
+
++ $(A &#8745; X)  \;&#8838;\;  B  \equivS  X  \;&#8838;\;  (A &#8594; B)$
+
+  Where we can similarly verify $(A &#8594; B) \;\;=\;\; &#8764; A &#8746; B$.
+
+  It is interesting to note that $x &#8712; (A &#8594; B) \equivS x &#8712; A \impliess x &#8712; B$.
+
++ $G &#8851; X \;&#8849;\; G&#8242;  \equivS  X \;&#8849;\; (G &#8594; G&#8242;)$
+
+  We disclosed earlier that subgraph difference did not yield valid subgraphs,
+  but if we relativised the resulting edge relationship to only consider the
+  resulting vertex set, then we do have a subgraph.
+
+  That is, subgraphs admit relative pseduo-complements, by
+  $(V&#8321;, E&#8321;) &#8594; (V&#8322;, E&#8322;) \equivS (V&#8321; - V&#8322;, (E&#8321; - E&#8322;) &#8745; (V&#8323; &#215; V&#8323;))$ where $V&#8323; = V&#8321; - V&#8322;$.
+
+  <span class="italic">/The result of $G&#8321; &#8594; G&#8322;$ is the largest subgraph of $G&#8321;$ that does not overlap with $G&#8322;$./</span>
+
++ $(A &#215; B &#8594; C) \equivS A &#8594; (B &#8594; C)$
+
+  In the setting of functions, this says that a function taking a pair of inputs
+  can be considered as a function that takes one input, of type $A$, then yields
+  another function that takes the second input. That is, the two inputs no longer
+  need to be provided at the same time. This is known as currying.
+
++ $P, Q &#8866; R \equivS P &#8866; (Q &#8594; R)$
+
+  In the logical formulae setting,
+  the characterisation is known as <span class="italic">/the deduction theorem/</span> and allows us
+  to &#8216;suppose&#8217; an antecedent in the process of a proof.
+
+In the above we have witnessed that the usual naturals admit pseudo-complements precisely
+when infinity is considered a number, that it is <span class="italic">/exactly/</span> implication for the Booleans,
+that it <span class="italic">/internalises/</span> implication for sets, and for subgraphs it is encodes
+<span class="italic">/the largest complementary subgraph/</span>.
+
+In some sense, the pseudo-complement is the &#8220;best approximate inverse&#8221; to forming minima.
+
+We leave the remaining example as an exercise &#128521;
+
+<span class="org-level-1">* Theorems --- Generalising Observations from the Examples</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Theorems-Generalising-Observations-from-the-Examples</span>
+<span class="org-drawer">:END:</span>
+
+Recall the \ref{Relative Pseudo-Complement Characterisation} says
+\[a &#8851; x \;&#8849;\; b  \equivS  x \;&#8849;\; (a &#8594; b)\]
+
+We readily obtain some results by making parts of the characterisation true.
+E.g., making the left/right part true by instantiating the variables.
+
+For example, taking $x &#8788; (a &#8594; b)$ yields
+\[\eqn{Modus Ponens}{a &#8851; (a &#8594; b) \quad&#8849;\quad b}\]
+Exercise: Prove this directly!
+
++ In the Boolean setting, this reads &#8220;if $a$ is true and $a$ implies $b$, then $b$ is true&#8221;.
++ In the functional setting, this reads &#8220;if $f : A &#8594; B$ and we have an element $a : A$, then
+  we have an element $f(a) \, : \, B$&#8221;. In this setting, this operation is known as &#8216;evaluation&#8217;,
+  or <span class="italic">/function application/</span>.
+
+Using the principle of indirect equality, we can strengthen this into an equality
+and also obtain a close variant.
+\[\eqn{Strong Modus Ponens}{a &#8851; (a &#8594; b) \quad=\quad a &#8851; b}\]
+<span class="org-drawer">:Proof:</span>
+   x &#8849; a &#8851; (a &#8594; b)
+&#8801;  x &#8849; a  &#8743;  x &#8849; a &#8594; b
+&#8801;  x &#8849; a  &#8743;  a &#8851; x &#8849; b
+&#8801;  x &#8849; a  &#8743;  x &#8849; b
+&#8801;  x &#8849; a &#8851; b
+<span class="org-drawer">:end:</span>
+
+\[\eqn{Absorption}{b &#8851; (a &#8594; b) \quad=\quad b}\]
+<span class="org-drawer">:Proof:</span>
+x &#8849; b &#8851; (a &#8594; b)
+&#8801; x &#8849; b &#8743; x &#8849; a &#8594; b
+&#8801; x &#8849; b &#8743; x &#8851; a &#8849; b
+&#8801; x &#8849; b &#8743; (x &#8851; b) &#8851; a &#8849; b
+&#8801; x &#8849; b
+<span class="org-drawer">:end:</span>
+
+<span class="comment"># $a &#8851; x \;&#8849;\; b  \equivS  x \;&#8849;\; (a &#8594; b)$</span>
+\ref{Modus Ponens} suggest an order preservation property:
+\begin{calc}
+   a &#8594; x \quad&#8849;\quad a &#8594; y
+\step{ \ref{Relative Pseudo-Complement Characterisation} }
+   a &#8851; (a &#8594; x) \quad&#8849;\quad y
+\stepWith{\Leftarrow}{ \ref{&#8849;-transitive} }
+   a &#8851; (a &#8594; x) \quad&#8849;\quad x \landS x \quad&#8849;\quad y
+\step{ \ref{Modus Ponens} and Identity of &#8743; }
+   x \quad&#8849;\quad y
+\end{calc}
+Hence we have derived the following <span class="italic">/consequent weakening rule/</span>,
+\[\eqn{Monotonicity&#8322;}{a &#8594; x \quad&#8849;\quad a &#8594; y \qquad\Leftarrow\qquad x \;&#8849;\; y}\]
+
+An immediate sequel is,
+\[\eqn{Weakening&#8322;}{a &#8594; (x &#8851; y) \quad&#8849;\quad a &#8594; y}\]
+
+Here are a few more properties for you to get familiar with this,
+the first three are immediate instantiation of the characterisation,
+while the fourth one may require using monotonicity properties of meet,
+and the final one uses indirect equality.
+
+<span class="comment"># Taking b &#8788; a</span>
+\[\eqn{Top Element}{x \quad&#8849;\quad a &#8594; a}\]
+
+<span class="comment"># Take x &#8788; b</span>
+\[\eqn{Strengthening}{b \quad&#8849;\quad a &#8594; b}\]
+
+<span class="comment"># Take b &#8788; a &#8851; x</span>
+\[\eqn{UnCurrying}{x \quad&#8849;\quad a &#8594; a &#8851; x}\]
+
+<span class="comment"># Take a &#8788; a &#8851; b</span>
+\[\eqn{Weakening}{x \quad&#8849;\quad (a &#8851; b) &#8594; b}\]
+
+\[\eqn{Antitonicity&#8321;}{a &#8594; x \quad&#8849;\quad b &#8594; x \qquad\Leftarrow\qquad b \;&#8849;\; a}\]
+<span class="org-drawer">:Proof:</span>
+If b &#8849; a, then a &#8594; x  &#8849; b &#8594; x
+   a &#8594; x  &#8849; b &#8594; x
+&#8801;  b &#8851; (a &#8594; x)  &#8849; x
+&#8656; b &#8851; (a &#8594; x)  &#8849; a &#8851; (a &#8594; x)  &#8849; x
+&#8656; b &#8849; a
+<span class="org-drawer">:end:</span>
+
+\[\eqn{Self-Sub-Distributive}{a &#8594; (b &#8594; c)  \sqleqS  (a &#8594; b) &#8594; (a &#8594; c)}\]
+<span class="org-drawer">:Proof:</span>
+  x &#8849; (a &#8594; b) &#8594; (a &#8594; c)
+&#8801; (a &#8594; b) &#8851; x &#8849; a &#8594; c
+&#8801;  a &#8851; (a &#8594; b) &#8851; x &#8849; c
+&#8801;  a &#8851; b &#8851; x &#8849; c        , strong modus ponens
+&#8801;  a &#8851; x &#8849; b &#8594; c
+&#8801;  x &#8849; a &#8594; (b &#8594; c)
+<span class="org-drawer">:end:</span>
+
+Observe that, in the functional case, \ref{UnCurrying} says we have a function
+\[X &#8594; (A &#8594; (A &#215; X)) \;\;:\;\; x \mapsto (a \mapsto (a, x))\]
+
+<span class="org-level-1">* &#8594; Furnishes &#8851;</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Furnishes</span>
+<span class="org-drawer">:END:</span>
+
+Recall \ref{Top Element} said that we have a greatest element in the order.
+Suppose our universe, $Carrier$, is non-empty and has some element $c&#8320;$.
+Then we may <span class="italic">/define/</span> $&#8868; = (c&#8320; &#8594; c&#8320;)$. This element is in-fact invariant
+over $c&#8320;$:
+
+\[\eqn{Top Element Invariance}{ &#8704; x \;&#8226;\quad &#8868; \quad=\quad (x &#8594; x) }\]
+The proof is simply an appeal to \ref{&#8849;-antisymmetric} then \ref{Top Element}
+twice.
+
+From this, we obtain two immediate properties about meets.
+
+\[\eqn{Identity of &#8851;}{ x &#8851; &#8868; \quad=\quad x }\]
+<span class="org-drawer">:Proof:</span>
+  x &#8851; &#8868;
+= x &#8851; (x &#8594; x)
+&#8849; x
+= x &#8851; x
+&#8849; x &#8851; &#8868;
+<span class="org-drawer">:end:</span>
+
+\[\eqn{Shunting}{x \;&#8849;\; a &#8594; (b &#8594; c) \equivS x \;&#8849;\; (a &#8851; b) &#8594; c}\]
+<span class="org-drawer">:Proof:</span>
+   x &#8849; a &#8594; (b &#8594; c)
+&#8801;  a &#8851; x &#8849; (b &#8594; c)
+&#8801;  (b &#8851; a) &#8851; x &#8849; c
+&#8801; x &#8849; (a &#8851; b) &#8594; c
+<span class="org-drawer">:end:</span>
+
+Along with two properties about top element.
+
+\[\eqn{Right Zero of &#8594;}{ x &#8594; &#8868; \quad=\quad &#8868; }\]
+<span class="org-drawer">:Proof:</span>
+  x &#8594; &#8868;
+= x &#8594; (x &#8594; x)
+= x &#8851; x &#8594; x
+= x &#8594; x
+= &#8868;
+<span class="org-drawer">:end:</span>
+
+<span class="comment"># The next one can be easily proven using indirect equality.</span>
+\[\eqn{Left Identity of &#8594;}{ &#8868; &#8594; x \quad=\quad x }\]
+<span class="org-drawer">:Proof:</span>
+      z       &#8849;  &#8868; &#8594; x
+   &#8801;  z &#8851; &#8868;  &#8849;  x
+   &#8801;  z       &#8849; x
+Thus by law of indirect equality, x = (&#8868; &#8594; x).
+<span class="org-drawer">:end:</span>
+
+Notice that \ref{Right Zero of &#8594;} <span class="italic">/internalises/</span> what it means to
+be a \ref{Top Element}; namely $&#8704; x \;&#8226;\; x &#8804; &#8868;$.
+
+A bit more interestingly, we can <span class="italic">/fuse/</span> a meet with a pseudo-complement:
+<span class="comment"># The next one needs antitonicity in the first argument of `&#8594;'!</span>
+<span class="comment"># &#8220;Lower adjoint after upper adjoint is contained in the reversal&#8221;</span>
+\[\eqn{Sub-mutual Associtivity of &#8851; and &#8594;}{\hspace{-3em}x &#8851; (a &#8594; b)  \sqleqS (x &#8851; a) &#8594; b}\]
+<span class="org-drawer">:Proof:</span>
+   x &#8851; (a &#8594; b)  &#8849; (x &#8851; a) &#8594; b
+&#8801;  (a &#8594; b)  &#8849; x &#8594; ((x &#8851; a) &#8594; b)
+&#8801;  (a &#8594; b)  &#8849; (x &#8851; x &#8851; a) &#8594; b
+&#8656; x &#8851; x &#8851; a &#8849; a
+&#8801; true
+<span class="org-drawer">:end:</span>
+
+The converse of this statement is not true in general.
+In particular, in the presence of bottoms, the converse,
+$(x &#8851; a) &#8594; b   \;\;&#8849;\;\;   x &#8851; (a &#8594; b)$, implies that there is only
+one possible value: &#8869;!
+
+Exercise: Show that the converse statement implies $&#8869; = &#8868;$
+then from this conclude that $x = &#8869;$, for all $x$.
+<span class="org-drawer">:Proof:</span>
+Then taking a &#8788; b &#8788; x &#8788; &#8869; yields
+   (&#8869; &#8851; &#8869;) &#8594; &#8869;   &#8849;   &#8869; &#8851; (&#8869; &#8594; &#8869;).
+&#8801;  &#8869; &#8594; &#8869;   &#8849;   &#8869; ; zero of &#8851;
+&#8801;  &#8868;   &#8849;   &#8869; ; defn of &#8868;
+&#8801; &#8869; &#8849; &#8868; &#8849; &#8869;
+&#8801; &#8869; = &#8868;
+
+Theorem &#8220;OhNo!&#8221;: &#8869; = &#8868;
+Theorem &#8220;Explosion&#8221; &#8220;Everything is &#8869;&#8221;: p = &#8869;
+Proof:
+    p
+  =&#10216; &#8220;Identity of &#8743;&#8221; &#10217;
+    p &#8851; &#8868;
+  =&#10216; &#8220;OhNo!&#8221; &#10217;
+    p &#8851; &#8869;
+  =&#10216; &#8220;Zero of &#8851;&#8221; &#10217;
+    &#8869;
+<span class="org-drawer">:end:</span>
+
+<span class="comment"># Every element x with the property x* = 0 (or equivalently, x** = 1) is called dense.</span>
+
+<span class="org-level-1">* Internalising &#8849; and &#8851;</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Internalising-and</span>
+<span class="org-drawer">:END:</span>
+
+We have seen how relative pseudo-complements allowed us to reflect
+external characterisations such as \ref{Top Element} that use
+logical connectives into internal forms such as \ref{Right Zero of &#8594;}
+which only <span class="italic">/uses the symbols of the language/</span>, namely &#8594;, &#8851;, &#8868;.
+
+Even the order, which takes two elements and yields a Boolean, can be internalised:
+\[\eqn{Internalising}{a &#8849; b  \equivS  (a &#8594; b) = &#8868;}\]
+<span class="org-drawer">:Proof:</span>
+   a &#8594; b = &#8868;
+&#8801;  &#8868; &#8849; a &#8594; b
+&#8801; a &#8851; &#8868; &#8849; b
+&#8801; a &#8849; b
+<span class="org-drawer">:end:</span>
+Notice the striking resemblance to the \ref{Definition of &#8594; for &#119977;}!
+
+\ref{Meet Characterisation} can also be internalised:
+\begin{calc}
+x \sqleqS (a &#8594; c) \;&#8851;\; (a &#8594; b)
+  \step{ \ref{Meet Characterisation} }
+x &#8849; (a &#8594; c) \landS  x &#8849; (a &#8594; b)
+  \step{ \ref{Relative Pseudo-Complement Characterisation} }
+a &#8851; x &#8849; c   \landS  a &#8851; x &#8849; b
+  \step{ \ref{Meet Characterisation} }
+a &#8851; x \sqleqS c &#8851; b
+  \step{ \ref{Relative Pseudo-Complement Characterisation} }
+x \sqleqS  a &#8594; (c &#8851; b)
+\end{calc}
+Hence, by the principle of \ref{Indirect Equality}, we have
+\[\eqn{Distributivity of &#8594; over &#8851;}{ a &#8594; (c &#8851; b) \quad=\quad (a &#8594; c) \;&#8851;\; (a &#8594; b) }\]
+
+<span class="org-level-1">* Flipping the Inclusions Around</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Flipping-the-Inclusions-Around</span>
+<span class="org-drawer">:END:</span>
+<span class="comment"># -- Adding -&#8852;-</span>
+
+Recall \ref{Meet Characterisation} says
+\[ z \;&#8849;\; x &#8851; y \equivS z &#8849; x \landS z &#8849; y \]
+If we now mirror &#8216;&#8849;&#8217; with &#8216;&#8850;&#8217; we obtain --after renaming &#8851; with &#8852;--
+\[ z \;&#8850;\; x &#8852; y \equivS z &#8850; x \landS z &#8850; y \]
+That is, we obtain upper bounds!
+\[\eqnColour{Join Characterisation}{ x &#8852; y \;&#8849;\; z \equivS x &#8849; z \landS y &#8849; z}{green}\]
+
+<span class="comment"># (x &#8594; z) &#8851; (y &#8594; z)  &#8849;  (x &#8852; y) &#8594; z</span>
+
+Moreover, using &#8594;, it can be shown that joins and meets distribute over each other.
+
+\[\eqn{Distributivity&#8321;}{a \;&#8852;\; (b &#8851; c) \quad=\quad (a &#8852; b) \;&#8851;\; (a &#8852; c)}\]
+\[\eqn{Distributivity&#8322;}{a \;&#8851;\; (b &#8852; c) \quad=\quad (a &#8851; b) \;&#8852;\; (a &#8851; c)}\]
+<span class="org-drawer">:Proof:</span>
+The &#8850; is true, by monoctonicty. Or more directly:
+
+   (a &#8851; b) &#8852; (a &#8851; c)  &#8849; a &#8851; (b &#8852; c)
+&#8801;  (a &#8851; b) &#8849; a &#8851; (b &#8852; c)  &#8743;   (a &#8851; c) &#8849; a &#8851; (b &#8852; c)
+&#8801;      (a &#8851; b) &#8849; a  &#8743;  (a &#8851; b) &#8849; (b &#8852; c)
+   &#8743;   (a &#8851; c) &#8849; a   &#8743; (a &#8851; c) &#8849; (b &#8852; c)
+&#8801;      true   &#8743;  (a &#8851; b) &#8849; (b &#8852; c)
+   &#8743;   true   &#8743; (a &#8851; c) &#8849; (b &#8852; c)
+&#8801;   a &#8851; b &#8849; b &#8852; c  &#8743;  a &#8851; c &#8849; b &#8852; c
+&#8656;  a &#8851; b &#8849; b &#8849; b &#8852; c  &#8743;  a &#8851; c &#8849; c &#8849; b &#8852; c
+&#8801; true
+
+So the other inclusion:
+  a &#8851; (b &#8852; c)  &#8849;  (a &#8851; b) &#8852; (a &#8851; c)
+&#8801;  (b &#8852; c)  &#8849;  a &#8594; ( (a &#8851; b) &#8852; (a &#8851; c) )
+&#8801;    b &#8849;  a &#8594; ( (a &#8851; b) &#8852; (a &#8851; c) )
+   &#8743; c &#8849;  a &#8594; ( (a &#8851; b) &#8852; (a &#8851; c) )
+&#8801;    a &#8851; b &#8849;  (a &#8851; b) &#8852; (a &#8851; c) )
+   &#8743; a &#8851; c &#8849;  (a &#8851; b) &#8852; (a &#8851; c) )
+&#8801; true, weakening twice.
+<span class="org-drawer">:end:</span>
+
+<span class="org-level-1">* Almost </span><span class="org-level-1"><span class="italic">/True/</span></span><span class="org-level-1"> Complements</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Almost-True-Complements</span>
+<span class="org-drawer">:END:</span>
+<span class="comment"># -- Adding &#8869;</span>
+
+Can we obtain the usual De Morgan's law?
+
+Suppose we have a <span class="italic">/least element/</span> $&#8869; : Carrier$, i.e., for any $x$,
+\[\eqn{Bottom Element}{ &#8869; \sqleqs x}\]
+
+For usual &#8469;, &#120121;, sets, and graphs this amounts to 0, $\mathsf{false}$, $\emptyset$, and the
+empty graph with no nodes nor any edges, respectively.
+
+Unsurprising this can also be internalised!
+\[\eqn{ex falso quod libet}{&#8869; &#8594; a \quad=\quad &#8868;}\]
+<span class="org-drawer">:Proof:</span>
+  &#8869; &#8594; a
+= &#8869; &#8851; a &#8594; a
+= &#8869; &#8594; (a &#8594; a)
+= &#8869; &#8594; &#8868;
+= &#8868;       by right zero.
+<span class="org-drawer">:end:</span>
+
+Moreover we can now define an operation $&#172;\_$ as follows,
+\[\eqn{Pseudo-Complement Definition}{ &#172; x \quad=\quad (x &#8594; &#8869;) }\]
+
+<span class="italic">/A complement/</span> of an element $x$ is an element $y$ that is
+disjoint from $x$ and together their join is the top element.
+
+<span class="italic">/A </span><span class="org-link"><span class="italic"><a href="https://en.wikipedia.org/wiki/Pseudocomplement">pseudo-complement</a></span></span><span class="italic">/</span> generalises this idea by discarding the second half
+of that conjunction; i.e., instead requiring a greatest element $y$
+disjoint from $x$.
+
+Indeed this is the case here,
+\begin{calc}
+   x \;&#8851;\; &#172; x \quad=\quad &#8869;
+\step{ \ref{&#8849;-antisymmetric} }
+   (x \;&#8851;\; &#172; x) \sqleqs &#8869;
+   \landS &#8869; \sqleqs (x \;&#8851;\; &#172; x)
+\step{ \ref{Bottom Element} }
+   x \;&#8851;\; &#172; x \sqleqS &#8869;
+\step{ \ref{Modus Ponens} }
+   \mathsf{true}
+\end{calc}
+
+We now have the linguistic prerequisites to actually express De Morgan's laws.
+\[\eqn{Constructive De Morgan}{&#172;(x \;&#8852;\; y) \quad=\quad &#172; x \;&#8851;\; &#172; y}\]
+
+The other form $&#172;(x &#8851; y) \;=\; &#172; x &#8852; &#172; y$ however is not true in general.
+Likewise neither are double negation, $&#172;&#172;x \;=\; x$, nor the law of the
+the excluded middle $x \;&#8852;\; &#172; x \;=\; &#8868;$.
+
+Indeed for &#119977;, the natural numbers extended with +&#8734;, the law of the exluded middle
+is falsified as follows:
+
+\begin{calc}
+   3 &#8593; &#172; 3
+\step{ \ref{Pseudo-Complement Definition} }
+   3 &#8593; (3 &#8594; 0)
+\step{ \ref{Definition of &#8594; for &#119977;} }
+   3 &#8593; 0
+\step{ Maximum }
+   3
+\end{calc}
+
+Likewise double negation is falsified by $&#172; &#172; 3 \;=\; 0$.
+
+Exercise: Find an example to falsify the other De Morgan's law.
+
+Having &#8851;, &#8852;, &#8869;, &#8868;, &#8594; together constitutes a <span class="org-link"><a href="https://en.wikipedia.org/wiki/Heyting_algebra">Heyting Algebra</a></span>.
+
+<span class="org-level-2">** </span><span class="org-level-2"><span class="org-special-keyword">COMMENT</span></span><span class="org-level-2"> Old stuff</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">COMMENT-Old-stuff</span>
+<span class="org-drawer">:END:</span>
+Let's close by showing that
+<span class="italic">/relative pseudo-complements $a &#8594; b$ are the largest subparts of $a$ disjoint from $b$!/</span>
+
+We can say two elements are <span class="italic">/disjoint/</span> when their commonality is the least element; i.e.,
+when $a &#8851; b \;=\; &#8869;$.
+
+With this setup, our final claim can be phrased as
+\[ x &#8849; a  \landS  x &#8851; b = &#8869;  \impliesS  x &#8849; a &#8594; b \]
+
+Let's prove it!
+
+\begin{calc}
+   x &#8849; a \landS x &#8851; b = &#8869;
+\step{justification ;; nice }
+   x &#8849; a \landS x &#8851; b &#8849; &#8869;  \landS &#8869; &#8849; x &#8851; b
+\step{justification ;; woah }
+   x &#8849; a \landS x &#8851; b &#8849; &#8869;
+\step{justification ;; woah }
+   x &#8849; a \landS x &#8849; b &#8594; &#8869;
+\step{justification ;; woah }
+   x &#8849; a &#8851; (b &#8594; &#8869;) --- Nice!
+\end{calc}
+
+<span class="comment"># Counter-example to: a &#8594; b  =  a &#8851; (b &#8594; &#8869;)</span>
+<span class="comment"># =  p &#8658; q   &#8801;   p &#8743; &#172; q</span>
+<span class="comment"># =  p &#8743; q &#8801; p &#8801; p &#8743; &#172; q</span>
+<span class="comment"># =  p &#8743; (q &#8801; &#172; q &#8801; true)</span>
+<span class="comment"># =  p &#8743; false</span>
+<span class="comment"># =  false</span>
+
+Indeed, it seems more often that: a &#8594; b  =  &#172; a &#8852; b
+Provided &#172; is a true complement.
+
+   &#172; a &#8852; b  &#8849;  a &#8594; b
+&#8801;  a &#8851; (&#172; a &#8852; b)  &#8849;  b
+&#8801;  (a &#8851; &#172; a) &#8852; (a &#8851; b) &#8849; b
+&#8801;  &#8869; &#8852; (a &#8851; b) &#8849; b          -- since &#172; is a real complement.
+&#8801;  a &#8851; b  &#8849; b
+&#8801;  true
+
+And the converse?
+
+<span class="org-level-1">* So long and thanks for the fish</span>
+<span class="org-drawer">:PROPERTIES:</span>
+<span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">So-long-and-thanks-for-the-fish</span>
+<span class="org-drawer">:END:</span>
+
+It took a while, but we've more or less shimmied our
+way to the structure needed for Heyting Algebras.
+
+Hope you had fun!
+</pre>
+  </body>
+</html>
