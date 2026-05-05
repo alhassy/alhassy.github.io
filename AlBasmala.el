@@ -114,6 +114,8 @@ Incidentally, orange and `#f2b195' are also nice 'warning' colours."
 (defvar blog-url "https://alhassy.com"
   "URL of the blog.")
 
+
+
 (defvar blog-publish-directory "~/blog/public/"
   "Directory containing published HTML files.
 
@@ -122,14 +124,14 @@ On master we keep only sources; CI exports everything to public/ and deploys
 public/'s contents to the gh-pages branch that GitHub Pages serves.
 That gives flat URLs (alhassy.com/foo) while the master working tree stays clean.")
 
-(defvar blog-posts-directory "~/blog/posts"
+(defvar blog-posts-directory "~/blog"
   "Directory containing source Org files.
 
 When publishing, posts are rendered as HTML and included in the index and RSS feed.
 See blog-make-index-page and blog-publish-directory.")
 
 (defun blog-new-article ()
-"Make a new article for my blog; prompting for the necessary ingredients.
+  "Make a new article for my blog; prompting for the necessary ingredients.
 
 If the filename entered already exists, we simply write to it.
 The user notices this and picks a new name.
@@ -144,11 +146,11 @@ nearly instantaneously."
   (let (file desc)
 
     (thread-last blog-posts-directory
-      f-entries
-      (mapcar #'f-filename)
-      (completing-read "Filename (Above are existing): ")
-      (concat blog-posts-directory)
-      (setq file))
+                 f-entries
+                 (mapcar #'f-filename)
+                 (completing-read "Filename (Above are existing): ")
+                 (concat blog-posts-directory)
+                 (setq file))
 
     ;; For some reason, 'find-file' in the thread above
     ;; wont let the completing-read display the possible completions.
@@ -167,7 +169,7 @@ nearly instantaneously."
             ;;                    (mapcar #'f-filename (f-entries "~/blog/resources/")))
             ;; "\n#+include: ../MathJaxPreamble.org" ;; TODO. Is this someting I actually want here? If so, then consider tangling it from AlBasmala! (and add the whitespace-MathJax setup from above!)
             "\n#+description: "
-               (setq desc (read-string "Article Purpose: "))
+            (setq desc (read-string "Article Purpose: "))
             "\n\n* Abstract :ignore: \n" desc
             "\n\n* ???")
     (save-buffer)
@@ -686,7 +688,7 @@ when they carry #+site_nav: <short-title>; they are never added to posts."
   (let ((posts '())
         (pages '()))
     ;; posts/ directory: container files yield many articles, standalone yield one.
-    (dolist (file (s-split "\n" (shell-command-to-string "ls ~/blog")))
+    (dolist (file (s-split "\n" (shell-command-to-string "ls .")))
       (when (s-ends-with? ".org" file)
         (let ((infos (if (equal "multiple" (blog--article-style file))
                          (blog--info-multiple file)
@@ -696,7 +698,7 @@ when they carry #+site_nav: <short-title>; they are never added to posts."
                 (push info pages)
               (push info posts))))))
     ;; Root ~/blog/*.org: only collect entries that opt in via #+site_nav: <short title>.
-    (dolist (file (f-files "~/blog"))
+    (dolist (file (f-files "."))
       (when (and (s-ends-with? ".org" file)
                  (equal "standalone" (blog--article-style file)))
         (let ((info (blog--info file)))
@@ -1265,7 +1267,7 @@ For a one-off use in an article, prepend #+html: to the result."
 
 (cl-defun blog--git (cmd &rest args)
   "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
-  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
+  (shell-command (apply #'format (concat "git " cmd) args)))
 
 (defun blog--multiple-style-p ()
   "Return non-nil when the current buffer is a multiple-style container."
@@ -1570,7 +1572,7 @@ deployed as-is to gh-pages without the master-branch source tree."
     (make-directory dist t)
     (dolist (asset '("resources"
                      "readremaining.js-readremainingjs"))
-      (let ((src (expand-file-name asset "~/blog/")))
+      (let ((src (expand-file-name asset ".")))
         (when (file-exists-p src)
           (if (file-directory-p src)
               (copy-directory src (expand-file-name asset dist) t t t)
@@ -1601,7 +1603,7 @@ default name is pre-filled so you can rename the resource before committing."
          (dest-name (if current-prefix-arg
                         (read-string "Name for image (with extension): " default-name)
                       default-name))
-         (dest (expand-file-name dest-name "~/blog/resources/")))
+         (dest (expand-file-name dest-name "./resources/")))
     (copy-file file dest t)
     (blog--git "add resources/%s" dest-name)
     (insert (format "[[file:../resources/%s]]" dest-name))
@@ -1619,7 +1621,7 @@ you are prompted for a meaningful name; the timestamp default is just a fallback
         (message "Screenshot cancelled.")
       (let* ((default-name (format "screenshot-%s.png" (format-time-string "%Y%m%d-%H%M%S")))
              (dest-name (read-string "Name for screenshot (with extension): " default-name))
-             (dest (expand-file-name dest-name "~/blog/resources/")))
+             (dest (expand-file-name dest-name "./resources/")))
         (rename-file tmp dest t)
         (blog--git "add resources/%s" dest-name)
         (insert (format "[[file:../resources/%s]]" dest-name))
