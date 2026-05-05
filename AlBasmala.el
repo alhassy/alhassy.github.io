@@ -564,7 +564,7 @@ Stale when any of:
   • the :MODIFIED: property is absent on the heading
   • the HTML file predates MODIFIED (mtime < MODIFIED date)
   • the article has a :REDIRECT: and the redirected file is newer than MODIFIED"
-  (let* ((html-file  (expand-file-name (concat slug ".html") "~/blog/"))
+  (let* ((html-file  (expand-file-name (concat slug ".html") blog-posts-directory))
          (modified   (save-excursion
                        (goto-char heading-point)
                        (org-entry-get (point) "MODIFIED")))
@@ -695,7 +695,7 @@ posts — dated, non-site_nav entries, sorted newest-first.
 pages — site_nav entries, unsorted."
   (let ((posts '())
         (pages '()))
-    (dolist (file (f-files "~/blog"))
+    (dolist (file (f-files blog-posts-directory))
       (when (s-ends-with? ".org" file)
         (let ((infos (if (equal "multiple" (blog--article-style file))
                          (blog--info-multiple file)
@@ -893,7 +893,7 @@ maintaining a stable [Org source | xwidget] side-by-side layout."
              (title     (org-get-heading t t t t))
              (slug      (blog--make-slug (or (org-entry-get (point) "TITLE") title)))
              (all-infos (blog--info-multiple (buffer-file-name)))
-             (html-out  (expand-file-name (concat slug ".html") "~/blog/")))
+             (html-out  (expand-file-name (concat slug ".html") blog-posts-directory)))
         (message "=> Previewing %s..." title)
         (blog--publish-single-subtree (point) (buffer-file-name) all-infos slug)
         (when (file-exists-p html-out)
@@ -1252,7 +1252,8 @@ For a one-off use in an article, prepend #+html: to the result."
 
 (cl-defun blog--git (cmd &rest args)
   "Execute git command CMD, which may have %s placeholders whose values are positional in ARGS."
-  (shell-command (apply #'format (concat "cd ~/blog; git " cmd) args)))
+  (let ((default-directory (expand-file-name blog-posts-directory)))
+    (shell-command (apply #'format (concat "git " cmd) args))))
 
 (defun blog--multiple-style-p ()
   "Return non-nil when the current buffer is a multiple-style container."
@@ -1548,7 +1549,7 @@ deployed as-is to gh-pages without the master-branch source tree."
                      "floating-toc.css"
                      "doom-solarized-light.css"
                      "readremaining.js-readremainingjs"))
-      (let ((src (expand-file-name asset "~/blog/")))
+      (let ((src (expand-file-name asset blog-posts-directory)))
         (when (file-exists-p src)
           (if (file-directory-p src)
               (copy-directory src (expand-file-name asset dist) t t t)
@@ -1592,7 +1593,7 @@ default name is pre-filled so you can rename the resource before committing."
          (dest-name (if current-prefix-arg
                         (read-string "Name for image (with extension): " default-name)
                       default-name))
-         (dest (expand-file-name dest-name "~/blog/resources/")))
+         (dest (expand-file-name dest-name (expand-file-name "resources/" blog-posts-directory))))
     (copy-file file dest t)
     (blog--git "add resources/%s" dest-name)
     (insert (format "[[file:resources/%s]]" dest-name))
@@ -1610,7 +1611,7 @@ you are prompted for a meaningful name; the timestamp default is just a fallback
         (message "Screenshot cancelled.")
       (let* ((default-name (format "screenshot-%s.png" (format-time-string "%Y%m%d-%H%M%S")))
              (dest-name (read-string "Name for screenshot (with extension): " default-name))
-             (dest (expand-file-name dest-name "~/blog/resources/")))
+             (dest (expand-file-name dest-name (expand-file-name "resources/" blog-posts-directory))))
         (rename-file tmp dest t)
         (blog--git "add resources/%s" dest-name)
         (insert (format "[[file:resources/%s]]" dest-name))
