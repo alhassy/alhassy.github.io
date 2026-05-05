@@ -610,11 +610,16 @@ The heading text does not appear in the HTML output (title:nil)."
      (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
      (format "<center>%s</center>\n" (@tags post))
      (@image post "resources/")
+     "#+end_export\n"
      "\n"
      (or (@abstract post) "")
      "\n"
-     (format "<p style=\"text-align:right\"> badge:Read|more|green|%s|read-the-docs </p>\n" (@url post))
-     "#+end_export\n")))
+     ;; badge:… is an org-special-block-extras link type, so it must sit in
+     ;; Org territory — not inside #+begin_export html, which would ship it
+     ;; verbatim to the HTML output.  The @@html:…@@ wrappers give us the
+     ;; surrounding <p> while keeping the badge: link itself as Org syntax.
+     (format "@@html:<p style=\"text-align:right\">@@ badge:Read|more|green|%s|read-the-docs @@html:</p>@@\n"
+             (@url post)))))
 
 (defun blog--make-page-buffer (posts greeting export-file-name)
   "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
@@ -1233,6 +1238,8 @@ For a one-off use in an article, prepend #+html: to the result."
                 (lambda ()
                   (interactive)
                   (blog--ensure-useful-section-anchors)
+                  (blog--refresh-posts)
+                  (blog--validate-unique-slugs)
                   (save-buffer)
                   (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd "M-RET")
@@ -1476,7 +1483,6 @@ Dispatches on #+article_style: per file —
   (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (make-directory blog-publish-directory t)
   (blog--refresh-posts)
-  (blog--validate-unique-slugs)
   (dolist (f (f-entries blog-posts-directory
                         (lambda (x) (and (s-suffix? ".org" x)
                                          (blog--publishable-p x)))))

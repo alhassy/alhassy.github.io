@@ -2487,11 +2487,16 @@ The heading text does not appear in the HTML output (title:nil)."
      (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
      (format "<center>%s</center>\n" (@tags post))
      (@image post "resources/")
+     "#+end_export\n"
      "\n"
      (or (@abstract post) "")
      "\n"
-     (format "<p style=\"text-align:right\"> badge:Read|more|green|%s|read-the-docs </p>\n" (@url post))
-     "#+end_export\n")))
+     ;; badge:… is an org-special-block-extras link type, so it must sit in
+     ;; Org territory — not inside #+begin_export html, which would ship it
+     ;; verbatim to the HTML output.  The @@html:…@@ wrappers give us the
+     ;; surrounding <p> while keeping the badge: link itself as Org syntax.
+     (format "@@html:<p style=\"text-align:right\">@@ badge:Read|more|green|%s|read-the-docs @@html:</p>@@\n"
+             (@url post)))))
 
 (defun blog--make-page-buffer (posts greeting export-file-name)
   "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
@@ -3785,6 +3790,8 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                 (lambda ()
                   (interactive)
                   (blog--ensure-useful-section-anchors)
+                  (blog--refresh-posts)
+                  (blog--validate-unique-slugs)
                   (save-buffer)
                   (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd "M-RET")
@@ -4015,6 +4022,30 @@ We use a two-branch model to keep =master= clean and let CI own all HTML generat
 - =peaceiris/actions-gh-pages= force-pushes =public/='s contents to =gh-pages=.
 - GitHub Pages serves =gh-pages= at the root, so URLs are flat: =alhassy.com/foo=.
 
+*CI rebuilds everything, from scratch, every run.*  The runner checks out
+=master= fresh (no =public/=), =blog-publish-all= starts with an empty
+=public/= and calls =org-html-export-to-html= on every publishable =.org= —
+no mtime comparisons, no diffing against prior output.  =peaceiris/actions-
+gh-pages= then force-pushes =public/= to =gh-pages=, overwriting whatever
+was there.  So every deploy regenerates every HTML file.
+
+The one apparent exception is container-style files: =blog--subtree-stale-p=
+compares a subtree's =:MODIFIED:= against =<slug>.html= on disk, and
+short-circuits re-export when the HTML is newer.  But on a fresh CI
+checkout there is no HTML on disk, so =(file-exists-p html-file)= is
+always =nil= and the short-circuit never fires.  The staleness check is
+interactive-preview machinery; CI re-exports every subtree regardless.
+
+Because the rebuild is always total, the consequence for validation is
+direct: a check either runs before every HTML is written, or it never
+runs at all.  That's why slug uniqueness is policed at =C-x C-s= preview
+time rather than on the CI path (see §[[Seamlessly Previewing Articles within Emacs]]):
+authoring is where collisions get introduced, and preview is where they
+get caught.  The tradeoff is that a never-previewed-but-pushed edit with
+a duplicate slug would slip into CI and silently overwrite one HTML with
+another — if that ever bites, wire =blog--validate-unique-slugs= back
+into =blog-publish-all=.
+
 *Inspecting what got deployed* — the post-build state of the blog is visible
 at [[https://github.com/alhassy/alhassy.github.io/tree/gh-pages][the =gh-pages= branch on GitHub]].  Each CI run rewrites it entirely, so
 browsing that tree tells you exactly what =alhassy.com= is currently serving.
@@ -4088,7 +4119,6 @@ Dispatches on #+article_style: per file —
   (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (make-directory blog-publish-directory t)
   (blog--refresh-posts)
-  (blog--validate-unique-slugs)
   (dolist (f (f-entries blog-posts-directory
                         (lambda (x) (and (s-suffix? ".org" x)
                                          (blog--publishable-p x)))))
