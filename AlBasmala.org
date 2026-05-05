@@ -1480,9 +1480,9 @@ TODO. Something in my init.el breaks this package!?!
    particular section, /thereby/ dramatically increasing the speed at which the
    preview renders.
 
-5. Execute doc:blog-publish-current-article when you're done.
-   - This gets the new article showing up in index, RSS, archive, and updates
-     the tags.
+5. ~git push~ when you're done — CI runs =blog-publish-all= on a fresh
+   checkout and deploys =public/= to =gh-pages=, updating index, RSS,
+   archive, and tag pages in one shot.
    - NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
 
 * Why not use an existing blogging platform?
@@ -2961,35 +2961,6 @@ maintaining a stable [Org source | xwidget] side-by-side layout."
           ;; so the [Org | xwidget] split is stable across repeated saves.
           (blog--show-preview (concat "file://" (expand-file-name html-out))))))))
 
-(defun blog-publish-current-subtree ()
-  "Publish just the top-level heading at point from a multiple-style container.
-
-Fast path: only this article is exported, only its tags' pages are
-regenerated, and a single targeted git commit is made.
-
-Mirrors blog-preview-subtree but goes all the way to git push."
-  (interactive)
-  (unless (blog--multiple-style-p)
-    (user-error "Not a multiple-style file; use blog-publish-current-article instead"))
-  (save-excursion
-    (unless (org-at-heading-p) (outline-previous-heading))
-    (while (> (org-outline-level) 1) (org-up-heading-safe))
-    (let* ((heading-tags (mapcar #'downcase (org-get-tags)))
-           (_ (when (member "noexport" heading-tags)
-                (user-error "Heading tagged :noexport: — nothing to publish")))
-           (title        (org-get-heading t t t t))
-           (slug         (blog--make-slug (or (org-entry-get (point) "TITLE") title)))
-           (container    (buffer-file-name))
-           (all-infos    (blog--info-multiple container)))
-      (message "=> Publishing subtree: %s (%s)..." title slug)
-      (save-buffer)
-      (blog-preview-disable)
-      (blog--publish-single-subtree (point) container all-infos slug)
-      (blog--git "add %s public/%s.html public/%s.org.html"
-                container slug slug)
-      (blog--git "commit -m \"%s\"; git push"
-                (blog--commit-message (format "Publish: %s" title)))
-      (message "=> Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)" slug))))
 #+end_src
 
 Upon a save, kbd:C-x_C-s, a new HTML file is created ---bearing the same name as the Org file. It seems an /incremental/
@@ -3885,32 +3856,25 @@ hideously small.
 :CUSTOM_ID: Actually-publishing-an-article
 :END:
 
-# My preview setup does a great job at "publishing" my articles, as such, it seems I don't really need use org-static-blog-publish-file.
+Publishing is a single command — =blog-publish-all= — and it is run by CI,
+not by the author.  Push a =.org= source to =master=; CI exports everything
+into =public/= and deploys that tree to =gh-pages= (see §[[Deployment via CI]]).
+There is no local publish command; there never needs to be one, since CI
+rebuilds the world from scratch on every push.
 
-# (I would need org-static-blog-publish-file if I were to republish the entire blog, say via org-static-blog-publish)
+For a given article =blog-publish-all= dispatches on =#+article_style:=:
 
-Publishing is a single command: =M-x blog-publish-current-article= (or =C-c C-p= in
-=my/blogging-mode=).  It exports the article HTML + colourised source, commits the
-=.org= source and the generated artefacts, and pushes to =master=.  That is all it
-does — index.html, tag pages, and RSS are deliberately left to CI (see
-§[[Deployment via CI]]).  No point regenerating them on your laptop when CI will
-rebuild everything from scratch moments after the push anyway.
+- *standalone* articles (the default) — one =.org= file → one HTML file.
+- *multiple-style container* files — =blog--publish-multiple-articles=
+  iterates over every non-=:noexport:= top-level heading and calls
+  =blog--publish-single-subtree= for each.
 
-For iterating on one heading inside a container, =blog-publish-current-subtree=
-(speed key =P= in =my/blogging-mode=) is the fast path.
-
-For *standalone* articles the flow is straightforward (one file → one HTML file).
-
-For *multiple-style container* files, =blog-publish-current-article= delegates to
-=blog--publish-multiple-articles=, which iterates over every non-=:noexport:= top-level
-heading and calls =blog--publish-single-subtree= for each.
-
-=blog--publish-single-subtree= is the core of the container export pipeline.  See
-§[[The Two Article Styles: standalone vs multiple]] for a full explanation of the
-synthetic temp-file trick it uses to route every sub-article through the unchanged
-=blog--style-setup= pipeline.  The short version: we build a temp =.org= file with the
-right =#+keyword:= lines, paste the promoted subtree body into it, and run
-=org-html-export-to-html= exactly as for a standalone post.
+=blog--publish-single-subtree= is the core of the container export pipeline.
+See §[[The Two Article Styles: standalone vs multiple]] for a full explanation
+of the synthetic temp-file trick it uses to route every sub-article through
+the unchanged =blog--style-setup= pipeline.  The short version: we build a
+temp =.org= file with the right =#+keyword:= lines, paste the promoted subtree
+body into it, and run =org-html-export-to-html= exactly as for a standalone post.
 
 Two extra synthetic keywords injected into the temp file are worth knowing about:
 - =#+history_url:= — overrides the auto-derived GitHub history link so the badge
@@ -3949,7 +3913,6 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                 (lambda ()
                   (interactive)
                   (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
-    (define-key m (kbd "C-c C-p") #'blog-publish-current-article)
     (define-key m (kbd "C-c i i") #'blog-insert-image)
     (define-key m (kbd "C-c i s") #'blog-insert-screenshot)
     m)
@@ -3961,10 +3924,11 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
 Binds:
   C-x C-s  — save + live preview (dispatches on article style)
   M-RET    — new article / new post (dispatches on article style)
-  C-c C-p  — publish current article (full file)
   C-c i i  — insert image from file (C-u to rename before committing)
   C-c i s  — take a screenshot and insert it
-  P        — (Org speed key, at heading start) publish subtree or article
+
+Publishing is not bound to a key: push your .org source to master and CI
+runs `blog-publish-all' on a fresh checkout.
 
 On activation:
   - enables org-special-block-extras-mode (badges, doc: links, tooltips)
@@ -3980,42 +3944,9 @@ On deactivation:
         (require 'org-special-block-extras)
         (require 'org-preview-html)
         (org-special-block-extras-mode 1)
-        (setq browse-url-browser-function 'xwidget-webkit-browse-url)
-        (setq-local org-speed-commands
-                    (cons '("P" . (lambda ()
-                                    (if (blog--multiple-style-p)
-                                        (blog-publish-current-subtree)
-                                      (blog-publish-current-article))))
-                          org-speed-commands)))
+        (setq browse-url-browser-function 'xwidget-webkit-browse-url))
     (org-special-block-extras-mode -1)
-    (setq browse-url-browser-function 'browse-url-default-browser)
-    (setq-local org-speed-commands
-                (assoc-delete-all "P" org-speed-commands))))
-
-
-(cl-defun blog-publish-current-article ()
-  "Dispatch on #+article_style: to publish the current article — CI entry point.
-
-- standalone (default): one file → one HTML file (`blog-publish-standalone').
-- multiple: exports each top-level heading as its own article via
-  `blog-publish-multiple'."
-  (if (blog--multiple-style-p) (blog-publish-multiple) (blog-publish-standalone)))
-
-(cl-defun blog-publish-standalone ()
-  "Publish the current standalone article — CI entry point.
-
-Exports the article HTML into `blog-publish-directory' and produces the
-colourised per-article source view.  Index, tag pages, RSS, and the gh-pages
-push are the CI workflow's job, not ours."
-  (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-  (blog--refresh-posts)
-  (blog--validate-unique-slugs)
-  (make-directory blog-publish-directory t)
-  (-let [base (f-base (buffer-file-name))]
-    (org-html-export-to-html)
-    (rename-file (concat base ".html")
-                 (expand-file-name (concat base ".html") blog-publish-directory) t)
-    (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))))
+    (setq browse-url-browser-function 'browse-url-default-browser)))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
@@ -4177,14 +4108,6 @@ Returns the list of slugs that were published."
     (nreverse results)))
 
 
-(defun blog-publish-multiple ()
-  "Publish all articles from the multiple-style container at current buffer — CI entry point."
-  (let ((base (f-base (buffer-file-name))))
-    (blog--refresh-posts)
-    (blog--validate-unique-slugs)
-    (message "=> Exporting all articles from %s..." base)
-    (blog--publish-multiple-articles (buffer-file-name))))
-
 ;; Initialize blog-posts and blog-tags now that all helpers are defined.
 (blog--refresh-posts)
 #+end_src
@@ -4270,17 +4193,33 @@ and are silently skipped."
         (re-search-forward "^#\\+article_style:[ ]*multiple" nil t))))
 
 (defun blog-publish-all ()
-  "Batch-publish every article and regenerate the index.  Used by CI.
+  "Batch-publish every article and regenerate the index.  The sole CI entry point.
 
 Exports all posts → public/, rebuilds index + tag pages + RSS, copies static
 assets.  public/ is then deployed by CI to gh-pages so URLs stay flat:
-alhassy.com/foo not alhassy.com/public/foo."
+alhassy.com/foo not alhassy.com/public/foo.
+
+Dispatches on #+article_style: per file —
+  standalone (default) → one .org → one HTML file,
+  multiple            → one subtree → one HTML file (via `blog--publish-multiple-articles')."
+  (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (make-directory blog-publish-directory t)
+  (blog--refresh-posts)
+  (blog--validate-unique-slugs)
   (dolist (f (f-entries blog-posts-directory
                         (lambda (x) (and (s-suffix? ".org" x)
                                          (blog--publishable-p x)))))
     (with-current-buffer (find-file-noselect f)
-      (blog-publish-current-article)))
+      (if (blog--multiple-style-p)
+          (progn
+            (message "=> Exporting all articles from %s..." (f-base f))
+            (blog--publish-multiple-articles f))
+        (let ((base (f-base f)))
+          (org-html-export-to-html)
+          (rename-file (concat base ".html")
+                       (expand-file-name (concat base ".html") blog-publish-directory) t)
+          (message "⇒ HTMLizing article %s..." base)
+          (blog--htmlize-file f)))))
   (blog-make-index-page)
   (blog--sync-assets))
 #+end_src
