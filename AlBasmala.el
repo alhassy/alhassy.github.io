@@ -989,7 +989,7 @@ temp file path."
   "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file.
 
 We do not take the extra time to produce a colourised file when we are previewing an article."
-  (unless org-preview-html-mode
+  (unless (bound-and-true-p org-preview-html-mode)
 (let ((org-hide-block-startup nil))
   (with-temp-buffer
     (find-file file-name)
