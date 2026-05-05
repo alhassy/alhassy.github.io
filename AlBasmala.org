@@ -2594,10 +2594,14 @@ earns us nothing here."
            (@url post))
    "\n@@html:<hr>@@\n"))
 
-(defun blog--make-page-buffer (posts greeting export-file-name)
+(defun blog--make-page-buffer (posts greeting export-file-name &optional rss-file)
   "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
+RSS-FILE is the filename of the associated feed (\"rss.xml\" for the index,
+\"<tag>-rss.xml\" for a tag page).  It is surfaced as a prominent link right
+under the greeting so readers see it without scrolling.
 Caller is responsible for killing the buffer when done."
-  (let ((buf (generate-new-buffer " *blog-page*")))
+  (let ((buf (generate-new-buffer " *blog-page*"))
+        (rss (or rss-file "rss.xml")))
     (with-current-buffer buf
       (insert
        (format "#+EXPORT_FILE_NAME: %s\n" export-file-name)
@@ -2608,11 +2612,11 @@ Caller is responsible for killing the buffer when done."
        "#+end_export\n"
        "#+html: <br>\n"
        greeting "\n"
+       (format "#+html: <p style=\"text-align:center;\"><a href=\"%s\">📡 Subscribe via RSS</a></p>\n" rss)
        "#+html: <br>\n"
        (mapconcat #'blog--card posts "\n")
        "\n#+begin_export html\n"
        "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em>"
-       " &nbsp;|&nbsp; <a href=\"https://alhassy.github.io/rss.xml\">RSS feed</a>"
        " </center> <br/>\n"
        (blog--license)
        "\n#+end_export\n")
@@ -2629,23 +2633,64 @@ Caller is responsible for killing the buffer when done."
 
 Builds one Org buffer per output file, each populated directly from
 the relevant subset of blog-posts — no copy-then-delete."
-  (cl-flet ((export-page (posts greeting dest)
-               (let ((buf (blog--make-page-buffer posts greeting dest)))
+  (cl-flet ((export-page (posts greeting dest rss)
+               (let ((buf (blog--make-page-buffer posts greeting dest rss)))
                  (unwind-protect
                      (with-current-buffer buf (org-html-export-to-html))
                    (with-current-buffer buf (set-buffer-modified-p nil))
                    (kill-buffer buf)))))
     (export-page blog-posts
                  (blog--greeting)
-                 (concat-to-dir blog-publish-directory "index.html"))
+                 (concat-to-dir blog-publish-directory "index.html")
+                 "rss.xml")
     (dolist (tag blog-tags)
       (message "=> Generating tag page: %s..." tag)
-      (export-page (seq-filter (lambda (p)
-                                 (member tag (s-split " " (map-elt p "tags") t)))
-                               blog-posts)
-                   (blog--greeting tag)
-                   (concat-to-dir blog-publish-directory (concat "tag-" (blog--tag-slug tag) ".html"))))))
+      (let ((slug (blog--tag-slug tag)))
+        (export-page (seq-filter (lambda (p)
+                                   (member tag (s-split " " (map-elt p "tags") t)))
+                                 blog-posts)
+                     (blog--greeting tag)
+                     (concat-to-dir blog-publish-directory (concat "tag-" slug ".html"))
+                     (concat slug "-rss.xml"))))))
+#+end_src
 
+** RSS feeds: one per tag, plus a global one                         :details:
+
+RSS (/Really Simple Syndication/) is a plain-text format a website uses to
+announce its new content.  A reader program — Feedly, Inoreader, Newsboat,
+NetNewsWire, and dozens of others — subscribes to the URL of an RSS feed
+and periodically refetches it.  When the feed has a new =<item>=, the
+reader surfaces it as "there is a new article".  The blog does not push;
+readers /pull/ whenever they want.
+
+So yes: every time we publish, this pipeline regenerates =rss.xml=; the
+next time a reader's program polls our URL, it compares entries to what
+it saw last time and notifies the human about any new ones.  We never
+send email, we never track subscribers, we never even know who is
+subscribed.  Publishing is just "put a new item in the feed"; the rest
+is the reader's problem.
+
+Why bother generating these at all?  Because RSS is the one remaining
+ambient-notification mechanism for writers on the open web: no
+algorithm, no platform lock-in, no "follow" button owned by a company.
+A reader who subscribed to your RSS feed in 2008 is still subscribed
+today as long as the URL resolves.  For a personal technical blog,
+it's the cheapest way to have an audience that returns.
+
+We emit two flavours of feed:
+
+- =rss.xml= — every post, newest first.  For the reader who wants
+  everything you write.
+- =<tag>-rss.xml= — per-tag feed (e.g. =emacs-rss.xml=, =arabic-rss.xml=).
+  For a reader who wants only the =emacs= or =arabic= articles.  The
+  link to each tag-specific feed is surfaced at the top of the
+  corresponding tag page.
+
+Each item carries a =<pubDate>=, a =<link>= back to =alhassy.com/<slug>=,
+and the article's =#+description= as its preview text.  Bodies are
+intentionally not embedded: we want readers to click through.
+
+#+begin_src emacs-lisp  -n
 (defun blog--rss-date (date-str)
   "Format DATE-STR (an Org date string) as an RFC-822 pubDate for RSS."
   (format-time-string "%a, %d %b %Y %H:%M:%S %z"
@@ -2869,6 +2914,8 @@ which I place below at the top of the page.)
             "</center>"
             "\n#+html: "
             (@image post "resources/")
+            "\n#+html: "
+            (blog--badges-bar post (buffer-file-name))
             "\n")
 
     ;; Wrap contents of "* Abstract" section in the "abstract" Org-special-block
@@ -3000,48 +3047,56 @@ export is performed and so this is rather fast ---at least much faster than manu
 <<footers>>
 
 #+begin_src emacs-lisp -n
-(defun blog--footer (post-file-name)
-  "Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
+(defun blog--badges-bar (post post-file-name)
+  "Return the Source/History/BuyMeACoffee badge cluster for POST.
 
-This function is called for every post and the returned string is appended to the post body, as a postamble.
+POST is the metadata alist from `blog--info'; POST-FILE-NAME is the article's
+filesystem path (used only when we need to htmlize a standalone article's
+source for the Source badge).
 
-For container sub-articles, the temp buffer carries #+htmlized_source_url: and #+history_url:
-synthetic keywords; blog--info reads them and we use them here instead of auto-deriving from the
-temp file path."
-  (let* ((post (blog--info (buffer-file-name)))
-         (source-badge
-          (if-let (url (@htmlized_source_url post))
-              ;; Container sub-article: source htmlized separately to <slug>.org.html;
-              ;; just emit the badge pointing to it.
-              (concat "<a class=\"tooltip\""
-                      " title=\"See the colourised Org source of this article;"
-                      " i.e., what I typed to get this nice webpage\""
-                      " href=\"" url "\"><img"
-                      " src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>")
-            ;; Standalone: existing behaviour — htmlize and return badge.
-            (blog--htmlize-file post-file-name))))
+Surfaced directly under the article image in `blog--style-setup' so readers
+see the source/history/support links up top — nobody scrolls to the bottom."
+  (let ((source-badge
+         (if-let (url (@htmlized_source_url post))
+             ;; Container sub-article: source htmlized separately to <slug>.org.html;
+             ;; just emit the badge pointing to it.
+             (concat "<a class=\"tooltip\""
+                     " title=\"See the colourised Org source of this article;"
+                     " i.e., what I typed to get this nice webpage\""
+                     " href=\"" url "\"><img"
+                     " src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>")
+           ;; Standalone: htmlize and return badge.
+           (blog--htmlize-file post-file-name))))
     (concat
-     "<hr>"
      "<center>"
      source-badge
      "&ensp;"
      (@history post)
-     ;;
-     ;; Consider only add this to posts tagged "arabic"?
+     "&ensp;"
+     "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
+     "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
+     "</a>"
+     "</center>")))
+
+(defun blog--footer (post-file-name)
+  "Return the closing HTML appended to every post.
+
+Just the emacs/org credit, license, Arabic-font CSS shim, and RR.js hook:
+the Source/History/BuyMeACoffee badges have been hoisted up to sit
+directly under the article image (see `blog--badges-bar').  For container
+sub-articles, #+htmlized_source_url: and #+history_url: are carried on
+the temp buffer by `blog--info'."
+  (let ((post (blog--info (buffer-file-name))))
+    (concat
+     "<hr>"
+     "<center>"
      (blog--css-arabic-font-setup)
-     ;;
-     "<br>"
-   "<a href=\"https://www.buymeacoffee.com/alhassy\"><img src="
-   "\"https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee\">"
-   "</a>"
-   ;;
-   "<br><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
-   (blog--license)
-   ;; (blog--comments) ;; TODO. Not working as intended; low priority.
-   "</center>"
-   ;; The next line is required to make the org-static-blog-assemble-rss method work.
-   "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
-   (blog--read-remaining-js))))
+     "<strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
+     (blog--license)
+     "</center>"
+     ;; The next line is required to make the org-static-blog-assemble-rss method work.
+     "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
+     (blog--read-remaining-js))))
 #+end_src
 
 ** blog--htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file :details:
@@ -4301,11 +4356,13 @@ Dispatches on #+article_style: per file —
             (message "=> Exporting all articles from %s..." (f-base f))
             (blog--publish-multiple-articles f))
         (let ((base (f-base f)))
+          ;; org-html-export-to-html triggers blog--style-setup, which calls
+          ;; blog--badges-bar → blog--htmlize-file, which writes <base>.org.html
+          ;; into public/ as a side effect.  So a single export emits both the
+          ;; article HTML and its colourised source view.
           (org-html-export-to-html)
           (rename-file (concat base ".html")
-                       (expand-file-name (concat base ".html") blog-publish-directory) t)
-          (message "⇒ HTMLizing article %s..." base)
-          (blog--htmlize-file f)))))
+                       (expand-file-name (concat base ".html") blog-publish-directory) t)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
