@@ -1,9 +1,17 @@
+(require 'dash)
+(require 'f)
+(require 's)
+(require 'org-static-blog)
+(require 'htmlize)
+(require 'org-special-block-extras)
+
 (use-package org-special-block-extras)
 (org-special-block-extras-mode t)
 
 
+
 (org-deflink image
-             "Provide a quick way to insert images along with credits via tooltips.
+  "Provide a quick way to insert images along with credits via tooltips.
 
 Example usage:
 
@@ -11,15 +19,15 @@ image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|1
 
 image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
 "
-;;             (upcase (or o-description o-label))
+  ;;             (upcase (or o-description o-label))
   (-let [(image width height center? credit?) (s-split "|" o-label)]
     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
       (let* ((href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
-            (title (format "Image credit %s" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
-            (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
-            (it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
+             (title (format "Image credit %s" (or credit? (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))))
+             (src (if unsplash (format "https://source.unsplash.com/%s/%sx%s" unsplash width height) image))
+             (it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/></a>"
-                        href title src width height)))
+                         href title src width height)))
         (if center?
             (format "<center> %s </center>" it)
           it)))))
@@ -678,7 +686,7 @@ when they carry #+site_nav: <short-title>; they are never added to posts."
   (let ((posts '())
         (pages '()))
     ;; posts/ directory: container files yield many articles, standalone yield one.
-    (dolist (file (f-files "~/blog/posts"))
+    (dolist (file (s-split "\n" (shell-command-to-string "ls ~/blog")))
       (when (s-ends-with? ".org" file)
         (let ((infos (if (equal "multiple" (blog--article-style file))
                          (blog--info-multiple file)
