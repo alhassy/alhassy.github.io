@@ -5,6 +5,8 @@
 (require 'htmlize)
 (require 'org-special-block-extras)
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
+(require 'ox-extra)
+(ox-extras-activate '(ignore-headlines))
 
 (use-package org-special-block-extras)
 (org-special-block-extras-mode t)
