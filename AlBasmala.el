@@ -1044,7 +1044,7 @@ var disqus_shortname = 'life-and-computing-science';
   "Get the HTML required to make use of ReadRemaining.js"
 
   ;; [Maybe Not True] ReadReamining.js does not work well with xWidget browser within Emacs
-  (if (equal org-preview-html-viewer 'xwidget)
+  (if (equal (bound-and-true-p org-preview-html-viewer) 'xwidget)
       ""
 
    ;; ReadRemaining.js ∷ How much time is left to finish reading this article?
