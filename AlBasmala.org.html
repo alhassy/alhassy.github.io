@@ -2733,11 +2733,16 @@ The heading text does not appear in the HTML output (title:nil)."</span></span><
      (format </span><span class="org-block"><span class="string">"&lt;h2 class=\"title\"&gt;&lt;a href=\"%s\"&gt;%s&lt;/a&gt;&lt;/h2&gt;\n"</span></span><span class="org-block"> (@url post) (@title post))
      (format </span><span class="org-block"><span class="string">"&lt;center&gt;%s&lt;/center&gt;\n"</span></span><span class="org-block"> (@tags post))
      (@image post </span><span class="org-block"><span class="string">"resources/"</span></span><span class="org-block">)
+     </span><span class="org-block"><span class="string">"#+end_export\n"</span></span><span class="org-block">
      </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
      (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> (@abstract post) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)
      </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
-     (format </span><span class="org-block"><span class="string">"&lt;p style=\"text-align:right\"&gt; <a href="badge:Read|more|green|%s|read-the-docs">badge:Read|more|green|%s|read-the-docs</a> &lt;/p&gt;\n"</span></span><span class="org-block"> (@url post))
-     </span><span class="org-block"><span class="string">"#+end_export\n"</span></span><span class="org-block">)))
+     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">badge:&#8230; is an org-special-block-extras link type, so it must sit in
+</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Org territory &#8212; not inside #+begin_export html, which would ship it
+</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">verbatim to the HTML output.  The @@html:&#8230;@@ wrappers give us the
+</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">surrounding &lt;p&gt; while keeping the badge: link itself as Org syntax.
+</span></span><span class="org-block">     (format </span><span class="org-block"><span class="string">"@@html:&lt;p style=\"text-align:right\"&gt;@@ <a href="badge:Read|more|green|%s|read-the-docs">badge:Read|more|green|%s|read-the-docs</a> @@html:&lt;/p&gt;@@\n"</span></span><span class="org-block">
+             (@url post)))))
 
 (</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-page-buffer</span></span><span class="org-block"> (posts greeting export-file-name)
   </span><span class="org-block"><span class="doc">"Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
@@ -4031,6 +4036,8 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                 (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> ()
                   (</span><span class="org-block"><span class="keyword">interactive</span></span><span class="org-block">)
                   (blog--ensure-useful-section-anchors)
+                  (blog--refresh-posts)
+                  (blog--validate-unique-slugs)
                   (save-buffer)
                   (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd </span><span class="org-block"><span class="string">"M-RET"</span></span><span class="org-block">)
@@ -4261,6 +4268,30 @@ We use a two-branch model to keep <span class="org-verbatim">=master=</span> cle
 - <span class="org-verbatim">=peaceiris/actions-gh-pages=</span> force-pushes <span class="org-verbatim">=public/=</span>'s contents to <span class="org-verbatim">=gh-pages=</span>.
 - GitHub Pages serves <span class="org-verbatim">=gh-pages=</span> at the root, so URLs are flat: <span class="org-verbatim">=alhassy.com/foo=</span>.
 
+<span class="bold">*CI rebuilds everything, from scratch, every run.*</span>  The runner checks out
+<span class="org-verbatim">=master=</span> fresh (no <span class="org-verbatim">=public/=</span>), <span class="org-verbatim">=blog-publish-all=</span> starts with an empty
+<span class="org-verbatim">=public/=</span> and calls <span class="org-verbatim">=org-html-export-to-html=</span> on every publishable <span class="org-verbatim">=.org=</span> &#8212;
+no mtime comparisons, no diffing against prior output.  <span class="org-verbatim">=peaceiris/actions-
+gh-pages=</span> then force-pushes <span class="org-verbatim">=public/=</span> to <span class="org-verbatim">=gh-pages=</span>, overwriting whatever
+was there.  So every deploy regenerates every HTML file.
+
+The one apparent exception is container-style files: <span class="org-verbatim">=blog--subtree-stale-p=</span>
+compares a subtree's <span class="org-verbatim">=:MODIFIED:=</span> against <span class="org-verbatim">=&lt;slug&gt;.html=</span> on disk, and
+short-circuits re-export when the HTML is newer.  But on a fresh CI
+checkout there is no HTML on disk, so <span class="org-verbatim">=(file-exists-p html-file)=</span> is
+always <span class="org-verbatim">=nil=</span> and the short-circuit never fires.  The staleness check is
+interactive-preview machinery; CI re-exports every subtree regardless.
+
+Because the rebuild is always total, the consequence for validation is
+direct: a check either runs before every HTML is written, or it never
+runs at all.  That's why slug uniqueness is policed at <span class="org-verbatim">=C-x C-s=</span> preview
+time rather than on the CI path (see &#167;<span class="org-link"><a href="Seamlessly Previewing Articles within Emacs">Seamlessly Previewing Articles within Emacs</a></span>):
+authoring is where collisions get introduced, and preview is where they
+get caught.  The tradeoff is that a never-previewed-but-pushed edit with
+a duplicate slug would slip into CI and silently overwrite one HTML with
+another &#8212; if that ever bites, wire <span class="org-verbatim">=blog--validate-unique-slugs=</span> back
+into <span class="org-verbatim">=blog-publish-all=</span>.
+
 <span class="bold">*Inspecting what got deployed*</span> &#8212; the post-build state of the blog is visible
 at <span class="org-link"><a href="https://github.com/alhassy/alhassy.github.io/tree/gh-pages">the </a></span><span class="org-link"><span class="org-verbatim"><a href="https://github.com/alhassy/alhassy.github.io/tree/gh-pages">=gh-pages=</a></span></span><span class="org-link"><a href="https://github.com/alhassy/alhassy.github.io/tree/gh-pages"> branch on GitHub</a></span>.  Each CI run rewrites it entirely, so
 browsing that tree tells you exactly what <span class="org-verbatim">=alhassy.com=</span> is currently serving.
@@ -4334,7 +4365,6 @@ Dispatches on #+article_style: per file &#8212;
   (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (make-directory blog-publish-directory t)
   (blog--refresh-posts)
-  (blog--validate-unique-slugs)
   (</span><span class="org-block"><span class="keyword">dolist</span></span><span class="org-block"> (f (f-entries blog-posts-directory
                         (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> (x) (</span><span class="org-block"><span class="keyword">and</span></span><span class="org-block"> (s-suffix? </span><span class="org-block"><span class="string">".org"</span></span><span class="org-block"> x)
                                          (blog--publishable-p x)))))
