@@ -162,7 +162,6 @@ nearly instantaneously."
     (insert "#+title: " (read-string "Title: ")
             "\n#+author: " user-full-name
             "\n#+email: "  user-mail-address
-            "\n#+date: <" (format-time-string "%Y-%m-%d") ">"
             "\n#+modified: " (format-time-string "%Y-%m-%d")
             "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
                                                          blog-tags
@@ -203,7 +202,6 @@ a draft until you remove it before publishing."
     (insert
      "* " title " :draft:" tag-suffix "\n"
      ":PROPERTIES:\n"
-     ":DATE:        <" today ">\n"
      ":MODIFIED:    " today "\n"
      ":DESCRIPTION: " description "\n"
      ":IMAGE:       " image "\n"
@@ -226,7 +224,7 @@ a draft until you remove it before publishing."
 
 ;; TODO: Consider using: (format-time-string "%d %b %Y" ⋯) to have the same format across all articles.
 (defun @date (json)
-  "Extract the #+date: field from JSON."
+  "Extract the #+modified: field from JSON."
   (map-elt json "date"))
 
 (defun @file        (json) (map-elt json "file"))
@@ -337,7 +335,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
       (let* ((keyword-pairs
               (cl-loop for (prop.name prop.regex prop.default) on
                     `("title"                "^\\#\\+title:[ ]*\\(.+\\)$"                ,post-filename
-                      "date"                 "^\\#\\+date:[ ]*<\\([^]>]+\\)>$"           ,(format-time-string "%Y-%m-%d %a")
+                      "date"                 "^\\#\\+modified:[ ]*\\([0-9][-0-9 a-zA-Z:]+\\)$" ,(format-time-string "%Y-%m-%d")
                       "image"                "^\\#\\+fileimage: \\(.*\\)"                "emacs-birthday-present.png 350 350"
                       "description"          "^\\#\\+description:[ ]*\\(.+\\)$"          "I learned something neat, and wanted to share!"
                       "tags"                 "^\\#\\+filetags:[ ]*\\(.+\\)$"             "" ;; String; Space-separated
@@ -477,8 +475,9 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              ;; title: :TITLE: property overrides heading text
              (title (or (org-element-property :TITLE headline-node)
                         (org-element-property :raw-value headline-node)))
-             ;; date
-             (date-raw (org-element-property :DATE headline-node))
+             ;; date — prefer :MODIFIED:, fall back to :DATE: for old articles
+             (date-raw (or (org-element-property :MODIFIED headline-node)
+                           (org-element-property :DATE headline-node)))
              (date (if date-raw
                        (replace-regexp-in-string "[<>]" "" date-raw)
                      (format-time-string "%Y-%m-%d")))
@@ -909,7 +908,6 @@ which I place below at the top of the page.)
   (goto-char (point-min))
   (let ((post (blog--info (buffer-file-name))))
     (insert "#+options: toc:2 html-postamble:nil d:nil"
-            "\n#+date: " (format-time-string "%Y-%m-%d" (current-time))
             (if (buffer-narrowed-p) "\n#+options: broken-links:t" "")
             "\n blog:header blog:sanitise-title \n"
             "\n* Tags, then Image :ignore:"
@@ -1070,6 +1068,21 @@ the temp buffer by `blog--info'."
      "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
      (blog--read-remaining-js))))
 
+(defun blog--htmlize-apply-css (html-buf)
+  "Replace htmlize's inline <style> block in HTML-BUF with a link to doom-solarized-light.css.
+
+htmlize generates a session-specific <style> block whose colours depend
+on whatever theme is loaded at export time.  We axe it and link to the
+vendored doom-solarized-light.css instead, so every .org.html gets a
+consistent Gruvbox-light look regardless of the Emacs session."
+  (with-current-buffer html-buf
+    (goto-char (point-min))
+    (when (re-search-forward "<style type=\"text/css\">\n    <!--" nil t)
+      (let ((style-start (match-beginning 0)))
+        (when (re-search-forward "-->\n    </style>" nil t)
+          (delete-region style-start (match-end 0))
+          (insert "<link rel=\"stylesheet\" type=\"text/css\" href=\"resources/doom-solarized-light.css\">"))))))
+
 (defun blog--htmlize-file (file-name)
   "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file."
   (let ((org-hide-block-startup nil))
@@ -1079,6 +1092,7 @@ the temp buffer by `blog--info'."
       (outline-show-all)
       (let* ((inhibit-message t)
              (html-buf (htmlize-buffer)))
+        (blog--htmlize-apply-css html-buf)
         (with-current-buffer html-buf
           (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
           (kill-buffer))))
@@ -1468,6 +1482,7 @@ htmlize, and write the result."
           (outline-show-all)
           (let* ((inhibit-message t)
                  (html-buf (htmlize-buffer)))
+            (blog--htmlize-apply-css html-buf)
             (with-current-buffer html-buf
               (write-file (expand-file-name (concat slug ".org.html") blog-publish-directory))
               (kill-buffer))))
@@ -1496,7 +1511,7 @@ file-level keywords so that blog--style-setup runs unchanged."
             (erase-buffer)
             (insert
              "#+title: "                (cdr (assoc "title"       info)) "\n"
-             "#+date: <"               (cdr (assoc "date"         info)) ">\n"
+             "#+modified: "            (cdr (assoc "date"         info)) "\n"
              "#+fileimage: "           (cdr (assoc "image"        info)) "\n"
              "#+filetags: "            (cdr (assoc "tags"         info)) "\n"
              "#+description: "        (cdr (assoc "description"  info)) "\n"
@@ -1636,11 +1651,11 @@ forgot their #+date:."
     (cl-flet ((has (rx) (goto-char (point-min)) (re-search-forward rx nil t)))
       (cond
        ((has "^#\\+exclude_from_publish:") nil)
-       ((has "^#\\+date:") t)
+       ((has "^#\\+modified:") t)
        ((has "^#\\+article_style:[ ]*multiple") t)
        ((has "^#\\+site_nav:") t)
        (t (user-error
-           "%s has no #+date:, #+article_style: multiple, or #+site_nav: — add one, or #+exclude_from_publish: t if this is an include-only fragment"
+           "%s has no #+modified:, #+article_style: multiple, or #+site_nav: — add one, or #+exclude_from_publish: t if this is an include-only fragment"
            (f-filename file)))))))
 
 (defun blog-publish-all ()
