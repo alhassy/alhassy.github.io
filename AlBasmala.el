@@ -1,3 +1,7 @@
+(use-package org-special-block-extras)
+(org-special-block-extras-mode t)
+
+
 (org-deflink image
              "Provide a quick way to insert images along with credits via tooltips.
 
@@ -81,7 +85,7 @@ Here is the actual implementation:
    arguments indicating the anchor for this block as well as the background colour of the resulting block.
 
 For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
-friendly-soft-red to denote it as an "advanced" content that could be ignored
+friendly-soft-red to denote it as an 'advanced' content that could be ignored
 on a first reading of my article.
 Incidentally, orange and `#f2b195' are also nice 'warning' colours."
    (insert "\n#+html:"
@@ -481,7 +485,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons "url"         url)
               (cons "history"     history)
               (cons "abstract"    abstract)
-              (cons "draft"       (if draft? "t" nil)))))))
+              (cons "draft"       (if draft? "t" nil))
+              (cons "redirect"    (org-element-property :REDIRECT headline-node)))))))
 
 (defun blog--info-multiple (container-file)
   "Return a list of post-alists for all publishable top-level headings in CONTAINER-FILE.
@@ -523,6 +528,33 @@ Headings tagged :draft: are included but marked."
       (delq nil
             (cl-mapcar (lambda (h slug) (blog--info-subtree h container-file slug))
                        top-headings slugs)))))
+
+(defun blog--subtree-stale-p (heading-point slug info)
+  "Return non-nil when the article at HEADING-POINT needs republishing.
+
+Stale when any of:
+  • ~/blog/SLUG.html does not exist
+  • the :MODIFIED: property is absent on the heading
+  • the HTML file predates MODIFIED (mtime < MODIFIED date)
+  • the article has a :REDIRECT: and the redirected file is newer than MODIFIED"
+  (let* ((html-file  (expand-file-name (concat slug ".html") "~/blog/"))
+         (modified   (save-excursion
+                       (goto-char heading-point)
+                       (org-entry-get (point) "MODIFIED")))
+         (redirect   (cdr (assoc "redirect" info))))
+    (or (not (file-exists-p html-file))
+        (not modified)
+        ;; HTML mtime older than the recorded MODIFIED date?
+        (time-less-p (file-attribute-modification-time
+                      (file-attributes html-file))
+                     (date-to-time modified))
+        ;; For redirect articles: included file newer than MODIFIED?
+        (and redirect
+             (let ((rpath (expand-file-name redirect)))
+               (and (file-exists-p rpath)
+                    (time-less-p (date-to-time modified)
+                                 (file-attribute-modification-time
+                                  (file-attributes rpath)))))))))
 
 (org-defblock abstract (main) nil
   "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
@@ -695,13 +727,13 @@ Example uses:
     (org-html-export-to-html)))
 
 (org-deflink blog
-  "Provide the styles for "www.alhassy.com"'s "header" and "footer".
+  "Provide the styles for 'www.alhassy.com's header and footer.
 
-The use of "blog:footer" aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
+The use of 'blog:footer' aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
 and provides a Disqus comments sections. For details, consult the blog--footer function.
 
 Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
-We accomplish this with the help of some handy-dandy JavaScript: Just use "blog:sanitise-title".
+We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:sanitise-title'.
 "
       (pcase o-label
         ("header" (concat
@@ -720,7 +752,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use "blog:
         (_ "")))
 
 (defun blog--style-setup (_backend)
-  "Insert blog header (fancy title), tags, blog image (before "* Abstract"), and footer (links to tags).
+  "Insert blog header (fancy title), tags, blog image (before \"* Abstract\"), and footer (links to tags).
 
 There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
 Notice that if you explicitly provide options to change the toc, date, or show drawers, etc;
@@ -1196,14 +1228,14 @@ For a one-off use in an article, prepend #+html: to the result."
 (defvar my/blogging-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m (kbd "C-x C-s")
-      (lambda ()
-        (interactive)
-        (save-buffer)
-        (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
+                (lambda ()
+                  (interactive)
+                  (save-buffer)
+                  (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd "M-RET")
-      (lambda ()
-        (interactive)
-        (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
+                (lambda ()
+                  (interactive)
+                  (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
     (define-key m (kbd "C-c C-p") #'blog-publish-current-article)
     m)
   "Keymap for my/blogging-mode.")
@@ -1268,10 +1300,10 @@ Dispatches on #+article_style:
       (message "⇒ Assembling tags (%s)..." (s-join ", " article-tags))
       (blog--make-tag-pages-for-tags article-tags))
     (blog--git "add %s %s.html %s.org.html tag* rss.xml index.html%s"
-              (buffer-file-name) base base
-              (if (equal base "AlBasmala") " AlBasmala.el" ""))
+               (buffer-file-name) base base
+               (if (equal base "AlBasmala") " AlBasmala.el" ""))
     (blog--git "commit -m \"%s\"; git push"
-              (blog--commit-message (format "Publish: Article %s.org" base)))
+               (blog--commit-message (format "Publish: Article %s.org" base)))
     (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!")))
 
 
@@ -1330,33 +1362,38 @@ file-level keywords so that blog--style-setup runs unchanged."
              "\n")
             (save-buffer))
 
-          ;; 2. Copy subtree from container buffer, paste into temp buffer, then
-          ;;    delete the redundant top-level heading line and promote all children.
+          ;; 2. Populate the temp file body.
           ;;
-          ;;    After org-paste-subtree 1 the temp buffer looks like:
-          ;;      * Article Title          ← same as #+title:, unwanted as a section
-          ;;      ** Abstract :ignore:
-          ;;      ** Introduction ...
+          ;;    When the heading carries a :REDIRECT: property we simply emit a
+          ;;    #+include: directive pointing at the external file — Org's own
+          ;;    include machinery handles the rest during export.
           ;;
-          ;;    We delete just that heading line (not its content), then promote
-          ;;    every remaining heading once so they land at the right level:
-          ;;      * Abstract :ignore:
-          ;;      * Introduction ...
+          ;;    Otherwise we copy the subtree, paste it, axe the redundant
+          ;;    top-level heading line, and promote all children one level so
+          ;;    blog--style-setup's "^* Abstract" search finds them correctly:
           ;;
-          ;;    blog--style-setup's re-search-forward "^* Abstract" will find it.
-          (save-excursion
-            (goto-char heading-point)
-            (org-copy-subtree))
-          (with-current-buffer tmp-buf
-            (goto-char (point-max))
-            (org-paste-subtree 1)
-            ;; Find and delete the top-level heading line (the article title).
-            (goto-char (point-min))
-            (when (re-search-forward "^\\* " nil t)
-              (delete-region (line-beginning-position) (line-beginning-position 2)))
-            ;; Promote all remaining headings by one level (** -> *, *** -> **, etc.)
-            (org-map-entries #'org-promote t)
-            (save-buffer))
+          ;;      Before promotion   →   After
+          ;;      * Article Title        (deleted)
+          ;;      ** Abstract :ignore:   * Abstract :ignore:
+          ;;      ** Introduction ...    * Introduction ...
+          (let ((redirect (cdr (assoc "redirect" info))))
+            (if redirect
+                (with-current-buffer tmp-buf
+                  (goto-char (point-max))
+                  (insert (format "#+include: \"%s\"\n"
+                                  (expand-file-name redirect)))
+                  (save-buffer))
+              (save-excursion
+                (goto-char heading-point)
+                (org-copy-subtree))
+              (with-current-buffer tmp-buf
+                (goto-char (point-max))
+                (org-paste-subtree 1)
+                (goto-char (point-min))
+                (when (re-search-forward "^\\* " nil t)
+                  (delete-region (line-beginning-position) (line-beginning-position 2)))
+                (org-map-entries #'org-promote t)
+                (save-buffer))))
 
           ;; 3. Export through the full blog--style-setup pipeline.
           (with-current-buffer tmp-buf
@@ -1372,7 +1409,13 @@ file-level keywords so that blog--style-setup runs unchanged."
                            (expand-file-name (concat slug ".html") "~/blog/")
                            t)))
 
-          ;; 5. Per-article colourised source: htmlize the subtree narrowed copy.
+          ;; 5. Stamp :MODIFIED: on the source heading so future runs can detect
+          ;;    whether the HTML is up-to-date without re-exporting.
+          (save-excursion
+            (goto-char heading-point)
+            (org-set-property "MODIFIED" (format-time-string "%Y-%m-%d")))
+
+          ;; 6. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
 
       ;; Cleanup temp files regardless of errors.
@@ -1386,6 +1429,69 @@ file-level keywords so that blog--style-setup runs unchanged."
       (let ((tmp-html (concat (file-name-sans-extension tmp-org) ".html")))
         (when (file-exists-p tmp-html) (delete-file tmp-html))))))
 
+(defun blog--publish-multiple-articles (container-file)
+  "Publish each top-level heading of CONTAINER-FILE as a separate HTML article.
+
+Writes the derived slug back to the heading as a :SLUG: property so future
+publishes are stable even if the heading title changes.
+
+Returns the list of slugs that were published."
+  (let ((all-infos (blog--info-multiple container-file))
+        (results   '()))
+    (with-current-buffer (find-file-noselect container-file)
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward "^\\* " nil t)
+          (beginning-of-line)
+          (let* ((tags  (mapcar #'downcase (org-get-tags)))
+                 (title (org-get-heading t t t t))
+                 (slug  (or (org-entry-get (point) "SLUG")
+                            (blog--make-slug (or (org-entry-get (point) "TITLE") title)))))
+            (unless (member "noexport" tags)
+              ;; Persist the slug so it survives future title edits.
+              (unless (org-entry-get (point) "SLUG")
+                (org-set-property "SLUG" slug))
+              (let ((info (blog--find-info-by-slug slug all-infos)))
+                (if (blog--subtree-stale-p (point) slug info)
+                    (progn
+                      (message "=> Publishing subtree: %s (%s)..." title slug)
+                      (blog--publish-single-subtree (point) container-file all-infos slug)
+                      (push slug results))
+                  (message "=> Skipping up-to-date subtree: %s (%s)" title slug)
+                  (push slug results)))))
+          (org-end-of-subtree t t)))
+      (save-buffer))
+    (nreverse results)))
+
+
+(defun blog-publish-multiple ()
+  "Publish all articles from the multiple-style container at current buffer."
+  (interactive)
+  (let* ((container (buffer-file-name))
+         (base      (f-base container)))
+    (save-buffer)
+    (blog-preview-disable)
+    (message "=> Exporting all articles from %s..." base)
+    (let* ((slugs    (blog--publish-multiple-articles container))
+           (_ (progn (message "=> Refreshing post index...") (blog--refresh-posts)))
+           (all-tags (seq-uniq
+                      (-flatten
+                       (mapcar (lambda (slug)
+                                 (s-split " " (map-elt (blog--find-info-by-slug slug blog-posts) "tags")))
+                               slugs)))))
+      (message "=> Assembling tags (%s)..." (s-join ", " all-tags))
+      (blog--make-tag-pages-for-tags all-tags)
+      (blog--git "add %s tag* rss.xml index.html%s"
+                 container
+                 (s-join "" (mapcar (lambda (slug)
+                                      (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
+                                    slugs)))
+      (blog--git "commit -m \"%s\"; git push"
+                 (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
+    (message "=> It may take up to 1 minute for changes to be live at alhassy.com; congratulations!")))
+
+;; Initialize blog-posts and blog-tags now that all helpers are defined.
+(blog--refresh-posts)
 
 (defun blog--validate-no-orphan-html ()
   "Warn about ~/blog/*.html files with no corresponding known source.
@@ -1410,62 +1516,3 @@ Reports orphans but does not abort — the user decides what to do."
       (let ((msg (format "Orphan HTML files (no Org source): %s"
                          (s-join ", " (mapcar #'f-filename orphans)))))
         (if noninteractive (error msg) (message "⚠ %s" msg))))))
-
-(defun blog--publish-multiple-articles (container-file)
-  "Publish each top-level heading of CONTAINER-FILE as a separate HTML article.
-
-Writes the derived slug back to the heading as a :SLUG: property so future
-publishes are stable even if the heading title changes.
-
-Returns the list of slugs that were published."
-  (let ((all-infos (blog--info-multiple container-file))
-        (results   '()))
-    (with-current-buffer (find-file-noselect container-file)
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward "^\\* " nil t)
-          (beginning-of-line)
-          (let* ((tags  (mapcar #'downcase (org-get-tags)))
-                 (title (org-get-heading t t t t))
-                 (slug  (or (org-entry-get (point) "SLUG")
-                            (blog--make-slug (or (org-entry-get (point) "TITLE") title)))))
-            (unless (member "noexport" tags)
-              ;; Persist the slug so it survives future title edits.
-              (unless (org-entry-get (point) "SLUG")
-                (org-set-property "SLUG" slug))
-              (message "=> Publishing subtree: %s (%s)..." title slug)
-              (blog--publish-single-subtree (point) container-file all-infos slug)
-              (push slug results)))
-          (org-end-of-subtree t t)))
-      (save-buffer))
-    (nreverse results)))
-
-
-(defun blog-publish-multiple ()
-  "Publish all articles from the multiple-style container at current buffer."
-  (interactive)
-  (let* ((container (buffer-file-name))
-         (base      (f-base container)))
-    (save-buffer)
-    (blog-preview-disable)
-    (message "=> Exporting all articles from %s..." base)
-    (let* ((slugs    (blog--publish-multiple-articles container))
-           (_ (progn (message "=> Refreshing post index...") (blog--refresh-posts)))
-           (all-tags (seq-uniq
-                      (-flatten
-                       (mapcar (lambda (slug)
-                                 (s-split " " (map-elt (blog--find-info-by-slug slug blog-posts) "tags")))
-                               slugs)))))
-      (message "=> Assembling tags (%s)..." (s-join ", " all-tags))
-      (blog--make-tag-pages-for-tags all-tags)
-      (blog--git "add %s tag* rss.xml index.html%s"
-                container
-                (s-join "" (mapcar (lambda (slug)
-                                     (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
-                                   slugs)))
-      (blog--git "commit -m \"%s\"; git push"
-                (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
-    (message "=> It may take up to 1 minute for changes to be live at alhassy.com; congratulations!")))
-
-;; Initialize blog-posts and blog-tags now that all helpers are defined.
-(blog--refresh-posts)

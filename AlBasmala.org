@@ -1,4 +1,6 @@
-# -*- eval: (org-babel-load-file "AlBasmala.org") -*-
+(setq org-export-with-broken-links t) ;; TODO: Should avoid this! 
+
+## # -*- eval: (org-babel-load-file "AlBasmala.org") -*-
 #+title: AlBasmala: @@html: <br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 #+description: How my blog is setup (•̀ᴗ•́)و
 #+date: <2020-05-03 Sun>
@@ -7,204 +9,136 @@
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
-
+ 
 * COMMENT Speculative TODO-s
 
-Is this disastrous situation true?
-+ I have everything in a single directory??
-+ Why not have a ~src~ directory consisting of Org source text,
-  a ~resources~ directory consisting of CSS and JS and image & pdf & video & gif &
-  fontsassests,
-  then an output ~public~ directory that copies over statics and produces HTML?  
+1. Is this disastrous situation true?
+   + I have everything in a single directory??
+   + Why not have a ~src~ directory consisting of Org source text, a ~resources~
+     directory consisting of CSS and JS and image & pdf & video & gif &
+     fontsassests, then an output ~public~ directory that copies over statics and
+     produces HTML?
+  
+2. I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
 
--------------------------------------------------------------------------------- 
+3. TODO: The sections that have been tangled from my init: Just move that code
+   here. That code was written with my blog in mind, and so it deserves to be
+   here, and not in my init.
+   
+4. TODO: Look at stuff in my init and see what there is specifically serving my
+   blog; and move that here. Can always link to AlBasmala.html.
 
-<<outline-container-orgdb4bfb9>>
+5. Super simple validation: The number of blog posts can only increase.   
+   # ;; (length blog-posts) ⇒ 16
 
-<<text-orgdb4bfb9>>
-Second, once you have your publishing list configured, it can be
-difficult to keep your /org and /html directories in sync. Org Mode has
-a built-in solution for this: =ox-publish= uses a timestamp cache
-controlled by =org-publish-use-timestamps-flag=. When enabled (it's on
-by default), the =org-publish-needed-p= function checks each file's
-modification time against the last export and skips anything that hasn't
-changed. This can speed up the build process, but I've often had trouble
-with it and opted to simply delete the HTML contents and start fresh.
+6. TODO: When I'm done, look around and ensure there are no 'TODO's; or if there
+   are any, move them to my todo.org::Blog::Ideas section!
 
-Also, it has no way of cleaning up orphaned files. Let's say you delete
-or rename an =.org= file, the corresponding =.html= file will sit in the
-build directory, basically outdated and no longer being used but still
-there.
+7. TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think
+   there's any real reason for breaking consistency.
+   
+   - Need this conditional since AlBasmala lives in ~/blog whereas usually
+     articles live in ~/blog/posts.
 
-I've solved that problem here by wiping/deleting the html directory
-contents on each build via the build.el script. Though, this can
-increase your build time if you have a large amount of .org files.
-That's why I'd recommend keeping separate notebooks organized by topic.
+   In-particular, besides some extra code in blog--style-setup, by breaking consistency, AlBasmala does not produce tag
+   pages /not/ contribute to them! This is probably a good enough reason to have it live alongside the other posts!
 
-<<outline-container-orgd2316d1>>
-\\
+8. wrt org-link/blog:
+    TODO: For the footer, we want ~blog:footer|src|history~ where ~src~ is Boolean to
+    indicate generating the *.org.html file and ~history~ is the relevant repo.
+   
+   Low priority.
 
+9. font for links
+   #+html: <br>
+   #+begin_remark
+   Before we move on, I'd like to have heavy red font for links.
+   # +begin_src css :tangle ~/blog/blog-banner.css :noeval -n :tangle no
+   HERE PLS
+   # +end_src
+   But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
+   #+end_remark
+   
+10. wrt floating toc:
+    #+begin_remark Strange
+    If I zoom in over 100% in my browser, the toc disappears until I zoom out.
+    #+end_remark    
+    
+11. TODO: Make the floating toc "Ξ" be aware of links...
+     ... so that "doc:blog-new-article" renders nicely in the floating doc!
 
-:my-html-header__variable:
-See  [[the-html-header]] above
-In addition, we have two more pieces we would like to add to the header: Support
-for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
-LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
-[[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
-:end:
+12. Add dates, and sort by them.
+    - TODO: Do I really want to surface dates?
+    - TODO: Add #+date when publishing, otherwise order's are all wonky.
+      - Is this stroll true?  
+    
 
-#+begin_remark "ლ(ಠ益ಠ)ლ"
-I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
-#+end_remark
+13. TODO: Find-replace all px with percentages, then ensure things look good!?
 
-;; TODO: Consider a tag "draft", such that articles with this tag are not considered
-;; for publication? Or better, they are published and have a badge "Warning: Incomplete Draft", after all I think most articles are drafts since I want to be able to continously update them, that's why I have the "history" badge.
-;;
-;; Use "#+filetags: τ₁ τ₂ … τₙ"
-;; See (@tags ⋯) method.
+14. Magit and large HTML files
+    
+    Since I'm producing /massive/ HTML files for each post, trying to review changes with the default Magit buffer /which shows
+    all changes in the repository/ can be painfully slow. As such, when I'm blogging, let's change my ~C-x g~ binding from
+    doc:magit-status to doc:magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
+    ~C-x g D u~ to see the "u"nstaged "d"ifferences for the file, then stage what I like with ~s~, then ~C-x g c~ to "c"ommit whatever differences I have staged.
+    #+begin_src emacs-lisp
+    (bind-key "C-x g" #'magit-file-dispatch)
+    #+end_src
 
-;; TODO. (defun @tags (json) (s-split " " (map-elt json "tags"))) ;; TODO Have this be a list, in the actual json for future AngularJS search by tags
+    TODO: Think of a better way!
 
+15. Column Width
 
-TODO: The sections that have been tangled from my init: Just move that code
-here. That code was written with my blog in mind, and so it deserves to be here,
-and not in my init.
+    When blogging, I see live HTML previews whenever I save thanks to
+    doc:blog-preview.  As such, I cannot have my lines being too wide. I'll settle
+    for a modest 80 columns.  Then kbd:M-q will format my paragraphs to wrap nicely
+    into this 80-column width.
+    #+begin_src emacs-lisp
+    (setq-default fill-column 80)
+    #+end_src
+    
+    (When I'm coding with a single open window, I usually use a comfortable 120 columns.)
 
-TODO: Look at stuff in my init and see what there is specifically serving my
-blog; and move that here. Can always link to AlBasmala.html.
-
-# ;; (length blog-posts) ⇒ 16
-
-# TODO: When I'm done, look around and ensure there are no 'TODO's; or if there are any, move them to my todo.org::Blog::Ideas section!
-
-# ;; Need this conditional since AlBasmala lives in ~/blog whereas usually articles live in ~/blog/posts.
-# ;; TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think there's any real reason for breaking consistency.
-#
-# In-particular, besides some extra code in blog--style-setup, by breaking consistency, AlBasmala does not produce tag
-# pages /not/ contribute to them! This is probably a good enough reason to have it live alongside the other posts!
-
-# TODO: Following method crashes unexpectedly when there is no #image; this
-# should not be the case.
-# (blog-preview)
-
-# wrt org-link/blog:
-#  TODO: For the footer, we want ~blog:footer|src|history~ where ~src~ is Boolean to
-#  indicate generating the *.org.html file and ~history~ is the relevant repo.
-#
-# Low priority.
-
-
-** font for links
-#+html: <br>
-#+begin_remark
-Before we move on, I'd like to have heavy red font for links.
-# +begin_src css :tangle ~/blog/blog-banner.css :noeval -n :tangle no
-HERE PLS
-# +end_src
-But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
-#+end_remark
-
-** wrt floating toc:
-#+begin_remark Strange
-If I zoom in over 100% in my browser, the toc disappears until I zoom out.
-#+end_remark
-
-  (org-export-string-as
-     "*blog-new-article*"
-     'html
-     :body-only)
-
-
-** COMMENT TODO: Make the floating toc "Ξ" be aware of links...
-... so that "doc:blog-new-article" renders nicely in the floating doc!
-
-** TODO COMMENT Add dates, and sort by them.
-
-** TODO COMMENT avoid being asked for unicode encodings
-
-(cl-defun select-safe-coding-system-interactively (&rest args) (setq last-coding-system-specified 'utf-8))
-
-Related:
-- https://github.com/abingham/emacs-ycmd/issues/496
-- https://stackoverflow.com/questions/63644928/emacs-failed-quit-with-error-of-utf-8-cannot-encode
-
-** TODO Misc                                                       :noexport:
-:PROPERTIES:
-:CUSTOM_ID: Misc
-:END:
-TODO: Add #+date when publishing, otherwise order's are all wonky.
-
-TODO:
-Find-replace all px with percentages, then ensure things look good!
-
-*** Magit and large HTML files
-:PROPERTIES:
-:CUSTOM_ID: Magit-and-large-HTML-files
-:END:
-Since I'm producing /massive/ HTML files for each post, trying to review changes with the default Magit buffer /which shows
-all changes in the repository/ can be painfully slow. As such, when I'm blogging, let's change my ~C-x g~ binding from
-doc:magit-status to doc:magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
-~C-x g D u~ to see the "u"nstaged "d"ifferences for the file, then stage what I like with ~s~, then ~C-x g c~ to "c"ommit whatever differences I have staged.
-#+begin_src emacs-lisp
-(bind-key "C-x g" #'magit-file-dispatch)
-#+end_src
-
-*** Column Width
-:PROPERTIES:
-:CUSTOM_ID: Column-Width
-:END:
-When blogging, I see live HTML previews whenever I save thanks to
-doc:blog-preview.  As such, I cannot have my lines being too wide. I'll settle
-for a modest 80 columns.  Then kbd:M-q will format my paragraphs to wrap nicely
-into this 80-column width.
-#+begin_src emacs-lisp
-(setq-default fill-column 80)
-#+end_src
-
-(When I'm coding with a single open window, I usually use a comfortable 120 columns.)
-
-*** Required loads
-:PROPERTIES:
-:CUSTOM_ID: Clean-this-section-up
-:END:
-#+begin_src emacs-lisp :exports none
-;; cl-lib was published as a better (namespaced!) alternative to cl, which has a deprecation warning in Emacs27.
-;; Yet some old pacakges require cl, and so the below setq silences the deprecation warning.
-(setq byte-compile-warnings '(cl-functions))
-(require 'cl-lib) ;; to get loop instead of cl-loop, etc.
-
-(require 'shortdoc) ;; Essentially "tldr" but for Emacs Lisp!
-;; (cl-defun define-short-documentation-group (&rest _))
-;; (cl-defun org-duration-to-minutes (&rest _) )
-;; (cl-defun org-id-find-id-file (&rest _))
-
-(ignore-errors
-  (use-package org-preview-html)
-  (setq org-preview-html-viewer 'xwidget)
-  ;; (xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
-  (advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
-  (advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
-  (advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
-                                                           (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
-                                                           )))
-  (use-package org-special-block-extras)
-  ;;(load-file "~/blog/AlBasmala.el")
-  ) ;; M-x blog-preview
-
-;; Required for Github Actions; i.e., testing.
-;; TODO Clean me!
-(defun quelpa-read-cache ()) ;; Used somewhere, but not defined.
-;; See: quelpa-persistent-cache-file
-(setq quelpa-cache nil)
-
-;; Eager macro-expansion failure: (void-function all-the-icons-faicon)
-;; Symbol's function definition is void: all-the-icons-faicon
-#+end_src
-#+begin_src emacs-lisp :exports none
-;; Error in kill-emacs-hook (org-clock-save): (void-function org-clocking-buffer)
-(cl-defun org-clocking-buffer (&rest _))
-#+end_src
-
+16. Required loads
+     
+     #+begin_src emacs-lisp :exports none
+     ;; cl-lib was published as a better (namespaced!) alternative to cl, which has a deprecation warning in Emacs27.
+     ;; Yet some old pacakges require cl, and so the below setq silences the deprecation warning.
+     (setq byte-compile-warnings '(cl-functions))
+     (require 'cl-lib) ;; to get loop instead of cl-loop, etc.
+     
+     (require 'shortdoc) ;; Essentially "tldr" but for Emacs Lisp!
+     ;; (cl-defun define-short-documentation-group (&rest _))
+     ;; (cl-defun org-duration-to-minutes (&rest _) )
+     ;; (cl-defun org-id-find-id-file (&rest _))
+     
+     (ignore-errors
+       (use-package org-preview-html)
+       (setq org-preview-html-viewer 'xwidget)
+       ;; (xwidget-webkit-browse-url "https://github.com/adithyaov/helm-org-static-blog")
+       (advice-add #'xwidget-webkit-browse-url :before (lambda (&rest _) (doom-modeline-mode 0)))
+       (advice-add #'xwidget-webkit-browse-url :after (lambda (&rest _) (--map (with-current-buffer it (setq mode-line-format "%b %p L%l C%c")) (buffer-list)) ))
+       (advice-add #'doom-modeline-mode :before (lambda (&rest _)  (-let [kill-buffer-query-functions nil]
+                                                                (mapcar #'kill-buffer (--filter (s-starts-with? "*xwidget" (buffer-name it)) (buffer-list)))
+                                                                )))
+       (use-package org-special-block-extras)
+       ;;(load-file "~/blog/AlBasmala.el")
+       ) ;; M-x blog-preview
+     
+     ;; Required for Github Actions; i.e., testing.
+     ;; TODO Clean me!
+     (defun quelpa-read-cache ()) ;; Used somewhere, but not defined.
+     ;; See: quelpa-persistent-cache-file
+     (setq quelpa-cache nil)
+     
+     ;; Eager macro-expansion failure: (void-function all-the-icons-faicon)
+     ;; Symbol's function definition is void: all-the-icons-faicon
+     #+end_src
+     #+begin_src emacs-lisp :exports none
+     ;; Error in kill-emacs-hook (org-clock-save): (void-function org-clocking-buffer)
+     (cl-defun org-clocking-buffer (&rest _))
+     #+end_src
+     
 *** COMMENT Arabic Setup    :Possibly_already_in_AlBasmala_so_just_load_that:
 :PROPERTIES:
 :CUSTOM_ID: COMMENT-Arabic-Setup
@@ -249,6 +183,9 @@ into this 80-column width.
 (load-file "~/blog/AlBasmala.el")
 
 #+begin_src emacs-lisp :exports code
+(use-package org-special-block-extras)
+(org-special-block-extras-mode t)
+
 (org-deflink card
  "Show one of 6 hardcoded phrases as a small inline image."
  (-let [url
@@ -1156,7 +1093,7 @@ Let's use [[https://github.com/bastibe/org-static-blog][org-static-block]] to ma
   understand, and, most importantly, it was super easy to get started using it
   using the [[https://github.com/bastibe/org-static-blog#examples][given example]].
 
-* COMMENT Abstract                                                           :ignore:
+* Abstract                                                           :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Abstract
 :END:
@@ -1194,6 +1131,10 @@ Here are some notable features of my blog.
 A quick way to embed clickable images, along with tooltip credits and other configs.
 
 #+begin_src emacs-lisp :exports code
+(use-package org-special-block-extras)
+(org-special-block-extras-mode t)
+
+
 (org-deflink image
              "Provide a quick way to insert images along with credits via tooltips.
 
@@ -1319,7 +1260,7 @@ Here is the actual implementation:
    arguments indicating the anchor for this block as well as the background colour of the resulting block.
 
 For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
-friendly-soft-red to denote it as an "advanced" content that could be ignored
+friendly-soft-red to denote it as an 'advanced' content that could be ignored
 on a first reading of my article.
 Incidentally, orange and `#f2b195' are also nice 'warning' colours."
    (insert "\n#+html:"
@@ -1332,6 +1273,7 @@ Incidentally, orange and `#f2b195' are also nice 'warning' colours."
    (org-next-visible-heading 1)
    (insert "#+html: </details> </div>"))
 #+END_SRC
+
 
 ** COMMENT Demo
 See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/
@@ -1447,7 +1389,7 @@ tree.
 (push "~/blog/posts/arabic-glossary.org" org-docs-libraries)
 #+end_src
 
-* COMMENT Presentation Order
+* TODO COMMENT Presentation Order
 :PROPERTIES:
 :CUSTOM_ID: COMMENT-Presentation-Order
 :END:
@@ -1461,7 +1403,7 @@ We start off with
    - Which I use since it provides me with a nice index.html to showcase my posts,
      a tagging mechanism, an RSS mechanism, etc.
 
-* COMMENT Preview :move_to_init:Mention_in_AlBasmala:
+* TODO COMMENT Preview                            :move_to_init:Mention_in_AlBasmala:
 :PROPERTIES:
 :CUSTOM_ID: COMMENT-Preview
 :END:
@@ -1674,8 +1616,9 @@ need no changes; they just see more entries.
 | =blog--info-subtree-abstract= | Resolves abstract from property / child heading / first paragraph |
 | =blog--info-subtree= | Extracts one heading's metadata via =org-element= |
 | =blog--info-multiple= | Parses an entire container; returns a list of alists |
-| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html= |
-| =blog--publish-multiple-articles= | Orchestrates per-heading exports for a container |
+| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html=; stamps =:MODIFIED:= |
+| =blog--subtree-stale-p= | Predicate: returns non-nil when a subtree's HTML is out of date |
+| =blog--publish-multiple-articles= | Orchestrates per-heading exports; skips up-to-date subtrees |
 | =blog-publish-multiple= | Full publish cycle (export → posts.json → index → git push) |
 | =blog-preview-subtree= | Previews heading at point via xwidget on every save |
 | =blog-new-post= | Inserts a heading skeleton (2 prompts: title + description) |
@@ -2371,7 +2314,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons "url"         url)
               (cons "history"     history)
               (cons "abstract"    abstract)
-              (cons "draft"       (if draft? "t" nil)))))))
+              (cons "draft"       (if draft? "t" nil))
+              (cons "redirect"    (org-element-property :REDIRECT headline-node)))))))
 
 (defun blog--info-multiple (container-file)
   "Return a list of post-alists for all publishable top-level headings in CONTAINER-FILE.
@@ -2413,7 +2357,144 @@ Headings tagged :draft: are included but marked."
       (delq nil
             (cl-mapcar (lambda (h slug) (blog--info-subtree h container-file slug))
                        top-headings slugs)))))
+
+(defun blog--subtree-stale-p (heading-point slug info)
+  "Return non-nil when the article at HEADING-POINT needs republishing.
+
+Stale when any of:
+  • ~/blog/SLUG.html does not exist
+  • the :MODIFIED: property is absent on the heading
+  • the HTML file predates MODIFIED (mtime < MODIFIED date)
+  • the article has a :REDIRECT: and the redirected file is newer than MODIFIED"
+  (let* ((html-file  (expand-file-name (concat slug ".html") "~/blog/"))
+         (modified   (save-excursion
+                       (goto-char heading-point)
+                       (org-entry-get (point) "MODIFIED")))
+         (redirect   (cdr (assoc "redirect" info))))
+    (or (not (file-exists-p html-file))
+        (not modified)
+        ;; HTML mtime older than the recorded MODIFIED date?
+        (time-less-p (file-attribute-modification-time
+                      (file-attributes html-file))
+                     (date-to-time modified))
+        ;; For redirect articles: included file newer than MODIFIED?
+        (and redirect
+             (let ((rpath (expand-file-name redirect)))
+               (and (file-exists-p rpath)
+                    (time-less-p (date-to-time modified)
+                                 (file-attribute-modification-time
+                                  (file-attributes rpath)))))))))
 #+end_src
+
+** REDIRECT: zero-duplication bridges to external Org files :details:
+
+Often a project already has a lovingly maintained =README.org= (or a
+self-contained section of =~/.emacs.d/init.org=) that /is/ the article — there is
+no point copying it into a container heading just to republish it here.
+
+The =:REDIRECT:= property solves this.  Give any container heading a path (tilde
+and environment variables are expanded) and the publish pipeline replaces the
+subtree body with a single =#+include:= directive pointing at that file.  Org's
+own include machinery does the rest — the result is indistinguishable from an
+article whose body was typed directly in the container.
+
+#+begin_src org :tangle no
+,* My Literate Emacs Config :emacs:lisp:
+:PROPERTIES:
+:DATE:        <2024-01-15>
+:DESCRIPTION: A literate Emacs configuration, tangled from Org and readable as prose.
+:REDIRECT:    ~/.emacs.d/init.org
+:END:
+#+end_src
+
+When =blog-publish-multiple= processes this heading it synthesises the usual
+file-level keyword preamble (=#+title:=, =#+date:=, etc.) and then appends
+
+#+begin_example
+#+include: "/Users/musa/.emacs.d/init.org"
+#+end_example
+
+No subtree content is copied or promoted — the export proceeds through the
+identical =blog--style-setup= pipeline as any other article.
+
+Forcing a republish is a matter of nudging the staleness check (see
+§[[MODIFIED-stale-check]]).  Any of the following suffice:
+
+- Axe the =:MODIFIED:= property from the drawer.
+- Delete =~/blog/<slug>.html= outright.
+- =touch= the redirected file so its mtime is newer than =:MODIFIED:=.
+
+The new key ="redirect"= is surfaced in every alist produced by
+=blog--info-subtree= and passed through the full pipeline, so tag pages, the RSS
+feed, and the index all treat redirect articles identically to hand-authored ones.
+
+** MODIFIED: universal staleness check for container articles :details:
+:PROPERTIES:
+:CUSTOM_ID: MODIFIED-stale-check
+:END:
+
+Previously every invocation of =blog-publish-multiple= unconditionally
+re-exported every heading — correct, but increasingly slow for large containers.
+
+We now stamp a =:MODIFIED: <YYYY-MM-DD>= property on each heading /after/ a
+successful export.  Before the next export =blog--subtree-stale-p= checks:
+
+1. Does =~/blog/<slug>.html= exist at all?
+2. Is =:MODIFIED:= present on the heading?
+3. Is the HTML file's mtime ≥ the =:MODIFIED:= date?
+4. For =:REDIRECT:= articles only — is the included file's mtime ≤ =:MODIFIED:=?
+
+All four must hold for the subtree to be considered fresh.  A "no" on any of them
+triggers a full re-export and a fresh =:MODIFIED:= stamp.
+
+The implementation reaches for nothing exotic — =file-attributes=,
+=file-attribute-modification-time=, =date-to-time=, and =time-less-p= are all
+stock Emacs Lisp.
+
+#+begin_src emacs-lisp :tangle no
+(defun blog--subtree-stale-p (heading-point slug info)
+  "Return non-nil when the article at HEADING-POINT needs republishing.
+
+Stale when any of:
+  • ~/blog/SLUG.html does not exist
+  • the :MODIFIED: property is absent on the heading
+  • the HTML file predates MODIFIED (mtime < MODIFIED date)
+  • the article has a :REDIRECT: and the redirected file is newer than MODIFIED"
+  (let* ((html-file  (expand-file-name (concat slug ".html") "~/blog/"))
+         (modified   (save-excursion
+                       (goto-char heading-point)
+                       (org-entry-get (point) "MODIFIED")))
+         (redirect   (cdr (assoc "redirect" info))))
+    (or (not (file-exists-p html-file))
+        (not modified)
+        (time-less-p (file-attribute-modification-time
+                      (file-attributes html-file))
+                     (date-to-time modified))
+        (and redirect
+             (let ((rpath (expand-file-name redirect)))
+               (and (file-exists-p rpath)
+                    (time-less-p (date-to-time modified)
+                                 (file-attribute-modification-time
+                                  (file-attributes rpath)))))))))
+#+end_src
+
+=blog--publish-multiple-articles= now wraps each per-heading export in a
+conditional:
+
+#+begin_src emacs-lisp :tangle no
+(let ((info (blog--find-info-by-slug slug all-infos)))
+  (if (blog--subtree-stale-p (point) slug info)
+      (progn
+        (message "=> Publishing subtree: %s (%s)..." title slug)
+        (blog--publish-single-subtree (point) container-file all-infos slug)
+        (push slug results))
+    (message "=> Skipping up-to-date subtree: %s (%s)" title slug)
+    (push slug results)))
+#+end_src
+
+Both branches push the slug into =results= so the calling =blog-publish-multiple=
+still refreshes the index, RSS, and tag pages for /all/ articles — just without
+touching HTML that is already current.
 
 ** The <code>#+begin_abstract</code> is an Org-mode Special Block :details_orange:
 
@@ -2661,13 +2742,13 @@ In any Org-mode file ---including random ones that are not even for my blog--- I
 This is a minor alteration from the examples within the docstring of doc:org-deflink.
 #+begin_src emacs-lisp :exports code
 (org-deflink blog
-  "Provide the styles for "www.alhassy.com"'s "header" and "footer".
+  "Provide the styles for 'www.alhassy.com's header and footer.
 
-The use of "blog:footer" aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
+The use of 'blog:footer' aims to provide a clickable list of tags, produce an HTMLized version of the Org source,
 and provides a Disqus comments sections. For details, consult the blog--footer function.
 
 Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
-We accomplish this with the help of some handy-dandy JavaScript: Just use "blog:sanitise-title".
+We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:sanitise-title'.
 "
       (pcase o-label
         ("header" (concat
@@ -2701,7 +2782,7 @@ Example usage: (blog-posts \"java-cheat-sheet\")
 ** blog--style-setup: A function to insert org-link/blog into a buffer :details:
 #+begin_src emacs-lisp
 (defun blog--style-setup (_backend)
-  "Insert blog header (fancy title), tags, blog image (before "* Abstract"), and footer (links to tags).
+  "Insert blog header (fancy title), tags, blog image (before \"* Abstract\"), and footer (links to tags).
 
 There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
 Notice that if you explicitly provide options to change the toc, date, or show drawers, etc;
@@ -3787,14 +3868,14 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
 (defvar my/blogging-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m (kbd "C-x C-s")
-      (lambda ()
-        (interactive)
-        (save-buffer)
-        (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
+                (lambda ()
+                  (interactive)
+                  (save-buffer)
+                  (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd "M-RET")
-      (lambda ()
-        (interactive)
-        (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
+                (lambda ()
+                  (interactive)
+                  (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
     (define-key m (kbd "C-c C-p") #'blog-publish-current-article)
     m)
   "Keymap for my/blogging-mode.")
@@ -3859,10 +3940,10 @@ Dispatches on #+article_style:
       (message "⇒ Assembling tags (%s)..." (s-join ", " article-tags))
       (blog--make-tag-pages-for-tags article-tags))
     (blog--git "add %s %s.html %s.org.html tag* rss.xml index.html%s"
-              (buffer-file-name) base base
-              (if (equal base "AlBasmala") " AlBasmala.el" ""))
+               (buffer-file-name) base base
+               (if (equal base "AlBasmala") " AlBasmala.el" ""))
     (blog--git "commit -m \"%s\"; git push"
-              (blog--commit-message (format "Publish: Article %s.org" base)))
+               (blog--commit-message (format "Publish: Article %s.org" base)))
     (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!")))
 
 
@@ -3921,33 +4002,38 @@ file-level keywords so that blog--style-setup runs unchanged."
              "\n")
             (save-buffer))
 
-          ;; 2. Copy subtree from container buffer, paste into temp buffer, then
-          ;;    delete the redundant top-level heading line and promote all children.
+          ;; 2. Populate the temp file body.
           ;;
-          ;;    After org-paste-subtree 1 the temp buffer looks like:
-          ;;      * Article Title          ← same as #+title:, unwanted as a section
-          ;;      ** Abstract :ignore:
-          ;;      ** Introduction ...
+          ;;    When the heading carries a :REDIRECT: property we simply emit a
+          ;;    #+include: directive pointing at the external file — Org's own
+          ;;    include machinery handles the rest during export.
           ;;
-          ;;    We delete just that heading line (not its content), then promote
-          ;;    every remaining heading once so they land at the right level:
-          ;;      * Abstract :ignore:
-          ;;      * Introduction ...
+          ;;    Otherwise we copy the subtree, paste it, axe the redundant
+          ;;    top-level heading line, and promote all children one level so
+          ;;    blog--style-setup's "^* Abstract" search finds them correctly:
           ;;
-          ;;    blog--style-setup's re-search-forward "^* Abstract" will find it.
-          (save-excursion
-            (goto-char heading-point)
-            (org-copy-subtree))
-          (with-current-buffer tmp-buf
-            (goto-char (point-max))
-            (org-paste-subtree 1)
-            ;; Find and delete the top-level heading line (the article title).
-            (goto-char (point-min))
-            (when (re-search-forward "^\\* " nil t)
-              (delete-region (line-beginning-position) (line-beginning-position 2)))
-            ;; Promote all remaining headings by one level (** -> *, *** -> **, etc.)
-            (org-map-entries #'org-promote t)
-            (save-buffer))
+          ;;      Before promotion   →   After
+          ;;      * Article Title        (deleted)
+          ;;      ** Abstract :ignore:   * Abstract :ignore:
+          ;;      ** Introduction ...    * Introduction ...
+          (let ((redirect (cdr (assoc "redirect" info))))
+            (if redirect
+                (with-current-buffer tmp-buf
+                  (goto-char (point-max))
+                  (insert (format "#+include: \"%s\"\n"
+                                  (expand-file-name redirect)))
+                  (save-buffer))
+              (save-excursion
+                (goto-char heading-point)
+                (org-copy-subtree))
+              (with-current-buffer tmp-buf
+                (goto-char (point-max))
+                (org-paste-subtree 1)
+                (goto-char (point-min))
+                (when (re-search-forward "^\\* " nil t)
+                  (delete-region (line-beginning-position) (line-beginning-position 2)))
+                (org-map-entries #'org-promote t)
+                (save-buffer))))
 
           ;; 3. Export through the full blog--style-setup pipeline.
           (with-current-buffer tmp-buf
@@ -3963,7 +4049,13 @@ file-level keywords so that blog--style-setup runs unchanged."
                            (expand-file-name (concat slug ".html") "~/blog/")
                            t)))
 
-          ;; 5. Per-article colourised source: htmlize the subtree narrowed copy.
+          ;; 5. Stamp :MODIFIED: on the source heading so future runs can detect
+          ;;    whether the HTML is up-to-date without re-exporting.
+          (save-excursion
+            (goto-char heading-point)
+            (org-set-property "MODIFIED" (format-time-string "%Y-%m-%d")))
+
+          ;; 6. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
 
       ;; Cleanup temp files regardless of errors.
@@ -3976,32 +4068,9 @@ file-level keywords so that blog--style-setup runs unchanged."
       (when (file-exists-p tmp-org) (delete-file tmp-org))
       (let ((tmp-html (concat (file-name-sans-extension tmp-org) ".html")))
         (when (file-exists-p tmp-html) (delete-file tmp-html))))))
+#+end_src
 
-
-(defun blog--validate-no-orphan-html ()
-  "Warn about ~/blog/*.html files with no corresponding known source.
-
-An HTML file is \"known\" if its basename matches a slug in blog-posts or is a
-reserved file (index, tag pages, AlBasmala, rss, sitemap, etc.).
-Reports orphans but does not abort — the user decides what to do."
-  (let* ((all-known    (seq-uniq
-                        (cl-loop for p in blog-posts
-                                 when (@slug p) collect (@slug p)
-                                 when (@file p) collect (f-base (@file p)))))
-         (reserved-rx  (rx bos (or "index" "rss" "sitemap" "404" "AlBasmala"
-                                   (seq "tag-" (+ anything)))
-                           eos))
-         (orphans      (seq-filter
-                        (lambda (f)
-                          (let ((base (f-base f)))
-                            (and (not (string-match-p reserved-rx base))
-                                 (not (member base all-known)))))
-                        (f-glob "*.html" "~/blog/"))))
-    (when orphans
-      (let ((msg (format "Orphan HTML files (no Org source): %s"
-                         (s-join ", " (mapcar #'f-filename orphans)))))
-        (if noninteractive (error msg) (message "⚠ %s" msg))))))
-
+#+begin_src emacs-lisp
 (defun blog--publish-multiple-articles (container-file)
   "Publish each top-level heading of CONTAINER-FILE as a separate HTML article.
 
@@ -4024,9 +4093,14 @@ Returns the list of slugs that were published."
               ;; Persist the slug so it survives future title edits.
               (unless (org-entry-get (point) "SLUG")
                 (org-set-property "SLUG" slug))
-              (message "=> Publishing subtree: %s (%s)..." title slug)
-              (blog--publish-single-subtree (point) container-file all-infos slug)
-              (push slug results)))
+              (let ((info (blog--find-info-by-slug slug all-infos)))
+                (if (blog--subtree-stale-p (point) slug info)
+                    (progn
+                      (message "=> Publishing subtree: %s (%s)..." title slug)
+                      (blog--publish-single-subtree (point) container-file all-infos slug)
+                      (push slug results))
+                  (message "=> Skipping up-to-date subtree: %s (%s)" title slug)
+                  (push slug results)))))
           (org-end-of-subtree t t)))
       (save-buffer))
     (nreverse results)))
@@ -4050,19 +4124,68 @@ Returns the list of slugs that were published."
       (message "=> Assembling tags (%s)..." (s-join ", " all-tags))
       (blog--make-tag-pages-for-tags all-tags)
       (blog--git "add %s tag* rss.xml index.html%s"
-                container
-                (s-join "" (mapcar (lambda (slug)
-                                     (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
-                                   slugs)))
+                 container
+                 (s-join "" (mapcar (lambda (slug)
+                                      (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
+                                    slugs)))
       (blog--git "commit -m \"%s\"; git push"
-                (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
+                 (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
     (message "=> It may take up to 1 minute for changes to be live at alhassy.com; congratulations!")))
 
 ;; Initialize blog-posts and blog-tags now that all helpers are defined.
 (blog--refresh-posts)
 #+end_src
+* Orphan HTML Validation
+:PROPERTIES:
+:CREATED:  [2026-05-04 Mon 13:05]
+:END:
 
-* COMMENT Publishing with  =[C-u C-u] C-c C-b=
+Second, once you have your publishing list configured, it can be
+difficult to keep your /org and /html directories in sync. Org Mode has
+a built-in solution for this: =ox-publish= uses a timestamp cache
+controlled by =org-publish-use-timestamps-flag=. When enabled (it's on
+by default), the =org-publish-needed-p= function checks each file's
+modification time against the last export and skips anything that hasn't
+changed. This can speed up the build process, but I've often had trouble
+with it and opted to simply delete the HTML contents and start fresh.
+
+Also, it has no way of cleaning up orphaned files. Let's say you delete
+or rename an =.org= file, the corresponding =.html= file will sit in the
+build directory, basically outdated and no longer being used but still
+there.
+
+I've solved that problem here by wiping/deleting the html directory
+contents on each build via the build.el script. Though, this can
+increase your build time if you have a large amount of .org files.
+That's why I'd recommend keeping separate notebooks organized by topic.
+
+#+begin_src emacs-lisp
+(defun blog--validate-no-orphan-html ()
+  "Warn about ~/blog/*.html files with no corresponding known source.
+
+An HTML file is \"known\" if its basename matches a slug in blog-posts or is a
+reserved file (index, tag pages, AlBasmala, rss, sitemap, etc.).
+Reports orphans but does not abort — the user decides what to do."
+  (let* ((all-known    (seq-uniq
+                        (cl-loop for p in blog-posts
+                                 when (@slug p) collect (@slug p)
+                                 when (@file p) collect (f-base (@file p)))))
+         (reserved-rx  (rx bos (or "index" "rss" "sitemap" "404" "AlBasmala"
+                                   (seq "tag-" (+ anything)))
+                           eos))
+         (orphans      (seq-filter
+                        (lambda (f)
+                          (let ((base (f-base f)))
+                            (and (not (string-match-p reserved-rx base))
+                                 (not (member base all-known)))))
+                        (f-glob "*.html" "~/blog/"))))
+    (when orphans
+      (let ((msg (format "Orphan HTML files (no Org source): %s"
+                         (s-join ", " (mapcar #'f-filename orphans)))))
+        (if noninteractive (error msg) (message "⚠ %s" msg))))))
+#+end_src
+ 
+* TODO COMMENT Publishing with  =[C-u C-u] C-c C-b=
   :PROPERTIES:
   :CUSTOM_ID: Publishing-with-C-u-C-u-C-c-C-b
   :END:
@@ -4106,7 +4229,7 @@ C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts
 
 Line [[(delAll)]]: To re-render an article, just remove its corresponding .html file ;-)
 
-* COMMENT [Part of publishing a file] org-static-blog-post-preamble: Making this work with =org-notes-style= and =org-static-blog=
+* TODO COMMENT [Part of publishing a file] org-static-blog-post-preamble: Making this work with =org-notes-style= and =org-static-blog=
 :PROPERTIES:
 :CUSTOM_ID: Making-this-work-with-org-notes-style-and-org-static-blog
 :END:
@@ -4216,7 +4339,7 @@ Further resources:
 - [[https://richpauloo.github.io/2019-11-17-Linking-a-Custom-Domain-to-Github-Pages/][Linking A Custom Domain To Github Pages]]
 #+end_details
 
-* COMMENT Archives
+* TODO COMMENT Archives
 ** Org Marco: "This section has been #+include'd from my init.org"   :ignore:
 :PROPERTIES:
 :CUSTOM_ID: Org-Marco-This-section-has-been-include'd-from-my-init-org
@@ -4266,4 +4389,3 @@ unsplash unsplash)))
 unsplash:XXX0GQfgMy8
 
 
-(cl-defun org-export--annotate-info (&rest args) (make-hash-table))
