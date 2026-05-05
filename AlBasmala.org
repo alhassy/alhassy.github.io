@@ -1614,9 +1614,8 @@ same schema as a standalone post — so =blog-make-index-page= and =blog-make-al
 need no changes; they just see more entries.
 
 On every publish run the derived slug is written back to the heading's =:PROPERTIES:=
-drawer (=:SLUG: <slug>=) unless one is already there — mirroring how =:MODIFIED:= is
-stamped after each export.  This makes the URL stable against future title edits with
-zero author effort.
+drawer (=:SLUG: <slug>=) unless one is already there.  This makes the URL stable
+against future title edits with zero author effort.
 
 Global uniqueness is enforced by =blog--validate-unique-slugs=: it collects every
 slug across every container and standalone file and calls =user-error= on the first
@@ -1973,6 +1972,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
                       "history_url"          "^\\#\\+history_url:[ ]*\\(.+\\)$"          nil
                       "htmlized_source_url"  "^\\#\\+htmlized_source_url:[ ]*\\(.+\\)$"  nil
                       "site_nav"             "^\\#\\+site_nav:[ ]*\\(.+\\)$"             nil
+                      "modified"             "^\\#\\+modified:[ ]*\\(.+\\)$"             nil
                       )
                   by 'cdddr
                   ;; See: https://stackoverflow.com/questions/19774603/convert-alist-to-from-regular-list-in-elisp
@@ -2201,6 +2201,7 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons "abstract"    abstract)
               (cons "draft"       (if draft? "t" nil))
               (cons "redirect"    (org-element-property :REDIRECT headline-node))
+              (cons "modified"    (org-element-property :MODIFIED headline-node))
               (cons "site_nav"    (org-element-property :SITE_NAV headline-node)))))))
 
 (defun blog--info-multiple (container-file)
@@ -2244,32 +2245,6 @@ Headings tagged :draft: are included but marked."
             (cl-mapcar (lambda (h slug) (blog--info-subtree h container-file slug))
                        top-headings slugs)))))
 
-(defun blog--subtree-stale-p (heading-point slug info)
-  "Return non-nil when the article at HEADING-POINT needs republishing.
-
-Stale when any of:
-  • ~/blog/SLUG.html does not exist
-  • the :MODIFIED: property is absent on the heading
-  • the HTML file predates MODIFIED (mtime < MODIFIED date)
-  • the article has a :REDIRECT: and the redirected file is newer than MODIFIED"
-  (let* ((html-file  (expand-file-name (concat slug ".html") blog-posts-directory))
-         (modified   (save-excursion
-                       (goto-char heading-point)
-                       (org-entry-get (point) "MODIFIED")))
-         (redirect   (cdr (assoc "redirect" info))))
-    (or (not (file-exists-p html-file))
-        (not modified)
-        ;; HTML mtime older than the recorded MODIFIED date?
-        (time-less-p (file-attribute-modification-time
-                      (file-attributes html-file))
-                     (date-to-time modified))
-        ;; For redirect articles: included file newer than MODIFIED?
-        (and redirect
-             (let ((rpath (expand-file-name redirect)))
-               (and (file-exists-p rpath)
-                    (time-less-p (date-to-time modified)
-                                 (file-attribute-modification-time
-                                  (file-attributes rpath)))))))))
 #+end_src
 
 ** REDIRECT: zero-duplication bridges to external Org files :details:
@@ -2388,93 +2363,72 @@ A no-op if REDIRECT already points into `blog-redirects-subdir'."
           (copy-file src dest t))))
       (concat blog-redirects-subdir slug ".org"))))
 
-(defun blog--vendor-redirects ()
-  "Walk the current buffer's top-level headings; for each with a :REDIRECT:
-property, vendor the source into `blog-redirects-subdir' and rewrite the
-property to the in-repo path.  Only touches multiple-style containers."
+(defun blog--assign-slugs ()
+  "Walk the current buffer's top-level headings; for each without a :SLUG:
+property, derive one from the heading title (or :TITLE: override) and
+write it back via `org-set-property'.
+
+Called from the C-x C-s preview binding so that, by the time a source
+lands in git, every container heading carries a stable :SLUG:.  CI then
+reads :SLUG: and errors out if missing, rather than silently generating
+one and writing back to a throwaway checkout."
   (when (blog--multiple-style-p)
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward "^\\* " nil t)
-        (let ((redirect (org-entry-get (point) "REDIRECT")))
-          (when (and redirect (not (blog--already-vendored-p redirect)))
+        (let ((tags (mapcar #'downcase (org-get-tags))))
+          (unless (or (member "noexport" tags)
+                      (org-entry-get (point) "SLUG"))
             (let* ((title (org-get-heading t t t t))
-                   (slug  (or (org-entry-get (point) "SLUG")
-                              (blog--make-slug
-                               (or (org-entry-get (point) "TITLE") title))))
-                   (vendored (blog--vendor-one-redirect slug redirect)))
+                   (slug  (blog--make-slug
+                           (or (org-entry-get (point) "TITLE") title))))
+              (org-set-property "SLUG" slug)
+              (message "=> Assigned :SLUG: %s to %s" slug title))))
+        (org-end-of-subtree t t)))))
+
+(defun blog--vendor-redirects ()
+  "Walk the current buffer's top-level headings; for each with a :REDIRECT:
+property, vendor the source into `blog-redirects-subdir' and rewrite the
+property to the in-repo path.  Only touches multiple-style containers.
+
+Relies on `blog--assign-slugs' having run first so every heading carries
+a :SLUG: property we can build the vendored filename from."
+  (when (blog--multiple-style-p)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\* " nil t)
+        (let ((redirect (org-entry-get (point) "REDIRECT"))
+              (slug     (org-entry-get (point) "SLUG")))
+          (when (and redirect slug (not (blog--already-vendored-p redirect)))
+            (let ((vendored (blog--vendor-one-redirect slug redirect)))
               (org-entry-put (point) "REDIRECT" vendored)
               (message "=> Vendored redirect for %s ← %s" slug redirect))))
         (org-end-of-subtree t t)))))
 #+end_src
 
-** MODIFIED: universal staleness check for container articles :details:
+** MODIFIED: retired staleness machinery                             :details:
 :PROPERTIES:
 :CUSTOM_ID: MODIFIED-stale-check
 :END:
 
-Previously every container publish unconditionally re-exported every heading
-— correct, but increasingly slow for large containers.
+For historical interest: there /was/ a =:MODIFIED: <YYYY-MM-DD>= property
+stamped on each container heading after a successful export, and a
+predicate =blog--subtree-stale-p= that compared =:MODIFIED:= to the
+=<slug>.html= mtime to skip unchanged subtrees on the next publish.
+That machinery only mattered while the author published locally — CI
+now rebuilds =public/= from scratch on every run (the checkout has no
+prior HTML to compare against, so the stale-check always reported
+"stale"), and the =:MODIFIED:= stamps were writing back into source
+files from CI's throwaway working tree, which is pointless.  Both
+were axed.
 
-We now stamp a =:MODIFIED: <YYYY-MM-DD>= property on each heading /after/ a
-successful export.  Before the next export =blog--subtree-stale-p= checks:
-
-1. Does =~/blog/<slug>.html= exist at all?
-2. Is =:MODIFIED:= present on the heading?
-3. Is the HTML file's mtime ≥ the =:MODIFIED:= date?
-4. For =:REDIRECT:= articles only — is the included file's mtime ≤ =:MODIFIED:=?
-
-All four must hold for the subtree to be considered fresh.  A "no" on any of them
-triggers a full re-export and a fresh =:MODIFIED:= stamp.
-
-The implementation reaches for nothing exotic — =file-attributes=,
-=file-attribute-modification-time=, =date-to-time=, and =time-less-p= are all
-stock Emacs Lisp.
-
-#+begin_src emacs-lisp :tangle no
-(defun blog--subtree-stale-p (heading-point slug info)
-  "Return non-nil when the article at HEADING-POINT needs republishing.
-
-Stale when any of:
-  • ~/blog/SLUG.html does not exist
-  • the :MODIFIED: property is absent on the heading
-  • the HTML file predates MODIFIED (mtime < MODIFIED date)
-  • the article has a :REDIRECT: and the redirected file is newer than MODIFIED"
-  (let* ((html-file  (expand-file-name (concat slug ".html") blog-posts-directory))
-         (modified   (save-excursion
-                       (goto-char heading-point)
-                       (org-entry-get (point) "MODIFIED")))
-         (redirect   (cdr (assoc "redirect" info))))
-    (or (not (file-exists-p html-file))
-        (not modified)
-        (time-less-p (file-attribute-modification-time
-                      (file-attributes html-file))
-                     (date-to-time modified))
-        (and redirect
-             (let ((rpath (expand-file-name redirect)))
-               (and (file-exists-p rpath)
-                    (time-less-p (date-to-time modified)
-                                 (file-attribute-modification-time
-                                  (file-attributes rpath)))))))))
-#+end_src
-
-=blog--publish-multiple-articles= now wraps each per-heading export in a
-conditional:
-
-#+begin_src emacs-lisp :tangle no
-(let ((info (blog--find-info-by-slug slug all-infos)))
-  (if (blog--subtree-stale-p (point) slug info)
-      (progn
-        (message "=> Publishing subtree: %s (%s)..." title slug)
-        (blog--publish-single-subtree (point) container-file all-infos slug)
-        (push slug results))
-    (message "=> Skipping up-to-date subtree: %s (%s)" title slug)
-    (push slug results)))
-#+end_src
-
-Both branches push the slug into =results= so the surrounding loop in
-=blog--publish-multiple-articles= still refreshes the index, RSS, and tag pages
-for /all/ articles — just without touching HTML that is already current.
+If a future iteration ever caches =public/= across CI runs (e.g.
+checking out =gh-pages= and incrementally updating), =:MODIFIED:=
+resurrects as the natural cache key: set the property explicitly on a
+heading you want re-exported, and the cached HTML older than that date
+gets invalidated.  For the RSS guid's "edits re-notify readers" story
+we took a different route — see §[[RSS feeds: one per tag, plus a global one]] —
+because it works without the author having to remember to stamp anything.
 
 ** SITE_NAV: data-driven site navigation from container subtrees :details:
 :PROPERTIES:
@@ -2699,30 +2653,43 @@ compare the feed's current GUIDs against that seen-set:
 - /Already-seen GUID/ → reader ignores the item, /even if its title,
   description, or pubDate changed/.
 
-We use the article URL (=alhassy.com/<slug>=) as the GUID.  This has a
-direct consequence: *editing an already-published article does not
-re-notify subscribers*.  Fix a typo in =arabic.org=, rewrite a paragraph,
-add a whole new section — CI regenerates =rss.xml= on the next push, but
-the item's GUID is unchanged, so readers silently keep the updated
-content in place without waking anyone up.  That's the RSS consensus, by
-the way: if every spelling fix re-notified thousands of readers, feeds
-would be unusable.
+Our GUIDs are =alhassy.com/<slug>?last-updated=<MODIFIED>= when the post
+carries a =:MODIFIED:= property (file-level =#+modified:= for standalone
+posts, heading-level =:MODIFIED:= for container sub-articles), or plain
+=alhassy.com/<slug>= otherwise.
 
-If you want subscribers to hear about an edit, you have two honest options:
+The consequence is entirely author-driven:
 
-1. *Write a short "Updated: X" post.*  A standalone article, or a new
-   heading in a container, whose =#+description= says what changed and
-   whose body links back to the revised original.  New slug, new URL,
-   new GUID — every reader announces it.  This is what most blogs do.
+- *No =:MODIFIED:= present* → guid is just the URL → edits are silent.
+  Typos, whitespace fixes, paragraph rewrites all land on the deployed
+  HTML without waking anyone up.
+- */Bumping/ =:MODIFIED:=* (to any later ISO date, e.g. =2026-05-06=) →
+  guid changes → next CI publish re-announces the post to every
+  subscriber's feed reader.
 
-2. *Break the slug on purpose.*  Rename the file or set =:SLUG:= to
-   something like =arabic-v2=.  The old URL now 404s (or redirects),
-   the new one is a fresh GUID, and the feed re-announces.  Noisy, but
-   appropriate if the revision is a true do-over.
+So the publishing contract is: you decide what "update" means.  Fix a
+typo and CI quietly ships it.  Finish rewriting the introduction,
+stamp =:MODIFIED:= to today's date, push — subscribers hear about it.
 
-We don't currently expose a =:RSS_REVISION:= knob that would rebuild the
-GUID as =alhassy.com/<slug>#revN= — if the "quiet by default" behaviour
-ever becomes painful, that's a two-line addition to =blog--make-one-rss-feed=.
+*Partial-commit trick.*  Magit makes this a one-keystroke workflow:
+bump =:MODIFIED:= whenever you save (so the stamp is always current
+while editing), and when preparing a commit, /unstage the =:MODIFIED:=
+hunk/ with =u= if you don't want this particular edit to announce.
+The commit lands without the property bump; =gh-pages= gets the
+updated HTML; the guid is unchanged; subscribers stay silent.  Conversely,
+stage the =:MODIFIED:= hunk with =s= when you do want the announce.
+The "should this notify?" decision lives exactly where it belongs —
+at commit time, per-hunk, alongside the actual change.
+
+An alternative we considered was deriving the date automatically from
+=git log= on the source file (per-heading for container articles, via
+=git log -L /regex/,/regex/:file=).  That removes one piece of author
+discipline but adds a different one: every single commit counts, so a
+=[typo]= commit re-announces the post.  Either move the noise upstream
+(squash cosmetic commits before pushing) or accept the signal loss.
+We went with =:MODIFIED:= because it matches how humans actually
+think about revisions, and it costs nothing on CI — no git shell-outs
+per post, no =-L= regex-escape edge cases.
 
 #+begin_src emacs-lisp  -n
 (defun blog--rss-date (date-str)
@@ -2731,6 +2698,19 @@ ever becomes painful, that's a two-line addition to =blog--make-one-rss-feed=.
                       (condition-case _
                           (date-to-time date-str)
                         (error (current-time)))))
+
+(defun blog--rss-guid (post)
+  "Return POST's RSS <guid>.
+
+If POST carries a :MODIFIED: property, the guid is the article URL with
+a ?last-updated=<MODIFIED> query string; bumping :MODIFIED: therefore
+re-announces the post to every subscriber's feed reader (see the
+identity discussion in the prose above).  Without :MODIFIED:, the guid
+is just the URL — edits stay quiet until you stamp one."
+  (let ((modified (map-elt post "modified")))
+    (if modified
+        (format "%s?last-updated=%s" (@url post) modified)
+      (@url post))))
 
 (defun blog--make-one-rss-feed (posts filename &optional channel-title)
   "Emit `blog-publish-directory'/FILENAME from POSTS.
@@ -2757,7 +2737,7 @@ and descriptions do not break feed readers."
           (insert "<item>\n"
                   "<title>"       (esc (@title post))       "</title>\n"
                   "<link>"        (esc (@url post))         "</link>\n"
-                  "<guid>"        (esc (@url post))         "</guid>\n"
+                  "<guid>"        (esc (blog--rss-guid post)) "</guid>\n"
                   "<pubDate>"     (blog--rss-date (@date post)) "</pubDate>\n"
                   "<description>" (esc (@description post)) "</description>\n"
                   "</item>\n"))
@@ -4024,6 +4004,7 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                 (lambda ()
                   (interactive)
                   (blog--ensure-useful-section-anchors)
+                  (blog--assign-slugs)
                   (blog--vendor-redirects)
                   (blog--refresh-posts)
                   (blog--validate-unique-slugs)
@@ -4042,10 +4023,10 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
   "Buffer-local minor mode for editing blog articles in AlBasmala style.
 
 Binds:
-  C-x C-s  — stamp section anchors, vendor :REDIRECT: sources into
-             resources/redirects/, refresh the posts registry, validate
-             slug uniqueness, then save + live preview (dispatches on
-             article style)
+  C-x C-s  — stamp section anchors, assign :SLUG: to fresh container
+             headings, vendor :REDIRECT: sources into resources/redirects/,
+             refresh the posts registry, validate slug uniqueness, then
+             save + live preview (dispatches on article style)
   M-RET    — new article / new post (dispatches on article style)
   C-c i i  — insert image from file (C-u to rename before committing)
   C-c i s  — take a screenshot and insert it
@@ -4174,13 +4155,7 @@ file-level keywords so that blog--style-setup runs unchanged."
                            (expand-file-name (concat slug ".html") blog-publish-directory)
                            t)))
 
-          ;; 5. Stamp :MODIFIED: on the source heading so future runs can detect
-          ;;    whether the HTML is up-to-date without re-exporting.
-          (save-excursion
-            (goto-char heading-point)
-            (org-set-property "MODIFIED" (format-time-string "%Y-%m-%d")))
-
-          ;; 6. Per-article colourised source: htmlize the subtree narrowed copy.
+          ;; 5. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
 
       ;; Cleanup temp files regardless of errors.
@@ -4212,22 +4187,16 @@ Returns the list of slugs that were published."
           (beginning-of-line)
           (let* ((tags  (mapcar #'downcase (org-get-tags)))
                  (title (org-get-heading t t t t))
-                 (slug  (or (org-entry-get (point) "SLUG")
-                            (blog--make-slug (or (org-entry-get (point) "TITLE") title)))))
+                 (slug  (org-entry-get (point) "SLUG")))
             (unless (member "noexport" tags)
-              ;; Persist the slug so it survives future title edits.
-              (unless (org-entry-get (point) "SLUG")
-                (org-set-property "SLUG" slug))
+              (unless slug
+                (user-error "Container heading %S in %s has no :SLUG: property — run C-x C-s on the source first"
+                            title (f-filename container-file)))
               (let ((info (blog--find-info-by-slug slug all-infos)))
-                (if (blog--subtree-stale-p (point) slug info)
-                    (progn
-                      (message "=> Publishing subtree: %s (%s)..." title slug)
-                      (blog--publish-single-subtree (point) container-file all-infos slug)
-                      (push slug results))
-                  (message "=> Skipping up-to-date subtree: %s (%s)" title slug)
-                  (push slug results)))))
-          (org-end-of-subtree t t)))
-      (save-buffer))
+                (message "=> Publishing subtree: %s (%s)..." title slug)
+                (blog--publish-single-subtree (point) container-file all-infos slug)
+                (push slug results))))
+          (org-end-of-subtree t t))))
     (nreverse results)))
 
 
@@ -4354,15 +4323,30 @@ dry-run before pushing.
 #+begin_src emacs-lisp
 (defun blog--publishable-p (file)
   "Return non-nil if FILE is an article that should be published.
-A file is publishable when it has a #+date: keyword (standalone post) or
-#+article_style: multiple (container of subtree articles).
-Infrastructure files (AlBasmala.el, MathJaxPreamble.org, etc.) have neither
-and are silently skipped."
+A file is publishable when it has any of:
+  - #+date:                     — standalone post
+  - #+article_style: multiple   — container of subtree articles
+  - #+site_nav:                 — top-level nav page (e.g. about.org)
+
+Fragments that are #+include'd into articles but never published on
+their own (e.g. MathJaxPreamble.org) must opt out explicitly with
+
+  #+exclude_from_publish: t
+
+Any other .org file missing /both/ a publish marker and the opt-out
+signals a (user-error) — we do not silently skip files that just
+forgot their #+date:."
   (with-temp-buffer
     (insert-file-contents file)
-    (goto-char (point-min))
-    (or (re-search-forward "^#\\+date:" nil t)
-        (re-search-forward "^#\\+article_style:[ ]*multiple" nil t))))
+    (cl-flet ((has (rx) (goto-char (point-min)) (re-search-forward rx nil t)))
+      (cond
+       ((has "^#\\+exclude_from_publish:") nil)
+       ((has "^#\\+date:") t)
+       ((has "^#\\+article_style:[ ]*multiple") t)
+       ((has "^#\\+site_nav:") t)
+       (t (user-error
+           "%s has no #+date:, #+article_style: multiple, or #+site_nav: — add one, or #+exclude_from_publish: t if this is an include-only fragment"
+           (f-filename file)))))))
 
 (defun blog-publish-all ()
   "Batch-publish every article and regenerate the index.  The sole CI entry point.
