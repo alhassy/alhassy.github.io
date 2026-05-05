@@ -1076,7 +1076,23 @@ width="142" height="142" align="top"> </center>
    :END:
 
  NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
+**** Should this be in the ci or locally during preview phase? 
+:PROPERTIES:
+:CREATED:  [2026-05-05 Tue 15:27]
+:END:
 
+
+      - name: Validate all slugs are unique
+        run: |
+          emacs --batch \
+            --eval "(require 'package)" \
+            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+            --eval "(package-initialize)" \
+            --eval "(setq org-confirm-babel-evaluate nil)" \
+            --eval "(load-file \"AlBasmala.el\")" \
+            --eval "(blog--validate-unique-slugs)"
+
+            
 ** Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
   :PROPERTIES:
   :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
@@ -1086,6 +1102,8 @@ Let's use [[https://github.com/bastibe/org-static-blog][org-static-block]] to ma
 - It's a Lisp program smaller than 900 lines, its source is easy to read and
   understand, and, most importantly, it was super easy to get started using it
   using the [[https://github.com/bastibe/org-static-blog#examples][given example]].
+
+
 
 * Abstract                                                           :ignore:
 :PROPERTIES:
