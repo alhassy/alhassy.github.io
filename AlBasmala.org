@@ -2277,11 +2277,12 @@ Often a project already has a lovingly maintained =README.org= (or a
 self-contained section of =~/.emacs.d/init.org=) that /is/ the article — there is
 no point copying it into a container heading just to republish it here.
 
-The =:REDIRECT:= property solves this.  Give any container heading a path (tilde
-and environment variables are expanded) and the publish pipeline replaces the
-subtree body with a single =#+include:= directive pointing at that file.  Org's
-own include machinery does the rest — the result is indistinguishable from an
-article whose body was typed directly in the container.
+The =:REDIRECT:= property solves this.  Give any container heading a local
+path (tilde and environment variables are expanded) /or/ an =https://= URL
+to an Org file; the publish pipeline replaces the subtree body with a
+single =#+include:= directive pointing at that file.  Org's own include
+machinery does the rest — the result is indistinguishable from an article
+whose body was typed directly in the container.
 
 #+begin_src org :tangle no
 ,* My Literate Emacs Config :emacs:lisp:
@@ -2290,13 +2291,28 @@ article whose body was typed directly in the container.
 :DESCRIPTION: A literate Emacs configuration, tangled from Org and readable as prose.
 :REDIRECT:    ~/.emacs.d/init.org
 :END:
+
+,* Remote README :docs:
+:PROPERTIES:
+:DATE:        <2024-02-01>
+:REDIRECT:    https://raw.githubusercontent.com/alhassy/example/master/README.org
+:END:
 #+end_src
 
-When =blog-publish-all= processes this heading (via =blog--publish-multiple-articles=) it synthesises the usual
-file-level keyword preamble (=#+title:=, =#+date:=, etc.) and then appends
+Neither =~/.emacs.d/= nor an arbitrary HTTPS URL is reachable from a CI
+runner, so =C-x C-s= /vendors/ every =:REDIRECT:= into
+=resources/redirects/<slug>.org= (see §[[Vendoring redirects so CI can resolve them]])
+and rewrites the property in place to point at the in-repo copy.  After
+one preview-save, the property reads
+=:REDIRECT: resources/redirects/my-literate-emacs-config.org=, CI has the
+content, and =#+include:= resolves without special cases.
+
+When =blog-publish-all= processes the heading (via
+=blog--publish-multiple-articles=) it synthesises the usual file-level
+keyword preamble (=#+title:=, =#+date:=, etc.) and then appends
 
 #+begin_example
-#+include: "/Users/musa/.emacs.d/init.org"
+#+include: "/…/blog/resources/redirects/my-literate-emacs-config.org"
 #+end_example
 
 No subtree content is copied or promoted — the export proceeds through the
@@ -2312,6 +2328,84 @@ Forcing a republish is a matter of nudging the staleness check (see
 The new key ="redirect"= is surfaced in every alist produced by
 =blog--info-subtree= and passed through the full pipeline, so tag pages, the RSS
 feed, and the index all treat redirect articles identically to hand-authored ones.
+
+*** Vendoring redirects so CI can resolve them                       :details:
+
+A =:REDIRECT:= of =~/.emacs.d/init.org= works beautifully on the author's
+laptop and catastrophically on CI — the runner has no =~/.emacs.d/= and
+=#+include:= aborts.  We solve this by /vendoring/ every redirect source
+into the blog repo at =C-x C-s= preview time, then rewriting the property
+to point at the in-repo copy:
+
+- *Local path* (=~/.emacs.d/init.org=, =../foo.org=, …) — =url-copy-file='d
+  into =resources/redirects/<slug>.org=, which is git-tracked.
+- *HTTP(S) URL* (=https://raw.githubusercontent.com/…/README.org=, …) —
+  fetched into the same directory.
+
+After vendoring, the property itself is rewritten to =resources/redirects/<slug>.org=.
+CI then sees an in-tree path and the existing =#+include:= machinery just
+works, without special-casing.
+
+=blog--vendor-redirects= runs on =C-x C-s= in multiple-style buffers (see
+=my/blogging-mode-map=): preview is when redirect targets change, and when
+the author can resolve "that URL is not reachable" errors on the spot
+rather than discover them in CI.
+
+The staleness check still applies unchanged — =blog--subtree-stale-p=
+compares =:MODIFIED:= against the vendored copy's mtime, which updates
+every time =blog--vendor-redirects= re-copies the upstream.
+
+#+begin_src emacs-lisp
+(defvar blog-redirects-subdir "resources/redirects/"
+  "Subdirectory of `blog-posts-directory' where :REDIRECT: sources are
+vendored for CI.  Relative path; must end with a trailing slash.")
+
+(defun blog--url-p (path)
+  "Return non-nil if PATH is an HTTP(S) URL."
+  (string-match-p "\\`https?://" path))
+
+(defun blog--already-vendored-p (path)
+  "Return non-nil if PATH is already rooted at `blog-redirects-subdir'."
+  (string-prefix-p blog-redirects-subdir path))
+
+(defun blog--vendor-one-redirect (slug redirect)
+  "Fetch REDIRECT (a local path or http(s) URL) into
+`blog-redirects-subdir'/SLUG.org and return the vendored relative path.
+A no-op if REDIRECT already points into `blog-redirects-subdir'."
+  (if (blog--already-vendored-p redirect)
+      redirect
+    (let* ((dest-dir (expand-file-name blog-redirects-subdir blog-posts-directory))
+           (dest     (expand-file-name (concat slug ".org") dest-dir)))
+      (make-directory dest-dir t)
+      (cond
+       ((blog--url-p redirect)
+        (url-copy-file redirect dest t))
+       (t
+        (let ((src (expand-file-name redirect)))
+          (unless (file-exists-p src)
+            (user-error "REDIRECT source does not exist: %s" src))
+          (copy-file src dest t))))
+      (concat blog-redirects-subdir slug ".org"))))
+
+(defun blog--vendor-redirects ()
+  "Walk the current buffer's top-level headings; for each with a :REDIRECT:
+property, vendor the source into `blog-redirects-subdir' and rewrite the
+property to the in-repo path.  Only touches multiple-style containers."
+  (when (blog--multiple-style-p)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\* " nil t)
+        (let ((redirect (org-entry-get (point) "REDIRECT")))
+          (when (and redirect (not (blog--already-vendored-p redirect)))
+            (let* ((title (org-get-heading t t t t))
+                   (slug  (or (org-entry-get (point) "SLUG")
+                              (blog--make-slug
+                               (or (org-entry-get (point) "TITLE") title))))
+                   (vendored (blog--vendor-one-redirect slug redirect)))
+              (org-entry-put (point) "REDIRECT" vendored)
+              (message "=> Vendored redirect for %s ← %s" slug redirect))))
+        (org-end-of-subtree t t)))))
+#+end_src
 
 ** MODIFIED: universal staleness check for container articles :details:
 :PROPERTIES:
@@ -3790,6 +3884,7 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                 (lambda ()
                   (interactive)
                   (blog--ensure-useful-section-anchors)
+                  (blog--vendor-redirects)
                   (blog--refresh-posts)
                   (blog--validate-unique-slugs)
                   (save-buffer)
@@ -3807,7 +3902,10 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
   "Buffer-local minor mode for editing blog articles in AlBasmala style.
 
 Binds:
-  C-x C-s  — save + live preview (dispatches on article style)
+  C-x C-s  — stamp section anchors, vendor :REDIRECT: sources into
+             resources/redirects/, refresh the posts registry, validate
+             slug uniqueness, then save + live preview (dispatches on
+             article style)
   M-RET    — new article / new post (dispatches on article style)
   C-c i i  — insert image from file (C-u to rename before committing)
   C-c i s  — take a screenshot and insert it
@@ -4056,6 +4154,26 @@ lives): in the repo Settings → Pages, set *Source* to "Deploy from a branch",
 then pick *Branch:* =gh-pages= with folder =/= (root) and save.  You should
 then see "Your GitHub Pages site is currently being built from the =gh-pages=
 branch" at the top of that page.  Set once; CI handles everything thereafter.
+
+*On CI timing, and why we don't bother caching.*  A full run takes around two
+minutes end-to-end — fine for a blog, and public repos get unlimited Actions
+minutes so the cost is literally zero.  Of that two minutes, the actual
+export work is ~30 seconds; the remaining ~1.5 minutes is the cold-start
+overhead of each job provisioning an Ubuntu runner, checking out =master=,
+installing Emacs via Nix (=purcell/setup-emacs=), and =package-install='ing
+six MELPA packages.  If the wait ever grates:
+
+1. *Collapse =validate= into =deploy=* — cuts one round of provisioning
+   overhead (~45 s).  Only worth it when the =validate= job stops being a
+   meaningful pre-check.
+2. *Cache the MELPA install* — add =actions/cache= keyed on the package
+   list, caching =~/.emacs.d/elpa/=.  Saves ~20 s.
+3. *Cache the Nix store* under =/nix/store/=.  Marginal today since the
+   setup-emacs action already warms quickly.
+
+We deliberately take none of these shortcuts now: simplicity of the workflow
+beats ~45 seconds of saved wall-clock for a blog that deploys a handful of
+times per week.
 
 ** Asset sync                                                        :details:
 

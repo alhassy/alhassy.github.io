@@ -579,6 +579,56 @@ Stale when any of:
                                  (file-attribute-modification-time
                                   (file-attributes rpath)))))))))
 
+(defvar blog-redirects-subdir "resources/redirects/"
+  "Subdirectory of `blog-posts-directory' where :REDIRECT: sources are
+vendored for CI.  Relative path; must end with a trailing slash.")
+
+(defun blog--url-p (path)
+  "Return non-nil if PATH is an HTTP(S) URL."
+  (string-match-p "\\`https?://" path))
+
+(defun blog--already-vendored-p (path)
+  "Return non-nil if PATH is already rooted at `blog-redirects-subdir'."
+  (string-prefix-p blog-redirects-subdir path))
+
+(defun blog--vendor-one-redirect (slug redirect)
+  "Fetch REDIRECT (a local path or http(s) URL) into
+`blog-redirects-subdir'/SLUG.org and return the vendored relative path.
+A no-op if REDIRECT already points into `blog-redirects-subdir'."
+  (if (blog--already-vendored-p redirect)
+      redirect
+    (let* ((dest-dir (expand-file-name blog-redirects-subdir blog-posts-directory))
+           (dest     (expand-file-name (concat slug ".org") dest-dir)))
+      (make-directory dest-dir t)
+      (cond
+       ((blog--url-p redirect)
+        (url-copy-file redirect dest t))
+       (t
+        (let ((src (expand-file-name redirect)))
+          (unless (file-exists-p src)
+            (user-error "REDIRECT source does not exist: %s" src))
+          (copy-file src dest t))))
+      (concat blog-redirects-subdir slug ".org"))))
+
+(defun blog--vendor-redirects ()
+  "Walk the current buffer's top-level headings; for each with a :REDIRECT:
+property, vendor the source into `blog-redirects-subdir' and rewrite the
+property to the in-repo path.  Only touches multiple-style containers."
+  (when (blog--multiple-style-p)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\* " nil t)
+        (let ((redirect (org-entry-get (point) "REDIRECT")))
+          (when (and redirect (not (blog--already-vendored-p redirect)))
+            (let* ((title (org-get-heading t t t t))
+                   (slug  (or (org-entry-get (point) "SLUG")
+                              (blog--make-slug
+                               (or (org-entry-get (point) "TITLE") title))))
+                   (vendored (blog--vendor-one-redirect slug redirect)))
+              (org-entry-put (point) "REDIRECT" vendored)
+              (message "=> Vendored redirect for %s ← %s" slug redirect))))
+        (org-end-of-subtree t t)))))
+
 (org-defblock abstract (main) nil
   "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
 
@@ -1238,6 +1288,7 @@ For a one-off use in an article, prepend #+html: to the result."
                 (lambda ()
                   (interactive)
                   (blog--ensure-useful-section-anchors)
+                  (blog--vendor-redirects)
                   (blog--refresh-posts)
                   (blog--validate-unique-slugs)
                   (save-buffer)
@@ -1255,7 +1306,10 @@ For a one-off use in an article, prepend #+html: to the result."
   "Buffer-local minor mode for editing blog articles in AlBasmala style.
 
 Binds:
-  C-x C-s  — save + live preview (dispatches on article style)
+  C-x C-s  — stamp section anchors, vendor :REDIRECT: sources into
+             resources/redirects/, refresh the posts registry, validate
+             slug uniqueness, then save + live preview (dispatches on
+             article style)
   M-RET    — new article / new post (dispatches on article style)
   C-c i i  — insert image from file (C-u to rename before committing)
   C-c i s  — take a screenshot and insert it
