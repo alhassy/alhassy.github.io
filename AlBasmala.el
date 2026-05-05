@@ -99,8 +99,6 @@ Incidentally, orange and `#f2b195' are also nice 'warning' colours."
    (insert "#+html: </details> </div>"))
 
 (use-package org-static-blog)
-(use-package lf) ;; So we can use lf-string for multi-line strings supporting interpolation:
-;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
 
 (defvar blog-title "Life & Computing Science"
   "Title of the blog.")
