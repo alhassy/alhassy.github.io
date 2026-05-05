@@ -2523,11 +2523,12 @@ Often a project already has a lovingly maintained <span class="org-verbatim">=RE
 self-contained section of <span class="org-verbatim">=~/.emacs.d/init.org=</span>) that <span class="italic">/is/</span> the article &#8212; there is
 no point copying it into a container heading just to republish it here.
 
-The <span class="org-verbatim">=:REDIRECT:=</span> property solves this.  Give any container heading a path (tilde
-and environment variables are expanded) and the publish pipeline replaces the
-subtree body with a single <span class="org-verbatim">=#+include:=</span> directive pointing at that file.  Org's
-own include machinery does the rest &#8212; the result is indistinguishable from an
-article whose body was typed directly in the container.
+The <span class="org-verbatim">=:REDIRECT:=</span> property solves this.  Give any container heading a local
+path (tilde and environment variables are expanded) <span class="italic">/or/</span> an <span class="org-verbatim">=</span><span class="org-link"><span class="org-verbatim"><a href="https://">https://</a></span></span><span class="org-verbatim">=</span> URL
+to an Org file; the publish pipeline replaces the subtree body with a
+single <span class="org-verbatim">=#+include:=</span> directive pointing at that file.  Org's own include
+machinery does the rest &#8212; the result is indistinguishable from an article
+whose body was typed directly in the container.
 
 <span class="org-block-begin-line">#+begin_src org :tangle no
 </span><span class="org-block">,* My Literate Emacs Config :emacs:lisp:
@@ -2536,13 +2537,28 @@ article whose body was typed directly in the container.
 </span><span class="org-block"><span class="org-special-keyword">:DESCRIPTION:</span></span><span class="org-block"> </span><span class="org-block"><span class="org-property-value">A literate Emacs configuration, tangled from Org and readable as prose.</span></span><span class="org-block">
 </span><span class="org-block"><span class="org-special-keyword">:REDIRECT:</span></span><span class="org-block">    </span><span class="org-block"><span class="org-property-value">~/.emacs.d/init.org</span></span><span class="org-block">
 </span><span class="org-block"><span class="org-drawer">:END:</span></span><span class="org-block">
+
+,* Remote README :docs:
+</span><span class="org-block"><span class="org-drawer">:PROPERTIES:</span></span><span class="org-block">
+</span><span class="org-block"><span class="org-special-keyword">:DATE:</span></span><span class="org-block">        </span><span class="org-block"><span class="org-property-value"><span class="org-date">&lt;2024-02-01&gt;</span></span></span><span class="org-block">
+</span><span class="org-block"><span class="org-special-keyword">:REDIRECT:</span></span><span class="org-block">    </span><span class="org-block"><span class="org-property-value"><span class="org-link"><a href="https://raw.githubusercontent.com/alhassy/example/master/README.org">https://raw.githubusercontent.com/alhassy/example/master/README.or</a><a href="https://raw.githubusercontent.com/alhassy/example/master/README.org">g</a></span></span></span><span class="org-block">
+</span><span class="org-block"><span class="org-drawer">:END:</span></span><span class="org-block">
 </span><span class="org-block-end-line">#+end_src
 </span>
-When <span class="org-verbatim">=blog-publish-all=</span> processes this heading (via <span class="org-verbatim">=blog--publish-multiple-articles=</span>) it synthesises the usual
-file-level keyword preamble (<span class="org-verbatim">=#+title:=</span>, <span class="org-verbatim">=#+date:=</span>, etc.) and then appends
+Neither <span class="org-verbatim">=~/.emacs.d/=</span> nor an arbitrary HTTPS URL is reachable from a CI
+runner, so <span class="org-verbatim">=C-x C-s=</span> <span class="italic">/vendors/</span> every <span class="org-verbatim">=:REDIRECT:=</span> into
+<span class="org-verbatim">=resources/redirects/&lt;slug&gt;.org=</span> (see &#167;<span class="org-link"><a href="Vendoring redirects so CI can resolve them">Vendoring redirects so CI can resolve them</a></span>)
+and rewrites the property in place to point at the in-repo copy.  After
+one preview-save, the property reads
+<span class="org-verbatim">=:REDIRECT: resources/redirects/my-literate-emacs-config.org=</span>, CI has the
+content, and <span class="org-verbatim">=#+include:=</span> resolves without special cases.
+
+When <span class="org-verbatim">=blog-publish-all=</span> processes the heading (via
+<span class="org-verbatim">=blog--publish-multiple-articles=</span>) it synthesises the usual file-level
+keyword preamble (<span class="org-verbatim">=#+title:=</span>, <span class="org-verbatim">=#+date:=</span>, etc.) and then appends
 
 <span class="org-block-begin-line">#+begin_example
-</span><span class="org-block">#+include: "/Users/musa/.emacs.d/init.org"
+</span><span class="org-block">#+include: "/&#8230;/blog/resources/redirects/my-literate-emacs-config.org"
 </span><span class="org-block-end-line">#+end_example
 </span>
 No subtree content is copied or promoted &#8212; the export proceeds through the
@@ -2559,6 +2575,84 @@ The new key <span class="org-verbatim">="redirect"=</span> is surfaced in every 
 <span class="org-verbatim">=blog--info-subtree=</span> and passed through the full pipeline, so tag pages, the RSS
 feed, and the index all treat redirect articles identically to hand-authored ones.
 
+<span class="org-level-3">*** Vendoring redirects so CI can resolve them                       </span><span class="org-level-3"><span class="org-tag">:details:</span></span>
+
+A <span class="org-verbatim">=:REDIRECT:=</span> of <span class="org-verbatim">=~/.emacs.d/init.org=</span> works beautifully on the author's
+laptop and catastrophically on CI &#8212; the runner has no <span class="org-verbatim">=~/.emacs.d/=</span> and
+<span class="org-verbatim">=#+include:=</span> aborts.  We solve this by <span class="italic">/vendoring/</span> every redirect source
+into the blog repo at <span class="org-verbatim">=C-x C-s=</span> preview time, then rewriting the property
+to point at the in-repo copy:
+
+- <span class="bold">*Local path*</span> (<span class="org-verbatim">=~/.emacs.d/init.org=</span>, <span class="org-verbatim">=../foo.org=</span>, &#8230;) &#8212; <span class="org-verbatim">=url-copy-file=</span>'d
+  into <span class="org-verbatim">=resources/redirects/&lt;slug&gt;.org=</span>, which is git-tracked.
+- <span class="bold">*HTTP(S) URL*</span> (<span class="org-verbatim">=</span><span class="org-link"><span class="org-verbatim"><a href="https://raw.githubusercontent.com/&#8230;/README.org">https://raw.githubusercontent.com/&#8230;/README.org</a></span></span><span class="org-verbatim">=</span>, &#8230;) &#8212;
+  fetched into the same directory.
+
+After vendoring, the property itself is rewritten to <span class="org-verbatim">=resources/redirects/&lt;slug&gt;.org=</span>.
+CI then sees an in-tree path and the existing <span class="org-verbatim">=#+include:=</span> machinery just
+works, without special-casing.
+
+<span class="org-verbatim">=blog--vendor-redirects=</span> runs on <span class="org-verbatim">=C-x C-s=</span> in multiple-style buffers (see
+<span class="org-verbatim">=my/blogging-mode-map=</span>): preview is when redirect targets change, and when
+the author can resolve "that URL is not reachable" errors on the spot
+rather than discover them in CI.
+
+The staleness check still applies unchanged &#8212; <span class="org-verbatim">=blog--subtree-stale-p=</span>
+compares <span class="org-verbatim">=:MODIFIED:=</span> against the vendored copy's mtime, which updates
+every time <span class="org-verbatim">=blog--vendor-redirects=</span> re-copies the upstream.
+
+<span class="org-block-begin-line">#+begin_src emacs-lisp
+</span><span class="org-block">(</span><span class="org-block"><span class="keyword">defvar</span></span><span class="org-block"> </span><span class="org-block"><span class="variable-name">blog-redirects-subdir</span></span><span class="org-block"> </span><span class="org-block"><span class="string">"resources/redirects/"</span></span><span class="org-block">
+  </span><span class="org-block"><span class="doc">"Subdirectory of `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-posts-directory</span></span></span><span class="org-block"><span class="doc">' where :REDIRECT: sources are
+vendored for CI.  Relative path; must end with a trailing slash."</span></span><span class="org-block">)
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--url-p</span></span><span class="org-block"> (path)
+  </span><span class="org-block"><span class="doc">"Return non-nil if PATH is an HTTP(S) URL."</span></span><span class="org-block">
+  (string-match-p </span><span class="org-block"><span class="string">"\\`https?://"</span></span><span class="org-block"> path))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--already-vendored-p</span></span><span class="org-block"> (path)
+  </span><span class="org-block"><span class="doc">"Return non-nil if PATH is already rooted at `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-redirects-subdir</span></span></span><span class="org-block"><span class="doc">'."</span></span><span class="org-block">
+  (string-prefix-p blog-redirects-subdir path))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--vendor-one-redirect</span></span><span class="org-block"> (slug redirect)
+  </span><span class="org-block"><span class="doc">"Fetch REDIRECT (a local path or http(s) URL) into
+`</span></span><span class="org-block"><span class="doc"><span class="constant">blog-redirects-subdir</span></span></span><span class="org-block"><span class="doc">'/SLUG.org and return the vendored relative path.
+A no-op if REDIRECT already points into `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-redirects-subdir</span></span></span><span class="org-block"><span class="doc">'."</span></span><span class="org-block">
+  (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (blog--already-vendored-p redirect)
+      redirect
+    (</span><span class="org-block"><span class="keyword">let*</span></span><span class="org-block"> ((dest-dir (expand-file-name blog-redirects-subdir blog-posts-directory))
+           (dest     (expand-file-name (concat slug </span><span class="org-block"><span class="string">".org"</span></span><span class="org-block">) dest-dir)))
+      (make-directory dest-dir t)
+      (</span><span class="org-block"><span class="keyword">cond</span></span><span class="org-block">
+       ((blog--url-p redirect)
+        (url-copy-file redirect dest t))
+       (t
+        (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((src (expand-file-name redirect)))
+          (</span><span class="org-block"><span class="keyword">unless</span></span><span class="org-block"> (file-exists-p src)
+            (</span><span class="org-block"><span class="warning">user-error</span></span><span class="org-block"> </span><span class="org-block"><span class="string">"REDIRECT source does not exist: %s"</span></span><span class="org-block"> src))
+          (copy-file src dest t))))
+      (concat blog-redirects-subdir slug </span><span class="org-block"><span class="string">".org"</span></span><span class="org-block">))))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--vendor-redirects</span></span><span class="org-block"> ()
+  </span><span class="org-block"><span class="doc">"Walk the current buffer's top-level headings; for each with a :REDIRECT:
+property, vendor the source into `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-redirects-subdir</span></span></span><span class="org-block"><span class="doc">' and rewrite the
+property to the in-repo path.  Only touches multiple-style containers."</span></span><span class="org-block">
+  (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (blog--multiple-style-p)
+    (</span><span class="org-block"><span class="keyword">save-excursion</span></span><span class="org-block">
+      (goto-char (point-min))
+      (</span><span class="org-block"><span class="keyword">while</span></span><span class="org-block"> (re-search-forward </span><span class="org-block"><span class="string">"^\\* "</span></span><span class="org-block"> nil t)
+        (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((redirect (org-entry-get (point) </span><span class="org-block"><span class="string">"REDIRECT"</span></span><span class="org-block">)))
+          (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">and</span></span><span class="org-block"> redirect (not (blog--already-vendored-p redirect)))
+            (</span><span class="org-block"><span class="keyword">let*</span></span><span class="org-block"> ((title (org-get-heading t t t t))
+                   (slug  (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> (org-entry-get (point) </span><span class="org-block"><span class="string">"SLUG"</span></span><span class="org-block">)
+                              (blog--make-slug
+                               (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> (org-entry-get (point) </span><span class="org-block"><span class="string">"TITLE"</span></span><span class="org-block">) title))))
+                   (vendored (blog--vendor-one-redirect slug redirect)))
+              (org-entry-put (point) </span><span class="org-block"><span class="string">"REDIRECT"</span></span><span class="org-block"> vendored)
+              (message </span><span class="org-block"><span class="string">"=&gt; Vendored redirect for %s &#8592; %s"</span></span><span class="org-block"> slug redirect))))
+        (org-end-of-subtree t t)))))
+</span><span class="org-block-end-line">#+end_src
+</span>
 <span class="org-level-2">** MODIFIED: universal staleness check for container articles </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 <span class="org-drawer">:PROPERTIES:</span>
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">MODIFIED-stale-check</span>
@@ -4036,6 +4130,7 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                 (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> ()
                   (</span><span class="org-block"><span class="keyword">interactive</span></span><span class="org-block">)
                   (blog--ensure-useful-section-anchors)
+                  (blog--vendor-redirects)
                   (blog--refresh-posts)
                   (blog--validate-unique-slugs)
                   (save-buffer)
@@ -4053,7 +4148,10 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
   </span><span class="org-block"><span class="doc">"Buffer-local minor mode for editing blog articles in AlBasmala style.
 
 Binds:
-  C-x C-s  &#8212; save + live preview (dispatches on article style)
+  C-x C-s  &#8212; stamp section anchors, vendor :REDIRECT: sources into
+             resources/redirects/, refresh the posts registry, validate
+             slug uniqueness, then save + live preview (dispatches on
+             article style)
   M-RET    &#8212; new article / new post (dispatches on article style)
   C-c i i  &#8212; insert image from file (C-u to rename before committing)
   C-c i s  &#8212; take a screenshot and insert it
@@ -4302,6 +4400,26 @@ lives): in the repo Settings &#8594; Pages, set <span class="bold">*Source*</spa
 then pick <span class="bold">*Branch:*</span> <span class="org-verbatim">=gh-pages=</span> with folder <span class="org-verbatim">=/=</span> (root) and save.  You should
 then see "Your GitHub Pages site is currently being built from the <span class="org-verbatim">=gh-pages=</span>
 branch" at the top of that page.  Set once; CI handles everything thereafter.
+
+<span class="bold">*On CI timing, and why we don't bother caching.*</span>  A full run takes around two
+minutes end-to-end &#8212; fine for a blog, and public repos get unlimited Actions
+minutes so the cost is literally zero.  Of that two minutes, the actual
+export work is ~30 seconds; the remaining ~1.5 minutes is the cold-start
+overhead of each job provisioning an Ubuntu runner, checking out <span class="org-verbatim">=master=</span>,
+installing Emacs via Nix (<span class="org-verbatim">=purcell/setup-emacs=</span>), and <span class="org-verbatim">=package-install=</span>'ing
+six MELPA packages.  If the wait ever grates:
+
+1. <span class="bold">*Collapse </span><span class="bold"><span class="org-verbatim">=validate=</span></span><span class="bold"> into </span><span class="bold"><span class="org-verbatim">=deploy=*</span></span><span class="org-verbatim"> &#8212; cuts one round of provisioning
+   overhead (~45 s).  Only worth it when the </span><span class="org-verbatim"><span class="org-verbatim">=validate=</span></span> job stops being a
+   meaningful pre-check.
+2. <span class="bold">*Cache the MELPA install*</span> &#8212; add <span class="org-verbatim">=actions/cache=</span> keyed on the package
+   list, caching <span class="org-verbatim">=~/.emacs.d/elpa/=</span>.  Saves ~20 s.
+3. <span class="bold">*Cache the Nix store*</span> under <span class="org-verbatim">=/nix/store/=</span>.  Marginal today since the
+   setup-emacs action already warms quickly.
+
+We deliberately take none of these shortcuts now: simplicity of the workflow
+beats ~45 seconds of saved wall-clock for a blog that deploys a handful of
+times per week.
 
 <span class="org-level-2">** Asset sync                                                        </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 
