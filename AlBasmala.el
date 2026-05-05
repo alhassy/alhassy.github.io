@@ -1182,14 +1182,17 @@ E.g., ↯ We'll go on a ∀∃⇅ adventure
                (s-chop-prefix "-")
                (s-chop-suffix "-")
                (setq id))
-             (when (member id ids)
-               (error "Duplicate section id in %s: %s" (buffer-file-name) id))
-             (push id ids)
+             (if (not (member id ids))
+                 (push id ids)
+               (message-box "Oh no, a repeated id!\n\n\t%s" id)
+               (undo)
+               (setq quit-flag t))
              (org-entry-put nil "CUSTOM_ID" id))))))))
 
-;; Whenever html & md export happens, ensure we have headline ids.
-(advice-add 'org-html-export-to-html   :before 'blog--ensure-useful-section-anchors)
-(advice-add 'org-md-export-to-markdown :before 'blog--ensure-useful-section-anchors)
+;; Anchor assignment is an interactive-authoring concern — it should only
+;; happen while you can still edit the generated id, i.e. during C-x C-s
+;; preview.  CI must not mutate source files, and (undo)/(message-box) don't
+;; work headlessly anyway.
 
 ;; Src: https://writepermission.com/org-blogging-clickable-headlines.html
 (setq org-html-format-headline-function
@@ -1237,6 +1240,7 @@ For a one-off use in an article, prepend #+html: to the result."
     (define-key m (kbd "C-x C-s")
                 (lambda ()
                   (interactive)
+                  (blog--ensure-useful-section-anchors)
                   (save-buffer)
                   (if (blog--multiple-style-p) (blog-preview-subtree) (blog-preview))))
     (define-key m (kbd "M-RET")
