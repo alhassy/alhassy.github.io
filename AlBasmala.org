@@ -2690,6 +2690,40 @@ Each item carries a =<pubDate>=, a =<link>= back to =alhassy.com/<slug>=,
 and the article's =#+description= as its preview text.  Bodies are
 intentionally not embedded: we want readers to click through.
 
+*On identity and what counts as "new".*  Every =<item>= also carries a
+=<guid>= (globally unique identifier).  Feed readers remember which
+GUIDs they have already surfaced to their user; on every refetch they
+compare the feed's current GUIDs against that seen-set:
+
+- /New GUID/ → reader announces it as a new post.
+- /Already-seen GUID/ → reader ignores the item, /even if its title,
+  description, or pubDate changed/.
+
+We use the article URL (=alhassy.com/<slug>=) as the GUID.  This has a
+direct consequence: *editing an already-published article does not
+re-notify subscribers*.  Fix a typo in =arabic.org=, rewrite a paragraph,
+add a whole new section — CI regenerates =rss.xml= on the next push, but
+the item's GUID is unchanged, so readers silently keep the updated
+content in place without waking anyone up.  That's the RSS consensus, by
+the way: if every spelling fix re-notified thousands of readers, feeds
+would be unusable.
+
+If you want subscribers to hear about an edit, you have two honest options:
+
+1. *Write a short "Updated: X" post.*  A standalone article, or a new
+   heading in a container, whose =#+description= says what changed and
+   whose body links back to the revised original.  New slug, new URL,
+   new GUID — every reader announces it.  This is what most blogs do.
+
+2. *Break the slug on purpose.*  Rename the file or set =:SLUG:= to
+   something like =arabic-v2=.  The old URL now 404s (or redirects),
+   the new one is a fresh GUID, and the feed re-announces.  Noisy, but
+   appropriate if the revision is a true do-over.
+
+We don't currently expose a =:RSS_REVISION:= knob that would rebuild the
+GUID as =alhassy.com/<slug>#revN= — if the "quiet by default" behaviour
+ever becomes painful, that's a two-line addition to =blog--make-one-rss-feed=.
+
 #+begin_src emacs-lisp  -n
 (defun blog--rss-date (date-str)
   "Format DATE-STR (an Org date string) as an RFC-822 pubDate for RSS."
