@@ -855,15 +855,6 @@ blog-preview-subtree, which previews just the heading at point."
     (setq org-preview-html-viewer 'xwidget)
     (org-preview-html-mode)))
 
-(cl-defun blog-preview-disable ()
-  "Disable preview-on-save, removing all hooks set by blog-preview."
-  (interactive)
-  ;; Remove the multiple-style buffer-local hook (no-op if not set).
-  (remove-hook 'after-save-hook #'blog-preview-subtree t)
-  ;; Remove the standalone hook and disable org-preview-html-mode.
-  (remove-hook 'org-export-before-processing-hook #'blog--style-setup)
-  (when (bound-and-true-p org-preview-html-mode) (org-preview-html-mode -1)))
-
 (defun blog-preview-subtree ()
   "Preview the top-level heading at point as a standalone blog article.
 
