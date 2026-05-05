@@ -2819,8 +2819,8 @@ unified buffer approach always rebuilds everything in one pass."</span></span><s
 <span class="org-level-2">** blog-posts, blog-tags, and their consumers: tag &amp; index page generation </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 
 <span class="org-verbatim">=blog-posts=</span> is a sorted list of post-alists (newest first), computed by
-scanning <span class="org-verbatim">=~/blog/*.org=</span> directly.  Its sole heavyweight consumer is
-<span class="org-verbatim">=blog-make-tags-page=</span>, which iterates it to build every article card on the
+scanning <span class="org-verbatim">=~/blog/*.org=</span> directly.  Its heavyweight consumer is
+<span class="org-verbatim">=blog-make-index-page=</span>, which iterates it to build every article card on the
 index and tag pages.  <span class="org-verbatim">=blog-tags=</span> is a flat sorted list of unique tag strings
 derived from <span class="org-verbatim">=blog-posts=</span> &#8212; used for tag-page iteration and helm completion.
 
@@ -2895,106 +2895,7 @@ Initialized at end of file; refresh with (blog--refresh-posts)."</span></span><s
   </span><span class="org-block"><span class="doc">"Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts)."</span></span><span class="org-block">)
 </span><span class="org-block-end-line">#+end_src
 </span>
-<span class="org-block-begin-line">#+begin_src emacs-lisp :tangle no
-</span><span class="org-block">(</span><span class="org-block"><span class="keyword">cl-defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog-make-tags-page</span></span><span class="org-block">
-    (</span><span class="org-block"><span class="type">&amp;key</span></span><span class="org-block">
-     (tag nil)
-     (title (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> tag (format </span><span class="org-block"><span class="string">"Posts &#160; tagged &#160; "</span></span><span class="org-block">%s</span><span class="org-block"><span class="string">""</span></span><span class="org-block"> tag) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">))
-     (greeting (format </span><span class="org-block"><span class="string">"Here are some of my latest thoughts %s... <a href="badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs">badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs</a> such as <a href="doc:thread-first">doc:thread-first</a> and <a href="doc:loop">doc:loop</a> (&#8226;&#768;&#7447;&#8226;&#769;)&#1608; <a href="tweet:https://alhassy.com">tweet:https://alhassy.com</a> @@html:&lt;br&gt;&lt;br&gt;@@"</span></span><span class="org-block">
 
-                       (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> tag (concat </span><span class="org-block"><span class="string">"on "</span></span><span class="org-block"> tag) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)))
-     (export-file-name
-      (concat-to-dir blog-publish-directory
-                     (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> tag (concat </span><span class="org-block"><span class="string">"tag-"</span></span><span class="org-block"> (downcase tag) </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">)
-                       </span><span class="org-block"><span class="string">"index.html"</span></span><span class="org-block">))))
-  </span><span class="org-block"><span class="doc">"Assemble a page of only articles tagged TAG blog index page.
-
-The page contains blurbs of all of my articles tagged TAG.
-
-Precondition: blog-posts refers to all posts, in reverse chronological order.
-
-Example uses:
-1. (blog-make-tags-page :export-file-name \"~/blog/index.html\" :title \"Hello world\" :tag \"arabic\")
-2. (blog-make-tags-page :tag \"arabic\")
-"</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">interactive</span></span><span class="org-block">)
-  (view-echo-area-messages)
-  (blog-preview-disable)
-  (</span><span class="org-block"><span class="keyword">with-temp-buffer</span></span><span class="org-block">
-    (insert
-     (s-join
-      </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
-      (list
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Actually look at this concat result and notice that osbe is adding
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">way too much content to the header!
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(progn (org-special-block-extras-mode -1) "")
-</span></span><span class="org-block">       (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> org-html-head-extra </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Org-mode header
-</span></span><span class="org-block">       (concat </span><span class="org-block"><span class="string">"#+EXPORT_FILE_NAME: "</span></span><span class="org-block"> export-file-name)
-       </span><span class="org-block"><span class="string">"#+options: toc:nil title:nil html-postamble:nil"</span></span><span class="org-block">
-       </span><span class="org-block"><span class="string">"#+begin_export html"</span></span><span class="org-block">
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">MA: Not ideal, the sizes I've set in the actual article are best.
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">"&lt;style&gt;"
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">".post-image { margin: auto; width: 30em !important; height: 30em !important; }"
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">"&lt;/style&gt;"
-</span></span><span class="org-block">       org-static-blog-page-preamble
-       org-static-blog-page-header
-       </span><span class="org-block"><span class="string">"#+end_export"</span></span><span class="org-block">
-       (concat </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;&lt;center style=\"font-size: 3em; font-weight: bolder;\"&gt;"</span></span><span class="org-block"> title </span><span class="org-block"><span class="string">"&lt;/center&gt;"</span></span><span class="org-block">)
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Delete the following comment when things work and are done.
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Extra styling of abstracts.
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Works; but not needed.
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">"\n#+HTML_HEAD_EXTRA: &lt;style&gt; div.abstract {background-color: pink !important;} &lt;/style&gt;"
-</span></span><span class="org-block">
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">The greeting message that informs viewers what this page is about.
-</span></span><span class="org-block">       </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;"</span></span><span class="org-block"> greeting </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;"</span></span><span class="org-block">
-
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Add this loop body to the info of each post, for future use via AngularJS view-by-tags.
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Blurbs of posts
-</span></span><span class="org-block">       (s-join </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">--map</span></span><span class="org-block">
-        (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">and</span></span><span class="org-block"> tag (not (seq-contains-p (s-split </span><span class="org-block"><span class="string">" "</span></span><span class="org-block"> (map-elt it </span><span class="org-block"><span class="string">"tags"</span></span><span class="org-block">)) tag)))
-            </span><span class="org-block"><span class="string">""</span></span><span class="org-block">
-          (concat
-           (</span><span class="org-block"><span class="keyword">progn</span></span><span class="org-block"> (message </span><span class="org-block"><span class="string">"Processing %s..."</span></span><span class="org-block"> it) </span><span class="org-block"><span class="string">""</span></span><span class="org-block">) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Progress indicator
-</span></span><span class="org-block">
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Make this concat of &#10216;0&#10217;-&#10216;4&#10217; into a method `</span></span><span class="org-block"><span class="comment"><span class="constant">@preview</span></span></span><span class="org-block"><span class="comment">'
-</span></span><span class="org-block">
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">&#10216;0&#10217; Title and link to article
-</span></span><span class="org-block">           (format </span><span class="org-block"><span class="string">"#+HTML: &lt;h2 class=\"title\"&gt;&lt;a href=\"%s\"&gt; %s&lt;/a&gt;&lt;/h2&gt;"</span></span><span class="org-block"> (@url it) (@title it))
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Look at all uses of @title and maybe move this @@html@@ into it.
-</span></span><span class="org-block">           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">NOTE: This is still a Phase Split since the JSON has the raw data, and the @ABC methods produce @@html&#8943;@@ code ^_^
-</span></span><span class="org-block">
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">&#10216;1&#10217; Tags and reading time
-</span></span><span class="org-block">           (format </span><span class="org-block"><span class="string">"\n#+begin_export html\n&lt;center&gt;%s\n&lt;/center&gt;\n#+end_export"</span></span><span class="org-block"> (@tags it)) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Look at all uses of @tags and maybe move this @@html@@ into it.
-</span></span><span class="org-block">
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">&#10216;2&#10217; Article image
-</span></span><span class="org-block">           (format </span><span class="org-block"><span class="string">"\n@@html:%s@@\n"</span></span><span class="org-block"> (@image it)) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Look at all uses of @image and maybe move this @@html@@ into it.
-</span></span><span class="org-block">
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">&#10216;3&#10217; Preview
-</span></span><span class="org-block">           (@abstract it)
-
-           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">&#10216;4&#10217; "Read more" link
-</span></span><span class="org-block">           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Make a @read-more method.
-</span></span><span class="org-block">           (format (concat </span><span class="org-block"><span class="string">"\n@@html:&lt;p style=\"text-align:right\"&gt;@@"</span></span><span class="org-block"> </span><span class="org-block"><span class="string">" <a href="badge:Read|more|green|%s|read-the-docs">badge:Read|more|green|%s|read-the-docs</a> @@html:&lt;/p&gt;@@"</span></span><span class="org-block">) (@url it))))
-          (seq--into-list blog-posts)))
-
-       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">"Show older posts"
-</span></span><span class="org-block">       </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">This is the bottom-most matter in the index.html page
-</span></span><span class="org-block">       </span><span class="org-block"><span class="string">"#+begin_export html"</span></span><span class="org-block">
-       </span><span class="org-block"><span class="string">"&lt;hr&gt; &lt;center&gt; &lt;em&gt; Thanks for reading everything! &#128513; Bye! &#128075; &lt;/em&gt;"</span></span><span class="org-block">
-       </span><span class="org-block"><span class="string">" &amp;nbsp;|&amp;nbsp; &lt;a href=\"<a href="https://alhassy.github.io/rss.xml">https://alhassy.github.io/rss.xml</a>\"&gt;RSS feed&lt;/a&gt;"</span></span><span class="org-block">
-       </span><span class="org-block"><span class="string">" &lt;/center&gt; &lt;br/&gt;"</span></span><span class="org-block">
-       (blog--license) </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">TODO: Add a "proudly created with Emacs' Org-mode" tagline?
-</span></span><span class="org-block">       </span><span class="org-block"><span class="string">"\n#+end_export"</span></span><span class="org-block">
-       )))
-    (org-mode)
-    (org-html-export-to-html)))
-
-
-
-
-</span><span class="org-block-end-line">#+end_src
-</span>
 <span class="org-level-1">* </span><span class="org-level-1"><span class="italic">/Seamlessly/</span></span><span class="org-level-1"> Previewing Articles </span><span class="org-level-1"><span class="italic">/within/</span></span><span class="org-level-1"> Emacs &#128562;</span>
 <span class="org-drawer">:PROPERTIES:</span>
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">Seamlessly-Previewing-Articles-within-Emacs</span>
@@ -3164,15 +3065,6 @@ blog-preview-subtree, which previews just the heading at point."</span></span><s
 </span></span><span class="org-block">    (add-hook 'org-export-before-processing-hook #'blog--style-setup)
     (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> org-preview-html-viewer 'xwidget)
     (org-preview-html-mode)))
-
-(</span><span class="org-block"><span class="keyword">cl-defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog-preview-disable</span></span><span class="org-block"> ()
-  </span><span class="org-block"><span class="doc">"Disable preview-on-save, removing all hooks set by blog-preview."</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">interactive</span></span><span class="org-block">)
-  </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Remove the multiple-style buffer-local hook (no-op if not set).
-</span></span><span class="org-block">  (remove-hook 'after-save-hook #'blog-preview-subtree t)
-  </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Remove the standalone hook and disable org-preview-html-mode.
-</span></span><span class="org-block">  (remove-hook 'org-export-before-processing-hook #'blog--style-setup)
-  (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (</span><span class="org-block"><span class="keyword">bound-and-true-p</span></span><span class="org-block"> org-preview-html-mode) (org-preview-html-mode -1)))
 
 (</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog-preview-subtree</span></span><span class="org-block"> ()
   </span><span class="org-block"><span class="doc">"Preview the top-level heading at point as a standalone blog article.
