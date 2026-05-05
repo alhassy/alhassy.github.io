@@ -1355,7 +1355,10 @@ Dispatches on #+article_style:
 Exports the article HTML and colourised source, commits the .org source +
 generated artefacts, and pushes.  Index, tag pages, and RSS are intentionally
 omitted here — CI regenerates them from scratch on every push, so there is no
-point doing that work locally."
+point doing that work locally.
+
+Under batch (CI), the git-commit-and-push step is elided — the workflow itself
+force-pushes public/ to gh-pages."
   (interactive)
   (save-buffer)
   (blog--refresh-posts)
@@ -1363,17 +1366,22 @@ point doing that work locally."
   (blog-preview)
   (make-directory blog-publish-directory t)
   (-let [base (f-base (buffer-file-name))]
+    ;; Interactive sessions let org-preview-html-mode produce the HTML as a
+    ;; side effect; under batch we export explicitly.
+    (unless (file-exists-p (concat base ".html"))
+      (org-html-export-to-html))
     (rename-file (concat base ".html")
                  (expand-file-name (concat base ".html") blog-publish-directory) t)
     (blog-preview-disable) (view-echo-area-messages)
     (blog--refresh-posts)
     (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))
-    (blog--git "add %s public/%s.html public/%s.org.html%s"
-               (buffer-file-name) base base
-               (if (equal base "AlBasmala") " AlBasmala.el" ""))
-    (blog--git "commit -m \"%s\"; git push"
-               (blog--commit-message (format "Publish: Article %s.org" base)))
-    (message "⇒ Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)")))
+    (unless noninteractive
+      (blog--git "add %s public/%s.html public/%s.org.html%s"
+                 (buffer-file-name) base base
+                 (if (equal base "AlBasmala") " AlBasmala.el" ""))
+      (blog--git "commit -m \"%s\"; git push"
+                 (blog--commit-message (format "Publish: Article %s.org" base)))
+      (message "⇒ Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)"))))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
