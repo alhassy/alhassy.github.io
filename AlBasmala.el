@@ -1182,11 +1182,9 @@ E.g., ↯ We'll go on a ∀∃⇅ adventure
                (s-chop-prefix "-")
                (s-chop-suffix "-")
                (setq id))
-             (if (not (member id ids))
-                 (push id ids)
-               (message-box "Oh no, a repeated id!\n\n\t%s" id)
-               (undo)
-               (setq quit-flag t))
+             (when (member id ids)
+               (error "Duplicate section id in %s: %s" (buffer-file-name) id))
+             (push id ids)
              (org-entry-put nil "CUSTOM_ID" id))))))))
 
 ;; Whenever html & md export happens, ensure we have headline ids.
