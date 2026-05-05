@@ -610,7 +610,7 @@ The heading text does not appear in the HTML output (title:nil)."
      (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
      (format "<center>%s</center>\n" (@tags post))
      (@image post "resources/")
-     "#+end_export\n"
+     "\n#+end_export\n"
      "\n"
      (or (@abstract post) "")
      "\n"
