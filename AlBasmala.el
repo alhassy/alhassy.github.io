@@ -870,8 +870,10 @@ blog-preview-subtree, which previews just the heading at point."
       (add-hook 'after-save-hook #'blog-preview-subtree nil t)
     ;; Standalone: existing behaviour.
     (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-    (setq org-preview-html-viewer 'xwidget)
-    (org-preview-html-mode)))
+    ;; org-preview-html is interactive-only; CI has no browser to preview into.
+    (when (fboundp 'org-preview-html-mode)
+      (setq org-preview-html-viewer 'xwidget)
+      (org-preview-html-mode))))
 
 (cl-defun blog-preview-disable ()
   "Disable preview-on-save, removing all hooks set by blog-preview."
@@ -880,7 +882,7 @@ blog-preview-subtree, which previews just the heading at point."
   (remove-hook 'after-save-hook #'blog-preview-subtree t)
   ;; Remove the standalone hook and disable org-preview-html-mode.
   (remove-hook 'org-export-before-processing-hook #'blog--style-setup)
-  (when org-preview-html-mode (org-preview-html-mode -1)))
+  (when (bound-and-true-p org-preview-html-mode) (org-preview-html-mode -1)))
 
 (defun blog-preview-subtree ()
   "Preview the top-level heading at point as a standalone blog article.
