@@ -4,6 +4,7 @@
 (require 'org-static-blog)
 (require 'htmlize)
 (require 'org-special-block-extras)
+(require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 
 (use-package org-special-block-extras)
 (org-special-block-extras-mode t)
@@ -648,28 +649,29 @@ property to the in-repo path.  Only touches multiple-style containers."
           (if tag (concat " on " tag) "")))
 
 (defun blog--card (post)
-  "Return the Org source for one article card as a tagged top-level heading.
+  "Return the Org source for one article card.
 
-The heading carries the post's tags so per-tag exports can be built
-by filtering blog-posts directly — no copy-then-delete needed.
-The heading text does not appear in the HTML output (title:nil)."
-  (let ((tags (s-join ":" (s-split " " (map-elt post "tags") t))))
-    (concat
-     (format "* %s %s\n" (@title post) (if (s-blank? tags) "" (format ":%s:" tags)))
-     "#+begin_export html\n"
-     (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
-     (format "<center>%s</center>\n" (@tags post))
-     (@image post "resources/")
-     "\n#+end_export\n"
-     "\n"
-     (or (@abstract post) "")
-     "\n"
-     ;; badge:… is an org-special-block-extras link type, so it must sit in
-     ;; Org territory — not inside #+begin_export html, which would ship it
-     ;; verbatim to the HTML output.  The @@html:…@@ wrappers give us the
-     ;; surrounding <p> while keeping the badge: link itself as Org syntax.
-     (format "@@html:<p style=\"text-align:right\">@@ badge:Read|more|green|%s|read-the-docs @@html:</p>@@\n"
-             (@url post)))))
+No Org heading is emitted — Org would render it as an <h2> *in addition*
+to our own <h2 class=\"title\"> inside the export block, giving every
+card a duplicated title.  Per-tag filtering is done in Elisp before
+cards are built (see `blog-make-index-page'), so the Org tag machinery
+earns us nothing here."
+  (concat
+   "#+begin_export html\n"
+   (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
+   (format "<center>%s</center>\n" (@tags post))
+   (@image post "resources/")
+   "\n#+end_export\n"
+   "\n"
+   (or (@abstract post) "")
+   "\n"
+   ;; badge:… is an org-special-block-extras link type, so it must sit in
+   ;; Org territory — not inside #+begin_export html, which would ship it
+   ;; verbatim to the HTML output.  The @@html:…@@ wrappers give us the
+   ;; surrounding <p> while keeping the badge: link itself as Org syntax.
+   (format "@@html:<p style=\"text-align:right\">@@ badge:Read|more|green|%s|read-the-docs @@html:</p>@@\n"
+           (@url post))
+   "\n@@html:<hr>@@\n"))
 
 (defun blog--make-page-buffer (posts greeting export-file-name)
   "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
@@ -722,6 +724,55 @@ the relevant subset of blog-posts — no copy-then-delete."
                                blog-posts)
                    (blog--greeting tag)
                    (concat-to-dir blog-publish-directory (concat "tag-" (blog--tag-slug tag) ".html"))))))
+
+(defun blog--rss-date (date-str)
+  "Format DATE-STR (an Org date string) as an RFC-822 pubDate for RSS."
+  (format-time-string "%a, %d %b %Y %H:%M:%S %z"
+                      (condition-case _
+                          (date-to-time date-str)
+                        (error (current-time)))))
+
+(defun blog--make-one-rss-feed (posts filename &optional channel-title)
+  "Emit `blog-publish-directory'/FILENAME from POSTS.
+
+A minimal RSS 2.0 feed — title, link, pubDate, description per item.
+Body is intentionally a short #+description rather than the full article
+HTML, so readers click through to alhassy.com.  CHANNEL-TITLE defaults
+to `blog-title'.
+
+Text fields are run through `xml-escape-string' so <, >, & in titles
+and descriptions do not break feed readers."
+  (cl-flet ((esc (s) (xml-escape-string (or s ""))))
+    (let ((dest  (concat-to-dir blog-publish-directory filename))
+          (title (or channel-title blog-title)))
+      (with-temp-file dest
+        (insert "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                "<rss version=\"2.0\">\n"
+                "<channel>\n"
+                "<title>"       (esc title) "</title>\n"
+                "<link>"        (esc blog-url) "</link>\n"
+                "<description>" (esc title) "</description>\n"
+                "<language>en-us</language>\n")
+        (dolist (post posts)
+          (insert "<item>\n"
+                  "<title>"       (esc (@title post))       "</title>\n"
+                  "<link>"        (esc (@url post))         "</link>\n"
+                  "<guid>"        (esc (@url post))         "</guid>\n"
+                  "<pubDate>"     (blog--rss-date (@date post)) "</pubDate>\n"
+                  "<description>" (esc (@description post)) "</description>\n"
+                  "</item>\n"))
+        (insert "</channel>\n</rss>\n")))))
+
+(defun blog--make-rss-feed ()
+  "Emit rss.xml (all posts) plus one <tag>-rss.xml per tag."
+  (blog--make-one-rss-feed blog-posts "rss.xml")
+  (dolist (tag blog-tags)
+    (blog--make-one-rss-feed
+     (seq-filter (lambda (p)
+                   (member tag (s-split " " (map-elt p "tags") t)))
+                 blog-posts)
+     (concat (blog--tag-slug tag) "-rss.xml")
+     (format "%s — %s" blog-title tag))))
 
 (defun blog-make-all-tag-pages ()
   "Regenerate index.html and all tag pages. Calls blog-make-index-page."
@@ -1556,6 +1607,7 @@ Dispatches on #+article_style: per file —
           (message "⇒ HTMLizing article %s..." base)
           (blog--htmlize-file f)))))
   (blog-make-index-page)
+  (blog--make-rss-feed)
   (blog--sync-assets))
 
 (defun blog-insert-image (file)
