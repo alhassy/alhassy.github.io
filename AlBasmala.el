@@ -160,7 +160,8 @@ nearly instantaneously."
     (insert "#+title: " (read-string "Title: ")
             "\n#+author: " user-full-name
             "\n#+email: "  user-mail-address
-            ;; "\n#+date: " (format-time-string "<%Y-%m-%d %H:%M>")
+            "\n#+date: <" (format-time-string "%Y-%m-%d") ">"
+            "\n#+modified: " (format-time-string "%Y-%m-%d")
             "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
                                                          blog-tags
                                                          :marked-candidates t))
@@ -201,6 +202,7 @@ a draft until you remove it before publishing."
      "* " title " :draft:" tag-suffix "\n"
      ":PROPERTIES:\n"
      ":DATE:        <" today ">\n"
+     ":MODIFIED:    " today "\n"
      ":DESCRIPTION: " description "\n"
      ":IMAGE:       " image "\n"
      ":END:\n"
@@ -1073,7 +1075,8 @@ the temp buffer by `blog--info'."
       (find-file file-name)
       (org-mode)
       (outline-show-all)
-      (switch-to-buffer (htmlize-buffer))
+      (let ((inhibit-message t))
+        (switch-to-buffer (htmlize-buffer)))
       (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
       (kill-buffer)))
 (concat
@@ -1360,6 +1363,35 @@ For a one-off use in an article, prepend #+html: to the result."
   "Return the first entry in INFOS whose slug matches SLUG, or nil."
   (seq-find (lambda (a) (equal (@slug a) slug)) infos))
 
+(defun blog--bump-modified-stamp ()
+  "Update the MODIFIED timestamp in the current buffer on every C-x C-s.
+
+For standalone-style buffers: rewrites the #+modified: file keyword if
+present, or inserts it after #+date: (creating #+date: too if absent).
+For multiple-style buffers: sets the :MODIFIED: property on the
+top-level heading at point if the property is already present, otherwise
+leaves the heading untouched — absence is intentional (silent edits)."
+  (let ((today (format-time-string "%Y-%m-%d")))
+    (if (blog--multiple-style-p)
+        ;; Multiple style: update :MODIFIED: on the enclosing top-level heading.
+        (save-excursion
+          (org-back-to-heading t)
+          (when (org-entry-get (point) "MODIFIED")
+            (org-entry-put (point) "MODIFIED" today)))
+      ;; Standalone style: update or insert #+modified: file keyword.
+      (save-excursion
+        (goto-char (point-min))
+        (if (re-search-forward "^#\\+modified:[ ]*.*$" nil t)
+            (replace-match (concat "#+modified: " today))
+          ;; Insert after #+date: if present, else after the last #+keyword: block.
+          (goto-char (point-min))
+          (if (re-search-forward "^#\\+date:.*$" nil t)
+              (end-of-line)
+            (re-search-forward "^#\\+[a-zA-Z].*$" nil t)
+            (while (looking-at "\n#\\+[a-zA-Z]")
+              (forward-line 1)
+              (end-of-line)))
+          (insert "\n#+modified: " today))))))
 
 (defvar my/blogging-mode-map
   (let ((m (make-sparse-keymap)))
@@ -1369,6 +1401,7 @@ For a one-off use in an article, prepend #+html: to the result."
                   (blog--ensure-useful-section-anchors)
                   (blog--assign-slugs)
                   (blog--vendor-redirects)
+                  (blog--bump-modified-stamp)
                   (blog--refresh-posts)
                   (blog--validate-unique-slugs)
                   (save-buffer)
@@ -1387,9 +1420,9 @@ For a one-off use in an article, prepend #+html: to the result."
 
 Binds:
   C-x C-s  — stamp section anchors, assign :SLUG: to fresh container
-             headings, vendor :REDIRECT: sources into resources/redirects/,
-             refresh the posts registry, validate slug uniqueness, then
-             save + live preview (dispatches on article style)
+             headings, vendor :REDIRECT: sources, bump #+modified: /
+             :MODIFIED: to today (if present), refresh the posts registry,
+             validate slug uniqueness, then save + live preview
   M-RET    — new article / new post (dispatches on article style)
   C-c i i  — insert image from file (C-u to rename before committing)
   C-c i s  — take a screenshot and insert it
@@ -1431,7 +1464,8 @@ htmlize, and write the result."
           (org-mode)
           (org-paste-subtree 1)
           (outline-show-all)
-          (switch-to-buffer (htmlize-buffer))
+          (let ((inhibit-message t))
+            (switch-to-buffer (htmlize-buffer)))
           (write-file (expand-file-name (concat slug ".org.html") blog-publish-directory))
           (set-buffer-modified-p nil)
           (kill-buffer))
@@ -1632,14 +1666,13 @@ Dispatches on #+article_style: per file —
           (progn
             (message "=> Exporting all articles from %s..." (f-base f))
             (blog--publish-multiple-articles f))
-        (let ((base (f-base f)))
-          ;; org-html-export-to-html triggers blog--style-setup, which calls
-          ;; blog--badges-bar → blog--htmlize-file, which writes <base>.org.html
-          ;; into public/ as a side effect.  So a single export emits both the
-          ;; article HTML and its colourised source view.
-          (org-html-export-to-html)
-          (rename-file (concat base ".html")
-                       (expand-file-name (concat base ".html") blog-publish-directory) t)))))
+        (let* ((base   (f-base f))
+               (target (expand-file-name (concat base ".html") blog-publish-directory)))
+          ;; Export directly to public/<base>.html so that #+export_file_name:
+          ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
+          ;; become the output destination.  blog--style-setup is already on
+          ;; org-export-before-processing-hook, so the full pipeline still runs.
+          (org-export-to-file 'html target)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
