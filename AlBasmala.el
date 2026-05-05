@@ -8,9 +8,6 @@
 (use-package org-special-block-extras)
 (org-special-block-extras-mode t)
 
-(use-package org-special-block-extras)
-(org-special-block-extras-mode t)
-
 
 (org-deflink image
              "Provide a quick way to insert images along with credits via tooltips.
@@ -109,8 +106,6 @@ Incidentally, orange and `#f2b195' are also nice 'warning' colours."
    (insert "#+html: </details> </div>"))
 
 (use-package org-static-blog)
-;; (use-package lf) ;; So we can use lf-string for multi-line strings supporting interpolation:
-;; (lf-string "100/2 is ${ (/ 100 2) }; neato!") ;; ⇒ "100/2 is 50; neato!"
 
 (defvar blog-title "Life & Computing Science"
   "Title of the blog.")
@@ -333,6 +328,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
   (let ((case-fold-search t))
     (with-temp-buffer
       (insert-file-contents post-filename)
+      (delay-mode-hooks (org-mode))
       (let* ((keyword-pairs
               (cl-loop for (prop.name prop.regex prop.default) on
                     `("title"                "^\\#\\+title:[ ]*\\(.+\\)$"                ,post-filename
@@ -1324,13 +1320,11 @@ On deactivation:
 
 
 (cl-defun blog-publish-current-article ()
-  "Place HTML files in the right place, update index, tags; git push!
+  "Dispatch on #+article_style: to publish the current article — CI entry point.
 
-Dispatches on #+article_style:
-- standalone (default): one file → one HTML file.
+- standalone (default): one file → one HTML file (`blog-publish-standalone').
 - multiple: exports each top-level heading as its own article via
-  blog-publish-multiple."
-  (interactive)
+  `blog-publish-multiple'."
   (if (blog--multiple-style-p) (blog-publish-multiple) (blog-publish-standalone)))
 
 (cl-defun blog-publish-standalone ()
@@ -1339,7 +1333,6 @@ Dispatches on #+article_style:
 Exports the article HTML into `blog-publish-directory' and produces the
 colourised per-article source view.  Index, tag pages, RSS, and the gh-pages
 push are the CI workflow's job, not ours."
-  (interactive)
   (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (blog--refresh-posts)
   (blog--validate-unique-slugs)
@@ -1509,28 +1502,12 @@ Returns the list of slugs that were published."
 
 
 (defun blog-publish-multiple ()
-  "Publish all articles from the multiple-style container at current buffer."
-  (interactive)
-  (let* ((container (buffer-file-name))
-         (base      (f-base container)))
-    (save-buffer)
-    (blog-preview-disable)
-    ;; Refresh the post registry so it reflects the current state of all
-    ;; container files (including any newly-added headings), then guard
-    ;; against slug collisions before touching any output files.
+  "Publish all articles from the multiple-style container at current buffer — CI entry point."
+  (let ((base (f-base (buffer-file-name))))
     (blog--refresh-posts)
     (blog--validate-unique-slugs)
     (message "=> Exporting all articles from %s..." base)
-    (let* ((slugs    (blog--publish-multiple-articles container))
-           )
-      (blog--git "add %s%s"
-                 container
-                 (s-join "" (mapcar (lambda (slug)
-                                      (format " public/%s.html public/%s.org.html" slug slug))
-                                    slugs)))
-      (blog--git "commit -m \"%s\"; git push"
-                 (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
-    (message "=> Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)")))
+    (blog--publish-multiple-articles (buffer-file-name))))
 
 ;; Initialize blog-posts and blog-tags now that all helpers are defined.
 (blog--refresh-posts)
@@ -1573,7 +1550,6 @@ and are silently skipped."
 Exports all posts → public/, rebuilds index + tag pages + RSS, copies static
 assets.  public/ is then deployed by CI to gh-pages so URLs stay flat:
 alhassy.com/foo not alhassy.com/public/foo."
-  (interactive)
   (make-directory blog-publish-directory t)
   (dolist (f (f-entries blog-posts-directory
                         (lambda (x) (and (s-suffix? ".org" x)
