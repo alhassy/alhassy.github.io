@@ -10,7 +10,20 @@
 #+property: header-args :tangle "~/blog/AlBasmala.el" :results silent :exports code :noeval
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
- 
+
+#+begin_src emacs-lisp 
+(require 'dash)
+(require 'f)
+(require 's)
+(require 'org-static-blog)
+(require 'htmlize)
+(require 'org-special-block-extras)
+
+(use-package org-special-block-extras)
+(org-special-block-extras-mode t)
+#+end_src
+
+
 * COMMENT Speculative TODO-s
 
 1. Is this disastrous situation true?
@@ -176,28 +189,20 @@
 
 (load-file "~/blog/AlBasmala.el")
 
-#+begin_src emacs-lisp :exports code
-(require 'dash)
-(require 'f)
-(require 's)
-(require 'org-static-blog)
-(require 'htmlize)
-(require 'org-special-block-extras)
 
-(use-package org-special-block-extras)
-(org-special-block-extras-mode t)
+#+begin_src emacs-lisp :exports code
 
 (org-deflink card
- "Show one of 6 hardcoded phrases as a small inline image."
- (-let [url
-        (pcase o-label
-          ("Let's take a break" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png")
-          ("Yes" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png")
-          ("No" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png")
-          ("Agree" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png")
-          ("Disagree" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png")
-          ("I have a question" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png"))]
-   (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
+  "Show one of 6 hardcoded phrases as a small inline image."
+  (-let [url
+         (pcase o-label
+           ("Let's take a break" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png")
+           ("Yes" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png")
+           ("No" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png")
+           ("Agree" "https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png")
+           ("Disagree" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png")
+           ("I have a question" "https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png"))]
+    (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
 #+end_src
 
 ** COMMENT  Ideas
@@ -1981,7 +1986,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
       (let* ((keyword-pairs
               (cl-loop for (prop.name prop.regex prop.default) on
                     `("title"                "^\\#\\+title:[ ]*\\(.+\\)$"                ,post-filename
-                      "date"                 "^\\#\\+date:[ ]*<\\([^]>]+\\)>$"           ,(time-since 0)
+                      "date"                 "^\\#\\+date:[ ]*<\\([^]>]+\\)>$"           ,(format-time-string "%Y-%m-%d %a")
                       "image"                "^\\#\\+fileimage: \\(.*\\)"                "emacs-birthday-present.png 350 350"
                       "description"          "^\\#\\+description:[ ]*\\(.+\\)$"          "I learned something neat, and wanted to share!"
                       "tags"                 "^\\#\\+filetags:[ ]*\\(.+\\)$"             "" ;; String; Space-separated
@@ -3049,19 +3054,15 @@ temp file path."
 ** blog--htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file :details:
 #+begin_src emacs-lisp
 (defun blog--htmlize-file (file-name)
-  "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file.
-
-We do not take the extra time to produce a colourised file when we are previewing an article."
-  (unless org-preview-html-mode
-(let ((org-hide-block-startup nil))
-  (with-temp-buffer
-    (find-file file-name)
-    ;; (insert "\n#+HTML_HEAD: <link href=\"../doom-solarized-light.css\" rel=\"stylesheet\">\n")
-    (org-mode)
-    (outline-show-all)
-    (switch-to-buffer (htmlize-buffer))
-    (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
-    (kill-buffer))))
+  "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file."
+  (let ((org-hide-block-startup nil))
+    (with-temp-buffer
+      (find-file file-name)
+      (org-mode)
+      (outline-show-all)
+      (switch-to-buffer (htmlize-buffer))
+      (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
+      (kill-buffer)))
 (concat
 "<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
    (f-base file-name) ".org.html\"><img
@@ -4006,31 +4007,21 @@ Dispatches on #+article_style:
   (if (blog--multiple-style-p) (blog-publish-multiple) (blog-publish-standalone)))
 
 (cl-defun blog-publish-standalone ()
-  "Publish the current standalone article.
+  "Publish the current standalone article — CI entry point.
 
-Exports the article HTML and colourised source, commits the .org source +
-generated artefacts, and pushes.  Index, tag pages, and RSS are intentionally
-omitted here — CI regenerates them from scratch on every push, so there is no
-point doing that work locally."
+Exports the article HTML into `blog-publish-directory' and produces the
+colourised per-article source view.  Index, tag pages, RSS, and the gh-pages
+push are the CI workflow's job, not ours."
   (interactive)
-  (save-buffer)
+  (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (blog--refresh-posts)
   (blog--validate-unique-slugs)
-  (blog-preview)
   (make-directory blog-publish-directory t)
   (-let [base (f-base (buffer-file-name))]
+    (org-html-export-to-html)
     (rename-file (concat base ".html")
                  (expand-file-name (concat base ".html") blog-publish-directory) t)
-    (blog-preview-disable) (view-echo-area-messages)
-    (blog--refresh-posts)
-    (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))
-    (when (equal base "AlBasmala") (org-babel-tangle))
-    (blog--git "add %s public/%s.html public/%s.org.html%s"
-               (buffer-file-name) base base
-               (if (equal base "AlBasmala") " AlBasmala.el" ""))
-    (blog--git "commit -m \"%s\"; git push"
-               (blog--commit-message (format "Publish: Article %s.org" base)))
-    (message "⇒ Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)")))
+    (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
