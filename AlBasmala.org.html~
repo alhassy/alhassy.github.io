@@ -1331,23 +1331,6 @@ width="142" height="142" align="top"&gt; &lt;/center&gt;
    <span class="org-drawer">:END:</span>
 
  NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
-<span class="org-level-4">**** Should this be in the ci or locally during preview phase? </span>
-<span class="org-drawer">:PROPERTIES:</span>
-<span class="org-special-keyword">:CREATED:</span>  <span class="org-property-value"><span class="org-date">[2026-05-05 Tue 15:27]</span></span>
-<span class="org-drawer">:END:</span>
-
-
-      - name: Validate all slugs are unique
-        run: |
-          emacs --batch \
-            --eval "(require 'package)" \
-            --eval "(add-to-list 'package-archives '(\"melpa\" . \"<span class="org-link"><a href="https://melpa.org/packages/">https://melpa.org/packages/</a></span>\") t)" \
-            --eval "(package-initialize)" \
-            --eval "(setq org-confirm-babel-evaluate nil)" \
-            --eval "(load-file \"AlBasmala.el\")" \
-            --eval "(blog--validate-unique-slugs)"
-
-            
 <span class="org-level-2">** Using </span><span class="org-level-2"><span class="org-link"><a href="https://github.com/bastibe/org-static-blog">org-static-block</a></span></span>
   <span class="org-drawer">:PROPERTIES:</span>
   <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">https-github-com-bastibe-org-static-blog-org-static-block</span>
@@ -1902,11 +1885,11 @@ colourised sources are validated in the same pass.
 </span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--subtree-stale-p=</span></span><span class="org-formula"> </span><span class="org-table">| Predicate: returns non-nil when a subtree's HTML is out of date |</span><span class="org-table-row">
 </span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--publish-multiple-articles=</span></span><span class="org-formula"> </span><span class="org-table">| Orchestrates per-heading exports; skips up-to-date subtrees; writes back </span><span class="org-table"><span class="org-verbatim">=:SLUG:=</span></span><span class="org-table"> |</span><span class="org-table-row">
 </span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--validate-unique-slugs=</span></span><span class="org-formula"> </span><span class="org-table">| Errors on the first duplicate slug, naming both conflicting articles |</span><span class="org-table-row">
-</span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--validate-no-orphan-html=</span></span><span class="org-formula"> </span><span class="org-table">| Warns/errors when </span><span class="org-table"><span class="org-verbatim">=X.html=</span></span><span class="org-table"> or </span><span class="org-table"><span class="org-verbatim">=X.org.html=</span></span><span class="org-table"> has no matching slug or </span><span class="org-table"><span class="org-verbatim">=posts/X.org=</span></span><span class="org-table"> |</span><span class="org-table-row">
-</span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog-publish-multiple=</span></span><span class="org-formula"> </span><span class="org-table">| Full publish cycle: validates slugs, exports each subtree, regenerates index &#8594; git push |</span><span class="org-table-row">
+</span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--validate-no-orphan-html=</span></span><span class="org-formula"> </span><span class="org-table">| Warns/errors when </span><span class="org-table"><span class="org-verbatim">=X.html=</span></span><span class="org-table"> or </span><span class="org-table"><span class="org-verbatim">=X.org.html=</span></span><span class="org-table"> has no matching slug or </span><span class="org-table"><span class="org-verbatim">=X.org=</span></span><span class="org-table"> source |</span><span class="org-table-row">
+</span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog-publish-all=</span></span><span class="org-formula"> </span><span class="org-table">| CI entry point: refreshes the registry, validates slugs, exports every post, rebuilds index + tag pages, syncs </span><span class="org-table"><span class="org-verbatim">=resources/=</span></span><span class="org-table"> |</span><span class="org-table-row">
 </span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog-preview-subtree=</span></span><span class="org-formula"> </span><span class="org-table">| Previews heading at point via xwidget on every save |</span><span class="org-table-row">
 </span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog-new-post=</span></span><span class="org-formula"> </span><span class="org-table">| Inserts a heading skeleton (2 prompts: title + description) |</span><span class="org-table-row">
-</span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--compute-posts-and-pages=</span></span><span class="org-formula"> </span><span class="org-table">| Scans ~/blog/*.org; returns </span><span class="org-table"><span class="org-verbatim">=(posts . pages)=</span></span><span class="org-table"> separating </span><span class="org-table"><span class="org-verbatim">=:SITE_NAV: t=</span></span><span class="org-table"> subtrees |</span><span class="org-table-row">
+</span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--compute-posts-and-pages=</span></span><span class="org-formula"> </span><span class="org-table">| Scans every </span><span class="org-table"><span class="org-verbatim">=.org=</span></span><span class="org-table"> in </span><span class="org-table"><span class="org-verbatim">=blog-posts-directory=</span></span><span class="org-table">; returns </span><span class="org-table"><span class="org-verbatim">=(posts . pages)=</span></span><span class="org-table">, separating </span><span class="org-table"><span class="org-verbatim">=:SITE_NAV: t=</span></span><span class="org-table"> subtrees |</span><span class="org-table-row">
 </span><span class="org-table">| </span><span class="org-formula"><span class="org-verbatim">=blog--rebuild-preamble=</span></span><span class="org-formula"> </span><span class="org-table">| Regenerates </span><span class="org-table"><span class="org-verbatim">=org-static-blog-page-preamble=</span></span><span class="org-table"> from </span><span class="org-table"><span class="org-verbatim">=blog-pages=</span></span><span class="org-table"> |</span><span class="org-table-row">
 </span>
 
@@ -2269,9 +2252,9 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
 <span class="org-level-2">** blog--article-style, blog--make-slug: Utilities for the </span><span class="org-level-2"><span class="org-verbatim">=multiple=</span></span><span class="org-level-2"> article style </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 
 <span class="org-verbatim">=blog--article-style=</span> is the dispatch predicate used everywhere: in <span class="org-verbatim">=blog-preview=</span>,
-<span class="org-verbatim">=blog-publish-current-article=</span>, <span class="org-verbatim">=blog--compute-posts=</span>, and <span class="org-verbatim">=blog-new-post=</span>.
-It reads <span class="org-verbatim">=#+article_style:=</span> via the same regex approach used throughout <span class="org-verbatim">=blog--info=</span>,
-so the two styles are always in sync.
+<span class="org-verbatim">=blog-publish-all=</span>, <span class="org-verbatim">=blog--compute-posts=</span>, and <span class="org-verbatim">=blog-new-post=</span>.  It reads
+<span class="org-verbatim">=#+article_style:=</span> via the same regex approach used throughout <span class="org-verbatim">=blog--info=</span>, so
+the two styles are always in sync.
 
 Slugs serve as both the HTML filename (<span class="org-verbatim">=&lt;slug&gt;.html=</span>) and the URL path
 (<span class="org-verbatim">=</span><span class="org-link"><span class="org-verbatim"><a href="https://alhassy.com/&lt;slug&gt;">https://alhassy.com/&lt;slug&gt;</a></span></span><span class="org-verbatim">=</span>).  They are derived from heading titles rather than
@@ -2555,7 +2538,7 @@ article whose body was typed directly in the container.
 </span><span class="org-block"><span class="org-drawer">:END:</span></span><span class="org-block">
 </span><span class="org-block-end-line">#+end_src
 </span>
-When <span class="org-verbatim">=blog-publish-multiple=</span> processes this heading it synthesises the usual
+When <span class="org-verbatim">=blog-publish-all=</span> processes this heading (via <span class="org-verbatim">=blog--publish-multiple-articles=</span>) it synthesises the usual
 file-level keyword preamble (<span class="org-verbatim">=#+title:=</span>, <span class="org-verbatim">=#+date:=</span>, etc.) and then appends
 
 <span class="org-block-begin-line">#+begin_example
@@ -2581,8 +2564,8 @@ feed, and the index all treat redirect articles identically to hand-authored one
 <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">MODIFIED-stale-check</span>
 <span class="org-drawer">:END:</span>
 
-Previously every invocation of <span class="org-verbatim">=blog-publish-multiple=</span> unconditionally
-re-exported every heading &#8212; correct, but increasingly slow for large containers.
+Previously every container publish unconditionally re-exported every heading
+&#8212; correct, but increasingly slow for large containers.
 
 We now stamp a <span class="org-verbatim">=:MODIFIED: &lt;YYYY-MM-DD&gt;=</span> property on each heading <span class="italic">/after/</span> a
 successful export.  Before the next export <span class="org-verbatim">=blog--subtree-stale-p=</span> checks:
@@ -2640,9 +2623,9 @@ conditional:
     (</span><span class="org-block"><span class="keyword">push</span></span><span class="org-block"> slug results)))
 </span><span class="org-block-end-line">#+end_src
 </span>
-Both branches push the slug into <span class="org-verbatim">=results=</span> so the calling <span class="org-verbatim">=blog-publish-multiple=</span>
-still refreshes the index, RSS, and tag pages for <span class="italic">/all/</span> articles &#8212; just without
-touching HTML that is already current.
+Both branches push the slug into <span class="org-verbatim">=results=</span> so the surrounding loop in
+<span class="org-verbatim">=blog--publish-multiple-articles=</span> still refreshes the index, RSS, and tag pages
+for <span class="italic">/all/</span> articles &#8212; just without touching HTML that is already current.
 
 <span class="org-level-2">** SITE_NAV: data-driven site navigation from container subtrees </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 <span class="org-drawer">:PROPERTIES:</span>
@@ -4274,35 +4257,40 @@ We use a two-branch model to keep <span class="org-verbatim">=master=</span> cle
 - <span class="org-verbatim">=peaceiris/actions-gh-pages=</span> force-pushes <span class="org-verbatim">=public/=</span>'s contents to <span class="org-verbatim">=gh-pages=</span>.
 - GitHub Pages serves <span class="org-verbatim">=gh-pages=</span> at the root, so URLs are flat: <span class="org-verbatim">=alhassy.com/foo=</span>.
 
-Local <span class="org-verbatim">=C-c C-p=</span> only exports the article HTML(s) and pushes the source.  Index and
-tag pages are not regenerated locally &#8212; there is no point, since CI will rebuild
-everything from scratch moments after the push.
+<span class="bold">*Inspecting what got deployed*</span> &#8212; the post-build state of the blog is visible
+at <span class="org-link"><a href="https://github.com/alhassy/alhassy.github.io/tree/gh-pages">the </a></span><span class="org-link"><span class="org-verbatim"><a href="https://github.com/alhassy/alhassy.github.io/tree/gh-pages">=gh-pages=</a></span></span><span class="org-link"><a href="https://github.com/alhassy/alhassy.github.io/tree/gh-pages"> branch on GitHub</a></span>.  Each CI run rewrites it entirely, so
+browsing that tree tells you exactly what <span class="org-verbatim">=alhassy.com=</span> is currently serving.
 
-<span class="bold">*One-time GitHub setup:*</span> in the repo Settings &#8594; Pages, set the publishing source
-branch to <span class="org-verbatim">=gh-pages=</span>, directory <span class="org-verbatim">=/=</span> (root).
+<span class="bold">*One-time GitHub setup*</span> &#8212; without this, every green CI run will still publish
+nothing, because GitHub Pages defaults to serving <span class="org-verbatim">=master=</span> (where no HTML
+lives): in the repo Settings &#8594; Pages, set <span class="bold">*Source*</span> to "Deploy from a branch",
+then pick <span class="bold">*Branch:*</span> <span class="org-verbatim">=gh-pages=</span> with folder <span class="org-verbatim">=/=</span> (root) and save.  You should
+then see "Your GitHub Pages site is currently being built from the <span class="org-verbatim">=gh-pages=</span>
+branch" at the top of that page.  Set once; CI handles everything thereafter.
 
 <span class="org-level-2">** Asset sync                                                        </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 
-<span class="org-verbatim">=blog--sync-assets=</span> copies <span class="org-verbatim">=resources/=</span> into <span class="org-verbatim">=public/=</span> so the deployed
-subtree is self-contained.  Since all articles now live at <span class="org-verbatim">=~/blog/=</span> alongside
-<span class="org-verbatim">=resources/=</span>, image references in exported HTML are simply <span class="org-verbatim">=resources/foo.png=</span> &#8212;
-the same path that resolves from the deployed root.
+<span class="org-verbatim">=blog--sync-assets=</span> copies <span class="org-verbatim">=resources/=</span> wholesale into <span class="org-verbatim">=public/resources/=</span> so
+the deployed subtree is self-contained.  Exported HTML references assets with
+plain <span class="org-verbatim">=resources/foo.css=</span> / <span class="org-verbatim">=resources/bar.png=</span> paths &#8212; which resolve both
+locally (relative to <span class="org-verbatim">=~/blog/=</span>) and on the deployed site (relative to
+<span class="org-verbatim">=public/=</span>'s root, i.e. <span class="org-verbatim">=alhassy.com/resources/=</span>).
+
+Two stragglers live directly at the repo root rather than under <span class="org-verbatim">=resources/=</span>:
+the <span class="org-verbatim">=readremaining.js-readremainingjs/=</span> vendor drop and <span class="org-verbatim">=floating-toc.css=</span>.
+We copy those alongside.
 
 <span class="org-block-begin-line">#+begin_src emacs-lisp
 </span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--sync-assets</span></span><span class="org-block"> ()
   </span><span class="org-block"><span class="doc">"Copy static assets into blog-publish-directory so relative HTML paths resolve.
 
-Called after any publish so that the public/ subtree is self-contained and can be
-deployed as-is to gh-pages without the master-branch source tree."</span></span><span class="org-block">
+Called at the end of `</span></span><span class="org-block"><span class="doc"><span class="constant">blog-publish-all</span></span></span><span class="org-block"><span class="doc">' so that public/ is self-contained and
+can be deployed as-is to gh-pages without the master-branch source tree."</span></span><span class="org-block">
   (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((dist (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory dist t)
-    (</span><span class="org-block"><span class="keyword">dolist</span></span><span class="org-block"> (asset '(</span><span class="org-block"><span class="string">"images"</span></span><span class="org-block">
-                     </span><span class="org-block"><span class="string">"blog-banner.css"</span></span><span class="org-block">
-                     </span><span class="org-block"><span class="string">"usual-org-front-matter.css"</span></span><span class="org-block">
-                     </span><span class="org-block"><span class="string">"org-notes-style.css"</span></span><span class="org-block">
-                     </span><span class="org-block"><span class="string">"floating-toc.css"</span></span><span class="org-block">
-                     </span><span class="org-block"><span class="string">"doom-solarized-light.css"</span></span><span class="org-block">
-                     </span><span class="org-block"><span class="string">"readremaining.js-readremainingjs"</span></span><span class="org-block">))
+    (</span><span class="org-block"><span class="keyword">dolist</span></span><span class="org-block"> (asset '(</span><span class="org-block"><span class="string">"resources"</span></span><span class="org-block">
+                     </span><span class="org-block"><span class="string">"readremaining.js-readremainingjs"</span></span><span class="org-block">
+                     </span><span class="org-block"><span class="string">"floating-toc.css"</span></span><span class="org-block">))
       (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((src (expand-file-name asset blog-posts-directory)))
         (</span><span class="org-block"><span class="keyword">when</span></span><span class="org-block"> (file-exists-p src)
           (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (file-directory-p src)
