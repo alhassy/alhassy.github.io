@@ -35,14 +35,7 @@
 6. TODO: When I'm done, look around and ensure there are no 'TODO's; or if there
    are any, move them to my todo.org::Blog::Ideas section!
 
-7. TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think
-   there's any real reason for breaking consistency.
-   
-   - Need this conditional since AlBasmala lives in ~/blog whereas usually
-     articles live in ~/blog/posts.
 
-   In-particular, besides some extra code in blog--style-setup, by breaking consistency, AlBasmala does not produce tag
-   pages /not/ contribute to them! This is probably a good enough reason to have it live alongside the other posts!
 
 8. wrt org-link/blog:
     TODO: For the footer, we want ~blog:footer|src|history~ where ~src~ is Boolean to
@@ -54,7 +47,7 @@
    #+html: <br>
    #+begin_remark
    Before we move on, I'd like to have heavy red font for links.
-   # +begin_src css :tangle ~/blog/blog-banner.css :noeval -n :tangle no
+   # +begin_src css :tangle ~/blog/resources/blog-banner.css :noeval -n :tangle no
    HERE PLS
    # +end_src
    But this causes the table of contents to be red, which I dislike ლ(ಠ益ಠ)ლ
@@ -1387,7 +1380,7 @@ tree.
 #+begin_src emacs-lisp
 ;; See: http://alhassy.com/org-special-block-extras/#Tooltips-for-Glossaries-Dictionaries-and-Documentation
 ;; My personal documentation library can be seen [[https://alhassy.github.io/org-special-block-extras/documentation.html][here]]
-(push "~/blog/posts/arabic-glossary.org" org-docs-libraries)
+(push "~/blog/arabic-glossary.org" org-docs-libraries)
 #+end_src
 
 * TODO COMMENT Presentation Order
@@ -1506,9 +1499,8 @@ I like maths.
 I like programming.
 #+end_example
 
-Almost all ~#+keyword:⋯~ lines become part of the JSON file
-https://alhassy.com/posts.json, that I'll use to generate the index landing
-page.
+Almost all ~#+keyword:⋯~ lines are parsed by =blog--info= to build the post-alist
+used for index/tag-page generation.
 
 ** The Two Article Styles: =standalone= vs =multiple=
 
@@ -1565,8 +1557,11 @@ Key rules:
   slug source (useful when the heading has decorative text).
 - *=:SLUG:= property* → pins the URL slug explicitly, bypassing the auto-derived
   kebab-case slug entirely.  Use this when you want a stable URL regardless of how
-  the heading title changes, or when the auto-slug is awkward.  Uniqueness is your
-  responsibility; no dedup suffix is appended.
+  the heading title changes, or when the auto-slug is awkward.  On first publish the
+  derived slug is written back to every heading that lacks an explicit =:SLUG:=, so
+  future title edits cannot silently shift the URL.  Uniqueness across the entire
+  blog (containers and standalones) is enforced at publish time — providing an
+  existing slug is a hard error.
 - *Abstract* is resolved in priority order: =:DESCRIPTION:= property →
   =** Abstract :ignore:= child heading body → first paragraph of the heading.
 
@@ -1599,13 +1594,26 @@ We resolve this with a /synthetic temp file/ trick (in =blog--publish-single-sub
 This means /standalone and multiple articles go through an identical export pipeline/;
 the only difference is how they arrive at the temp buffer.
 
-*** Slug derivation and the JSON cache
+*** Slug derivation, write-back, and global uniqueness
 
 Each container heading gets a URL slug derived from its title (lowercase, strip
 non-alphanum, collapse spaces → dashes).  Collisions /within/ the same container get
 =-2=, =-3=, … suffixes.  Each heading ends up as its own entry in =posts.json= with the
 same schema as a standalone post — so =blog-make-index-page= and =blog-make-all-tag-pages=
 need no changes; they just see more entries.
+
+On every publish run the derived slug is written back to the heading's =:PROPERTIES:=
+drawer (=:SLUG: <slug>=) unless one is already there — mirroring how =:MODIFIED:= is
+stamped after each export.  This makes the URL stable against future title edits with
+zero author effort.
+
+Global uniqueness is enforced by =blog--validate-unique-slugs=: it collects every
+slug across every container and standalone file and calls =user-error= on the first
+collision, naming both the new offender and the existing article that owns the slug.
+=blog--validate-no-orphan-html= now cross-references the same slug registry: every
+=X.html= in =~/blog/= must correspond to a standalone =posts/X.org= or appear as a
+container subtree whose written-back =:SLUG:= is =X=.  The companion =X.org.html=
+colourised sources are validated in the same pass.
 
 *** Functions introduced for the =multiple= style
 
@@ -1617,203 +1625,17 @@ need no changes; they just see more entries.
 | =blog--info-subtree-abstract= | Resolves abstract from property / child heading / first paragraph |
 | =blog--info-subtree= | Extracts one heading's metadata via =org-element= |
 | =blog--info-multiple= | Parses an entire container; returns a list of alists |
-| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html=; stamps =:MODIFIED:= |
+| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html=; stamps =:MODIFIED:= and =:SLUG:= |
 | =blog--subtree-stale-p= | Predicate: returns non-nil when a subtree's HTML is out of date |
-| =blog--publish-multiple-articles= | Orchestrates per-heading exports; skips up-to-date subtrees |
-| =blog-publish-multiple= | Full publish cycle (export → posts.json → index → git push) |
+| =blog--publish-multiple-articles= | Orchestrates per-heading exports; skips up-to-date subtrees; writes back =:SLUG:= |
+| =blog--validate-unique-slugs= | Errors on the first duplicate slug, naming both conflicting articles |
+| =blog--validate-no-orphan-html= | Warns/errors when =X.html= or =X.org.html= has no matching slug or =posts/X.org= |
+| =blog-publish-multiple= | Full publish cycle: validates slugs, exports each subtree, regenerates index → git push |
 | =blog-preview-subtree= | Previews heading at point via xwidget on every save |
 | =blog-new-post= | Inserts a heading skeleton (2 prompts: title + description) |
-| =blog--compute-posts-and-pages= | Scans posts/*.org; returns =(posts . pages)= separating =:SITE_NAV: t= subtrees |
+| =blog--compute-posts-and-pages= | Scans ~/blog/*.org; returns =(posts . pages)= separating =:SITE_NAV: t= subtrees |
 | =blog--rebuild-preamble= | Regenerates =org-static-blog-page-preamble= from =blog-pages= |
 
-#+html: <div style="overflow-y: scroll; height:250px;">
-#+begin_src emacs-lisp :tangle no :results replace value :wrap example js :exports results
-(f-read-text "~/blog/posts.json")
-#+end_src
-
-#+RESULTS:
-#+begin_example js
-[
-  {
-    "file": "java-cheat-sheet",
-    "title": "Java CheatSheet",
-    "date": "2023-12-25 Mon",
-    "image": "modern-java.png 88% 88%",
-    "description": "Quick reference for an old-school-cool high-level language ^_^",
-    "tags": "java cheat-sheet",
-    "url": "https://alhassy.com/java-cheat-sheet",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/java-cheat-sheet.org",
-    "abstract": "\n#+begin_center\n#+html: This is a quick reference of concepts in modern Java.\n\nbadge:PDF|colorful_cheat_sheet|success|https://alhassy.com/java-cheat-sheet.pdf|read-the-docs\n\n# badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs\ntweet:https://alhassy.com/java-cheat-sheet\nbadge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee\nbadge:contributions|welcome|green|https://github.com/alhassy/alhassy.github.io/issues\n# badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds\n# badge:Warning|Incomplete_DRAFT|red||codeigniter\n#+end_center\n\n# @@html: <br> @@\n\nModern Java is a strongly-typed, eagery evaluated, case sensative, yet\nwhitespace insensative language. It uses hierarchies of classes/types\nto structure data, but also has first-class support for\nfunctional-style algebraic datatypes.\n\nJava programs are made up of 'classes', classes contain methods, and methods contain commands.  To just try out a\nsnippet of code, we can\n+ Open a terminal and enter ~jshell~; then enter:\n     #+begin_src java\n1 + 2 // The jshell lets you try things out!\n\n// Say hello in a fancy way\nimport javax.swing.*;\nJOptionPane.showMessageDialog(new JFrame(), \"Hello, World!\");\n\n#+end_src\n\n+ Alternatively, in IntelliJ, click /Tools/ then /Groovy Console/ to try things out!\n+ Finally, [[http://alhassy.com/making-vscode-itself-a-java-repl.html][VSCode]] allows arbitrary Java code to be sent to a ~jshell~\n  in the background(!) and it echoes the result in a friendly way.\n\n# A program cannot consist of only commands. Java commands must be inside functions, and functions must be inside classes.\n#\n# Imagine a sofa. A sofa cannot exist on its own. It exist in a room somewhere. And a room also cannot exist on its own. A room is located in some house. Or, you could say that the house is divided into rooms, and those rooms contain things.\n#\n# Java programs are made up of classes, classes contain methods, and methods contain commands.\n\n# A minimal program must consist of at least one class, which must have at least\n# one method (function) that marks the program's starting point. This method must\n# be named main.\n\n:MWE:\nIn order to run a java program, it must have a main method as an entry point.\n\n#+begin_src java\n  public class LearnJava {\n      // In order to run a java program, it must have a main method as an entry\n      // point.\n      public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n\n          // Use System.out.printf() for easy formatted printing.\n          System.out.printf(\"pi = %.5f\", Math.PI); // => pi = 3.14159\n      }\n  }\n#+end_src\n:End:\n\n** Web reference                                                     :ignore:\n\n#+macro: begin-ignore-html #+html: <!--\n#+macro: end-ignore-html #+html: -->\n\n#+latex: \\vspace{-1em}\n{{{begin-ignore-html()}}}\nTo be terse, lots of content is not shown in this [[http://alhassy.com/java-cheat-sheet.pdf][PDF]], but is shown in the *[[https://alhassy.com/java-cheat-sheet][HTML]]*\nversion.\n{{{end-ignore-html()}}}\n"
-  },
-  {
-    "file": "repl-driven-development",
-    "title": "💐 Repl Driven Development: /Editor Integrated REPLs for all languages/ 🔁",
-    "date": "2023-09-08 Fri",
-    "image": "rdd-benefits.png",
-    "description": "Press "C-x C-e" to send any piece of code (in any language) to a REPL in the background, within Emacs!",
-    "tags": "repl-driven-development vscode emacs javascript java python lisp clojure haskell arend purescript idris racket",
-    "url": "https://alhassy.com/repl-driven-development",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/repl-driven-development.org",
-    "abstract": "\n#+begin_center\nbadge:Warning|Incomplete_DRAFT|red||codeigniter\n#+end_center\n\nThe melpa:repl-driven-development package makes the philosophy of REPL Driven\nDevelopment (RDD) accessible to any language that has a primitive CLI repl: /The\nresult is an Emacs interface for the language, where code of your choosing is/\n/evaluated, and results are echoed at your cursor in overlays./\n\nThat is, with Repl *green:aided* development, you make software by starting with\nan already working program (i.e., the repl) then *green:incrementlly* "teach it"\nto be the program you want, by defining & redefining things.  Until satisfied,\nloop: Type/modify code *[[green:in your editor]]*, press some keys to evaluate what you\nwrote/modified /in the currently running system/, and explore/test the resulting\nruntime.\n# Eventually, save your code as a clean text file.\n\n/RDD is programming emphasising fast & rich feedback from a running system./ RDD\nis fantastic for quickly /teaching/exploring/ an idea; as such, the running\nexample of this article will be on servers ---no prior experience with servers\nis assumed.\nThe main examples will be in JavaScript, Python, and Java.  (Since /JavaScript is\njust Lisp in C clothing/, we will not discuss Lisp.)  Since Java is verbose, the\npower of REPLs really pays off when exploring a new idea. We see how many\nimports and setup-code simply disappear in the RDD approach, letting you focus\non the core idea you're exploring/teaching.  For comparison, a traditional\nself-contained Java server program is ~30 lines long whereas the focused RDD\napproach is ~4 lines long.\n#\n# + We begin with JavaScript: Write some code, and see it interact with your browser.\n# + Then Python: Write some code, and see it interact with the terminal.\n\n# badge:repl-driven-development|1.4|informational|https://github.com/alhassy/repl-driven-development|Gnu-Emacs\n\n#+begin_center\nbadge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs\ntweet:https://alhassy.com/repl-driven-development\nbadge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee\n@@TODO: FIX contributions URL@@\nbadge:contributions|welcome|green|https://github.com/alhassy/alhassy.github.io/issues\n#+end_center\n\n# @@html: <br> @@\n\n/tdlr:/ This library provides the Emacs built-in kbd:C-x_C-e behaviour for\narbitrary languages, provided they have a primitive cli REPL.\n"
-  },
-  {
-    "file": "arabic-cheat-sheet",
-    "title": "Arabic CheatSheet",
-    "date": "2023-06-14 Wed",
-    "image": "arabic-irab.png 100% 100%",
-    "description": "Quick reference for the Arabic language; Modern Standard Arabic",
-    "tags": "arabic cheat-sheet",
-    "url": "https://alhassy.com/arabic-cheat-sheet",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/arabic-cheat-sheet.org",
-    "abstract": "\n#+latex: \\iffalse\n\n#+begin_center\n#+html: This is a quick reference of concepts in the Arabic language.\n\nbadge:PDF|colorful_cheat_sheet|success|https://alhassy.com/arabic-cheat-sheet.pdf|read-the-docs\n\n# badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs\ntweet:https://alhassy.com/arabic-cheat-sheet\nbadge:|buy_me_a_coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee\n#+end_center\n\n# @@html: <br> @@\n\n#+latex: \\fi\n"
-  },
-  {
-    "file": "family-tree",
-    "title": "My Family Tree",
-    "date": "2023-02-02 Thu",
-    "image": "../images/family-tree.png 88% 88%",
-    "description": "من هو في شجرة العائلة القديمة",
-    "tags": "family",
-    "url": "https://alhassy.com/family-tree",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/family-tree.org",
-    "abstract": "\n#+begin_center\nbadge:Warning|Incomplete_DRAFT|red||codeigniter\n#+end_center\n\nWho's who in the old family tree\n"
-  },
-  {
-    "file": "karate",
-    "title": "A Brisk Introduction to Karate",
-    "date": "2023-02-02 Thu",
-    "image": "https://www.usadojo.com/wp-content/uploads/2013/08/Goju-Ryu-Karate-600x300.png 88% 88%",
-    "description": "Discovering what be ka-ra-te",
-    "tags": "karate",
-    "url": "https://alhassy.com/karate",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/karate.org",
-    "abstract": "\n#+begin_center\nbadge:Warning|Incomplete_DRAFT|red||codeigniter\n#+end_center\n\nWhat are the basic forms of Karate? What is Karate?\n\n/"The ultimate aim of karate lies not in victory or defeat but in the perfection\nof the character of its participants … to subdue the enemy without fighting is/\n/the highest skill, know your enemy and know yourself, in a hundred battles you\nwill not be defeated"/ says Gichin Funakoshi ---known as The Father of Modern Karate.\n\n/Karate/ means "empty hand" and was developed on the island of Okinawa ---part of\nmodern-day Japan.  The major styles ("Ryu") are Shotokan, Wado-ryu,\nShito-ryu, and Goju-ryu ---many other styles of Karate are derived from these\nfour. I'm focusing on Goju-Ryu in this article: Goju-Ryu was founded by Chojun\nMiyagi; whose colleague, Gichin Funakosi, founded Shotokan-Ryu.\n\n#+begin_center\nimage:http://www.traditionalshotokankarate.co.uk/kara-te-do.gif\n#+end_center\n\nOccasionally one sees /Karate-Do/, which means "the way of the empty hand".\nThis usage is a reminder that Karate is not just about fighting, but is also\na spiritual discipline.\n\nThe basic form of Goju-Ryu karate is Sanchin, "3 battles": The battles of the\nmind, the body, and the spirit.  However, this was considered a bit difficult\nfor beginners, and so new forms were needed as a way of introducing fundamental\nkarate forms to a wider audience.  There are the "peaceful and safe" forms known\nas Pinan/Heian, the "first course" or Taikyoku forms, the "popularising forms"\nknown as Fukyugata ---the second of which was rebranded as "attack & smash",\nGekaisai--- and, finally, there is the so-called Dachi-waza form. This last one\nis relatively new, and aims to be a smooth introduction to the world of\nforms/Kata.\n\nIn this article, I'd like to discuss the basic forms and their relationships.\n#+begin_center\nimage:https://www.sullivanskarateschool.com/wp-content/uploads/2019/07/saifa.gif\n#+end_center\n"
-  },
-  {
-    "file": "arabic-word-order",
-    "title": "A Brisk Introduction to the Fundamentals of Arabic Grammar, نحو",
-    "date": "2022-11-03 Thu",
-    "image": "arabic-irab.png 100% 100%",
-    "description": "Discovering how to say "a/an/the" in Arabic leads onto a zany adventure into case markings, gender, annexation, non-verbal sentences, plurals, and concludes with whether "Muslims" is مسلمون or مسلمین ---it's both!",
-    "tags": "arabic",
-    "url": "https://alhassy.com/arabic-word-order",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/arabic-word-order.org",
-    "abstract": "\n# I'd like to discuss the importance of Arabic's short vowels and their use to give Arabic flexible word order.\n\nIn short: In English sometimes we mess-up between "I/me/my", likewise in Arabic we might mess up with "ابو / ابا / ابي":\nThese are just اب followed by one of ا/ي/و (which are the pronounced case endings!)\n\n#+begin_center\n~ ~ ~ ~ ~ ~ ~\n#+end_center\n\n How do Arabs say the English "a/an/the", as in "an apple" or "the chair"? Easy! By default, all words are /indefinite/\n ("a/an"); and made /definite/ ("the") by adding الـ to the front of the word.\n\n But... there's some subtleties, which first require us to discuss vowel markings... which also change if the /feminine\n marker/ ة is used, so we also need to briefly discuss gender.\n\nEnglish relies on /word order/ for meaning; for example, /Jim hit Bob/ is a sentence where the person doing the action is\n/Jim/ and we know it has to be /Jim/, and not /Bob/, since /Jim/ is the word /before/ the action /hit/. However, in Arabic words can\nbe ordered in almost any way you like! Then how do we identifiy who does an action? We use *[[green:case markings]]*: We add small\nsymbols to the end of words to indiciate the role they play in a sentence.\n\nWith vowel markings, we can finally flesh-out the nature of\n"a/an/the" in Arabic... but then something wild happens if we stick\nan (in)definite /followed by/ a definite! We get the concepts of ownership and complete sentences that don't need a verb!\n\nFinally, we conclude with an explanation of why in the world English Qurans use the single word /muslim/ where's Arabic\nQurans use both مسلمون and مسلمين.\n"
-  },
-  {
-    "file": "arabic-roots",
-    "title": "Arabic Roots: The Power of Patterns",
-    "date": "2022-11-02 Wed",
-    "image": "https://unsplash.com/photos/Ejdemp9O7Po",
-    "description": "Let's learn about how the Arabic language makes use of "roots" to obtain various words",
-    "tags": "arabic javascript emacs",
-    "url": "https://alhassy.com/arabic-roots",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/arabic-roots.org",
-    "abstract": "\nI want to quickly introduce the Arabic language, through its "root system" ---i.e., most words have 3-letters at their\ncore--- and how these roots can be placed in "patterns" to obtain new words.\n\nI'd like to take a glance at Arabic's Verb Forms: These give you 10 words for each root!\n\nSome *green:interesting* concepts will also be mentioned, for those curious, but should be ignored on a first\nreading. These will be hidden away in /clickable/foldable/ regions.\n\nThese are notes of things that I'm learning; there's likely errors.\n"
-  },
-  {
-    "file": "arabic-glossary",
-    "title": "Glossary of Arabic Linguistic Terms",
-    "date": "2022-11-01 Tue",
-    "image": "arabic-irab.png 100% 100%",
-    "description": "Definitions, and discussions, of jargon relating to learning the Arabic language.",
-    "tags": "arabic",
-    "url": "https://alhassy.com/arabic-glossary",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/arabic-glossary.org",
-    "abstract": "Definitions, and discussions, of jargon relating to learning the Arabic language."
-  },
-  {
-    "file": "cartoon",
-    "title": "Arabic Cartoons",
-    "date": "2022-10-21 Fri 11:20",
-    "image": "https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300",
-    "description": "A simple interface to watch the engaging Arabic cartoons",
-    "tags": "family arabic javascript",
-    "url": "https://alhassy.com/cartoon",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/cartoon.org",
-    "abstract": "\nA simple interface to watch the engaging Arabic cartoons.\n"
-  },
-  {
-    "file": "making-vscode-itself-a-java-repl",
-    "title": "💐 Making VSCode itself a Java REPL 🔁",
-    "date": "2022-09-05 Mon",
-    "image": "https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true 90% 90%",
-    "description": "VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a friendly way!",
-    "tags": "repl-driven-development vscode emacs javascript java python ruby clojure typescript haskell lisp",
-    "url": "https://alhassy.com/making-vscode-itself-a-java-repl",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/making-vscode-itself-a-java-repl.org",
-    "abstract": "\nVSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a\nfriendly way!\n\nThis is achieved with a [[https://github.com/alhassy/easy-extensibility][meta-extension for VSCode]] that makes VSCode into a living, breathing, JS interpreter: It can\nexecute arbitrary JS that alters VSCode on-the-fly.  /(Inspired by using Emacs and Lisp!)/\n\nThe relevant docs show how to make a similar REPL for [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1417-L1420][Python]], [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1459-L1462][Ruby]], [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1475-L1479][Clojure]], [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1490-L1494][Common Lisp]], [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1509-L1515][JavaScript]], [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1527-L1536][Typescript]],\n[[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1553-L1557][Haskell]], and of-course [[https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1575-L1585][Java]].\n"
-  },
-  {
-    "file": "vscode-is-itself-a-javascript-repl",
-    "title": "💐 VSCode is itself a JavaScript REPL 🔁",
-    "date": "2022-08-17 Wed",
-    "image": "https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl.gif 90% 90%",
-    "description": "A meta-extension for VSCode that makes VSCode into a living, breathing, JS interpreter: It can execute arbitrary JS that alters VSCode on-the-fly. A gateway into the world of Editor Crafting!",
-    "tags": "repl-driven-development vscode emacs javascript",
-    "url": "https://alhassy.com/vscode-is-itself-a-javascript-repl",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/vscode-is-itself-a-javascript-repl.org",
-    "abstract": "\nA meta-extension for VSCode that makes VSCode into a living, breathing, JS interpreter: It can execute arbitrary JS that\nalters VSCode on-the-fly. A gateway into the world of Editor Crafting!\n\n| /(Inspired by using Emacs and Lisp!)/ |\n"
-  },
-  {
-    "file": "TypedLisp",
-    "title": "Typed Lisp, A Primer",
-    "date": "2019-08-21 19:29",
-    "image": "emacs-birthday-present.png",
-    "description": "Exploring Lisp's fine-grained type hierarchy.",
-    "tags": "types lisp program-proving emacs",
-    "url": "https://alhassy.com/TypedLisp",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/TypedLisp.org",
-    "abstract": "\n#+TOC: headlines 2\n\nLet's explore Lisp's fine-grained type hierarchy!\n\nWe begin with a shallow comparison to Haskell, a rapid tour of type theory,\ntry in vain to defend dynamic approaches, give a somewhat humorous account of history,\nnote that you've been bamboozled ---type's have always been there---,\nthen go into technical details of some Lisp types, and finally conclude by showing\nhow /macros permit typing/.\n\n# Lisp types are fine-grained; e.g., rather than ~int~ we may use a spefied range of numbers,\n# or a set of specfiied elements, intersections, unions, and complements of types, and\n# even arbitrary predicates!\n\nGoals for this article:\n\n1. Multiple examples of type constructions in Lisp.\n2. Comparing Lisp type systems with modern languages, such as Haskell.\n3. Show how algebraic polymorphic types like ~Pair~ and ~Maybe~ can be defined in Lisp.\n   Including heterogeneously typed lists!\n4. Convey a passion for an elegant language.\n5. Augment Lisp with functional Haskell-like type declarations ;-)\n\nUnless suggested otherwise, the phrase "Lisp" refers to\n[[https://www.gnu.org/software/emacs/manual/html_mono/cl.html#index-cl_002ddeftype-14][Common Lisp as supported by Emacs Lisp]]. As such, the resulting discussion\nis applicable to a number of Lisp dialects\n---I'm ignoring editing types such as buffers and keymaps, for now.\n"
-  },
-  {
-    "file": "three-minute-thesis",
-    "title": "Have you ever packaged anything?",
-    "date": "2019-03-12 19:29",
-    "image": "packages.png 250 250",
-    "description": "I learned something neat, and wanted to share!",
-    "tags": "packages dependent-types",
-    "url": "https://alhassy.com/three-minute-thesis",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/three-minute-thesis.org",
-    "abstract": "\n#+TOC: headlines 2\n\n# copied from the repo\n\nHerein I try to make my current doctoral research accessible to the average person:\nExtending dependently-typed languages to implement module system features in the core\nlanguage. It's something I can direct my family to, if they're inclined to know what it is\nI've been doing lately.\n\nThe technical matter can be seen at the associated website\n─[[https://alhassy.github.io/next-700-module-systems-proposal/][The Next 700 Module Systems]]─ which includes a poster, slides, and a demo.\n\nExcluding the abstract, this is my thesis proposal in /three minutes/ (•̀ᴗ•́)و\n"
-  },
-  {
-    "file": "InteractiveWayToC",
-    "title": "An Interactive Way To C",
-    "date": "2019-01-12 19:29",
-    "image": "interactive_way_to_c.png 450 450",
-    "description": "Learning C program proving using Emacs --reminiscent of Coq proving with Proof General.",
-    "tags": "program-proving c emacs frama-c",
-    "url": "https://alhassy.com/InteractiveWayToC",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/InteractiveWayToC.org",
-    "abstract": "\n#+TOC: headlines 2\n\n# copied from the repo\n\nDo you know what the above program accomplishes?\nIf you do, did you also spot a special edge case?\n\nWe aim to present an approach to program proving in C using a minimal Emacs setup\nso that one may produce literate C programs and be able to prove them correct\n--or execute them-- using a single button press; moreover the output is again in Emacs.\n\nThe goal is to learn program proving using the Frama-C tool\n--without necessarily invoking its gui-- by loading the source of this file into\nEmacs then editing, executing, & proving as you read along.\nOne provides for the formal specification of properties of C programs --e.g., using ACSL--\n which can then be verified for the implementations using tools that interpret such annotation\n--e.g., Frama-C invoked from within our Emacs setup.\n\nRead on, and perhaps you'll figure out how to solve the missing ~FixMe~ pieces 😉\n\nThe intent is for rapid editing and checking.\nIndeed, the Frama-c gui does not permit editing in the gui, so one must switch between\ntheir text editor and the gui.\n[[https://orgmode.org/worg/org-tutorials/org4beginners.html][Org mode beginning at the basics]] is a brief tutorial that covers a lot of Org and,\nfrom the get-go, covers "the absolute minimum you need to know about Emacs!"\n\nIf anything, this effort can be construed as a gateway into interactive theorem proving\nsuch as with Isabelle, Coq, or Agda.\n\nThe article /aims/ to be self-contained ---not even assuming familiarity with any C!\n\n\n#+BEGIN_QUOTE\n  The presentation and examples are largely inspired by\n\n  + Gilles Dowek's exquisite text [[https://www.springer.com/gp/book/9781848820319][Principles of Programming Languages]].\n     - It is tremendously accessible!\n\n  + Allan Blanchard's excellent tutorial\n    [[https://allan-blanchard.fr/publis/frama-c-wp-tutorial-en.pdf][Introduction to C Program Proof using Frama-C and its WP Plugin]].\n\n  Another excellent and succinct tutorial is Virgile Prevosto's [[https://frama-c.com/download/acsl-tutorial.pdf][ACSL Mini-Tutorial]].\n  In contrast, the tutorial [[https://www.cs.umd.edu/class/spring2016/cmsc838G/frama-c/ACSL-by-Example-12.1.0.pdf][ACSL By Example]] aims to provide a variety of algorithms\n  rendered in ACSL.\n#+END_QUOTE\n\nThere are no solutions since it's too easy to give up and look at the solutions that're\nnearby. Moreover, I intend to use some of the exercises for a class I'm teaching ;-)\n"
-  },
-  {
-    "file": "PathCat",
-    "title": "Graphs are to categories as lists are to monoids",
-    "date": "2018-12-24 19:29",
-    "image": "PathCat.png 300 300",
-    "description": "A fast-paced introduction to Category Theory based on the notion of graphs.",
-    "tags": "category-theory agda types",
-    "url": "https://alhassy.com/PathCat",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/PathCat.org",
-    "abstract": "\n#+TOC: headlines 2\n\nNumbers are the lengths of lists which are the flattenings of trees which are\nthe spannings of graphs.\nUnlike the first three, graphs have /two/ underlying types of interest\n--the vertices and the edges-- and it is getting to grips with this complexity\nthat we attempt to tackle by considering their 'algebraic' counterpart: Categories.\n\n# trees are just those graphs for which arbitrary points are connected by a unique undirected path.\n\nIn our exploration of what graphs could possibly be and their relationships to lists are,\nwe shall /mechanise,/ or /implement,/ our claims since there will be many details and it is easy\nto make mistakes --moreover as a self-learning project, I'd feel more confident to make"
-  },
-  {
-    "file": "HeytingAlgebra",
-    "title": "Discovering Heyting Algebra",
-    "date": "2018-11-14 19:29",
-    "image": "HeytingAlgebra.png 350 350",
-    "description": "How do friends communicate secretly using non-invertible operations such as minimum? An introduction to Heyting Algebra --an instance of Cartesian Closed Categories!",
-    "tags": "order-theory category-theory",
-    "url": "https://alhassy.com/HeytingAlgebra",
-    "history": "https://github.com/alhassy/alhassy.github.io/commits/master/posts/HeytingAlgebra.org",
-    "abstract": "\n#+toc: headlines 2\n\nWe attempt to motivate the structure of a Heyting Algebra\nby considering 'inverse problems'.\n\nFor example,\n+ You have a secret number $x$ and your friend has a secret number $y$, which you've\n  communicated to each other in person.\n+ You communicate a 'message' to each other\n  by adding onto your secret number.\n+ Hence, if I receive a number $z$, then I can /undo/ the addition operation to find the 'message' $m = z - y$.\n\nWhat if we decided, for security, to change our protocol from using addition to using\nminimum. That is, we encode our message $m$ as $z = x ↓ m$. Since minimum is not\ninvertible, we decide to send our encoded messages with a 'context' $c$ as a pair $(z, c)$.\nFrom this pair, a unique number $m′$ can be extracted, which is not necessarily the original $m$.\nRead on, and perhaps you'll figure out which messages can be communicated 😉\n\n# For example, we wrote our message on a piece of paper and placed it on a cafe bulletin board --a context!\n\nThis exploration demonstrates that relative pseudo-complements\n+ Are admitted by the usual naturals precisely when infinity is considered a number;\n+ Are /exactly/ implication for the Booleans;\n+ /Internalises/ implication for sets;\n+ Yield /the largest complementary subgraph/ when considering subgraphs.\n# + Generalise the /deduction theorem/.\n\nIn some sense, the pseudo-complement is the "best approximate inverse" to forming meets, minima, intersections.\n\nAlong the way we develop a number of the theorems describing the relationships\nbetween different structural components of Heyting Algebras;\nmost notably the internalisation of much of its own structure.\n\nThe article aims to be self-contained, however it may be helpful to\nlook at [[https://alhassy.github.io/CatsCheatSheet/LatticesCheatSheet.pdf][this lattice cheat sheet]] (•̀ᴗ•́)و\n"
-  }
-]
-#+end_example
-
-#+html: </div>
 
 <<unfurling>>
 
@@ -1836,6 +1658,34 @@ article, to create the JSON file, and to load it.
 #+end_src
 
 ** Basic facts (global variables) of my blog                        :details:
+
+The =.org= source files in =~/blog/= are first-class citizens; the generated
+=.html= artefacts are not.  We achieve clean separation via a two-branch model:
+
+#+begin_example
+  master branch                      gh-pages branch
+  ──────────────────────────────     ─────────────────────────────────
+  foo.org         (source)      ──►  foo.html     (alhassy.com/foo)
+  AlBasmala.org   (source)   CI      index.html
+  resources/                    ──►  resources/
+  AlBasmala.el                       (NO .html files here)
+  (NO .html files here)
+#+end_example
+
+- =master= holds only =.org= sources, resources, and config — the working tree is clean.
+- CI runs on every push: Emacs exports all posts into =public/=, copies =resources/=
+  there too, then =peaceiris/actions-gh-pages= force-pushes =public/='s contents to
+  the =gh-pages= branch.
+- GitHub Pages is configured to serve from =gh-pages= (root =/=).  You never touch
+  =gh-pages= directly; it only ever contains build artefacts.
+- URLs remain flat: =alhassy.com/foo= — no =/public/= prefix.
+
+All article =.org= files live at the top-level =~/blog/= alongside =resources/=,
+so image references are simply =resources/foo.png= — the same path that works in
+deployed HTML (served from root).  No =../= prefix juggling needed.
+
+=blog-publish-directory= points to =~/blog/public/=.  It is gitignored on =master=.
+
 #+begin_src emacs-lisp :exports code
 (defvar blog-title "Life & Computing Science"
   "Title of the blog.")
@@ -1843,13 +1693,21 @@ article, to create the JSON file, and to load it.
 (defvar blog-url "https://alhassy.com"
   "URL of the blog.")
 
-(defvar blog-publish-directory "~/blog/"
-  "Directory containing published HTML files.")
+(defvar blog-publish-directory "~/blog/public/"
+  "Directory containing published HTML files.
 
-(defvar blog-posts-directory "~/blog/posts"
+HTML is a build artefact; the .org sources in ~/blog/ are first-class.
+On master we keep only sources; CI exports everything to public/ and deploys
+public/'s contents to the gh-pages branch that GitHub Pages serves.
+That gives flat URLs (alhassy.com/foo) while the master working tree stays clean.")
+
+(defvar blog-posts-directory "~/blog"
   "Directory containing source Org files.
 
-When publishing, posts are rendered as HTML and included in the index and RSS feed.
+All article .org files — including AlBasmala.org itself — live here alongside
+resources/.  blog--compute-posts-and-pages collects every .org file with #+date:
+as a post and every file with #+site_nav: as a nav page; files with neither
+(e.g. MathJaxPreamble.org) are silently skipped.
 See blog-make-index-page and blog-publish-directory.")
 #+end_src
 ** blog-new-article: Helper function to make a new article          :details:
@@ -1890,7 +1748,7 @@ nearly instantaneously."
             "\n#+fileimage: emacs-birthday-present.png"
             ;; "\n#+fileimage: " (completing-read
             ;;                    "Image: "
-            ;;                    (mapcar #'f-filename (f-entries "~/blog/images/")))
+            ;;                    (mapcar #'f-filename (f-entries "~/blog/resources/")))
             ;; "\n#+include: ../MathJaxPreamble.org" ;; TODO. Is this someting I actually want here? If so, then consider tangling it from AlBasmala! (and add the whitespace-MathJax setup from above!)
             "\n#+description: "
                (setq desc (read-string "Article Purpose: "))
@@ -1996,28 +1854,41 @@ start with '@'.
 #+end_src
 
 ** @tags: Get an HTML listing of tags, as shields.io bages, associated with the given file :details:
+
+Org forbids dashes in tag names — we use underscores internally (e.g., =programming_language=)
+and convert them to dashes everywhere they appear in HTML: display label, badge URL, and tag-page
+filename.  The reader always sees =programming-language=; =tag-programming-language.html= is the
+generated page.  =blog--tag-slug= is the single conversion point.
+
 #+begin_src emacs-lisp
+(defun blog--tag-slug (tag)
+  "Convert an internal TAG name (underscores, Org-compatible) to a kebab-case slug.
+
+Org forbids dashes in tag names — we use underscores internally and replace them
+with dashes for display and URLs so the reader sees kebab-case everywhere:
+  programming_language  →  programming-language
+  tag-programming_language.html  →  tag-programming-language.html"
+  (s-replace "_" "-" (downcase tag)))
+
 (defun @tags (json)
-  "Get an HTML listing of tags, as shields.io bages, associated with the given file.
+  "Get an HTML listing of tags, as shields.io badges, associated with the given file.
+
+Tag names are stored with underscores (Org syntax requirement) but rendered with
+dashes everywhere — display label, URL slug — so readers see kebab-case.
 
 Example use:  (@tags (seq-elt blog-posts 0))
 "
   (concat
-   ;; Straightforward implementation.
-   ;; "<div class=\"taglist\">"
-   ;; (org-static-blog-post-taglist file-name)
-   ;; "</div>"
-
   ;; Badges implementation
    (concat
     (format "<a href=\"https://alhassy.github.io/tags.html\"> %s </a>"
             (org-link/octoicon "tag" nil 'html))
     (s-join " "
-            (--map  (org-link/badge
-                     (format "|%s|grey|%stag-%s.html"
-                             (s-replace "-" "_" it)
-                             "https://alhassy.com/" it)
-                     nil 'html)
+            (--map  (let ((slug (blog--tag-slug it)))
+                      (org-link/badge
+                       (format "|%s|grey|%stag-%s.html"
+                               slug "https://alhassy.com/" slug)
+                       nil 'html))
                     (s-split " " (map-elt json "tags")))))))
 #+end_src
 
@@ -2025,14 +1896,14 @@ Example use:  (@tags (seq-elt blog-posts 0))
 <<Images>>
 
 Every article declaratively has an associated image ^_^
-- Images are loaded from the =~/blog/images/= directory, but may be explicit paths or URLs.
+- Images are loaded from the =~/blog/resources/= directory, but may be explicit paths or URLs.
 - If none declared, we use =emacs-birthday-present.png= :-)
   #+html: <center> <img src="http://alhassy.com/images/emacs-birthday-present.png" width=100 height=100> </center>
 #+begin_src emacs-lisp
 (cl-defun @image (json &optional explicit-image-path-prefix)
   "Assemble the value of '#+fileimage: image width height border?' as an HTML form.
 
-By default, the image should be located in the top-level images/ directory.
+By default, the image should be located in the top-level resources/ directory.
 If the image is located elsewhere, or is a URL, is dictated by the presence of a `/'
 in the image path.
 
@@ -2041,7 +1912,7 @@ Example use:  (@image (seq-elt blog-posts 0))
 Here are 4 example uses:
 
 ,#+fileimage: emacs-birthday-present.png
-,#+fileimage: ../images/emacs-birthday-present.png
+,#+fileimage: ../resources/emacs-birthday-present.png
 ,#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300
 ,#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
 
@@ -2057,7 +1928,7 @@ Here are 4 example uses:
     (cond
      ((s-contains? "/" image) t) ;; It's a URL, or explicit path, do nothing to it.
      (explicit-image-path-prefix (setq image (format "%s%s"  explicit-image-path-prefix image)))
-     ((not (s-contains? "/" image)) (setq image (format "images/%s" image))))
+     ((not (s-contains? "/" image)) (setq image (format "resources/%s" image))))
     (-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" image))]
       (setq href (if unsplash (concat "https://unsplash.com/photos/" unsplash) image))
       (setq title (format "Image credit %s" (if unsplash (concat "https://unsplash.com/photos/" unsplash) image)))
@@ -2073,7 +1944,7 @@ Here are 4 example uses:
 (defun blog--info (post-filename)
   "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
 
-Example use: (blog--info \"~/blog/posts/HeytingAlgebra.org\")
+Example use: (blog--info \"~/blog/HeytingAlgebra.org\")
 
 For container sub-articles, the temp file may carry synthetic keywords:
   #+history_url:         — overrides the auto-computed GitHub history URL
@@ -2109,7 +1980,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
          ;; over the auto-derived URL based on the file basename.
          (cons "history"
                (or (cdr (assoc "history_url" keyword-pairs))
-                   (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
+                   (format "https://github.com/alhassy/alhassy.github.io/commits/master/%s.org"
                            (f-base post-filename))))
          (cons "abstract" (progn
                     (goto-char (point-min))
@@ -2159,15 +2030,15 @@ where the image spec is anything =#+fileimage:= accepts (filename, URL, =filenam
 
 #+begin_src emacs-lisp
 (defvar blog-tag-image-alist
-  '(("emacs"    . "./images/emacs-birthday-present.png 350 350")
-    ("lisp"     . "./images/emacs-birthday-present.png 350 350")
-    ("org"      . "./images/org_logo.png 350 350")
-    ("haskell"  . "./images/haskell-logo.png 350 350")
-    ("java"     . "./images/modern-java.png 350 350")
-    ("arabic"   . "./images/arabic-irab.png 350 350")
-    ("life"     . "./images/musa_pink.jpg 350 350")
-    ("family"   . "./images/family-tree.png 350 350")
-    ("karate"   . "./images/fukyu-kata.png 350 350"))
+  '(("emacs"    . "./resources/emacs-birthday-present.png 350 350")
+    ("lisp"     . "./resources/emacs-birthday-present.png 350 350")
+    ("org"      . "./resources/org_logo.png 350 350")
+    ("haskell"  . "./resources/haskell-logo.png 350 350")
+    ("java"     . "./resources/modern-java.png 350 350")
+    ("arabic"   . "./resources/arabic-irab.png 350 350")
+    ("life"     . "./resources/musa_pink.jpg 350 350")
+    ("family"   . "./resources/family-tree.png 350 350")
+    ("karate"   . "./resources/fukyu-kata.png 350 350"))
   "Alist mapping Org heading tags to default image specs for blog posts.
 First match wins.  The image spec is anything #+fileimage: accepts.
 Used by blog--image-for-tags to avoid requiring an explicit :IMAGE: property
@@ -2179,7 +2050,7 @@ Checks blog-tag-image-alist in order; returns the first match.
 Falls back to the global default image when no tag matches."
   (or (cdr (seq-find (lambda (pair) (member (car pair) tags))
                      blog-tag-image-alist))
-      "./images/emacs-birthday-present.png 350 350"))
+      "./resources/emacs-birthday-present.png 350 350"))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -2305,7 +2176,7 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              ;; urls
              (container-base (f-base container-file))
              (url     (concat "https://alhassy.com/" slug))
-             (history (format "https://github.com/alhassy/alhassy.github.io/commits/master/posts/%s.org"
+             (history (format "https://github.com/alhassy/alhassy.github.io/commits/master/%s.org"
                               container-base)))
         (list (cons "file"        container-base)
               (cons "slug"        slug)
@@ -2519,7 +2390,7 @@ are rendered as a link in the preamble of every page.
 
 A typical nav page heading looks like:
 
-#+begin_src org
+#+begin_src org :tangle no
 ,* AlBasmala :emacs:lisp:
 :PROPERTIES:
 :DATE:        <2020-01-01>
@@ -2606,7 +2477,7 @@ The heading text does not appear in the HTML output (title:nil)."
      "#+begin_export html\n"
      (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
      (format "<center>%s</center>\n" (@tags post))
-     (@image post "../images/")
+     (@image post "resources/")
      "\n"
      (or (@abstract post) "")
      "\n"
@@ -2662,7 +2533,7 @@ the relevant subset of blog-posts — no copy-then-delete."
                                  (member tag (s-split " " (map-elt p "tags") t)))
                                blog-posts)
                    (blog--greeting tag)
-                   (concat-to-dir blog-publish-directory (concat "tag-" (downcase tag) ".html"))))))
+                   (concat-to-dir blog-publish-directory (concat "tag-" (blog--tag-slug tag) ".html"))))))
 
 (defun blog-make-all-tag-pages ()
   "Regenerate index.html and all tag pages. Calls blog-make-index-page."
@@ -2679,7 +2550,7 @@ unified buffer approach always rebuilds everything in one pass."
 ** blog-posts, blog-tags, and their consumers: tag & index page generation :details:
 
 =blog-posts= is a sorted list of post-alists (newest first), computed by
-scanning =~/blog/posts/*.org= directly.  Its sole heavyweight consumer is
+scanning =~/blog/*.org= directly.  Its sole heavyweight consumer is
 =blog-make-tags-page=, which iterates it to build every article card on the
 index and tag pages.  =blog-tags= is a flat sorted list of unique tag strings
 derived from =blog-posts= — used for tag-page iteration and helm completion.
@@ -2689,32 +2560,27 @@ defined) via =(blog--refresh-posts)=, and refreshed after every publish.
 
 #+begin_src emacs-lisp  -n
 (defun blog--compute-posts-and-pages ()
-  "Scan ~/blog/posts/*.org (and root ~/blog/*.org for nav-only pages) and return (posts . pages).
+  "Scan ~/blog/*.org and return (posts . pages).
 
-posts — all non-#+site_nav: entries from posts/, sorted newest-first.
-pages — all #+site_nav: <short-title> / :SITE_NAV: <short-title> entries from both directories, unsorted.
+Every .org file is processed uniformly — there is no special-cased directory.
+Container files (#+article_style: multiple) yield many post entries; standalone
+files yield one.  A file with #+site_nav: contributes a nav-page entry instead
+of (or in addition to, if it also has #+date:) a post entry.
+Files with neither #+date: nor #+site_nav: (e.g. MathJaxPreamble.org) are skipped.
 
-Root-level ~/blog/*.org files (e.g. AlBasmala.org, about.org) are only included
-when they carry #+site_nav: <short-title>; they are never added to posts."
+posts — dated, non-site_nav entries, sorted newest-first.
+pages — site_nav entries, unsorted."
   (let ((posts '())
         (pages '()))
-    ;; posts/ directory: container files yield many articles, standalone yield one.
-    (dolist (file (f-files "~/blog/posts"))
+    (dolist (file (f-files "~/blog"))
       (when (s-ends-with? ".org" file)
         (let ((infos (if (equal "multiple" (blog--article-style file))
                          (blog--info-multiple file)
                        (list (blog--info file)))))
           (dolist (info infos)
-            (if (map-elt info "site_nav")
-                (push info pages)
-              (push info posts))))))
-    ;; Root ~/blog/*.org: only collect entries that opt in via #+site_nav: <short title>.
-    (dolist (file (f-files "~/blog"))
-      (when (and (s-ends-with? ".org" file)
-                 (equal "standalone" (blog--article-style file)))
-        (let ((info (blog--info file)))
-          (when (map-elt info "site_nav")
-            (push info pages)))))
+            (cond
+             ((map-elt info "site_nav") (push info pages))
+             ((map-elt info "date")     (push info posts)))))))
     (cons (sort posts (lambda (a b)
                         (time-less-p (date-to-time (@date b))
                                      (date-to-time (@date a)))))
@@ -2941,10 +2807,7 @@ which I place below at the top of the page.)
             (@tags post)
             "</center>"
             "\n#+html: "
-            (@image post
-                    ;; Need this conditional since AlBasmala lives in ~/blog whereas usually articles live in ~/blog/posts.
-                    ;; TODO: Consider just making AlBasmala live in ~/blog/posts, I don't think there's any real reason for breaking consistency.
-                    (if (equal (f-base (@file post)) "AlBasmala") "./images/" "../images/"))
+            (@image post "resources/")
             "\n")
 
     ;; Wrap contents of "* Abstract" section in the "abstract" Org-special-block
@@ -2981,7 +2844,38 @@ brew reinstall emacs-plus@30 --with-xwidgets --with-imagemagick --with-dbus --wi
 
 Confirm support is present with: =(featurep 'xwidget-internal)=.
 
+=blog--show-preview= enforces a fixed side-by-side layout: the Org source stays in
+the left window and the xwidget view occupies a right split.  If an xwidget window
+already exists on the right it is reused (navigated to the new URL); otherwise a
+new window is split off to the right.  This is the layout we always want from
+=C-x C-s=, so /no other browser-function juggling is needed/.
+
 #+begin_src emacs-lisp
+(defun blog--show-preview (url)
+  "Display URL in an xwidget buffer to the right of the current Org window.
+
+Guarantees [Org source | xwidget] side-by-side layout:
+- If there is already an xwidget window on the right, reuse it.
+- Otherwise split the current window to the right and open there.
+- The Org source window is never taken over."
+  (let* ((org-win   (selected-window))
+         (xw-buf    (seq-find (lambda (b)
+                                (eq 'xwidget-webkit-mode
+                                    (buffer-local-value 'major-mode b)))
+                              (buffer-list)))
+         (xw-win    (and xw-buf (get-buffer-window xw-buf))))
+    (if (and xw-win (not (eq xw-win org-win)))
+        ;; Reuse the existing xwidget window — just navigate.
+        (progn
+          (select-window xw-win)
+          (xwidget-webkit-browse-url url)
+          (select-window org-win))
+      ;; No usable xwidget window — split right and open there.
+      (let ((right-win (split-window org-win nil 'right)))
+        (select-window right-win)
+        (xwidget-webkit-browse-url url)
+        (select-window org-win)))))
+
 (cl-defun blog-preview ()
   "Enable preview-on-save, dispatching on #+article_style.
 
@@ -3015,7 +2909,10 @@ blog-preview-subtree, which previews just the heading at point."
   "Preview the top-level heading at point as a standalone blog article.
 
 For use in multiple-style (#+article_style: multiple) files.
-Called automatically by the buffer-local after-save-hook set up by blog-preview."
+Called automatically by the buffer-local after-save-hook set up by blog-preview.
+
+Opens (or reuses) an xwidget window to the right of the Org source buffer,
+maintaining a stable [Org source | xwidget] side-by-side layout."
   (interactive)
   (let ((kill-buffer-query-functions nil))
     (unless (equal "multiple" (blog--article-style (buffer-file-name)))
@@ -3033,13 +2930,10 @@ Called automatically by the buffer-local after-save-hook set up by blog-preview.
              (html-out  (expand-file-name (concat slug ".html") "~/blog/")))
         (message "=> Previewing %s..." title)
         (blog--publish-single-subtree (point) (buffer-file-name) all-infos slug)
-        ;; Kill stale xwidget buffers before opening the fresh preview.
-        (-let [kill-buffer-query-functions nil]
-          (mapcar #'kill-buffer
-                  (--filter (equal 'xwidget-webkit-mode (buffer-local-value 'major-mode it))
-                            (buffer-list))))
         (when (file-exists-p html-out)
-          (browse-url (concat "file://" (expand-file-name html-out))))))))
+          ;; blog--show-preview reuses the existing xwidget window when present,
+          ;; so the [Org | xwidget] split is stable across repeated saves.
+          (blog--show-preview (concat "file://" (expand-file-name html-out))))))))
 
 (defun blog-publish-current-subtree ()
   "Publish just the top-level heading at point from a multiple-style container.
@@ -3065,14 +2959,11 @@ Mirrors blog-preview-subtree but goes all the way to git push."
       (save-buffer)
       (blog-preview-disable)
       (blog--publish-single-subtree (point) container all-infos slug)
-      (blog--refresh-posts)
-      (-let [article-tags (s-split " " (map-elt (blog--find-info-by-slug slug blog-posts) "tags"))]
-        (blog--make-tag-pages-for-tags article-tags))
-      (blog--git "add %s ~/blog/%s.html ~/blog/%s.org.html tag* rss.xml index.html"
+      (blog--git "add %s public/%s.html public/%s.org.html"
                 container slug slug)
       (blog--git "commit -m \"%s\"; git push"
                 (blog--commit-message (format "Publish: %s" title)))
-      (message "=> Live in ~1 minute at alhassy.com/%s" slug))))
+      (message "=> Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)" slug))))
 #+end_src
 
 Upon a save, kbd:C-x_C-s, a new HTML file is created ---bearing the same name as the Org file. It seems an /incremental/
@@ -3144,7 +3035,7 @@ We do not take the extra time to produce a colourised file when we are previewin
     (org-mode)
     (outline-show-all)
     (switch-to-buffer (htmlize-buffer))
-    (write-file (concat "~/blog/" (f-base file-name) ".org.html"))
+    (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
     (kill-buffer))))
 (concat
 "<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
@@ -3265,11 +3156,11 @@ Firstly, we want some styling rules to be loaded.
 (concat
 "<meta name=\"author\" content=\"Musa Al-hassy\">
  <meta name=\"referrer\" content=\"no-referrer\">"
-"<link href=\"usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:usualCSS)
-"<link href=\"org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
-"<link href=\"floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
-"<link href=\"blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
-"<link rel=\"icon\" href=\"images/favicon.png\">")
+"<link href=\"resources/usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:usualCSS)
+"<link href=\"resources/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
+"<link href=\"resources/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
+"<link href=\"resources/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
+"<link rel=\"icon\" href=\"resources/favicon.png\">")
 #+end_src
 
 + [[(usualCSS)][usual-org-front-matter.css]] badge:||success|usual-org-front-matter.css|css3 ::
@@ -3386,7 +3277,7 @@ I want to style it as follows:
 + Line [[(headerHover)]]: When you hover over a link, it becomes blue
 
 #+begin_details CSS Details
-#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval -n
+#+begin_src css -r -n :tangle ~/blog/resources/blog-banner.css :noeval -n
 .header { (ref:headerHeader)
   /* Try to load 'fantasy' if possible, else try to load the others. */
   font-family: fantasy, monospace, Times;
@@ -3486,7 +3377,7 @@ Its behaviour [[https://www.w3schools.com/cssref/css3_pr_border-radius.asp][chan
 - We also style the code block's label to be curvy.
 - Both =.src= and =pre.src:before= are used by Org.
 
-#+begin_src css -r -n :tangle ~/blog/blog-banner.css :noeval -n
+#+begin_src css -r -n :tangle ~/blog/resources/blog-banner.css :noeval -n
 .src {
   border: 0px !important;
   /* 50px for top-left and bottom-right corners;
@@ -3517,7 +3408,7 @@ pre.src:before {
 Code such as ~(= 2 (+ 1 1))~ now sticks out with a pink background ♥‿♥
 
 ** Pink Tables :details:
-#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
+#+begin_src css :tangle ~/blog/resources/blog-banner.css :noeval -n
 table {
      background: pink;
      border-radius: 10px;
@@ -3564,7 +3455,7 @@ table {
 
 ** Let's show folded, details, regions with a nice greenish colour :details:
 This is part of =org-special-block-extras=, and it's something like this:
-#+begin_src css :tangle ~/blog/blog-banner.css :noeval -n
+#+begin_src css :tangle ~/blog/resources/blog-banner.css :noeval -n
 details {
   padding: 1em;
   background-color: #e5f5e5;
@@ -3870,7 +3761,7 @@ label being =\label{Order-Definition}=, and clicking it takes you to the formula
 :END:
 The following rule for anchors =a {⋯}= resurrects =\ref{}= calls via MathJax
 ---which =org-notes-style= kills.
-#+begin_src css :tangle ~/blog/blog-banner.css :noeval
+#+begin_src css :tangle ~/blog/resources/blog-banner.css :noeval
 a { white-space: pre !important; }
 #+end_src
 
@@ -3977,9 +3868,13 @@ hideously small.
 # (I would need org-static-blog-publish-file if I were to republish the entire blog, say via org-static-blog-publish)
 
 Publishing is a single command: =M-x blog-publish-current-article= (or =C-c C-p= in
-=my/blogging-mode=).  It dispatches on =#+article_style:= and handles everything —
-HTML export, colourised source, targeted tag page rebuild, index, git commit,
-and push.  For iterating on one heading inside a container, =blog-publish-current-subtree=
+=my/blogging-mode=).  It exports the article HTML + colourised source, commits the
+=.org= source and the generated artefacts, and pushes to =master=.  That is all it
+does — index.html, tag pages, and RSS are deliberately left to CI (see
+§[[Deployment via CI]]).  No point regenerating them on your laptop when CI will
+rebuild everything from scratch moments after the push anyway.
+
+For iterating on one heading inside a container, =blog-publish-current-subtree=
 (speed key =P= in =my/blogging-mode=) is the fast path.
 
 For *standalone* articles the flow is straightforward (one file → one HTML file).
@@ -4032,6 +3927,8 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
                   (interactive)
                   (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
     (define-key m (kbd "C-c C-p") #'blog-publish-current-article)
+    (define-key m (kbd "C-c i i") #'blog-insert-image)
+    (define-key m (kbd "C-c i s") #'blog-insert-screenshot)
     m)
   "Keymap for my/blogging-mode.")
 
@@ -4042,6 +3939,8 @@ Binds:
   C-x C-s  — save + live preview (dispatches on article style)
   M-RET    — new article / new post (dispatches on article style)
   C-c C-p  — publish current article (full file)
+  C-c i i  — insert image from file (C-u to rename before committing)
+  C-c i s  — take a screenshot and insert it
   P        — (Org speed key, at heading start) publish subtree or article
 
 On activation:
@@ -4082,24 +3981,31 @@ Dispatches on #+article_style:
   (if (blog--multiple-style-p) (blog-publish-multiple) (blog-publish-standalone)))
 
 (cl-defun blog-publish-standalone ()
-  "Publish the current standalone article."
+  "Publish the current standalone article.
+
+Exports the article HTML and colourised source, commits the .org source +
+generated artefacts, and pushes.  Index, tag pages, and RSS are intentionally
+omitted here — CI regenerates them from scratch on every push, so there is no
+point doing that work locally."
   (interactive)
   (save-buffer)
+  (blog--refresh-posts)
+  (blog--validate-unique-slugs)
   (blog-preview)
+  (make-directory blog-publish-directory t)
   (-let [base (f-base (buffer-file-name))]
-    (shell-command (format "mv %s.html ~/blog/" base))
+    (rename-file (concat base ".html")
+                 (expand-file-name (concat base ".html") blog-publish-directory) t)
     (blog-preview-disable) (view-echo-area-messages)
     (blog--refresh-posts)
     (message "⇒ HTMLizing article...") (blog--htmlize-file (buffer-file-name))
-    (-let [article-tags (s-split " " (map-elt (blog--find-info-by-slug base blog-posts) "tags"))]
-      (message "⇒ Assembling tags (%s)..." (s-join ", " article-tags))
-      (blog--make-tag-pages-for-tags article-tags))
-    (blog--git "add %s %s.html %s.org.html tag* rss.xml index.html%s"
+    (when (equal base "AlBasmala") (org-babel-tangle))
+    (blog--git "add %s public/%s.html public/%s.org.html%s"
                (buffer-file-name) base base
                (if (equal base "AlBasmala") " AlBasmala.el" ""))
     (blog--git "commit -m \"%s\"; git push"
                (blog--commit-message (format "Publish: Article %s.org" base)))
-    (message "⇒ It may take up 20secs to 1minute for changes to be live at alhassy.com; congratulations!")))
+    (message "⇒ Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)")))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
@@ -4118,7 +4024,7 @@ htmlize, and write the result."
           (org-paste-subtree 1)
           (outline-show-all)
           (switch-to-buffer (htmlize-buffer))
-          (write-file (expand-file-name (concat slug ".org.html") "~/blog/"))
+          (write-file (expand-file-name (concat slug ".org.html") blog-publish-directory))
           (set-buffer-modified-p nil)
           (kill-buffer))
       (when (buffer-live-p tmp-buf)
@@ -4197,11 +4103,11 @@ file-level keywords so that blog--style-setup runs unchanged."
               (org-html-export-to-html))
             (remove-hook 'org-export-before-processing-hook #'blog--style-setup))
 
-          ;; 4. Move the resulting HTML to ~/blog/<slug>.html.
+          ;; 4. Move the resulting HTML to blog-publish-directory/<slug>.html.
           (let ((html-out (concat (file-name-sans-extension tmp-org) ".html")))
             (when (file-exists-p html-out)
               (rename-file html-out
-                           (expand-file-name (concat slug ".html") "~/blog/")
+                           (expand-file-name (concat slug ".html") blog-publish-directory)
                            t)))
 
           ;; 5. Stamp :MODIFIED: on the source heading so future runs can detect
@@ -4268,78 +4174,350 @@ Returns the list of slugs that were published."
          (base      (f-base container)))
     (save-buffer)
     (blog-preview-disable)
+    ;; Refresh the post registry so it reflects the current state of all
+    ;; container files (including any newly-added headings), then guard
+    ;; against slug collisions before touching any output files.
+    (blog--refresh-posts)
+    (blog--validate-unique-slugs)
     (message "=> Exporting all articles from %s..." base)
     (let* ((slugs    (blog--publish-multiple-articles container))
-           (_ (progn (message "=> Refreshing post index...") (blog--refresh-posts)))
-           (all-tags (seq-uniq
-                      (-flatten
-                       (mapcar (lambda (slug)
-                                 (s-split " " (map-elt (blog--find-info-by-slug slug blog-posts) "tags")))
-                               slugs)))))
-      (message "=> Assembling tags (%s)..." (s-join ", " all-tags))
-      (blog--make-tag-pages-for-tags all-tags)
-      (blog--git "add %s tag* rss.xml index.html%s"
+           )
+      (blog--git "add %s%s"
                  container
                  (s-join "" (mapcar (lambda (slug)
-                                      (format " ~/blog/%s.html ~/blog/%s.org.html" slug slug))
+                                      (format " public/%s.html public/%s.org.html" slug slug))
                                     slugs)))
       (blog--git "commit -m \"%s\"; git push"
                  (blog--commit-message (format "Publish: Multiple articles from %s.org" base))))
-    (message "=> It may take up to 1 minute for changes to be live at alhassy.com; congratulations!")))
+    (message "=> Pushed source to master; CI will rebuild index/tags and deploy — congratulations! (may take ~1 minute)")))
 
 ;; Initialize blog-posts and blog-tags now that all helpers are defined.
 (blog--refresh-posts)
 #+end_src
-* Orphan HTML Validation
+
+* Deployment via CI
 :PROPERTIES:
-:CREATED:  [2026-05-04 Mon 13:05]
+:CUSTOM_ID: Deployment-via-CI
 :END:
 
-Second, once you have your publishing list configured, it can be
-difficult to keep your /org and /html directories in sync. Org Mode has
-a built-in solution for this: =ox-publish= uses a timestamp cache
-controlled by =org-publish-use-timestamps-flag=. When enabled (it's on
-by default), the =org-publish-needed-p= function checks each file's
-modification time against the last export and skips anything that hasn't
-changed. This can speed up the build process, but I've often had trouble
-with it and opted to simply delete the HTML contents and start fresh.
+We use a two-branch model to keep =master= clean and let CI own all HTML generation.
 
-Also, it has no way of cleaning up orphaned files. Let's say you delete
-or rename an =.org= file, the corresponding =.html= file will sit in the
-build directory, basically outdated and no longer being used but still
-there.
+#+begin_example
+  master branch                      gh-pages branch
+  ──────────────────────────────     ─────────────────────────────────
+  foo.org         (source)      ──►  foo.html     (alhassy.com/foo)
+  AlBasmala.org   (source)   CI      index.html
+  resources/                    ──►  tag-emacs.html
+  AlBasmala.el                       tag-programming-language.html
+  (NO .html files here)              rss.xml
+                                     resources/  ...
+#+end_example
 
-I've solved that problem here by wiping/deleting the html directory
-contents on each build via the build.el script. Though, this can
-increase your build time if you have a large amount of .org files.
-That's why I'd recommend keeping separate notebooks organized by topic.
+- =master= holds only =.org= sources, resources, and config.  The working tree is clean.
+- Every push triggers CI: Emacs exports all posts into =public/=, rebuilds
+  =index.html=, all =tag-*.html= pages, and =rss.xml= there too, then copies
+  =resources/= into =public/= so it is self-contained.
+- =peaceiris/actions-gh-pages= force-pushes =public/='s contents to =gh-pages=.
+- GitHub Pages serves =gh-pages= at the root, so URLs are flat: =alhassy.com/foo=.
+
+Local =C-c C-p= only exports the article HTML(s) and pushes the source.  Index and
+tag pages are not regenerated locally — there is no point, since CI will rebuild
+everything from scratch moments after the push.
+
+*One-time GitHub setup:* in the repo Settings → Pages, set the publishing source
+branch to =gh-pages=, directory =/= (root).
+
+** Asset sync                                                        :details:
+
+=blog--sync-assets= copies =resources/= into =public/= so the deployed
+subtree is self-contained.  Since all articles now live at =~/blog/= alongside
+=resources/=, image references in exported HTML are simply =resources/foo.png= —
+the same path that resolves from the deployed root.
 
 #+begin_src emacs-lisp
-(defun blog--validate-no-orphan-html ()
-  "Warn about ~/blog/*.html files with no corresponding known source.
+(defun blog--sync-assets ()
+  "Copy static assets into blog-publish-directory so relative HTML paths resolve.
 
-An HTML file is \"known\" if its basename matches a slug in blog-posts or is a
-reserved file (index, tag pages, AlBasmala, rss, sitemap, etc.).
-Reports orphans but does not abort — the user decides what to do."
-  (let* ((all-known    (seq-uniq
+Called after any publish so that the public/ subtree is self-contained and can be
+deployed as-is to gh-pages without the master-branch source tree."
+  (let ((dist (file-name-as-directory (expand-file-name blog-publish-directory))))
+    (make-directory dist t)
+    (dolist (asset '("images"
+                     "blog-banner.css"
+                     "usual-org-front-matter.css"
+                     "org-notes-style.css"
+                     "floating-toc.css"
+                     "doom-solarized-light.css"
+                     "readremaining.js-readremainingjs"))
+      (let ((src (expand-file-name asset "~/blog/")))
+        (when (file-exists-p src)
+          (if (file-directory-p src)
+              (copy-directory src (expand-file-name asset dist) t t t)
+            (copy-file src (expand-file-name asset dist) t)))))))
+#+end_src
+
+** blog-publish-all: CI entry point                                  :details:
+
+=blog-publish-all= is what CI calls.  It exports every post, rebuilds index + tag
+pages + RSS, then syncs assets.  Running it locally works too — useful for a full
+dry-run before pushing.
+
+#+begin_src emacs-lisp
+(defun blog--publishable-p (file)
+  "Return non-nil if FILE is an article that should be published.
+A file is publishable when it has a #+date: keyword (standalone post) or
+#+article_style: multiple (container of subtree articles).
+Infrastructure files (AlBasmala.el, MathJaxPreamble.org, etc.) have neither
+and are silently skipped."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (or (re-search-forward "^#\\+date:" nil t)
+        (re-search-forward "^#\\+article_style:[ ]*multiple" nil t))))
+
+(defun blog-publish-all ()
+  "Batch-publish every article and regenerate the index.  Used by CI.
+
+Exports all posts → public/, rebuilds index + tag pages + RSS, copies static
+assets.  public/ is then deployed by CI to gh-pages so URLs stay flat:
+alhassy.com/foo not alhassy.com/public/foo."
+  (interactive)
+  (make-directory blog-publish-directory t)
+  (dolist (f (f-entries blog-posts-directory
+                        (lambda (x) (and (s-suffix? ".org" x)
+                                         (blog--publishable-p x)))))
+    (with-current-buffer (find-file-noselect f)
+      (blog-publish-current-article)))
+  (blog-make-index-page)
+  (blog--sync-assets))
+#+end_src
+
+** Media insertion: images and screenshots                           :details:
+
+We have two commands for dropping media into an article at point — both copy the
+file into =~/blog/resources/=, git-add it, and insert an Org inline-image link that
+becomes immediately visible:
+
+- =C-c i i= (=blog-insert-image=) — pick any file on disk.  With a =C-u= prefix you
+  are prompted to rename the destination before the copy happens, so the canonical
+  name lands in the repo from the start.
+
+- =C-c i s= (=blog-insert-screenshot=) — invokes macOS =screencapture -i= (the
+  crosshair selector).  After the screenshot is taken, Emacs prompts for a
+  meaningful name; pressing Escape in the selector cancels gracefully.
+
+All images live in =~/blog/resources/=.  The web-facing URL is
+=alhassy.com/resources/foo.png=.
+
+#+begin_src emacs-lisp
+(defun blog-insert-image (file)
+  "Copy FILE into ~/blog/resources/, git-add it, and insert an Org link at point.
+
+With a \\[universal-argument] prefix, prompts for a new filename after the
+default name is pre-filled so you can rename the resource before committing."
+  (interactive "fImage file: ")
+  (let* ((default-name (f-filename file))
+         (dest-name (if current-prefix-arg
+                        (read-string "Name for image (with extension): " default-name)
+                      default-name))
+         (dest (expand-file-name dest-name "~/blog/resources/")))
+    (copy-file file dest t)
+    (blog--git "add resources/%s" dest-name)
+    (insert (format "[[file:resources/%s]]" dest-name))
+    (org-display-inline-images nil t (line-beginning-position) (line-end-position))))
+
+(defun blog-insert-screenshot ()
+  "Take an interactive screenshot, move it to ~/blog/resources/, git-add, insert link.
+
+Uses macOS screencapture -i (crosshair selector).  After the screenshot is taken
+you are prompted for a meaningful name; the timestamp default is just a fallback."
+  (interactive)
+  (let* ((tmp (make-temp-file "blog-screenshot-" nil ".png")))
+    (shell-command (format "screencapture -i %s" (shell-quote-argument tmp)))
+    (if (not (file-exists-p tmp))
+        (message "Screenshot cancelled.")
+      (let* ((default-name (format "screenshot-%s.png" (format-time-string "%Y%m%d-%H%M%S")))
+             (dest-name (read-string "Name for screenshot (with extension): " default-name))
+             (dest (expand-file-name dest-name "~/blog/resources/")))
+        (rename-file tmp dest t)
+        (blog--git "add resources/%s" dest-name)
+        (insert (format "[[file:resources/%s]]" dest-name))
+        (org-display-inline-images nil t (line-beginning-position) (line-end-position))))))
+#+end_src
+
+** Validation: no orphans, unique slugs                              :details:
+
+Two guards run as part of every local publish and as explicit CI steps:
+
+*Orphan HTML check* — every =X.html= (and its companion =X.org.html=) in =public/=
+must correspond to a known article.  "Known" means =X= is a =:SLUG:= in =blog-posts=
+or the basename of a standalone =~/blog/X.org= file.  Reserved files (=index=, =rss=,
+=sitemap=, =404=, =AlBasmala=, all =tag-*=) are exempt.  Orphans are a hard error in
+CI and a warning interactively.
+
+*Unique-slug check* — collects every slug across every container and every standalone
+and errors on the first collision.  Catches manual =:SLUG:= copies and heading titles
+that accidentally match an existing post.
+
+#+begin_src emacs-lisp
+(defun blog--all-slug-sources ()
+  "Return an alist of (slug . source-description) for every article in blog-posts.
+
+source-description is a human-readable string: the article title and its
+file/container, suitable for error messages."
+  (mapcar (lambda (p)
+            (cons (@slug p)
+                  (format "\"%s\" (%s)"
+                          (or (map-elt p "title") (@slug p))
+                          (or (map-elt p "container") (@file p) (@slug p)))))
+          blog-posts))
+
+(defun blog--validate-unique-slugs ()
+  "Error when any two articles share a slug.
+
+Scans blog-posts (which already covers both standalone and container
+articles) and signals user-error on the first duplicate, naming the title
+and source of the conflicting pair.
+
+The effective slug for a post is its explicit :SLUG: property (container
+subtrees) or its file basename (standalone articles).  Both land at the
+same URL, so both must be globally unique."
+  (let ((seen (make-hash-table :test #'equal)))
+    (dolist (p blog-posts)
+      (let* ((slug   (or (@slug p) (@file p)))  ; effective URL slug
+             (source (format "\"%s\" (%s)"
+                             (or (map-elt p "title") slug)
+                             (or (map-elt p "container") (@file p) slug)))
+             (prior  (gethash slug seen)))
+        (if prior
+            (let ((msg (format "Duplicate slug \"%s\":\n  already claimed by %s\n  also claimed by %s\n  Change one of the :SLUG: properties."
+                               slug prior source)))
+              (if noninteractive (error msg) (user-error msg)))
+          (puthash slug source seen))))))
+
+(defun blog--validate-no-orphan-html ()
+  "Warn about public/*.html (and *.org.html) files with no corresponding known source.
+
+An HTML file X.html is \"known\" when X is a slug in blog-posts (covers both
+standalone and container articles) or matches the reserved-file pattern.
+The companion colourised source X.org.html is valid precisely when X.html is valid.
+Reports orphans as a hard error in CI (noninteractive) and a warning interactively."
+  (let* ((all-slugs   (seq-uniq
                         (cl-loop for p in blog-posts
                                  when (@slug p) collect (@slug p)
                                  when (@file p) collect (f-base (@file p)))))
          (reserved-rx  (rx bos (or "index" "rss" "sitemap" "404" "AlBasmala"
                                    (seq "tag-" (+ anything)))
                            eos))
-         (orphans      (seq-filter
+         (known-p      (lambda (base)
+                         (or (string-match-p reserved-rx base)
+                             (member base all-slugs))))
+         ;; Check plain .html files (exclude *.org.html — handled separately).
+         (orphan-html  (seq-filter
                         (lambda (f)
                           (let ((base (f-base f)))
-                            (and (not (string-match-p reserved-rx base))
-                                 (not (member base all-known)))))
-                        (f-glob "*.html" "~/blog/"))))
+                            (and (not (s-ends-with? ".org" base))
+                                 (not (funcall known-p base)))))
+                        (f-glob "*.html" blog-publish-directory)))
+         ;; Check *.org.html: valid iff the slug part (strip trailing ".org") is known.
+         (orphan-org-html
+          (seq-filter
+           (lambda (f)
+             (let ((base (f-base f)))  ; e.g. "foo.org"
+               (and (s-ends-with? ".org" base)
+                    (not (funcall known-p (f-base base))))))
+           (f-glob "*.org.html" blog-publish-directory)))
+         (orphans (append orphan-html orphan-org-html)))
     (when orphans
-      (let ((msg (format "Orphan HTML files (no Org source): %s"
+      (let ((msg (format "Orphan HTML files (no Org source or :SLUG: match): %s"
                          (s-join ", " (mapcar #'f-filename orphans)))))
         (if noninteractive (error msg) (message "⚠ %s" msg))))))
 #+end_src
- 
+
+** CI workflow: =.github/workflows/ci.yml=                           :details:
+
+The =validate= job runs on every push and PR; the =deploy= job runs only on pushes
+to =master= (after =validate= passes) and does the full build + deploy.
+
+#+begin_src yaml :tangle no
+name: blog CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@v8.0
+        with: { version: 30.1 }
+      - name: Install Emacs packages
+        run: |
+          emacs --batch \
+            --eval "(require 'package)" \
+            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+            --eval "(package-initialize)" \
+            --eval "(package-refresh-contents)" \
+            --eval "(package-install 'dash)" --eval "(package-install 'f)" \
+            --eval "(package-install 's)"    --eval "(package-install 'lf)" \
+            --eval "(package-install 'org-static-blog)" \
+            --eval "(package-install 'htmlize)" \
+            --eval "(package-install 'org-special-block-extras)"
+      - name: Validate — no orphan HTML files
+        run: |
+          emacs --batch \
+            --eval "(require 'package)" \
+            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+            --eval "(package-initialize)" \
+            --eval "(setq org-confirm-babel-evaluate nil)" \
+            --eval "(load-file \"AlBasmala.el\")" \
+            --eval "(blog--validate-no-orphan-html)"
+      - name: Validate — all slugs are unique
+        run: |
+          emacs --batch \
+            --eval "(require 'package)" \
+            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+            --eval "(package-initialize)" \
+            --eval "(setq org-confirm-babel-evaluate nil)" \
+            --eval "(load-file \"AlBasmala.el\")" \
+            --eval "(blog--validate-unique-slugs)"
+
+  # Runs only on master pushes (after validate passes).
+  # Builds everything into public/, then deploys public/ to gh-pages.
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@v8.0
+        with: { version: 30.1 }
+      - name: Install Emacs packages
+        run: |  # (same as validate job above)
+      - name: Build all articles
+        run: |
+          emacs --batch \
+            --eval "(require 'package)" \
+            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+            --eval "(package-initialize)" \
+            --eval "(setq org-confirm-babel-evaluate nil)" \
+            --eval "(load-file \"AlBasmala.el\")" \
+            --eval "(blog-publish-all)"
+      - name: Deploy public/ to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          cname: alhassy.com
+#+end_src
+
+
 * TODO COMMENT Publishing with  =[C-u C-u] C-c C-b=
   :PROPERTIES:
   :CUSTOM_ID: Publishing-with-C-u-C-u-C-c-C-b
@@ -4423,7 +4601,7 @@ Modify this function if you want to change a posts headline."
 
 # Before we move on, Org-notes adds extra whitespace after the title, let's avoid
 # that.
-# #+begin_src css :tangle ~/blog/blog-banner.css :noeval
+# #+begin_src css :tangle ~/blog/resources/blog-banner.css :noeval
 #  .title { margin: 0 0 0 0 !important; }
 # #+end_src
 * The name: [[https://en.wikipedia.org/wiki/Basmala][al-bas-mala]]
