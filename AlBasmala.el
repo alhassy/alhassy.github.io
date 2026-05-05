@@ -647,7 +647,7 @@ a :SLUG: property we can build the vendored filename from."
 (defun blog--greeting (&optional tag)
   "Return the index/tag-page greeting string, optionally specialised to TAG."
   (format "Here are some of my latest thoughts%s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"
-          (if tag (concat " on " tag) "")))
+          (if tag (concat " on " (blog--tag-slug tag)) "")))
 
 (defun blog--card (post)
   "Return the Org source for one article card.
