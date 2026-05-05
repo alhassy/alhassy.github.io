@@ -1332,7 +1332,7 @@ width="142" height="142" align="top"&gt; &lt;/center&gt;
    <span class="org-drawer">:END:</span>
 
  NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
-<span class="org-level-2">** Using </span><span class="org-level-2"><span class="org-link"><a href="https://github.com/bastibe/org-static-blog">org-static-bloc</a><a href="https://github.com/bastibe/org-static-blog">k</a></span></span>
+<span class="org-level-2">** Using </span><span class="org-level-2"><span class="org-link"><a href="https://github.com/bastibe/org-static-blog">org-static-block</a></span></span>
   <span class="org-drawer">:PROPERTIES:</span>
   <span class="org-special-keyword">:CUSTOM_ID:</span> <span class="org-property-value">https-github-com-bastibe-org-static-blog-org-static-block</span>
   <span class="org-drawer">:END:</span>
@@ -2840,10 +2840,14 @@ earns us nothing here."</span></span><span class="org-block">
            (@url post))
    </span><span class="org-block"><span class="string">"\n@@html:&lt;hr&gt;@@\n"</span></span><span class="org-block">))
 
-(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-page-buffer</span></span><span class="org-block"> (posts greeting export-file-name)
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-page-buffer</span></span><span class="org-block"> (posts greeting export-file-name </span><span class="org-block"><span class="type">&amp;optional</span></span><span class="org-block"> rss-file)
   </span><span class="org-block"><span class="doc">"Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
+RSS-FILE is the filename of the associated feed (\"rss.xml\" for the index,
+\"&lt;tag&gt;-rss.xml\" for a tag page).  It is surfaced as a prominent link right
+under the greeting so readers see it without scrolling.
 Caller is responsible for killing the buffer when done."</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((buf (generate-new-buffer </span><span class="org-block"><span class="string">" *blog-page*"</span></span><span class="org-block">)))
+  (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((buf (generate-new-buffer </span><span class="org-block"><span class="string">" *blog-page*"</span></span><span class="org-block">))
+        (rss (</span><span class="org-block"><span class="keyword">or</span></span><span class="org-block"> rss-file </span><span class="org-block"><span class="string">"rss.xml"</span></span><span class="org-block">)))
     (</span><span class="org-block"><span class="keyword">with-current-buffer</span></span><span class="org-block"> buf
       (insert
        (format </span><span class="org-block"><span class="string">"#+EXPORT_FILE_NAME: %s\n"</span></span><span class="org-block"> export-file-name)
@@ -2854,11 +2858,11 @@ Caller is responsible for killing the buffer when done."</span></span><span clas
        </span><span class="org-block"><span class="string">"#+end_export\n"</span></span><span class="org-block">
        </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;\n"</span></span><span class="org-block">
        greeting </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
+       (format </span><span class="org-block"><span class="string">"#+html: &lt;p style=\"text-align:center;\"&gt;&lt;a href=\"%s\"&gt;&#128225; Subscribe via RSS&lt;/a&gt;&lt;/p&gt;\n"</span></span><span class="org-block"> rss)
        </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;\n"</span></span><span class="org-block">
        (mapconcat #'blog--card posts </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">)
        </span><span class="org-block"><span class="string">"\n#+begin_export html\n"</span></span><span class="org-block">
        </span><span class="org-block"><span class="string">"&lt;hr&gt; &lt;center&gt; &lt;em&gt; Thanks for reading everything! &#128513; Bye! &#128075; &lt;/em&gt;"</span></span><span class="org-block">
-       </span><span class="org-block"><span class="string">" &amp;nbsp;|&amp;nbsp; &lt;a href=\"<a href="https://alhassy.github.io/rss.xml">https://alhassy.github.io/rss.xml</a>\"&gt;RSS feed&lt;/a&gt;"</span></span><span class="org-block">
        </span><span class="org-block"><span class="string">" &lt;/center&gt; &lt;br/&gt;\n"</span></span><span class="org-block">
        (blog--license)
        </span><span class="org-block"><span class="string">"\n#+end_export\n"</span></span><span class="org-block">)
@@ -2875,24 +2879,65 @@ Caller is responsible for killing the buffer when done."</span></span><span clas
 
 Builds one Org buffer per output file, each populated directly from
 the relevant subset of blog-posts &#8212; no copy-then-delete."</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">cl-flet</span></span><span class="org-block"> ((export-page (posts greeting dest)
-               (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((buf (blog--make-page-buffer posts greeting dest)))
+  (</span><span class="org-block"><span class="keyword">cl-flet</span></span><span class="org-block"> ((export-page (posts greeting dest rss)
+               (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((buf (blog--make-page-buffer posts greeting dest rss)))
                  (</span><span class="org-block"><span class="keyword">unwind-protect</span></span><span class="org-block">
                      (</span><span class="org-block"><span class="keyword">with-current-buffer</span></span><span class="org-block"> buf (org-html-export-to-html))
                    (</span><span class="org-block"><span class="keyword">with-current-buffer</span></span><span class="org-block"> buf (set-buffer-modified-p nil))
                    (kill-buffer buf)))))
     (export-page blog-posts
                  (blog--greeting)
-                 (concat-to-dir blog-publish-directory </span><span class="org-block"><span class="string">"index.html"</span></span><span class="org-block">))
+                 (concat-to-dir blog-publish-directory </span><span class="org-block"><span class="string">"index.html"</span></span><span class="org-block">)
+                 </span><span class="org-block"><span class="string">"rss.xml"</span></span><span class="org-block">)
     (</span><span class="org-block"><span class="keyword">dolist</span></span><span class="org-block"> (tag blog-tags)
       (message </span><span class="org-block"><span class="string">"=&gt; Generating tag page: %s..."</span></span><span class="org-block"> tag)
-      (export-page (seq-filter (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> (p)
-                                 (member tag (s-split </span><span class="org-block"><span class="string">" "</span></span><span class="org-block"> (map-elt p </span><span class="org-block"><span class="string">"tags"</span></span><span class="org-block">) t)))
-                               blog-posts)
-                   (blog--greeting tag)
-                   (concat-to-dir blog-publish-directory (concat </span><span class="org-block"><span class="string">"tag-"</span></span><span class="org-block"> (blog--tag-slug tag) </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">))))))
+      (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((slug (blog--tag-slug tag)))
+        (export-page (seq-filter (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> (p)
+                                   (member tag (s-split </span><span class="org-block"><span class="string">" "</span></span><span class="org-block"> (map-elt p </span><span class="org-block"><span class="string">"tags"</span></span><span class="org-block">) t)))
+                                 blog-posts)
+                     (blog--greeting tag)
+                     (concat-to-dir blog-publish-directory (concat </span><span class="org-block"><span class="string">"tag-"</span></span><span class="org-block"> slug </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">))
+                     (concat slug </span><span class="org-block"><span class="string">"-rss.xml"</span></span><span class="org-block">))))))
+</span><span class="org-block-end-line">#+end_src
+</span>
+<span class="org-level-2">** RSS feeds: one per tag, plus a global one                         </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
 
-(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--rss-date</span></span><span class="org-block"> (date-str)
+RSS (<span class="italic">/Really Simple Syndication/</span>) is a plain-text format a website uses to
+announce its new content.  A reader program &#8212; Feedly, Inoreader, Newsboat,
+NetNewsWire, and dozens of others &#8212; subscribes to the URL of an RSS feed
+and periodically refetches it.  When the feed has a new <span class="org-verbatim">=&lt;item&gt;=</span>, the
+reader surfaces it as "there is a new article".  The blog does not push;
+readers <span class="italic">/pull/</span> whenever they want.
+
+So yes: every time we publish, this pipeline regenerates <span class="org-verbatim">=rss.xml=</span>; the
+next time a reader's program polls our URL, it compares entries to what
+it saw last time and notifies the human about any new ones.  We never
+send email, we never track subscribers, we never even know who is
+subscribed.  Publishing is just "put a new item in the feed"; the rest
+is the reader's problem.
+
+Why bother generating these at all?  Because RSS is the one remaining
+ambient-notification mechanism for writers on the open web: no
+algorithm, no platform lock-in, no "follow" button owned by a company.
+A reader who subscribed to your RSS feed in 2008 is still subscribed
+today as long as the URL resolves.  For a personal technical blog,
+it's the cheapest way to have an audience that returns.
+
+We emit two flavours of feed:
+
+- <span class="org-verbatim">=rss.xml=</span> &#8212; every post, newest first.  For the reader who wants
+  everything you write.
+- <span class="org-verbatim">=&lt;tag&gt;-rss.xml=</span> &#8212; per-tag feed (e.g. <span class="org-verbatim">=emacs-rss.xml=</span>, <span class="org-verbatim">=arabic-rss.xml=</span>).
+  For a reader who wants only the <span class="org-verbatim">=emacs=</span> or <span class="org-verbatim">=arabic=</span> articles.  The
+  link to each tag-specific feed is surfaced at the top of the
+  corresponding tag page.
+
+Each item carries a <span class="org-verbatim">=&lt;pubDate&gt;=</span>, a <span class="org-verbatim">=&lt;link&gt;=</span> back to <span class="org-verbatim">=alhassy.com/&lt;slug&gt;=</span>,
+and the article's <span class="org-verbatim">=#+description=</span> as its preview text.  Bodies are
+intentionally not embedded: we want readers to click through.
+
+<span class="org-block-begin-line">#+begin_src emacs-lisp  -n
+</span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--rss-date</span></span><span class="org-block"> (date-str)
   </span><span class="org-block"><span class="doc">"Format DATE-STR (an Org date string) as an RFC-822 pubDate for RSS."</span></span><span class="org-block">
   (format-time-string </span><span class="org-block"><span class="string">"%a, %d %b %Y %H:%M:%S %z"</span></span><span class="org-block">
                       (</span><span class="org-block"><span class="keyword">condition-case</span></span><span class="org-block"> _
@@ -3115,6 +3160,8 @@ which I place below at the top of the page.)
             </span><span class="org-block"><span class="string">"&lt;/center&gt;"</span></span><span class="org-block">
             </span><span class="org-block"><span class="string">"\n#+html: "</span></span><span class="org-block">
             (@image post </span><span class="org-block"><span class="string">"resources/"</span></span><span class="org-block">)
+            </span><span class="org-block"><span class="string">"\n#+html: "</span></span><span class="org-block">
+            (blog--badges-bar post (buffer-file-name))
             </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">)
 
     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Wrap contents of "* Abstract" section in the "abstract" Org-special-block
@@ -3246,48 +3293,56 @@ export is performed and so this is rather fast ---at least much faster than manu
 <span class="org-target">&lt;&lt;footers&gt;&gt;</span>
 
 <span class="org-block-begin-line">#+begin_src emacs-lisp -n
-</span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--footer</span></span><span class="org-block"> (post-file-name)
-  </span><span class="org-block"><span class="doc">"Returns the HTML rendering the htmlised source, version history, and comment box at the end of a post.
+</span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--badges-bar</span></span><span class="org-block"> (post post-file-name)
+  </span><span class="org-block"><span class="doc">"Return the Source/History/BuyMeACoffee badge cluster for POST.
 
-This function is called for every post and the returned string is appended to the post body, as a postamble.
+POST is the metadata alist from `</span></span><span class="org-block"><span class="doc"><span class="constant">blog--info</span></span></span><span class="org-block"><span class="doc">'; POST-FILE-NAME is the article's
+filesystem path (used only when we need to htmlize a standalone article's
+source for the Source badge).
 
-For container sub-articles, the temp buffer carries #+htmlized_source_url: and #+history_url:
-synthetic keywords; blog--info reads them and we use them here instead of auto-deriving from the
-temp file path."</span></span><span class="org-block">
-  (</span><span class="org-block"><span class="keyword">let*</span></span><span class="org-block"> ((post (blog--info (buffer-file-name)))
-         (source-badge
-          (</span><span class="org-block"><span class="keyword">if-let</span></span><span class="org-block"> (url (@htmlized_source_url post))
-              </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Container sub-article: source htmlized separately to &lt;slug&gt;.org.html;
-</span></span><span class="org-block">              </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">just emit the badge pointing to it.
-</span></span><span class="org-block">              (concat </span><span class="org-block"><span class="string">"&lt;a class=\"tooltip\""</span></span><span class="org-block">
-                      </span><span class="org-block"><span class="string">" title=\"See the colourised Org source of this article;"</span></span><span class="org-block">
-                      </span><span class="org-block"><span class="string">" i.e., what I typed to get this nice webpage\""</span></span><span class="org-block">
-                      </span><span class="org-block"><span class="string">" href=\""</span></span><span class="org-block"> url </span><span class="org-block"><span class="string">"\"&gt;&lt;img"</span></span><span class="org-block">
-                      </span><span class="org-block"><span class="string">" src=\"<a href="https://img.shields.io/badge/-Source-informational?logo=read-the-docs">https://img.shields.io/badge/-Source-informational?logo=read-the-docs</a>\"&gt;&lt;/a&gt;"</span></span><span class="org-block">)
-            </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Standalone: existing behaviour &#8212; htmlize and return badge.
-</span></span><span class="org-block">            (blog--htmlize-file post-file-name))))
+Surfaced directly under the article image in `</span></span><span class="org-block"><span class="doc"><span class="constant">blog--style-setup</span></span></span><span class="org-block"><span class="doc">' so readers
+see the source/history/support links up top &#8212; nobody scrolls to the bottom."</span></span><span class="org-block">
+  (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((source-badge
+         (</span><span class="org-block"><span class="keyword">if-let</span></span><span class="org-block"> (url (@htmlized_source_url post))
+             </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Container sub-article: source htmlized separately to &lt;slug&gt;.org.html;
+</span></span><span class="org-block">             </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">just emit the badge pointing to it.
+</span></span><span class="org-block">             (concat </span><span class="org-block"><span class="string">"&lt;a class=\"tooltip\""</span></span><span class="org-block">
+                     </span><span class="org-block"><span class="string">" title=\"See the colourised Org source of this article;"</span></span><span class="org-block">
+                     </span><span class="org-block"><span class="string">" i.e., what I typed to get this nice webpage\""</span></span><span class="org-block">
+                     </span><span class="org-block"><span class="string">" href=\""</span></span><span class="org-block"> url </span><span class="org-block"><span class="string">"\"&gt;&lt;img"</span></span><span class="org-block">
+                     </span><span class="org-block"><span class="string">" src=\"<a href="https://img.shields.io/badge/-Source-informational?logo=read-the-docs">https://img.shields.io/badge/-Source-informational?logo=read-the-docs</a>\"&gt;&lt;/a&gt;"</span></span><span class="org-block">)
+           </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Standalone: htmlize and return badge.
+</span></span><span class="org-block">           (blog--htmlize-file post-file-name))))
     (concat
-     </span><span class="org-block"><span class="string">"&lt;hr&gt;"</span></span><span class="org-block">
      </span><span class="org-block"><span class="string">"&lt;center&gt;"</span></span><span class="org-block">
      source-badge
      </span><span class="org-block"><span class="string">"&amp;ensp;"</span></span><span class="org-block">
      (@history post)
-     </span><span class="org-block"><span class="comment-delimiter">;;</span></span><span class="org-block"><span class="comment">
-</span></span><span class="org-block">     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Consider only add this to posts tagged "arabic"?
-</span></span><span class="org-block">     (blog--css-arabic-font-setup)
-     </span><span class="org-block"><span class="comment-delimiter">;;</span></span><span class="org-block"><span class="comment">
-</span></span><span class="org-block">     </span><span class="org-block"><span class="string">"&lt;br&gt;"</span></span><span class="org-block">
-   </span><span class="org-block"><span class="string">"&lt;a href=\"<a href="https://www.buymeacoffee.com/alhassy">https://www.buymeacoffee.com/alhassy</a>\"&gt;&lt;img src="</span></span><span class="org-block">
-   </span><span class="org-block"><span class="string">"\"<a href="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee">https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee</a>\"&gt;"</span></span><span class="org-block">
-   </span><span class="org-block"><span class="string">"&lt;/a&gt;"</span></span><span class="org-block">
-   </span><span class="org-block"><span class="comment-delimiter">;;</span></span><span class="org-block"><span class="comment">
-</span></span><span class="org-block">   </span><span class="org-block"><span class="string">"&lt;br&gt;&lt;strong&gt; Generated by Emacs and Org-mode (&#8226;&#768;&#7447;&#8226;&#769;)&#1608; &lt;/strong&gt;"</span></span><span class="org-block">
-   (blog--license)
-   </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">(blog--comments) ;; TODO. Not working as intended; low priority.
-</span></span><span class="org-block">   </span><span class="org-block"><span class="string">"&lt;/center&gt;"</span></span><span class="org-block">
-   </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">The next line is required to make the org-static-blog-assemble-rss method work.
-</span></span><span class="org-block">   </span><span class="org-block"><span class="string">"&lt;div hidden&gt; &lt;div id=\"postamble\" class=\"status\"&gt; &lt;/div&gt; &lt;/div&gt;"</span></span><span class="org-block">
-   (blog--read-remaining-js))))
+     </span><span class="org-block"><span class="string">"&amp;ensp;"</span></span><span class="org-block">
+     </span><span class="org-block"><span class="string">"&lt;a href=\"<a href="https://www.buymeacoffee.com/alhassy">https://www.buymeacoffee.com/alhassy</a>\"&gt;&lt;img src="</span></span><span class="org-block">
+     </span><span class="org-block"><span class="string">"\"<a href="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee">https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee</a>\"&gt;"</span></span><span class="org-block">
+     </span><span class="org-block"><span class="string">"&lt;/a&gt;"</span></span><span class="org-block">
+     </span><span class="org-block"><span class="string">"&lt;/center&gt;"</span></span><span class="org-block">)))
+
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--footer</span></span><span class="org-block"> (post-file-name)
+  </span><span class="org-block"><span class="doc">"Return the closing HTML appended to every post.
+
+Just the emacs/org credit, license, Arabic-font CSS shim, and RR.js hook:
+the Source/History/BuyMeACoffee badges have been hoisted up to sit
+directly under the article image (see `</span></span><span class="org-block"><span class="doc"><span class="constant">blog--badges-bar</span></span></span><span class="org-block"><span class="doc">').  For container
+sub-articles, #+htmlized_source_url: and #+history_url: are carried on
+the temp buffer by `</span></span><span class="org-block"><span class="doc"><span class="constant">blog--info</span></span></span><span class="org-block"><span class="doc">'."</span></span><span class="org-block">
+  (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((post (blog--info (buffer-file-name))))
+    (concat
+     </span><span class="org-block"><span class="string">"&lt;hr&gt;"</span></span><span class="org-block">
+     </span><span class="org-block"><span class="string">"&lt;center&gt;"</span></span><span class="org-block">
+     (blog--css-arabic-font-setup)
+     </span><span class="org-block"><span class="string">"&lt;strong&gt; Generated by Emacs and Org-mode (&#8226;&#768;&#7447;&#8226;&#769;)&#1608; &lt;/strong&gt;"</span></span><span class="org-block">
+     (blog--license)
+     </span><span class="org-block"><span class="string">"&lt;/center&gt;"</span></span><span class="org-block">
+     </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">The next line is required to make the org-static-blog-assemble-rss method work.
+</span></span><span class="org-block">     </span><span class="org-block"><span class="string">"&lt;div hidden&gt; &lt;div id=\"postamble\" class=\"status\"&gt; &lt;/div&gt; &lt;/div&gt;"</span></span><span class="org-block">
+     (blog--read-remaining-js))))
 </span><span class="org-block-end-line">#+end_src
 </span>
 <span class="org-level-2">** blog--htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file </span><span class="org-level-2"><span class="org-tag">:details:</span></span>
@@ -4547,11 +4602,13 @@ Dispatches on #+article_style: per file &#8212;
             (message </span><span class="org-block"><span class="string">"=&gt; Exporting all articles from %s..."</span></span><span class="org-block"> (f-base f))
             (blog--publish-multiple-articles f))
         (</span><span class="org-block"><span class="keyword">let</span></span><span class="org-block"> ((base (f-base f)))
-          (org-html-export-to-html)
+          </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">org-html-export-to-html triggers blog--style-setup, which calls
+</span></span><span class="org-block">          </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">blog--badges-bar &#8594; blog--htmlize-file, which writes &lt;base&gt;.org.html
+</span></span><span class="org-block">          </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">into public/ as a side effect.  So a single export emits both the
+</span></span><span class="org-block">          </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">article HTML and its colourised source view.
+</span></span><span class="org-block">          (org-html-export-to-html)
           (rename-file (concat base </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">)
-                       (expand-file-name (concat base </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">) blog-publish-directory) t)
-          (message </span><span class="org-block"><span class="string">"&#8658; HTMLizing article %s..."</span></span><span class="org-block"> base)
-          (blog--htmlize-file f)))))
+                       (expand-file-name (concat base </span><span class="org-block"><span class="string">".html"</span></span><span class="org-block">) blog-publish-directory) t)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
@@ -4869,7 +4926,7 @@ Modify this function if you want to change a posts headline."</span></span><span
 <span class="comment"># #+begin_src css :tangle ~/blog/resources/blog-banner.css :noeval</span>
 <span class="comment">#  .title { margin: 0 0 0 0 !important; }</span>
 <span class="comment"># #+end_src</span>
-<span class="org-level-1">* The name: </span><span class="org-level-1"><span class="org-link"><a href="https://en.wikipedia.org/wiki/Basmala">al-bas-mal</a><a href="https://en.wikipedia.org/wiki/Basmala">a</a></span></span>
+<span class="org-level-1">* The name: </span><span class="org-level-1"><span class="org-link"><a href="https://en.wikipedia.org/wiki/Basmala">al-bas-mala</a></span></span>
   <span class="org-drawer">:PROPERTIES:</span>
   <span class="org-special-keyword">:CUSTOM_ID:</span>  <span class="org-property-value">the-name</span>
   <span class="org-drawer">:END:</span>
