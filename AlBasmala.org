@@ -2541,9 +2541,6 @@ Caller is responsible for killing the buffer when done."
 
 Builds one Org buffer per output file, each populated directly from
 the relevant subset of blog-posts — no copy-then-delete."
-  (interactive)
-  (blog-preview-disable)
-  (view-echo-area-messages)
   (cl-flet ((export-page (posts greeting dest)
                (let ((buf (blog--make-page-buffer posts greeting dest)))
                  (unwind-protect
@@ -2929,7 +2926,7 @@ blog-preview-subtree, which previews just the heading at point."
   (remove-hook 'after-save-hook #'blog-preview-subtree t)
   ;; Remove the standalone hook and disable org-preview-html-mode.
   (remove-hook 'org-export-before-processing-hook #'blog--style-setup)
-  (when org-preview-html-mode (org-preview-html-mode -1)))
+  (when (bound-and-true-p org-preview-html-mode) (org-preview-html-mode -1)))
 
 (defun blog-preview-subtree ()
   "Preview the top-level heading at point as a standalone blog article.
