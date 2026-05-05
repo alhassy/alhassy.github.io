@@ -1085,23 +1085,6 @@ width="142" height="142" align="top"> </center>
    :END:
 
  NOTE: It takes about 20secs ~ 1min for the changes to be live on github pages.
-**** Should this be in the ci or locally during preview phase? 
-:PROPERTIES:
-:CREATED:  [2026-05-05 Tue 15:27]
-:END:
-
-
-      - name: Validate all slugs are unique
-        run: |
-          emacs --batch \
-            --eval "(require 'package)" \
-            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
-            --eval "(package-initialize)" \
-            --eval "(setq org-confirm-babel-evaluate nil)" \
-            --eval "(load-file \"AlBasmala.el\")" \
-            --eval "(blog--validate-unique-slugs)"
-
-            
 ** Using [[https://github.com/bastibe/org-static-blog][org-static-block]]
   :PROPERTIES:
   :CUSTOM_ID: https-github-com-bastibe-org-static-blog-org-static-block
@@ -1656,11 +1639,11 @@ colourised sources are validated in the same pass.
 | =blog--subtree-stale-p= | Predicate: returns non-nil when a subtree's HTML is out of date |
 | =blog--publish-multiple-articles= | Orchestrates per-heading exports; skips up-to-date subtrees; writes back =:SLUG:= |
 | =blog--validate-unique-slugs= | Errors on the first duplicate slug, naming both conflicting articles |
-| =blog--validate-no-orphan-html= | Warns/errors when =X.html= or =X.org.html= has no matching slug or =posts/X.org= |
-| =blog-publish-multiple= | Full publish cycle: validates slugs, exports each subtree, regenerates index → git push |
+| =blog--validate-no-orphan-html= | Warns/errors when =X.html= or =X.org.html= has no matching slug or =X.org= source |
+| =blog-publish-all= | CI entry point: refreshes the registry, validates slugs, exports every post, rebuilds index + tag pages, syncs =resources/= |
 | =blog-preview-subtree= | Previews heading at point via xwidget on every save |
 | =blog-new-post= | Inserts a heading skeleton (2 prompts: title + description) |
-| =blog--compute-posts-and-pages= | Scans ~/blog/*.org; returns =(posts . pages)= separating =:SITE_NAV: t= subtrees |
+| =blog--compute-posts-and-pages= | Scans every =.org= in =blog-posts-directory=; returns =(posts . pages)=, separating =:SITE_NAV: t= subtrees |
 | =blog--rebuild-preamble= | Regenerates =org-static-blog-page-preamble= from =blog-pages= |
 
 
@@ -2023,9 +2006,9 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
 ** blog--article-style, blog--make-slug: Utilities for the =multiple= article style :details:
 
 =blog--article-style= is the dispatch predicate used everywhere: in =blog-preview=,
-=blog-publish-current-article=, =blog--compute-posts=, and =blog-new-post=.
-It reads =#+article_style:= via the same regex approach used throughout =blog--info=,
-so the two styles are always in sync.
+=blog-publish-all=, =blog--compute-posts=, and =blog-new-post=.  It reads
+=#+article_style:= via the same regex approach used throughout =blog--info=, so
+the two styles are always in sync.
 
 Slugs serve as both the HTML filename (=<slug>.html=) and the URL path
 (=https://alhassy.com/<slug>=).  They are derived from heading titles rather than
@@ -2309,7 +2292,7 @@ article whose body was typed directly in the container.
 :END:
 #+end_src
 
-When =blog-publish-multiple= processes this heading it synthesises the usual
+When =blog-publish-all= processes this heading (via =blog--publish-multiple-articles=) it synthesises the usual
 file-level keyword preamble (=#+title:=, =#+date:=, etc.) and then appends
 
 #+begin_example
@@ -2335,8 +2318,8 @@ feed, and the index all treat redirect articles identically to hand-authored one
 :CUSTOM_ID: MODIFIED-stale-check
 :END:
 
-Previously every invocation of =blog-publish-multiple= unconditionally
-re-exported every heading — correct, but increasingly slow for large containers.
+Previously every container publish unconditionally re-exported every heading
+— correct, but increasingly slow for large containers.
 
 We now stamp a =:MODIFIED: <YYYY-MM-DD>= property on each heading /after/ a
 successful export.  Before the next export =blog--subtree-stale-p= checks:
@@ -2394,9 +2377,9 @@ conditional:
     (push slug results)))
 #+end_src
 
-Both branches push the slug into =results= so the calling =blog-publish-multiple=
-still refreshes the index, RSS, and tag pages for /all/ articles — just without
-touching HTML that is already current.
+Both branches push the slug into =results= so the surrounding loop in
+=blog--publish-multiple-articles= still refreshes the index, RSS, and tag pages
+for /all/ articles — just without touching HTML that is already current.
 
 ** SITE_NAV: data-driven site navigation from container subtrees :details:
 :PROPERTIES:
@@ -4028,35 +4011,40 @@ We use a two-branch model to keep =master= clean and let CI own all HTML generat
 - =peaceiris/actions-gh-pages= force-pushes =public/='s contents to =gh-pages=.
 - GitHub Pages serves =gh-pages= at the root, so URLs are flat: =alhassy.com/foo=.
 
-Local =C-c C-p= only exports the article HTML(s) and pushes the source.  Index and
-tag pages are not regenerated locally — there is no point, since CI will rebuild
-everything from scratch moments after the push.
+*Inspecting what got deployed* — the post-build state of the blog is visible
+at [[https://github.com/alhassy/alhassy.github.io/tree/gh-pages][the =gh-pages= branch on GitHub]].  Each CI run rewrites it entirely, so
+browsing that tree tells you exactly what =alhassy.com= is currently serving.
 
-*One-time GitHub setup:* in the repo Settings → Pages, set the publishing source
-branch to =gh-pages=, directory =/= (root).
+*One-time GitHub setup* — without this, every green CI run will still publish
+nothing, because GitHub Pages defaults to serving =master= (where no HTML
+lives): in the repo Settings → Pages, set *Source* to "Deploy from a branch",
+then pick *Branch:* =gh-pages= with folder =/= (root) and save.  You should
+then see "Your GitHub Pages site is currently being built from the =gh-pages=
+branch" at the top of that page.  Set once; CI handles everything thereafter.
 
 ** Asset sync                                                        :details:
 
-=blog--sync-assets= copies =resources/= into =public/= so the deployed
-subtree is self-contained.  Since all articles now live at =~/blog/= alongside
-=resources/=, image references in exported HTML are simply =resources/foo.png= —
-the same path that resolves from the deployed root.
+=blog--sync-assets= copies =resources/= wholesale into =public/resources/= so
+the deployed subtree is self-contained.  Exported HTML references assets with
+plain =resources/foo.css= / =resources/bar.png= paths — which resolve both
+locally (relative to =~/blog/=) and on the deployed site (relative to
+=public/='s root, i.e. =alhassy.com/resources/=).
+
+Two stragglers live directly at the repo root rather than under =resources/=:
+the =readremaining.js-readremainingjs/= vendor drop and =floating-toc.css=.
+We copy those alongside.
 
 #+begin_src emacs-lisp
 (defun blog--sync-assets ()
   "Copy static assets into blog-publish-directory so relative HTML paths resolve.
 
-Called after any publish so that the public/ subtree is self-contained and can be
-deployed as-is to gh-pages without the master-branch source tree."
+Called at the end of `blog-publish-all' so that public/ is self-contained and
+can be deployed as-is to gh-pages without the master-branch source tree."
   (let ((dist (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory dist t)
-    (dolist (asset '("images"
-                     "blog-banner.css"
-                     "usual-org-front-matter.css"
-                     "org-notes-style.css"
-                     "floating-toc.css"
-                     "doom-solarized-light.css"
-                     "readremaining.js-readremainingjs"))
+    (dolist (asset '("resources"
+                     "readremaining.js-readremainingjs"
+                     "floating-toc.css"))
       (let ((src (expand-file-name asset blog-posts-directory)))
         (when (file-exists-p src)
           (if (file-directory-p src)

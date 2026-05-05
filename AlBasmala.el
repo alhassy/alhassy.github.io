@@ -1434,17 +1434,13 @@ Returns the list of slugs that were published."
 (defun blog--sync-assets ()
   "Copy static assets into blog-publish-directory so relative HTML paths resolve.
 
-Called after any publish so that the public/ subtree is self-contained and can be
-deployed as-is to gh-pages without the master-branch source tree."
+Called at the end of `blog-publish-all' so that public/ is self-contained and
+can be deployed as-is to gh-pages without the master-branch source tree."
   (let ((dist (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory dist t)
-    (dolist (asset '("images"
-                     "blog-banner.css"
-                     "usual-org-front-matter.css"
-                     "org-notes-style.css"
-                     "floating-toc.css"
-                     "doom-solarized-light.css"
-                     "readremaining.js-readremainingjs"))
+    (dolist (asset '("resources"
+                     "readremaining.js-readremainingjs"
+                     "floating-toc.css"))
       (let ((src (expand-file-name asset blog-posts-directory)))
         (when (file-exists-p src)
           (if (file-directory-p src)
