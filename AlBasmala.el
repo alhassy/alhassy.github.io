@@ -571,19 +571,91 @@ Stale when any of:
             "%s </div>")
            contents))
 
-(cl-defun blog-make-index-page ()
-  "Assemble the blog index page.
+(defun blog--greeting (&optional tag)
+  "Return the index/tag-page greeting string, optionally specialised to TAG."
+  (format "Here are some of my latest thoughts%s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"
+          (if tag (concat " on " tag) "")))
 
-The index page contains blurbs of all of my articles.
+(defun blog--card (post)
+  "Return the Org source for one article card as a tagged top-level heading.
 
-Precondition: blog-posts refers to all posts, in reverse chronological order.
+The heading carries the post's tags so per-tag exports can be built
+by filtering blog-posts directly — no copy-then-delete needed.
+The heading text does not appear in the HTML output (title:nil)."
+  (let ((tags (s-join ":" (s-split " " (map-elt post "tags") t))))
+    (concat
+     (format "* %s %s\n" (@title post) (if (s-blank? tags) "" (format ":%s:" tags)))
+     "#+begin_export html\n"
+     (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
+     (format "<center>%s</center>\n" (@tags post))
+     (@image post "../images/")
+     "\n"
+     (or (@abstract post) "")
+     "\n"
+     (format "<p style=\"text-align:right\"> badge:Read|more|green|%s|read-the-docs </p>\n" (@url post))
+     "#+end_export\n")))
 
-You can view the generated ~/blog/index.html by invoking:
+(defun blog--make-page-buffer (posts greeting export-file-name)
+  "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
+Caller is responsible for killing the buffer when done."
+  (let ((buf (generate-new-buffer " *blog-page*")))
+    (with-current-buffer buf
+      (insert
+       (format "#+EXPORT_FILE_NAME: %s\n" export-file-name)
+       "#+options: toc:nil title:nil html-postamble:nil broken-links:t\n"
+       "#+begin_export html\n"
+       org-static-blog-page-preamble "\n"
+       org-static-blog-page-header "\n"
+       "#+end_export\n"
+       "#+html: <br>\n"
+       greeting "\n"
+       "#+html: <br>\n"
+       (mapconcat #'blog--card posts "\n")
+       "\n#+begin_export html\n"
+       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em>"
+       " &nbsp;|&nbsp; <a href=\"https://alhassy.github.io/rss.xml\">RSS feed</a>"
+       " </center> <br/>\n"
+       (blog--license)
+       "\n#+end_export\n")
+      (org-mode)
+      (setq org-html-head-extra ""))
+    buf))
 
-  (blog-make-index-page)
-"
+(defun blog-make-index-page ()
+  "Assemble index.html and every tag page.
+
+Builds one Org buffer per output file, each populated directly from
+the relevant subset of blog-posts — no copy-then-delete."
   (interactive)
-  (blog-make-tags-page :export-file-name "~/blog/index.html"))
+  (blog-preview-disable)
+  (view-echo-area-messages)
+  (cl-flet ((export-page (posts greeting dest)
+               (let ((buf (blog--make-page-buffer posts greeting dest)))
+                 (unwind-protect
+                     (with-current-buffer buf (org-html-export-to-html))
+                   (with-current-buffer buf (set-buffer-modified-p nil))
+                   (kill-buffer buf)))))
+    (export-page blog-posts
+                 (blog--greeting)
+                 (concat-to-dir blog-publish-directory "index.html"))
+    (dolist (tag blog-tags)
+      (message "=> Generating tag page: %s..." tag)
+      (export-page (seq-filter (lambda (p)
+                                 (member tag (s-split " " (map-elt p "tags") t)))
+                               blog-posts)
+                   (blog--greeting tag)
+                   (concat-to-dir blog-publish-directory (concat "tag-" (downcase tag) ".html"))))))
+
+(defun blog-make-all-tag-pages ()
+  "Regenerate index.html and all tag pages. Calls blog-make-index-page."
+  (interactive)
+  (blog-make-index-page))
+
+(defun blog--make-tag-pages-for-tags (_tags)
+  "Regenerate index.html and all tag pages.
+The TAGS argument is accepted for compatibility but ignored — the
+unified buffer approach always rebuilds everything in one pass."
+  (blog-make-index-page))
 
 (defun blog--compute-posts-and-pages ()
   "Scan ~/blog/posts/*.org (and root ~/blog/*.org for nav-only pages) and return (posts . pages).
@@ -655,123 +727,6 @@ Initialized at end of file; refresh with (blog--refresh-posts).")
 
 (defvar blog-tags nil
   "Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts).")
-
-(defun blog-make-all-tag-pages ()
-  "Regenerate tag pages for every known tag. For manual full rebuilds.
-Does not commit — callers handle git."
-  (interactive)
-  (cl-loop for total = (length blog-tags)
-           for tag in blog-tags
-           for n from 0
-           for progress = (* (/ (* n 1.0) total) 100)
-           do
-           (let ((inhibit-message t)) (blog-make-tags-page :tag tag))
-           (message "Progress ... %d%%" progress)))
-
-(defun blog--make-tag-pages-for-tags (tags)
-  "Regenerate tag pages only for TAGS (list of strings), then rebuild the index.
-Faster than blog-make-all-tag-pages when only a few tags are affected."
-  (let (rebuilt)
-    (dolist (tag tags)
-      (when (member tag blog-tags)
-        (let ((inhibit-message t))
-          (blog-make-tags-page :tag tag))
-        (setq rebuilt t)))
-    (when rebuilt (blog-make-index-page))))
-
-(cl-defun blog-make-tags-page
-    (&key
-     (tag nil)
-     (title (if tag (format "Posts   tagged   "%s"" tag) ""))
-     (greeting (format "Here are some of my latest thoughts %s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"
-
-                       (if tag (concat "on " tag) "")))
-     (export-file-name
-      (concat-to-dir blog-publish-directory
-                     (if tag (concat "tag-" (downcase tag) ".html")
-                       "index.html"))))
-  "Assemble a page of only articles tagged TAG blog index page.
-
-The page contains blurbs of all of my articles tagged TAG.
-
-Precondition: blog-posts refers to all posts, in reverse chronological order.
-
-Example uses:
-1. (blog-make-tags-page :export-file-name \"~/blog/index.html\" :title \"Hello world\" :tag \"arabic\")
-2. (blog-make-tags-page :tag \"arabic\")
-"
-  (interactive)
-  (view-echo-area-messages)
-  (blog-preview-disable)
-  (with-temp-buffer
-    (insert
-     (s-join
-      "\n"
-      (list
-       ;; TODO: Actually look at this concat result and notice that osbe is adding
-       ;; way too much content to the header!
-       ;; (progn (org-special-block-extras-mode -1) "")
-       (setq org-html-head-extra "")
-       ;; Org-mode header
-       (concat "#+EXPORT_FILE_NAME: " export-file-name)
-       "#+options: toc:nil title:nil html-postamble:nil"
-       "#+begin_export html"
-       ;; MA: Not ideal, the sizes I've set in the actual article are best.
-       ;; "<style>"
-       ;; ".post-image { margin: auto; width: 30em !important; height: 30em !important; }"
-       ;; "</style>"
-       org-static-blog-page-preamble
-       org-static-blog-page-header
-       "#+end_export"
-       (concat "#+html: <br><center style=\"font-size: 3em; font-weight: bolder;\">" title "</center>")
-       ;; TODO: Delete the following comment when things work and are done.
-       ;; Extra styling of abstracts.
-       ;; Works; but not needed.
-       ;; "\n#+HTML_HEAD_EXTRA: <style> div.abstract {background-color: pink !important;} </style>"
-
-       ;; The greeting message that informs viewers what this page is about.
-       "#+html: <br>" greeting "#+html: <br>"
-
-       ;; TODO: Add this loop body to the info of each post, for future use via AngularJS view-by-tags.
-       ;; Blurbs of posts
-       (s-join "\n" (--map
-        (if (and tag (not (seq-contains-p (s-split " " (map-elt it "tags")) tag)))
-            ""
-          (concat
-           (progn (message "Processing %s..." it) "") ;; Progress indicator
-
-           ;; TODO: Make this concat of ⟨0⟩-⟨4⟩ into a method `@preview'
-
-           ;; ⟨0⟩ Title and link to article
-           (format "#+HTML: <h2 class=\"title\"><a href=\"%s\"> %s</a></h2>" (@url it) (@title it))
-           ;; TODO: Look at all uses of @title and maybe move this @@html@@ into it.
-           ;; NOTE: This is still a Phase Split since the JSON has the raw data, and the @ABC methods produce @@html⋯@@ code ^_^
-
-           ;; ⟨1⟩ Tags and reading time
-           (format "\n#+begin_export html\n<center>%s\n</center>\n#+end_export" (@tags it)) ;; TODO: Look at all uses of @tags and maybe move this @@html@@ into it.
-
-           ;; ⟨2⟩ Article image
-           (format "\n@@html:%s@@\n" (@image it)) ;; TODO: Look at all uses of @image and maybe move this @@html@@ into it.
-
-           ;; ⟨3⟩ Preview
-           (@abstract it)
-
-           ;; ⟨4⟩ "Read more" link
-           ;; TODO: Make a @read-more method.
-           (format (concat "\n@@html:<p style=\"text-align:right\">@@" " badge:Read|more|green|%s|read-the-docs @@html:</p>@@") (@url it))))
-          (seq--into-list blog-posts)))
-
-       ;; "Show older posts"
-       ;; This is the bottom-most matter in the index.html page
-       "#+begin_export html"
-       "<hr> <center> <em> Thanks for reading everything! 😁 Bye! 👋 </em>"
-       " &nbsp;|&nbsp; <a href=\"https://alhassy.github.io/rss.xml\">RSS feed</a>"
-       " </center> <br/>"
-       (blog--license) ;; TODO: Add a "proudly created with Emacs' Org-mode" tagline?
-       "\n#+end_export"
-       )))
-    (org-mode)
-    (org-html-export-to-html)))
 
 (org-deflink blog
   "Provide the styles for 'www.alhassy.com's header and footer.
