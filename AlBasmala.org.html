@@ -2936,6 +2936,40 @@ Each item carries a <span class="org-verbatim">=&lt;pubDate&gt;=</span>, a <span
 and the article's <span class="org-verbatim">=#+description=</span> as its preview text.  Bodies are
 intentionally not embedded: we want readers to click through.
 
+<span class="bold">*On identity and what counts as "new".*</span>  Every <span class="org-verbatim">=&lt;item&gt;=</span> also carries a
+<span class="org-verbatim">=&lt;guid&gt;=</span> (globally unique identifier).  Feed readers remember which
+GUIDs they have already surfaced to their user; on every refetch they
+compare the feed's current GUIDs against that seen-set:
+
+- <span class="italic">/New GUID/</span> &#8594; reader announces it as a new post.
+- <span class="italic">/Already-seen GUID/</span> &#8594; reader ignores the item, <span class="italic">/even if its title,
+  description, or pubDate changed/</span>.
+
+We use the article URL (<span class="org-verbatim">=alhassy.com/&lt;slug&gt;=</span>) as the GUID.  This has a
+direct consequence: <span class="bold">*editing an already-published article does not
+re-notify subscribers*</span>.  Fix a typo in <span class="org-verbatim">=arabic.org=</span>, rewrite a paragraph,
+add a whole new section &#8212; CI regenerates <span class="org-verbatim">=rss.xml=</span> on the next push, but
+the item's GUID is unchanged, so readers silently keep the updated
+content in place without waking anyone up.  That's the RSS consensus, by
+the way: if every spelling fix re-notified thousands of readers, feeds
+would be unusable.
+
+If you want subscribers to hear about an edit, you have two honest options:
+
+1. <span class="bold">*Write a short "Updated: X" post.*</span>  A standalone article, or a new
+   heading in a container, whose <span class="org-verbatim">=#+description=</span> says what changed and
+   whose body links back to the revised original.  New slug, new URL,
+   new GUID &#8212; every reader announces it.  This is what most blogs do.
+
+2. <span class="bold">*Break the slug on purpose.*</span>  Rename the file or set <span class="org-verbatim">=:SLUG:=</span> to
+   something like <span class="org-verbatim">=arabic-v2=</span>.  The old URL now 404s (or redirects),
+   the new one is a fresh GUID, and the feed re-announces.  Noisy, but
+   appropriate if the revision is a true do-over.
+
+We don't currently expose a <span class="org-verbatim">=:RSS_REVISION:=</span> knob that would rebuild the
+GUID as <span class="org-verbatim">=alhassy.com/&lt;slug&gt;#revN=</span> &#8212; if the "quiet by default" behaviour
+ever becomes painful, that's a two-line addition to <span class="org-verbatim">=blog--make-one-rss-feed=</span>.
+
 <span class="org-block-begin-line">#+begin_src emacs-lisp  -n
 </span><span class="org-block">(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--rss-date</span></span><span class="org-block"> (date-str)
   </span><span class="org-block"><span class="doc">"Format DATE-STR (an Org date string) as an RFC-822 pubDate for RSS."</span></span><span class="org-block">
