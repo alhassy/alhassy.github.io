@@ -2516,6 +2516,10 @@ Caller is responsible for killing the buffer when done."
        (blog--license)
        "\n#+end_export\n")
       (org-mode)
+      ;; org-special-block-extras provides the `badge:`, `doc:`, `tweet:` etc.
+      ;; link handlers used throughout the card template (blog--card).
+      ;; Without it those links pass through verbatim into the rendered HTML.
+      (org-special-block-extras-mode 1)
       (setq org-html-head-extra ""))
     buf))
 
@@ -4089,6 +4093,10 @@ Dispatches on #+article_style: per file —
                         (lambda (x) (and (s-suffix? ".org" x)
                                          (blog--publishable-p x)))))
     (with-current-buffer (find-file-noselect f)
+      ;; badge:/doc:/tweet: links in articles are registered as Org link types
+      ;; by org-special-block-extras-mode.  It's a buffer-local minor mode, so
+      ;; turn it on per buffer — without it those links leak verbatim to HTML.
+      (org-special-block-extras-mode 1)
       (if (blog--multiple-style-p)
           (progn
             (message "=> Exporting all articles from %s..." (f-base f))
