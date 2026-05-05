@@ -2762,6 +2762,10 @@ Caller is responsible for killing the buffer when done."</span></span><span clas
        (blog--license)
        </span><span class="org-block"><span class="string">"\n#+end_export\n"</span></span><span class="org-block">)
       (org-mode)
+      </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">org-special-block-extras provides the `badge:`, `doc:`, `tweet:` etc.
+</span></span><span class="org-block">      </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">link handlers used throughout the card template (blog--card).
+</span></span><span class="org-block">      </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">Without it those links pass through verbatim into the rendered HTML.
+</span></span><span class="org-block">      (org-special-block-extras-mode 1)
       (</span><span class="org-block"><span class="keyword">setq</span></span><span class="org-block"> org-html-head-extra </span><span class="org-block"><span class="string">""</span></span><span class="org-block">))
     buf))
 
@@ -4335,6 +4339,10 @@ Dispatches on #+article_style: per file &#8212;
                         (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> (x) (</span><span class="org-block"><span class="keyword">and</span></span><span class="org-block"> (s-suffix? </span><span class="org-block"><span class="string">".org"</span></span><span class="org-block"> x)
                                          (blog--publishable-p x)))))
     (</span><span class="org-block"><span class="keyword">with-current-buffer</span></span><span class="org-block"> (find-file-noselect f)
+      </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment"><a href="badge:/doc:/tweet">badge:/doc:/tweet</a>: links in articles are registered as Org link types
+</span></span><span class="org-block">      </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">by org-special-block-extras-mode.  It's a buffer-local minor mode, so
+</span></span><span class="org-block">      </span><span class="org-block"><span class="comment-delimiter">;; </span></span><span class="org-block"><span class="comment">turn it on per buffer &#8212; without it those links leak verbatim to HTML.
+</span></span><span class="org-block">      (org-special-block-extras-mode 1)
       (</span><span class="org-block"><span class="keyword">if</span></span><span class="org-block"> (blog--multiple-style-p)
           (</span><span class="org-block"><span class="keyword">progn</span></span><span class="org-block">
             (message </span><span class="org-block"><span class="string">"=&gt; Exporting all articles from %s..."</span></span><span class="org-block"> (f-base f))
