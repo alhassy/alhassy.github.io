@@ -331,7 +331,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
       (let* ((keyword-pairs
               (cl-loop for (prop.name prop.regex prop.default) on
                     `("title"                "^\\#\\+title:[ ]*\\(.+\\)$"                ,post-filename
-                      "date"                 "^\\#\\+date:[ ]*<\\([^]>]+\\)>$"           ,(time-since 0)
+                      "date"                 "^\\#\\+date:[ ]*<\\([^]>]+\\)>$"           ,(format-time-string "%Y-%m-%d %a")
                       "image"                "^\\#\\+fileimage: \\(.*\\)"                "emacs-birthday-present.png 350 350"
                       "description"          "^\\#\\+description:[ ]*\\(.+\\)$"          "I learned something neat, and wanted to share!"
                       "tags"                 "^\\#\\+filetags:[ ]*\\(.+\\)$"             "" ;; String; Space-separated
