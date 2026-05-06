@@ -682,6 +682,19 @@ earns us nothing here."
            (@url post))
    "\n@@html:<hr>@@\n"))
 
+(defun blog--toc-block (posts)
+  "Return a #+begin_export html block listing every post as a linked TOC entry."
+  (concat
+   "#+begin_export html\n"
+   "<details id=\"articles-toc\" style=\"text-align:center;margin:1em 0\">\n"
+   "<summary style=\"cursor:pointer;font-size:1.1em;font-weight:bold\">Articles on this page</summary>\n"
+   "<ol style=\"display:inline-block;text-align:left;margin-top:0.5em\">\n"
+   (mapconcat (lambda (post)
+                (format "<li><a href=\"%s\">%s</a></li>\n" (@url post) (@title post)))
+              posts "")
+   "</ol>\n</details>\n"
+   "#+end_export\n"))
+
 (defun blog--make-page-buffer (posts greeting export-file-name &optional rss-file)
   "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
 RSS-FILE is the filename of the associated feed (\"rss.xml\" for the index,
@@ -701,6 +714,8 @@ Caller is responsible for killing the buffer when done."
        "#+html: <br>\n"
        greeting "\n"
        (format "#+html: <p style=\"text-align:center;\"><a href=\"%s\">📡 Subscribe via RSS</a></p>\n" rss)
+       "#+html: <br>\n"
+       (blog--toc-block posts)
        "#+html: <br>\n"
        (mapconcat #'blog--card posts "\n")
        "\n#+begin_export html\n"
