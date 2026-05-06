@@ -11,10 +11,38 @@
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
 
 #+begin_src emacs-lisp
+;;; -*- lexical-binding: t; -*-
 (require 'dash)
 (require 'f)
 (require 's)
 (require 'htmlize)
+
+;; Load a colour theme so htmlize has real colours (not just bold/italic)
+;; to bake into the `#+begin_src' blocks of every exported article, and
+;; into the per-article `.org.html' colourised-source views.
+;;
+;; In batch mode no theme is active by default — font-lock faces then
+;; carry only weight/slant attributes, which is why Elisp blocks looked
+;; monochrome on deployed AlBasmala.html.  Most built-in themes
+;; (`tango', `leuven', `wombat', …) leave `font-lock-keyword-face' et al
+;; with `:foreground unspecified', so loading them is a no-op for
+;; htmlize.  `tsdh-light' is the exception among shipped themes: it
+;; assigns explicit colours to the full font-lock face family — which is
+;; exactly what we want baked into the HTML via `inline-css'.
+(when noninteractive
+  (load-theme 'tsdh-light t)
+  ;; org-special-block-extras stores documentation strings as tooltips
+  ;; using `font-lock-comment-face'; make sure the theme has taken effect
+  ;; before any export buffer is created.
+  (global-font-lock-mode 1)
+  ;; Fontify headings, TODO/DONE keywords, tags, priorities the org-modern
+  ;; way — htmlize's `inline-css' mode bakes those face colours into every
+  ;; .org.html page, so the colourised-source view inherits the same look
+  ;; we get in-buffer.  Fancy glyph substitutions (prettified bullets) are
+  ;; `display' overlays and don't survive htmlize — that's fine; the
+  ;; colour wins carry most of the aesthetic.
+  (when (require 'org-modern nil t)
+    (global-org-modern-mode 1)))
 (advice-add 'htmlize-buffer-1 :around
             (lambda (orig &rest args) (let ((inhibit-message t)) (apply orig args))))
 (require 'org-special-block-extras)
@@ -1589,8 +1617,8 @@ the only difference is how they arrive at the temp buffer.
 Each container heading gets a URL slug derived from its title (lowercase, strip
 non-alphanum, collapse spaces → dashes).  Collisions /within/ the same container get
 =-2=, =-3=, … suffixes.  Each heading ends up as its own entry in =posts.json= with the
-same schema as a standalone post — so =blog-make-index-page= and =blog-make-all-tag-pages=
-need no changes; they just see more entries.
+same schema as a standalone post — so =blog-make-index-page= needs no changes;
+it just sees more entries.
 
 On every publish run the derived slug is written back to the heading's =:PROPERTIES:=
 drawer (=:SLUG: <slug>=) unless one is already there.  This makes the URL stable
@@ -1614,9 +1642,8 @@ colourised sources are validated in the same pass.
 | =blog--info-subtree-abstract= | Resolves abstract from property / child heading / first paragraph |
 | =blog--info-subtree= | Extracts one heading's metadata via =org-element= |
 | =blog--info-multiple= | Parses an entire container; returns a list of alists |
-| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html=; stamps =:MODIFIED:= and =:SLUG:= |
-| =blog--subtree-stale-p= | Predicate: returns non-nil when a subtree's HTML is out of date |
-| =blog--publish-multiple-articles= | Orchestrates per-heading exports; skips up-to-date subtrees; writes back =:SLUG:= |
+| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html= |
+| =blog--publish-multiple-articles= | Orchestrates per-heading exports; assumes every heading carries =:CUSTOM_ID:= |
 | =blog--validate-unique-slugs= | Errors on the first duplicate slug, naming both conflicting articles |
 | =blog--validate-no-orphan-html= | Warns/errors when =X.html= or =X.org.html= has no matching slug or =X.org= source |
 | =blog-publish-all= | CI entry point: refreshes the registry, validates slugs, exports every post, rebuilds index + tag pages, syncs =resources/= |
@@ -1758,7 +1785,7 @@ selected automatically from blog-tag-image-alist based on the tags entered
 The :draft: heading tag is added automatically so the article is treated as
 a draft until you remove it before publishing."
   (interactive)
-  (unless (equal "multiple" (blog--article-style (buffer-file-name)))
+  (unless (blog--multiple-style-p)
     (user-error "Not a multiple-style file; use blog-new-article for standalone posts"))
   (let* ((title       (read-string "Article title: "))
          (description (read-string "One-line description: "))
@@ -1811,8 +1838,8 @@ Titles like 'AlBasmala: @@html: <br>@@ …' carry Org export snippets that
 should keep calling (esc (@title post)) and avoid this helper: `<br>' would
 then escape to '&lt;br&gt;' and be shown as text."
   (thread-last title
-               (s-replace-regexp "@@html:" "")
-               (s-replace-regexp "@@" "")))
+               (string-replace "@@html:" "")
+               (string-replace "@@" "")))
 
 ;; TODO: Consider using: (format-time-string "%d %b %Y" ⋯) to have the same format across all articles.
 (defun @date (json)
@@ -2051,19 +2078,31 @@ Falls back to the global default image when no tag matches."
 #+end_src
 
 #+begin_src emacs-lisp
+(defun blog--file-keyword (file-or-nil key &optional default)
+  "Return the value of `#+KEY:' as a trimmed string.
+
+If FILE-OR-NIL is nil, scan the current buffer; otherwise read FILE-OR-NIL
+into a temp buffer first.  Returns DEFAULT when the keyword is absent.
+Case-insensitive on the key.  KEY omits the leading `#+' and trailing `:'."
+  (let ((case-fold-search t)
+        (rx (concat "^#\\+" (regexp-quote key) ":[ ]*\\(.*\\)$")))
+    (cl-flet ((scan ()
+                (save-excursion
+                  (goto-char (point-min))
+                  (if (re-search-forward rx nil t) (s-trim (match-string 1)) default))))
+      (if (null file-or-nil)
+          (scan)
+        (with-temp-buffer
+          (insert-file-contents file-or-nil)
+          (scan))))))
+
 (defun blog--article-style (&optional filename)
   "Return the #+article_style keyword for FILENAME (default: current buffer file).
 Returns \"multiple\" or \"standalone\" (the default when the keyword is absent)."
-  (let ((case-fold-search t)
-        (file (or filename (buffer-file-name))))
+  (let ((file (or filename (buffer-file-name))))
     (if (not file)
         "standalone"
-      (with-temp-buffer
-        (insert-file-contents file)
-        (goto-char (point-min))
-        (if (re-search-forward "^#\\+article_style:[ ]*\\(.+\\)$" nil t)
-            (s-trim (match-string 1))
-          "standalone")))))
+      (blog--file-keyword file "article_style" "standalone"))))
 
 (defun blog--make-slug (title)
   "Convert TITLE to a URL-safe kebab-case slug.
@@ -2317,9 +2356,10 @@ first: it copies each upstream into =resources/redirects/= /and/ rewrites the
 to git, so CI's clean checkout can resolve the =#+include:= without network
 access or author-local paths like =~/.emacs.d/=.
 
-The staleness check still applies unchanged — =blog--subtree-stale-p=
-compares =:MODIFIED:= against the vendored copy's mtime, which updates
-every time =blog--vendor-redirects= re-copies the upstream.
+CI re-exports every subtree on every run (the checkout has no prior HTML
+to diff against), so the vendored copy simply has to be present when
+=org-export-to-html= follows the =#+include:=.  =blog--vendor-redirects=
+refreshes that copy on every publish, and git is the audit log.
 
 #+begin_src emacs-lisp
 (defvar blog-redirects-subdir "resources/redirects/"
@@ -2354,6 +2394,19 @@ A no-op if REDIRECT already points into `blog-redirects-subdir'."
       (call-process "git" nil nil nil "add" dest)
       (concat blog-redirects-subdir slug ".org"))))
 
+(defun blog--map-publishable-top-headings (fn)
+  "Walk top-level headings in the current buffer and call FN with point on each.
+
+Only runs on multiple-style containers.  Skips COMMENTed headings — the
+per-heading FN is responsible for any further filtering (e.g. :noexport:)."
+  (when (blog--multiple-style-p)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\* " nil t)
+        (unless (org-element-property :commentedp (org-element-at-point))
+          (funcall fn))
+        (org-end-of-subtree t t)))))
+
 (defun blog--assign-slugs ()
   "Walk the current buffer's top-level headings; for each without a :CUSTOM_ID:
 property, derive one from the heading title (or :TITLE: override) and
@@ -2363,20 +2416,16 @@ Called from the C-x C-s preview binding so that, by the time a source
 lands in git, every container heading carries a stable :CUSTOM_ID:.  CI then
 reads :CUSTOM_ID: and errors out if missing, rather than silently generating
 one and writing back to a throwaway checkout."
-  (when (blog--multiple-style-p)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^\\* " nil t)
-        (let ((tags (mapcar #'downcase (org-get-tags))))
-          (unless (or (member "noexport" tags)
-                      (org-element-property :commentedp (org-element-at-point))
-                      (org-entry-get (point) "CUSTOM_ID"))
-            (let* ((title (org-get-heading t t t t))
-                   (slug  (blog--make-slug
-                           (or (org-entry-get (point) "TITLE") title))))
-              (org-entry-put (point) "CUSTOM_ID" slug)
-              (message "=> Assigned :CUSTOM_ID: %s to %s" slug title))))
-        (org-end-of-subtree t t)))))
+  (blog--map-publishable-top-headings
+   (lambda ()
+     (let ((tags (mapcar #'downcase (org-get-tags))))
+       (unless (or (member "noexport" tags)
+                   (org-entry-get (point) "CUSTOM_ID"))
+         (let* ((title (org-get-heading t t t t))
+                (slug  (blog--make-slug
+                        (or (org-entry-get (point) "TITLE") title))))
+           (org-entry-put (point) "CUSTOM_ID" slug)
+           (message "=> Assigned :CUSTOM_ID: %s to %s" slug title)))))))
 
 (defun blog--vendor-redirects ()
   "Walk the current buffer's top-level headings; for each with a :REDIRECT:
@@ -2390,18 +2439,14 @@ source buffer.
 
 Relies on `blog--assign-slugs' having run first so every heading carries
 a :CUSTOM_ID: property we can build the vendored filename from."
-  (when (blog--multiple-style-p)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^\\* " nil t)
-        (unless (org-element-property :commentedp (org-element-at-point))
-          (let ((redirect (org-entry-get (point) "REDIRECT"))
-                (slug     (org-entry-get (point) "CUSTOM_ID")))
-            (when (and redirect slug (not (blog--already-vendored-p redirect)))
-              (let ((vendored (blog--vendor-one-redirect slug redirect)))
-                (org-entry-put (point) "REDIRECT" vendored)
-                (message "=> Vendored redirect for %s ← %s" slug redirect)))))
-        (org-end-of-subtree t t)))))
+  (blog--map-publishable-top-headings
+   (lambda ()
+     (let ((redirect (org-entry-get (point) "REDIRECT"))
+           (slug     (org-entry-get (point) "CUSTOM_ID")))
+       (when (and redirect slug (not (blog--already-vendored-p redirect)))
+         (let ((vendored (blog--vendor-one-redirect slug redirect)))
+           (org-entry-put (point) "REDIRECT" vendored)
+           (message "=> Vendored redirect for %s ← %s" slug redirect)))))))
 #+end_src
 
 ** MODIFIED: retired staleness machinery                             :details:
@@ -2517,9 +2562,15 @@ doc:blog-make-index-page. It summarises all of my articles by their title, data
 
 #+begin_src emacs-lisp -n
 (defun blog--greeting (&optional tag)
-  "Return the index/tag-page greeting string, optionally specialised to TAG."
-  (format "Here are some of my latest thoughts%s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"
-          (if tag (concat " on " (blog--tag-slug tag)) "")))
+  "Return the index/tag-page greeting string, optionally specialised to TAG.
+
+The `thread-first` / `doc:loop' name-drop makes sense on the landing page
+(Elisp is the site's /lingua franca/) but reads as a non-sequitur on a
+tag-scoped page like `life' — so tag pages get a trimmed variant."
+  (if tag
+      (format "Here are some of my latest thoughts on %s... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs tweet:https://alhassy.com @@html:<br><br>@@"
+              (blog--tag-slug tag))
+    "Here are some of my latest thoughts... badge:Made_with|Lisp|success|https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf|Gnu-Emacs such as doc:thread-first and doc:loop (•̀ᴗ•́)و tweet:https://alhassy.com @@html:<br><br>@@"))
 
 (defun blog--card (post)
   "Return the Org source for one article card.
@@ -2591,10 +2642,12 @@ Caller is responsible for killing the buffer when done."
        "\n#+end_export\n")
       (org-mode)
       ;; org-special-block-extras provides the `badge:`, `doc:`, `tweet:` etc.
-      ;; link handlers used throughout the card template (blog--card).
-      ;; Without it those links pass through verbatim into the rendered HTML.
-      (org-special-block-extras-mode 1)
-      (setq org-html-head-extra ""))
+      ;; link handlers used throughout the card template (blog--card).  Its
+      ;; activation also populates `org-html-head-extra' with tooltipster's
+      ;; CSS/JS — leave it alone so tooltips on index / tag pages animate the
+      ;; same way they do on articles.  Previously cleared to "", which gave
+      ;; us `class="tooltip"' spans with no tooltipster to bind them.
+      (org-special-block-extras-mode 1))
     buf))
 
 (defun blog-make-index-page ()
@@ -2612,15 +2665,14 @@ the relevant subset of blog-posts — no copy-then-delete."
                  (blog--greeting)
                  (concat blog-publish-directory "index.html")
                  "rss.xml")
-    (dolist (tag blog-tags)
-      (message "=> Generating tag page: %s..." tag)
-      (let ((slug (blog--tag-slug tag)))
-        (export-page (seq-filter (lambda (p)
-                                   (member tag (s-split " " (map-elt p "tags") t)))
-                                 blog-posts)
-                     (blog--greeting tag)
-                     (concat blog-publish-directory (concat "tag-" slug ".html"))
-                     (concat slug "-rss.xml"))))))
+    (let ((by-tag (blog--posts-by-tag)))
+      (dolist (tag blog-tags)
+        (message "=> Generating tag page: %s..." tag)
+        (let ((slug (blog--tag-slug tag)))
+          (export-page (gethash tag by-tag)
+                       (blog--greeting tag)
+                       (concat blog-publish-directory (concat "tag-" slug ".html"))
+                       (concat slug "-rss.xml")))))))
 #+end_src
 
 ** RSS feeds: one per tag, plus a global one                         :details:
@@ -2758,27 +2810,30 @@ and descriptions do not break feed readers."
                   "</item>\n"))
         (insert "</channel>\n</rss>\n")))))
 
+(defun blog--posts-by-tag ()
+  "Return a hash-table mapping tag-string → list of posts carrying that tag.
+
+Each post appears under every tag it declares in #+filetags.  Lookup is
+O(1); the table mirrors `blog-posts' and should be rebuilt after every
+`blog--refresh-posts' call — cheapest to just call this fresh at each
+consumer (index/RSS loops)."
+  (let ((by-tag (make-hash-table :test #'equal)))
+    (dolist (p blog-posts)
+      (dolist (tag (s-split " " (map-elt p "tags") t))
+        (push p (gethash tag by-tag))))
+    (maphash (lambda (k v) (puthash k (nreverse v) by-tag)) by-tag)
+    by-tag))
+
 (defun blog--make-rss-feed ()
   "Emit rss.xml (all posts) plus one <tag>-rss.xml per tag."
   (blog--make-one-rss-feed blog-posts "rss.xml")
-  (dolist (tag blog-tags)
-    (blog--make-one-rss-feed
-     (seq-filter (lambda (p)
-                   (member tag (s-split " " (map-elt p "tags") t)))
-                 blog-posts)
-     (concat (blog--tag-slug tag) "-rss.xml")
-     (format "%s — %s" blog-title tag))))
+  (let ((by-tag (blog--posts-by-tag)))
+    (dolist (tag blog-tags)
+      (blog--make-one-rss-feed
+       (gethash tag by-tag)
+       (concat (blog--tag-slug tag) "-rss.xml")
+       (format "%s — %s" blog-title tag)))))
 
-(defun blog-make-all-tag-pages ()
-  "Regenerate index.html and all tag pages. Calls blog-make-index-page."
-  (interactive)
-  (blog-make-index-page))
-
-(defun blog--make-tag-pages-for-tags (_tags)
-  "Regenerate index.html and all tag pages.
-The TAGS argument is accepted for compatibility but ignored — the
-unified buffer approach always rebuilds everything in one pass."
-  (blog-make-index-page))
 #+end_src
 
 ** blog-posts, blog-tags, and their consumers: tag & index page generation :details:
@@ -2808,7 +2863,7 @@ pages — site_nav entries, unsorted (used for the nav bar)."
     (dolist (file (f-files blog-posts-directory))
       (when (and (s-ends-with? ".org" file)
                  (blog--publishable-p file))
-        (let ((infos (if (equal "multiple" (blog--article-style file))
+        (let ((infos (if (blog--multiple-style-p file)
                          (blog--info-multiple file)
                        (list (blog--info file)))))
           (dolist (info infos)
@@ -2842,8 +2897,8 @@ interactively after editing :SITE_NAV: headings."
     (setq blog-posts (car result))
     (setq blog-pages (cdr result))
     (setq blog-tags
-          (sort (seq-uniq (-flatten (seq-map (lambda (it) (s-split " " (map-elt it "tags") t))
-                                             blog-posts)))
+          (sort (seq-uniq (mapcan (lambda (it) (s-split " " (map-elt it "tags") t))
+                                  blog-posts))
                 #'string<))
     (blog--rebuild-preamble)))
 
@@ -2906,7 +2961,7 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    (format "<br><center><h1 class=\"post-title\">%s</h1></center>"
-                           (blog--title-html (@title (blog--info (buffer-file-name))))))))
+                           (blog--title-html (@title (blog--info (buffer-file-name)))))))
         ("footer" (blog--footer (buffer-file-name)))
         ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
         (_ "")))
@@ -2991,6 +3046,12 @@ new window is split off to the right.  This is the layout we always want from
 =C-x C-s=, so /no other browser-function juggling is needed/.
 
 #+begin_src emacs-lisp
+(defun blog--xwidget-buffers ()
+  "Return the list of live buffers whose major mode is xwidget-webkit-mode."
+  (seq-filter (lambda (b)
+                (eq 'xwidget-webkit-mode (buffer-local-value 'major-mode b)))
+              (buffer-list)))
+
 (defun blog--show-preview (url)
   "Display URL in an xwidget buffer to the right of the current Org window.
 
@@ -2999,10 +3060,7 @@ Guarantees [Org source | xwidget] side-by-side layout:
 - Otherwise split the current window to the right and open there.
 - The Org source window is never taken over."
   (let* ((org-win   (selected-window))
-         (xw-buf    (seq-find (lambda (b)
-                                (eq 'xwidget-webkit-mode
-                                    (buffer-local-value 'major-mode b)))
-                              (buffer-list)))
+         (xw-buf    (car (blog--xwidget-buffers)))
          (xw-win    (and xw-buf (get-buffer-window xw-buf))))
     (if (and xw-win (not (eq xw-win org-win)))
         ;; Reuse the existing xwidget window — just navigate.
@@ -3025,10 +3083,10 @@ enables org-preview-html-mode so every C-x C-s regenerates the preview.
 For multiple-style files: adds a buffer-local after-save-hook that calls
 blog-preview-subtree, which previews just the heading at point."
   (interactive)
-  ;; Let's ensure we have no xwidget buffer lying around, otherwise Emacs might hang.
-  (-let [kill-buffer-query-functions nil]
-    (mapcar #'kill-buffer (--filter (equal 'xwidget-webkit-mode (buffer-local-value 'major-mode it)) (buffer-list))))
-  (if (equal "multiple" (blog--article-style (buffer-file-name)))
+  ;; Ensure no xwidget buffer lingers — otherwise Emacs might hang on re-preview.
+  (let ((kill-buffer-query-functions nil))
+    (mapc #'kill-buffer (blog--xwidget-buffers)))
+  (if (blog--multiple-style-p)
       ;; Multiple-style: preview heading at point on every save (buffer-local hook).
       (add-hook 'after-save-hook #'blog-preview-subtree nil t)
     ;; Standalone: existing behaviour.
@@ -3046,7 +3104,7 @@ Opens (or reuses) an xwidget window to the right of the Org source buffer,
 maintaining a stable [Org source | xwidget] side-by-side layout."
   (interactive)
   (let ((kill-buffer-query-functions nil))
-    (unless (equal "multiple" (blog--article-style (buffer-file-name)))
+    (unless (blog--multiple-style-p)
       (user-error "Not a multiple-style file; use blog-preview instead"))
     ;; Navigate to enclosing top-level heading.
     (save-excursion
@@ -3061,9 +3119,10 @@ maintaining a stable [Org source | xwidget] side-by-side layout."
              (slug      (or (org-entry-get (point) "CUSTOM_ID")
                             (blog--make-slug (or (org-entry-get (point) "TITLE") title))))
              (all-infos (blog--info-multiple (buffer-file-name)))
+             (info      (blog--find-info-by-slug slug all-infos))
              (html-out  (expand-file-name (concat slug ".html") blog-posts-directory)))
         (message "=> Previewing %s..." title)
-        (blog--publish-single-subtree (point) (buffer-file-name) all-infos slug)
+        (blog--publish-single-subtree (point) (buffer-file-name) info)
         (when (file-exists-p html-out)
           ;; blog--show-preview reuses the existing xwidget window when present,
           ;; so the [Org | xwidget] split is stable across repeated saves.
@@ -3134,32 +3193,25 @@ the temp buffer by `blog--info'."
 #+end_src
 
 ** blog--htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file :details:
+
+Every =.org.html= colourised-source page is produced with htmlize in
+=inline-css= mode — colours are baked directly into the spans by the
+loaded theme (=tsdh-light=, see the top of =AlBasmala.el=).  No
+stylesheet round-trip, no =doom-solarized-light.css=, no class-name
+prefix games — just whatever the running Emacs session would render
+the file as, serialised into HTML.
+
 #+begin_src emacs-lisp
-(defun blog--htmlize-apply-css (html-buf)
-  "Replace htmlize's inline <style> block in HTML-BUF with a link to doom-solarized-light.css.
-
-htmlize generates a session-specific <style> block whose colours depend
-on whatever theme is loaded at export time.  We axe it and link to the
-vendored doom-solarized-light.css instead, so every .org.html gets a
-consistent Gruvbox-light look regardless of the Emacs session."
-  (with-current-buffer html-buf
-    (goto-char (point-min))
-    (when (re-search-forward "<style type=\"text/css\">\n    <!--" nil t)
-      (let ((style-start (match-beginning 0)))
-        (when (re-search-forward "-->\n    </style>" nil t)
-          (delete-region style-start (match-end 0))
-          (insert "<link rel=\"stylesheet\" type=\"text/css\" href=\"resources/doom-solarized-light.css\">"))))))
-
 (defun blog--htmlize-file (file-name)
   "Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file."
-  (let ((org-hide-block-startup nil))
+  (let ((org-hide-block-startup nil)
+        (htmlize-output-type 'inline-css))
     (with-temp-buffer
       (find-file file-name)
       (org-mode)
       (outline-show-all)
       (let* ((inhibit-message t)
              (html-buf (htmlize-buffer)))
-        (blog--htmlize-apply-css html-buf)
         (with-current-buffer html-buf
           (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
           (kill-buffer)))
@@ -3285,34 +3337,28 @@ Firstly, we want some styling rules to be loaded.
 "<link href=\"resources/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
 "<link href=\"resources/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
 "<link href=\"resources/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
-"<link href=\"resources/org-modern-export.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:modernCSS)
 "<link rel=\"icon\" href=\"resources/favicon.png\">")
 #+end_src
 
-+ [[(usualCSS)][usual-org-front-matter.css]] badge:||success|usual-org-front-matter.css|css3 ::
++ [[(usualCSS)][usual-org-front-matter.css]] badge:||success|resources/usual-org-front-matter.css|css3 ::
   Org-static-blog ignores any styling exported by Org, so let's bring that back
   in. I just exported this file with the usual kbd:C-c_C-e_h_o, then saved the CSS
   it produced.
 
-+ [[(orgNotesCSS)][org-notes-style.css]] badge:||success|org-notes-style.css|css3 ::
++ [[(orgNotesCSS)][org-notes-style.css]] badge:||success|resources/org-notes-style.css|css3 ::
 
   I like the rose-style of this [[http://taopeng.me/org-notes-style/][org-notes-style]] for HTML export.  However, it
   seems loading the CSS directly from its homepage does not work, so I've copied
   the CSS file for my blog.
 
-+ [[(tocCSS)][floating-toc.css]] badge:||success|floating-toc.css|css3 ::
++ [[(tocCSS)][floating-toc.css]] badge:||success|resources/floating-toc.css|css3 ::
 
   I want to have an unobtrusive floating table of contents, see
   §[[floating-toc]].
 
-+ [[(bannerCSS)][blog-banner.css]] badge:||success|blog-banner.css|css3 ::
++ [[(bannerCSS)][blog-banner.css]] badge:||success|resources/blog-banner.css|css3 ::
 
   Finally, we want a beautiful welcome mat, see §[[blog-banner]].
-
-+ [[(modernCSS)][org-modern-export.css]] badge:||success|org-modern-export.css|css3 ::
-
-  Recreate the [[https://github.com/minad/org-modern][org-modern]] look --- dotted bullets, TODO pills, tag
-  chips --- on the exported HTML, see §[[Org-Modern-Export]].
 
 ** Script Header Elements
 :PROPERTIES:
@@ -3690,116 +3736,6 @@ Finally,
 (setq org-export-with-section-numbers t)
 #+end_src
 
-* Ξ: Org-Modern-style Export Styling
-  :PROPERTIES:
-  :CUSTOM_ID: Org-Modern-Export
-  :END:
-
-The [[https://github.com/minad/org-modern][org-modern]] Emacs package gives buffers a gorgeous look --- dotted
-bullets on headings, TODO/DONE pills, tag chips, pretty checkboxes. It
-achieves this entirely via display-time text properties, which is
-demonstrative of Emacs' strength but means /none of it survives HTML
-export/. Since we want the /web/ to look the same as the /buffer/, we
-recreate the effect in pure CSS, targeting the classes Org's HTML
-exporter already emits.
-
-By way of example:
-+ Each =* Heading= becomes =<div class="outline-1"><h2>…</h2></div>=,
-  so we prepend a bullet on =.outline-N h(N+1)::before=, cycling
-  through =◉ ○ ◆ ◇ ★ ☆= by depth.
-+ =TODO= and =DONE= keywords come out as =<span class="todo TODO">= and
-  =<span class="done DONE">=; we style them as coloured pills.
-+ Tag groups come out as =<span class="tag"><span class="foo">foo</span>…</span>=;
-  each chip gets a rounded grey background.
-+ Org renders ASCII checkboxes as =<code>[X]</code>=, and the
-  surrounding =<li>= carries =class="on"=, =class="off"=, or
-  =class="trans"=; we swap in Unicode ballots via =::before=.
-
-#+begin_details "CSS for org-modern-style export"
-#+begin_src css -n :tangle resources/org-modern-export.css :noeval
-/* org-modern-style export — recreate the buffer look on exported HTML. */
-
-/* Dotted bullets on headings, cycling by depth.  Scoped to .outline-N
-   so the top-banner <h1 class="post-title"> is not affected. */
-.outline-1 > h2::before,
-.outline-text-1 h3::before { content: "◉ "; color: #c678dd; }
-.outline-2 > h3::before { content: "○ "; color: #56b6c2; }
-.outline-3 > h4::before { content: "◆ "; color: #98c379; }
-.outline-4 > h5::before { content: "◇ "; color: #e5c07b; }
-.outline-5 > h6::before,
-.outline-6 > h6::before { content: "★ "; color: #e06c75; }
-
-/* TODO / DONE pills. */
-.todo, .done {
-  display: inline-block;
-  padding: 0.05em 0.55em;
-  margin-right: 0.4em;
-  border-radius: 0.5em;
-  font-family: "Source Code Pro", Menlo, monospace;
-  font-size: 0.75em;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  vertical-align: 0.15em;
-}
-.todo { background: #e06c75; color: #fff; }
-.done { background: #98c379; color: #fff; }
-
-/* Per-keyword overrides, in case finer grain is wanted. */
-.WAITING { background: #e5c07b; color: #1a1a1a; }
-.CANCELLED { background: #5c6370; color: #fff; }
-
-/* Tag chips. */
-.tag > span {
-  display: inline-block;
-  padding: 0.05em 0.5em;
-  margin-left: 0.25em;
-  border-radius: 0.4em;
-  background: #eee;
-  color: #555;
-  font-family: "Source Code Pro", Menlo, monospace;
-  font-size: 0.72em;
-  font-weight: 500;
-  vertical-align: 0.2em;
-}
-
-/* Priority cookies. */
-.priority {
-  display: inline-block;
-  padding: 0 0.4em;
-  margin-right: 0.3em;
-  border-radius: 0.3em;
-  background: #fce8e6;
-  color: #c0392b;
-  font-family: "Source Code Pro", Menlo, monospace;
-  font-size: 0.8em;
-}
-
-/* Checkboxes: swap ASCII for Unicode ballots.
-   Org emits <li class="on"><code>[X]</code>…</li> (similarly off, trans). */
-li.on > code:first-child,
-li.off > code:first-child,
-li.trans > code:first-child {
-  display: none;
-}
-li.on::marker  { content: "☑ "; color: #98c379; }
-li.off::marker { content: "☐ "; color: #777; }
-li.trans::marker { content: "⊟ "; color: #e5c07b; }
-
-/* Timestamps: monospace, muted. */
-.timestamp-wrapper .timestamp {
-  font-family: "Source Code Pro", Menlo, monospace;
-  font-size: 0.9em;
-  color: #888;
-}
-.timestamp-kwd {
-  font-family: "Source Code Pro", Menlo, monospace;
-  font-size: 0.8em;
-  color: #c678dd;
-  margin-right: 0.3em;
-}
-#+end_src
-#+end_details
-
 * Clickable Sections with Sensible Anchors
 ** Ensuring Useful HTML Anchors
 :PROPERTIES:
@@ -4107,9 +4043,9 @@ Two extra synthetic keywords injected into the temp file are worth knowing about
   (let ((default-directory (expand-file-name blog-posts-directory)))
     (shell-command (apply #'format (concat "git " cmd) args))))
 
-(defun blog--multiple-style-p ()
-  "Return non-nil when the current buffer is a multiple-style container."
-  (equal "multiple" (blog--article-style (buffer-file-name))))
+(defun blog--multiple-style-p (&optional file)
+  "Return non-nil when FILE (or the current buffer's file) is a multiple-style container."
+  (equal "multiple" (blog--article-style (or file (buffer-file-name)))))
 
 (defun blog--commit-message (default)
   "Return a git commit message: prompt if C-u prefix, else use DEFAULT."
@@ -4199,7 +4135,10 @@ On deactivation:
         (require 'org-special-block-extras)
         (require 'org-preview-html)
         (org-special-block-extras-mode 1)
-        (setq browse-url-browser-function 'xwidget-webkit-browse-url))
+        (setq browse-url-browser-function 'xwidget-webkit-browse-url)
+        ;; Populate blog-posts/blog-tags now that we're actually editing — avoids
+        ;; scanning every .org on bare (require 'AlBasmala).
+        (blog--refresh-posts))
     (org-special-block-extras-mode -1)
     (setq browse-url-browser-function 'browse-url-default-browser)))
 
@@ -4213,7 +4152,8 @@ htmlize, and write the result."
   (save-excursion
     (goto-char heading-point)
     (org-copy-subtree))
-  (let ((tmp-buf (generate-new-buffer " *blog-htmlize-subtree*")))
+  (let ((tmp-buf (generate-new-buffer " *blog-htmlize-subtree*"))
+        (htmlize-output-type 'inline-css))
     (unwind-protect
         (with-current-buffer tmp-buf
           (org-mode)
@@ -4221,7 +4161,6 @@ htmlize, and write the result."
           (outline-show-all)
           (let* ((inhibit-message t)
                  (html-buf (htmlize-buffer)))
-            (blog--htmlize-apply-css html-buf)
             (with-current-buffer html-buf
               (write-file (expand-file-name (concat slug ".org.html") blog-publish-directory))
               (kill-buffer))))
@@ -4230,15 +4169,15 @@ htmlize, and write the result."
         (kill-buffer tmp-buf)))))
 
 
-(defun blog--publish-single-subtree (heading-point container-file all-infos slug)
+(defun blog--publish-single-subtree (heading-point container-file info)
   "Export the subtree at HEADING-POINT in the current buffer to ~/blog/SLUG.html.
 
-ALL-INFOS is the result of (blog--info-multiple CONTAINER-FILE).
-SLUG is the pre-computed slug for this heading (from ALL-INFOS).
+INFO is the pre-resolved metadata alist for this heading (a single entry
+from `blog--info-multiple').  The slug is read from INFO.
 
 The subtree is copied into a temp .org file populated with synthetic
 file-level keywords so that blog--style-setup runs unchanged."
-  (let* ((info    (blog--find-info-by-slug slug all-infos))
+  (let* ((slug    (@slug info))
          (tmp-org (make-temp-file "albasmala-" nil ".org"))
          (tmp-buf (find-file-noselect tmp-org)))
     (unwind-protect
@@ -4328,8 +4267,11 @@ Writes the derived slug back to the heading as a :CUSTOM_ID: property so future
 publishes are stable even if the heading title changes.
 
 Returns the list of slugs that were published."
-  (let ((all-infos (blog--info-multiple container-file))
-        (results   '()))
+  (let* ((all-infos (blog--info-multiple container-file))
+         (by-slug   (let ((h (make-hash-table :test #'equal)))
+                      (dolist (i all-infos) (puthash (@slug i) i h))
+                      h))
+         (results   '()))
     (with-current-buffer (find-file-noselect container-file)
       (save-excursion
         (goto-char (point-min))
@@ -4343,16 +4285,13 @@ Returns the list of slugs that were published."
               (unless slug
                 (user-error "Container heading %S in %s has no :CUSTOM_ID: property — run C-x C-s on the source first"
                             title (f-filename container-file)))
-              (let ((info (blog--find-info-by-slug slug all-infos)))
+              (let ((info (gethash slug by-slug)))
                 (message "=> Publishing subtree: %s (%s)..." title slug)
-                (blog--publish-single-subtree (point) container-file all-infos slug)
+                (blog--publish-single-subtree (point) container-file info)
                 (push slug results))))
           (org-end-of-subtree t t))))
     (nreverse results)))
 
-
-;; Initialize blog-posts and blog-tags now that all helpers are defined.
-(blog--refresh-posts)
 #+end_src
 
 * Deployment via CI
@@ -4387,12 +4326,11 @@ no mtime comparisons, no diffing against prior output.  =peaceiris/actions-
 gh-pages= then force-pushes =public/= to =gh-pages=, overwriting whatever
 was there.  So every deploy regenerates every HTML file.
 
-The one apparent exception is container-style files: =blog--subtree-stale-p=
-compares a subtree's =:MODIFIED:= against =<slug>.html= on disk, and
-short-circuits re-export when the HTML is newer.  But on a fresh CI
-checkout there is no HTML on disk, so =(file-exists-p html-file)= is
-always =nil= and the short-circuit never fires.  The staleness check is
-interactive-preview machinery; CI re-exports every subtree regardless.
+Container-style files are no exception: every heading is re-exported on
+every run.  Earlier versions had a =blog--subtree-stale-p= short-circuit
+that compared =:MODIFIED:= against =<slug>.html= mtime, but it was a
+preview-only optimisation that never fired on CI (fresh checkout, no
+prior HTML) — axed along with the =:MODIFIED:= write-back machinery.
 
 Because the rebuild is always total, the consequence for validation is
 direct: a check either runs before every HTML is written, or it never
@@ -4455,9 +4393,14 @@ Called at the end of `blog-publish-all' so that public/ is self-contained and
 can be deployed as-is to gh-pages without the master-branch source tree."
   (let ((dist (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory dist t)
-    (dolist (asset '("resources"
-                     "readremaining.js-readremainingjs"
-                     "floating-toc.css"))
+    ;; Required: resources/ must exist — missing it means a broken site.
+    (dolist (asset '("resources"))
+      (let ((src (expand-file-name asset blog-posts-directory)))
+        (unless (file-exists-p src)
+          (user-error "blog--sync-assets: required asset %s missing at %s" asset src))
+        (copy-directory src (expand-file-name asset dist) t t t)))
+    ;; Optional: nice-to-haves — silent skip if absent.
+    (dolist (asset '("readremaining.js-readremainingjs" "floating-toc.css"))
       (let ((src (expand-file-name asset blog-posts-directory)))
         (when (file-exists-p src)
           (if (file-directory-p src)
@@ -4489,12 +4432,12 @@ signals a (user-error) — we do not silently skip files that just
 forgot their #+date:."
   (with-temp-buffer
     (insert-file-contents file)
-    (cl-flet ((has (rx) (goto-char (point-min)) (re-search-forward rx nil t)))
+    (cl-flet ((kw (k) (blog--file-keyword nil k)))
       (cond
-       ((has "^#\\+exclude_from_publish:") nil)
-       ((has "^#\\+modified:") t)
-       ((has "^#\\+article_style:[ ]*multiple") t)
-       ((has "^#\\+site_nav:") t)
+       ((kw "exclude_from_publish") nil)
+       ((kw "modified") t)
+       ((equal (kw "article_style") "multiple") t)
+       ((kw "site_nav") t)
        (t (user-error
            "%s has no #+modified:, #+article_style: multiple, or #+site_nav: — add one, or #+exclude_from_publish: t if this is an include-only fragment"
            (f-filename file)))))))
@@ -4605,18 +4548,6 @@ and errors on the first collision.  Catches manual =:SLUG:= copies and heading t
 that accidentally match an existing post.
 
 #+begin_src emacs-lisp
-(defun blog--all-slug-sources ()
-  "Return an alist of (slug . source-description) for every article in blog-posts.
-
-source-description is a human-readable string: the article title and its
-file/container, suitable for error messages."
-  (mapcar (lambda (p)
-            (cons (@slug p)
-                  (format "\"%s\" (%s)"
-                          (or (map-elt p "title") (@slug p))
-                          (or (map-elt p "container") (@file p) (@slug p)))))
-          blog-posts))
-
 (defun blog--validate-unique-slugs ()
   "Error when any two articles share a slug.
 
