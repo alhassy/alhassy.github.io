@@ -2,6 +2,8 @@
 (require 'f)
 (require 's)
 (require 'htmlize)
+(advice-add 'htmlize-buffer-1 :around
+            (lambda (orig &rest args) (let ((inhibit-message t)) (apply orig args))))
 (require 'org-special-block-extras)
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 (require 'ox-extra)
@@ -736,7 +738,7 @@ the relevant subset of blog-posts — no copy-then-delete."
                                    (member tag (s-split " " (map-elt p "tags") t)))
                                  blog-posts)
                      (blog--greeting tag)
-                     (concat-to-dir blog-publish-directory (concat "tag-" slug ".html"))
+                     (concat blog-publish-directory (concat "tag-" slug ".html"))
                      (concat slug "-rss.xml"))))))
 
 (defun blog--rss-date (date-str)
@@ -770,7 +772,7 @@ to `blog-title'.
 Text fields are run through `xml-escape-string' so <, >, & in titles
 and descriptions do not break feed readers."
   (cl-flet ((esc (s) (xml-escape-string (or s ""))))
-    (let ((dest  (concat-to-dir blog-publish-directory filename))
+    (let ((dest  (concat blog-publish-directory filename))
           (title (or channel-title blog-title)))
       (with-temp-file dest
         (insert "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
