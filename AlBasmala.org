@@ -1,4 +1,3 @@
-(setq org-export-with-broken-links t) ;; TODO: Should avoid this! 
 
 ## # -*- eval: (org-babel-load-file "AlBasmala.org") -*-
 #+title: AlBasmala: @@html: <br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
@@ -15,16 +14,17 @@
 (require 'dash)
 (require 'f)
 (require 's)
-(require 'org-static-blog)
 (require 'htmlize)
 (require 'org-special-block-extras)
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 (require 'ox-extra)
 (ox-extras-activate '(ignore-headlines))
 #+end_src
-
-
+ 
 * COMMENT Speculative TODO-s
+
+0. (setq org-export-with-broken-links t) ;; TODO: Should avoid this! It's set in the CI!
+
 
 1. Is this disastrous situation true?
    + I have everything in a single directory??
@@ -276,9 +276,8 @@
 
 (setq blog-title "Life & Computing Science")
 (setq blog-url "https://alhassy.github.io/")
-(setq blog-publish-directory "~/alhassy.github/posts/")
-(setq blog-posts-directory "~/alhassy.github/posts/")
-(setq org-static-blog-drafts-directory "~/alhassy.github/drafts/")
+(setq blog-publish-directory "~/alhassy.github/")
+(setq blog-posts-directory "~/alhassy.github/")
 #+END_SRC
 
 Show me the "non-trivial" files in my blog repo.
@@ -1646,7 +1645,7 @@ colourised sources are validated in the same pass.
 | =blog-preview-subtree= | Previews heading at point via xwidget on every save |
 | =blog-new-post= | Inserts a heading skeleton (2 prompts: title + description) |
 | =blog--compute-posts-and-pages= | Scans every =.org= in =blog-posts-directory=; returns =(posts . pages)=, separating =:SITE_NAV: t= subtrees |
-| =blog--rebuild-preamble= | Regenerates =org-static-blog-page-preamble= from =blog-pages= |
+| =blog--rebuild-preamble= | Regenerates =blog-page-preamble= from =blog-pages= |
 
 
 <<unfurling>>
@@ -1661,11 +1660,6 @@ about the link, such as its image, description, and author.
 
 Below are the methods to make a new article, to get the meta-data about each
 article, to create the JSON file, and to load it.
-
-** Use-package declarations :details:
-  #+begin_src emacs-lisp -n :exports code
-(use-package org-static-blog)
-#+end_src
 
 ** Basic facts (global variables) of my blog                        :details:
 
@@ -2439,7 +2433,7 @@ because it works without the author having to remember to stamp anything.
 :END:
 
 Previously the site header — the links that appear at the top of every page — was
-a hardcoded HTML string in =org-static-blog-page-preamble=.  Adding or renaming a
+a hardcoded HTML string in =blog-page-preamble=.  Adding or renaming a
 nav link meant editing that string by hand, with no connection to the rest of the
 blog's metadata.
 
@@ -2474,7 +2468,7 @@ The implementation lives in three new/modified functions (all in the
 | Function | Role |
 |---|---|
 | =blog--compute-posts-and-pages= | Replaces =blog--compute-posts=; returns =(posts . pages)= cons |
-| =blog--rebuild-preamble= | Generates =org-static-blog-page-preamble= from =blog-pages= |
+| =blog--rebuild-preamble= | Generates =blog-page-preamble= from =blog-pages= |
 | =blog--refresh-posts= | Updated to populate =blog-pages= and call =blog--rebuild-preamble= |
 
 ** The <code>#+begin_abstract</code> is an Org-mode Special Block :details_orange:
@@ -2564,8 +2558,8 @@ Caller is responsible for killing the buffer when done."
        (format "#+EXPORT_FILE_NAME: %s\n" export-file-name)
        "#+options: toc:nil title:nil html-postamble:nil broken-links:t\n"
        "#+begin_export html\n"
-       org-static-blog-page-preamble "\n"
-       org-static-blog-page-header "\n"
+       blog-page-preamble "\n"
+       blog-page-header "\n"
        "#+end_export\n"
        "#+html: <br>\n"
        greeting "\n"
@@ -2809,11 +2803,11 @@ pages — site_nav entries, unsorted."
           pages)))
 
 (defun blog--rebuild-preamble ()
-  "Regenerate org-static-blog-page-preamble from blog-pages.
+  "Regenerate blog-page-preamble from blog-pages.
 Falls back to blog--preamble-fallback when blog-pages is empty.
 Called automatically by blog--refresh-posts; also useful to call
 interactively after editing :SITE_NAV: headings."
-  (setq org-static-blog-page-preamble
+  (setq blog-page-preamble
         (if (null blog-pages)
             (blog--preamble-fallback)
           (concat
@@ -2835,6 +2829,14 @@ interactively after editing :SITE_NAV: headings."
                                              blog-posts)))
                 #'string<))
     (blog--rebuild-preamble)))
+
+(defvar blog-page-preamble ""
+  "HTML injected at the top of every exported page: the site nav bar.
+Set by blog--rebuild-preamble whenever blog-pages changes.")
+
+(defvar blog-page-header ""
+  "HTML injected into the <head> of every exported page: CSS, JS, MathJax, etc.
+Set once at load time by the setq block near the blog-banner section.")
 
 (defvar blog-posts nil
   "All post metadata, sorted newest-first. Initialized at end of file; refresh with (blog--refresh-posts).")
@@ -2881,13 +2883,12 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:
 "
       (pcase o-label
         ("header" (concat
-                   org-static-blog-page-preamble
-                   org-static-blog-page-header
+                   blog-page-preamble
+                   blog-page-header
                    "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   ;; The use of the "post-title" class is so that the org-static-blog-assemble-rss method can work as intended.
-                   (thread-last (org-static-blog-get-title (buffer-file-name))
+                   (thread-last (@title (blog--info (buffer-file-name)))
                                 (s-replace-regexp "@@html:" "")
                                 (s-replace-regexp "@@" "")
                                 (format "<br><center><h1 class=\"post-title\">%s</h1></center>"))))
@@ -3110,7 +3111,6 @@ the temp buffer by `blog--info'."
      "<strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong>"
      (blog--license)
      "</center>"
-     ;; The next line is required to make the org-static-blog-assemble-rss method work.
      "<div hidden> <div id=\"postamble\" class=\"status\"> </div> </div>"
      (blog--read-remaining-js))))
 #+end_src
@@ -3298,9 +3298,9 @@ In addition, we have two more pieces we would like to add to the header: Support
 for /dynamic/ code-line highlighting, §[[blog-banner]], and support for using
 LaTeX-style notation to write mathematics, §[[MathJax-Support]].  We will use a
 [[https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like][noweb-ref]] named =my-html-header= to refer to them, which are then catenated below.
-#+begin_details "Full, tangled, value of org-static-blog-page-header"
+#+begin_details "Full, tangled, value of blog-page-header"
 #+begin_src emacs-lisp -r :noweb yes :results raw -n
- (setq org-static-blog-page-header
+ (setq blog-page-header
   (concat
    ;; NOPE: org-html-head-extra  ;; Altered by 'org-special-block-extras'
    <<my-html-header>>
@@ -3349,31 +3349,7 @@ The initial preamble is populated at file-load time after =blog--refresh-posts= 
 When =blog-pages= is still empty (e.g. on a fresh load before any =:SITE_NAV:= subtrees
 exist) we fall back to the hardcoded string so the blog remains functional:
 
-#+begin_src emacs-lisp -n
-(defun blog--preamble-fallback ()
-  "Hardcoded fallback preamble used when blog-pages is not yet populated."
-  "<div class=\"header\">
-  <a href=\"https://alhassy.github.io/\" class=\"logo\">Life & Computing Science</a>
-  <br/>
-  <a href=\"https://alhassy.github.io/AlBasmala\">AlBasmala</a>
-  <a href=\"https://alhassy.github.io/rss.xml\">RSS</a>
-  <a href=\"https://alhassy.github.io/about\">About</a>
-</div>")
 
-;; Seed the preamble; blog--refresh-posts (called at end of file) will
-;; rebuild it from :SITE_NAV: t entries once blog-pages is populated.
-(setq org-static-blog-page-preamble (blog--preamble-fallback))
-#+end_src
-
-:Lisp_Remark:
-Previously this was a bare hardcoded string.  The fallback function preserves
-that content during initial load; =blog--rebuild-preamble= overwrites it with
-the data-driven version as soon as =blog-pages= is non-nil.
-:End:
-:Also:
-blog-url
-blog-title
-:End:
 
 I want to style it as follows:
 
@@ -4609,7 +4585,6 @@ jobs:
             --eval "(package-refresh-contents)" \
             --eval "(package-install 'dash)" --eval "(package-install 'f)" \
             --eval "(package-install 's)"    --eval "(package-install 'lf)" \
-            --eval "(package-install 'org-static-blog)" \
             --eval "(package-install 'htmlize)" \
             --eval "(package-install 'org-special-block-extras)"
       - name: Validate — no orphan HTML files
@@ -4662,92 +4637,8 @@ jobs:
 #+end_src
 
 
-* TODO COMMENT Publishing with  =[C-u C-u] C-c C-b=
-  :PROPERTIES:
-  :CUSTOM_ID: Publishing-with-C-u-C-u-C-c-C-b
-  :END:
-:Hide_fornow:
-  #+begin_src emacs-lisp -n :tangle no
-;; No lock files, for now
-;; The ".#file" files
-;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Interlocking.html#Interlocking
-(setq create-lockfiles nil)
-#+end_src
-:End:
-
-#+begin_src emacs-lisp -r -n
-;; Override all minor modes that use this binding.
-(bind-key* (kbd "C-c C-b")
-  (lambda (&optional prefix)
-"C-c C-b        ⇒ Publish current buffer
-C-u C-c C-b     ⇒ Publish entire blog
-C-u C-u C-c C-b ⇒ Publish entire blog; re-rendering all blog posts
-                  (This will take time!)
-"
-     (interactive "P")
-     (pcase (or (car prefix) 0)
-       (0  (org-static-blog-publish-file (f-full (buffer-file-name)))
-           (browse-url-of-file (format "file://%s%s.html" (file-truename blog-publish-directory)
-                                       (f-base (buffer-file-name)))))
-       ;; Apparently I have to publish the current buffer before trying
-       ;; to publish the blog; otherwise I got some errors.
-       (4  (org-static-blog-publish-file (f-full (buffer-name)))
-           (org-static-blog-publish))
-       (16 ;; (org-static-blog-publish t) ⇒ Crashes.
-           ;; Delete all .html files, except "about"
-           (thread-last (f-entries "~/blog/")
-             (--filter (and (equal (f-ext it) "html")
-                            (not (member (f-base it) '("about")))))
-             (--map (f-delete it))) (ref:delAll)
-           ;; Publish as usual
-           (org-static-blog-publish-file (f-full (buffer-name)))
-           (org-static-blog-publish)))))
-#+end_src
-
-Line [[(delAll)]]: To re-render an article, just remove its corresponding .html file ;-)
-
-* TODO COMMENT [Part of publishing a file] org-static-blog-post-preamble: Making this work with =org-notes-style= and =org-static-blog=
-:PROPERTIES:
-:CUSTOM_ID: Making-this-work-with-org-notes-style-and-org-static-blog
-:END:
-To make use of =org-notes-style=, I need the title to use the =title= class
-but =org-static-blog= uses the =post-title= blog, so I'll override the
-=org-static-blog= preamble method to simply use an auxiliary div.
-- Along the way, I'll position the article image under the article's title.
-- Line [[(fixTitle)]]: =org-notes-style= has too much vertical space after the title,
-  let's reduce it so that the article's data can follow it smoothly.
-# - Line [[(BR)]]: =org-static-blog= does not support Org-markup in the title, since it
-#  just dumps the title in-place; here I provide a support for just =<br>=.
-#+begin_src emacs-lisp -r -n -n
-(defun org-static-blog-post-preamble (post-filename)
-  "Returns the formatted date and headline of the post.
-This function is called for every post and prepended to the post body.
-Modify this function if you want to change a posts headline."
-  (let ((post (blog--info (buffer-file-name))))
-    (concat
-     ;; The title
-     "<h1 class=\"post-title\">"
-     "<div class=\"title\" style=\"margin: 0 0 0 0 !important;\">"  (ref:fixTitle)
-     "<a href=\"" (@url post) "\">"
-     (@title post)
-     "</a>"
-     "</h1></div>"
-     ;; The date
-     "<div style=\"text-align: center;\">"
-     (@date post)
-     "</div>"
-     ;; The article's image
-     (@image post)
-     "<br><center><strong>Abstract</strong></center>")))
-
-#+end_src
 
 
-# Before we move on, Org-notes adds extra whitespace after the title, let's avoid
-# that.
-# #+begin_src css :tangle ~/blog/resources/blog-banner.css :noeval
-#  .title { margin: 0 0 0 0 !important; }
-# #+end_src
 * The name: [[https://en.wikipedia.org/wiki/Basmala][al-bas-mala]]
   :PROPERTIES:
   :CUSTOM_ID:  the-name
