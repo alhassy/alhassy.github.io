@@ -1095,10 +1095,10 @@ consistent Gruvbox-light look regardless of the Emacs session."
         (blog--htmlize-apply-css html-buf)
         (with-current-buffer html-buf
           (write-file (expand-file-name (concat (f-base file-name) ".org.html") blog-publish-directory))
-          (kill-buffer))))
-(concat
-"<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
-   (f-base file-name) ".org.html\"><img src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"))
+          (kill-buffer)))
+    (concat
+     "<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
+     (f-base file-name) ".org.html\"><img src=\"https://img.shields.io/badge/-Source-informational?logo=read-the-docs\"></a>"))))
 
 (defun blog--license ()
   "Get HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License."
