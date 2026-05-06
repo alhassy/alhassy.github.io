@@ -2759,8 +2759,8 @@ files yield one.  A file with #+site_nav: contributes a nav-page entry instead
 of (or in addition to, if it also has #+date:) a post entry.
 Files with neither #+date: nor #+site_nav: (e.g. MathJaxPreamble.org) are skipped.
 
-posts — dated, non-site_nav entries, sorted newest-first.
-pages — site_nav entries, unsorted."
+posts — all dated entries (including site_nav ones), sorted newest-first.
+pages — site_nav entries, unsorted (used for the nav bar)."
   (let ((posts '())
         (pages '()))
     (dolist (file (f-files blog-posts-directory))
@@ -2769,9 +2769,8 @@ pages — site_nav entries, unsorted."
                          (blog--info-multiple file)
                        (list (blog--info file)))))
           (dolist (info infos)
-            (cond
-             ((map-elt info "site_nav") (push info pages))
-             ((map-elt info "date")     (push info posts)))))))
+            (when (map-elt info "site_nav") (push info pages))
+            (when (map-elt info "date")     (push info posts)))))))
     (cons (sort posts (lambda (a b)
                         (time-less-p (date-to-time (@date b))
                                      (date-to-time (@date a)))))
