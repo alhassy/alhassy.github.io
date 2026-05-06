@@ -3,7 +3,7 @@
 #+title: AlBasmala: @@html: <br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 #+description: How my blog is setup (•̀ᴗ•́)و
 #+date: <2020-05-03 Sun>
-#+filetags: emacs org html css javascript git lisp
+#+filetags: emacs org html css javascript git lisp meta
 #+fileimage: org_logo.png 150 150 no-border
 #+site_nav: AlBasmala
 #+property: header-args :tangle "AlBasmala.el" :results silent :exports code :noeval
@@ -22,7 +22,7 @@
 (require 'ox-extra)
 (ox-extras-activate '(ignore-headlines))
 #+end_src
- 
+
 * COMMENT Speculative TODO-s
 
 0. (setq org-export-with-broken-links t) ;; TODO: Should avoid this! It's set in the CI!
@@ -3271,6 +3271,7 @@ Firstly, we want some styling rules to be loaded.
 "<link href=\"resources/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
 "<link href=\"resources/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
 "<link href=\"resources/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
+"<link href=\"resources/org-modern-export.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:modernCSS)
 "<link rel=\"icon\" href=\"resources/favicon.png\">")
 #+end_src
 
@@ -3293,6 +3294,11 @@ Firstly, we want some styling rules to be loaded.
 + [[(bannerCSS)][blog-banner.css]] badge:||success|blog-banner.css|css3 ::
 
   Finally, we want a beautiful welcome mat, see §[[blog-banner]].
+
++ [[(modernCSS)][org-modern-export.css]] badge:||success|org-modern-export.css|css3 ::
+
+  Recreate the [[https://github.com/minad/org-modern][org-modern]] look --- dotted bullets, TODO pills, tag
+  chips --- on the exported HTML, see §[[Org-Modern-Export]].
 
 ** Script Header Elements
 :PROPERTIES:
@@ -3669,6 +3675,116 @@ Finally,
 (setq org-export-with-toc t)
 (setq org-export-with-section-numbers t)
 #+end_src
+
+* Ξ: Org-Modern-style Export Styling
+  :PROPERTIES:
+  :CUSTOM_ID: Org-Modern-Export
+  :END:
+
+The [[https://github.com/minad/org-modern][org-modern]] Emacs package gives buffers a gorgeous look --- dotted
+bullets on headings, TODO/DONE pills, tag chips, pretty checkboxes. It
+achieves this entirely via display-time text properties, which is
+demonstrative of Emacs' strength but means /none of it survives HTML
+export/. Since we want the /web/ to look the same as the /buffer/, we
+recreate the effect in pure CSS, targeting the classes Org's HTML
+exporter already emits.
+
+By way of example:
++ Each =* Heading= becomes =<div class="outline-1"><h2>…</h2></div>=,
+  so we prepend a bullet on =.outline-N h(N+1)::before=, cycling
+  through =◉ ○ ◆ ◇ ★ ☆= by depth.
++ =TODO= and =DONE= keywords come out as =<span class="todo TODO">= and
+  =<span class="done DONE">=; we style them as coloured pills.
++ Tag groups come out as =<span class="tag"><span class="foo">foo</span>…</span>=;
+  each chip gets a rounded grey background.
++ Org renders ASCII checkboxes as =<code>[X]</code>=, and the
+  surrounding =<li>= carries =class="on"=, =class="off"=, or
+  =class="trans"=; we swap in Unicode ballots via =::before=.
+
+#+begin_details "CSS for org-modern-style export"
+#+begin_src css -n :tangle resources/org-modern-export.css :noeval
+/* org-modern-style export — recreate the buffer look on exported HTML. */
+
+/* Dotted bullets on headings, cycling by depth.  Scoped to .outline-N
+   so the top-banner <h1 class="post-title"> is not affected. */
+.outline-1 > h2::before,
+.outline-text-1 h3::before { content: "◉ "; color: #c678dd; }
+.outline-2 > h3::before { content: "○ "; color: #56b6c2; }
+.outline-3 > h4::before { content: "◆ "; color: #98c379; }
+.outline-4 > h5::before { content: "◇ "; color: #e5c07b; }
+.outline-5 > h6::before,
+.outline-6 > h6::before { content: "★ "; color: #e06c75; }
+
+/* TODO / DONE pills. */
+.todo, .done {
+  display: inline-block;
+  padding: 0.05em 0.55em;
+  margin-right: 0.4em;
+  border-radius: 0.5em;
+  font-family: "Source Code Pro", Menlo, monospace;
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  vertical-align: 0.15em;
+}
+.todo { background: #e06c75; color: #fff; }
+.done { background: #98c379; color: #fff; }
+
+/* Per-keyword overrides, in case finer grain is wanted. */
+.WAITING { background: #e5c07b; color: #1a1a1a; }
+.CANCELLED { background: #5c6370; color: #fff; }
+
+/* Tag chips. */
+.tag > span {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  margin-left: 0.25em;
+  border-radius: 0.4em;
+  background: #eee;
+  color: #555;
+  font-family: "Source Code Pro", Menlo, monospace;
+  font-size: 0.72em;
+  font-weight: 500;
+  vertical-align: 0.2em;
+}
+
+/* Priority cookies. */
+.priority {
+  display: inline-block;
+  padding: 0 0.4em;
+  margin-right: 0.3em;
+  border-radius: 0.3em;
+  background: #fce8e6;
+  color: #c0392b;
+  font-family: "Source Code Pro", Menlo, monospace;
+  font-size: 0.8em;
+}
+
+/* Checkboxes: swap ASCII for Unicode ballots.
+   Org emits <li class="on"><code>[X]</code>…</li> (similarly off, trans). */
+li.on > code:first-child,
+li.off > code:first-child,
+li.trans > code:first-child {
+  display: none;
+}
+li.on::marker  { content: "☑ "; color: #98c379; }
+li.off::marker { content: "☐ "; color: #777; }
+li.trans::marker { content: "⊟ "; color: #e5c07b; }
+
+/* Timestamps: monospace, muted. */
+.timestamp-wrapper .timestamp {
+  font-family: "Source Code Pro", Menlo, monospace;
+  font-size: 0.9em;
+  color: #888;
+}
+.timestamp-kwd {
+  font-family: "Source Code Pro", Menlo, monospace;
+  font-size: 0.8em;
+  color: #c678dd;
+  margin-right: 0.3em;
+}
+#+end_src
+#+end_details
 
 * Clickable Sections with Sensible Anchors
 ** Ensuring Useful HTML Anchors
