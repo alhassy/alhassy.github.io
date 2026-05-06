@@ -1801,6 +1801,19 @@ start with '@'.
 ;; Extract the '#+title:' from POST-FILENAME.
 (defun @title       (json) (map-elt json "title"))
 
+(defun blog--title-html (title)
+  "Strip Org export-snippet markers from TITLE so embedded HTML renders.
+
+Titles like 'AlBasmala: @@html: <br>@@ …' carry Org export snippets that
+`#+begin_export html' blocks and raw format strings ship verbatim --- so the
+`@@html:' / `@@' markers leak into the output.  Axe them, keeping the payload
+(here, the literal `<br>') so HTML contexts render it as intended.  RSS feeds
+should keep calling (esc (@title post)) and avoid this helper: `<br>' would
+then escape to '&lt;br&gt;' and be shown as text."
+  (thread-last title
+               (s-replace-regexp "@@html:" "")
+               (s-replace-regexp "@@" "")))
+
 ;; TODO: Consider using: (format-time-string "%d %b %Y" ⋯) to have the same format across all articles.
 (defun @date (json)
   "Extract the #+modified: field from JSON."
@@ -2518,7 +2531,8 @@ cards are built (see `blog-make-index-page'), so the Org tag machinery
 earns us nothing here."
   (concat
    "#+begin_export html\n"
-   (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n" (@url post) (@title post))
+   (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n"
+           (@url post) (blog--title-html (@title post)))
    (format "<center>%s</center>\n" (@tags post))
    (@image post "resources/")
    "\n#+end_export\n"
@@ -2541,7 +2555,8 @@ earns us nothing here."
    "<summary style=\"cursor:pointer;font-size:1.1em;font-weight:bold\">Articles on this page</summary>\n"
    "<ol style=\"display:inline-block;text-align:left;margin-top:0.5em\">\n"
    (mapconcat (lambda (post)
-                (format "<li><a href=\"%s\">%s</a></li>\n" (@url post) (@title post)))
+                (format "<li><a href=\"%s\">%s</a></li>\n"
+                        (@url post) (blog--title-html (@title post))))
               posts "")
    "</ol>\n</details>\n"
    "#+end_export\n"))
@@ -2889,10 +2904,8 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:
                    "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
                    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   (thread-last (@title (blog--info (buffer-file-name)))
-                                (s-replace-regexp "@@html:" "")
-                                (s-replace-regexp "@@" "")
-                                (format "<br><center><h1 class=\"post-title\">%s</h1></center>"))))
+                   (format "<br><center><h1 class=\"post-title\">%s</h1></center>"
+                           (blog--title-html (@title (blog--info (buffer-file-name))))))))
         ("footer" (blog--footer (buffer-file-name)))
         ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
         (_ "")))
