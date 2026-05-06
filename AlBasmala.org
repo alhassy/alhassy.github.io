@@ -1540,6 +1540,7 @@ Key rules:
   filtered out of the published tag list).
 - *=:draft:= tag* → article is published but carries a DRAFT banner.
 - *=:noexport:= tag* → heading is skipped entirely; never exported or indexed.
+- *=COMMENT= keyword* → same as =:noexport:=; the standard Org way to comment-out a subtree.
 - *=:TITLE:= property* → overrides the heading text as the article's display title and
   slug source (useful when the heading has decorative text).
 - *=:SLUG:= property* → pins the URL slug explicitly, bypassing the auto-derived
@@ -2123,11 +2124,12 @@ Priority:
 (defun blog--info-subtree (headline-node container-file slug)
   "Extract post metadata for HEADLINE-NODE from CONTAINER-FILE with SLUG.
 
-Returns nil when the headline carries a :noexport: tag.
+Returns nil when the headline carries a :noexport: tag or the COMMENT keyword.
 Returns an alist with the same keys as blog--info plus \"slug\" and \"container\"."
   (let* ((heading-tags (mapcar #'downcase
                                (org-element-property :tags headline-node))))
-    (unless (member "noexport" heading-tags)
+    (unless (or (member "noexport" heading-tags)
+                (org-element-property :commentedp headline-node))
       (let* (;; draft?
              (draft? (or (member "draft" heading-tags)
                          (equal "t" (org-element-property :DRAFT headline-node))))
@@ -2180,7 +2182,7 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
   "Return a list of post-alists for all publishable top-level headings in CONTAINER-FILE.
 
 CONTAINER-FILE must carry #+article_style: multiple.
-Headings tagged :noexport: are excluded.
+Headings tagged :noexport: or carrying the COMMENT keyword are excluded.
 Headings tagged :draft: are included but marked."
   (with-temp-buffer
     (insert-file-contents container-file)
@@ -2191,13 +2193,13 @@ Headings tagged :draft: are included but marked."
             (org-element-map tree 'headline
               (lambda (h)
                 (when (= (org-element-property :level h) 1) h))))
-           ;; Derive slugs.  A heading with an explicit :SLUG: property uses it
+           ;; Derive slugs.  A heading with an explicit :CUSTOM_ID: property uses it
            ;; verbatim (the author takes responsibility for uniqueness).  All
            ;; other headings derive their slug from :TITLE: or the heading text
            ;; and go through blog--make-slugs-for-headings for dedup.
            (slugs
-            (let* ((explicit  ; :SLUG: property, or nil
-                    (mapcar (lambda (h) (org-element-property :SLUG h)) top-headings))
+            (let* ((explicit  ; :CUSTOM_ID: property, or nil
+                    (mapcar (lambda (h) (org-element-property :CUSTOM_ID h)) top-headings))
                    (titles    ; used only for headings without an explicit slug
                     (mapcar (lambda (h)
                               (or (org-element-property :TITLE h)
@@ -2209,10 +2211,10 @@ Headings tagged :draft: are included but marked."
                    (deduped (blog--make-slugs-for-headings
                              (cl-mapcar (lambda (exp title) (or exp title))
                                         explicit titles))))
-              ;; Explicit :SLUG: wins over the deduped result.
+              ;; Explicit :CUSTOM_ID: wins over the deduped result.
               (cl-mapcar (lambda (exp deduped) (or exp deduped))
                          explicit deduped))))
-      ;; Build alists, skipping noexport headings (blog--info-subtree returns nil for them)
+      ;; Build alists, skipping noexport/COMMENT headings (blog--info-subtree returns nil for them)
       (delq nil
             (cl-mapcar (lambda (h slug) (blog--info-subtree h container-file slug))
                        top-headings slugs)))))
@@ -2290,14 +2292,15 @@ to point at the in-repo copy:
 - *HTTP(S) URL* (=https://raw.githubusercontent.com/…/README.org=, …) —
   fetched into the same directory.
 
-After vendoring, the property itself is rewritten to =resources/redirects/<slug>.org=.
-CI then sees an in-tree path and the existing =#+include:= machinery just
-works, without special-casing.
+On preview (=C-x C-s=), =blog--publish-single-subtree= vendors the redirect
+on-the-fly into the temp file it creates for export — the source =:REDIRECT:=
+property is left untouched.
 
-=blog--vendor-redirects= runs on =C-x C-s= in multiple-style buffers (see
-=my/blogging-mode-map=): preview is when redirect targets change, and when
-the author can resolve "that URL is not reachable" errors on the spot
-rather than discover them in CI.
+On full publish (=blog-publish-all=, i.e. CI), =blog--vendor-redirects= runs
+first: it copies each upstream into =resources/redirects/= /and/ rewrites the
+=:REDIRECT:= property to the in-repo path.  That rewritten value is committed
+to git, so CI's clean checkout can resolve the =#+include:= without network
+access or author-local paths like =~/.emacs.d/=.
 
 The staleness check still applies unchanged — =blog--subtree-stale-p=
 compares =:MODIFIED:= against the vendored copy's mtime, which updates
@@ -2333,16 +2336,17 @@ A no-op if REDIRECT already points into `blog-redirects-subdir'."
           (unless (file-exists-p src)
             (user-error "REDIRECT source does not exist: %s" src))
           (copy-file src dest t))))
+      (call-process "git" nil nil nil "add" dest)
       (concat blog-redirects-subdir slug ".org"))))
 
 (defun blog--assign-slugs ()
-  "Walk the current buffer's top-level headings; for each without a :SLUG:
+  "Walk the current buffer's top-level headings; for each without a :CUSTOM_ID:
 property, derive one from the heading title (or :TITLE: override) and
-write it back via `org-set-property'.
+write it back via `org-entry-put'.
 
 Called from the C-x C-s preview binding so that, by the time a source
-lands in git, every container heading carries a stable :SLUG:.  CI then
-reads :SLUG: and errors out if missing, rather than silently generating
+lands in git, every container heading carries a stable :CUSTOM_ID:.  CI then
+reads :CUSTOM_ID: and errors out if missing, rather than silently generating
 one and writing back to a throwaway checkout."
   (when (blog--multiple-style-p)
     (save-excursion
@@ -2350,32 +2354,39 @@ one and writing back to a throwaway checkout."
       (while (re-search-forward "^\\* " nil t)
         (let ((tags (mapcar #'downcase (org-get-tags))))
           (unless (or (member "noexport" tags)
-                      (org-entry-get (point) "SLUG"))
+                      (org-element-property :commentedp (org-element-at-point))
+                      (org-entry-get (point) "CUSTOM_ID"))
             (let* ((title (org-get-heading t t t t))
                    (slug  (blog--make-slug
                            (or (org-entry-get (point) "TITLE") title))))
-              (org-set-property "SLUG" slug)
-              (message "=> Assigned :SLUG: %s to %s" slug title))))
+              (org-entry-put (point) "CUSTOM_ID" slug)
+              (message "=> Assigned :CUSTOM_ID: %s to %s" slug title))))
         (org-end-of-subtree t t)))))
 
 (defun blog--vendor-redirects ()
   "Walk the current buffer's top-level headings; for each with a :REDIRECT:
 property, vendor the source into `blog-redirects-subdir' and rewrite the
-property to the in-repo path.  Only touches multiple-style containers.
+property to the vendored in-repo path.  Only touches multiple-style containers.
+
+Called by `blog-publish-all' (CI) so the rewritten path lands in git and CI
+can resolve it on a clean checkout.  NOT called on preview/C-x C-s — preview
+vendors on-the-fly inside `blog--publish-single-subtree' without touching the
+source buffer.
 
 Relies on `blog--assign-slugs' having run first so every heading carries
-a :SLUG: property we can build the vendored filename from."
+a :CUSTOM_ID: property we can build the vendored filename from."
   (when (blog--multiple-style-p)
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward "^\\* " nil t)
-        (let ((redirect (org-entry-get (point) "REDIRECT"))
-              (slug     (org-entry-get (point) "SLUG")))
-          (when (and redirect slug (not (blog--already-vendored-p redirect)))
-            (let ((vendored (blog--vendor-one-redirect slug redirect)))
-              (org-entry-put (point) "REDIRECT" vendored)
-              (message "=> Vendored redirect for %s ← %s" slug redirect))))
-        (org-end-of-subtree t t)))))
+        (unless (org-element-property :commentedp (org-element-at-point))
+          (let ((redirect (org-entry-get (point) "REDIRECT"))
+                (slug     (org-entry-get (point) "CUSTOM_ID"))
+            (when (and redirect slug (not (blog--already-vendored-p redirect)))
+              (let ((vendored (blog--vendor-one-redirect slug redirect)))
+                (org-entry-put (point) "REDIRECT" vendored)
+                (message "=> Vendored redirect for %s ← %s" slug redirect)))))
+        (org-end-of-subtree t t))))))
 #+end_src
 
 ** MODIFIED: retired staleness machinery                             :details:
@@ -2756,10 +2767,9 @@ defined) via =(blog--refresh-posts)=, and refreshed after every publish.
 Every .org file is processed uniformly — there is no special-cased directory.
 Container files (#+article_style: multiple) yield many post entries; standalone
 files yield one.  A file with #+site_nav: contributes a nav-page entry instead
-of (or in addition to, if it also has #+date:) a post entry.
-Files with neither #+date: nor #+site_nav: (e.g. MathJaxPreamble.org) are skipped.
+of (or in addition to) a post entry.
 
-posts — all dated entries (including site_nav ones), sorted newest-first.
+posts — all entries, sorted newest-first.
 pages — site_nav entries, unsorted (used for the nav bar)."
   (let ((posts '())
         (pages '()))
@@ -2770,7 +2780,7 @@ pages — site_nav entries, unsorted (used for the nav bar)."
                        (list (blog--info file)))))
           (dolist (info infos)
             (when (map-elt info "site_nav") (push info pages))
-            (when (map-elt info "date")     (push info posts)))))))
+            (push info posts)))))
     (cons (sort posts (lambda (a b)
                         (time-less-p (date-to-time (@date b))
                                      (date-to-time (@date a)))))
@@ -3014,8 +3024,11 @@ maintaining a stable [Org source | xwidget] side-by-side layout."
       (let* ((tags  (mapcar #'downcase (org-get-tags)))
              (_ (when (member "noexport" tags)
                   (user-error "Heading is tagged :noexport: — nothing to preview")))
+             (_ (when (org-element-property :commentedp (org-element-at-point))
+                  (user-error "Heading is COMMENT — nothing to preview")))
              (title     (org-get-heading t t t t))
-             (slug      (blog--make-slug (or (org-entry-get (point) "TITLE") title)))
+             (slug      (or (org-entry-get (point) "CUSTOM_ID")
+                            (blog--make-slug (or (org-entry-get (point) "TITLE") title))))
              (all-infos (blog--info-multiple (buffer-file-name)))
              (html-out  (expand-file-name (concat slug ".html") blog-posts-directory)))
         (message "=> Previewing %s..." title)
@@ -3654,15 +3667,13 @@ IDs from headings, by replacing spaces with hyphens, for headings without IDs.
 #+begin_details "blog--ensure-useful-section-anchors: Advised to Org Export"
 #+BEGIN_SRC emacs-lisp
 (defun blog--ensure-useful-section-anchors (&rest _)
-  "Org sections without an ID are given one based on its title.
+  "Org sections without a CUSTOM_ID are given one derived from the heading title.
 
-All non-alphanumeric characters are cleverly replaced with '-'.
-
-If multiple trees end-up with the same id property, issue a
-message and undo any property insertion thus far.
+Uses `blog--make-slug' so the result is lowercase kebab-case, consistent with
+URL slugs.  If a collision is detected, pops a message-box and undoes.
 
 E.g., ↯ We'll go on a ∀∃⇅ adventure
-   ↦  We'll-go-on-a-adventure
+   ↦  well-go-on-a-adventure
 "
   (interactive)
   (let ((ids))
@@ -3671,12 +3682,7 @@ E.g., ↯ We'll go on a ∀∃⇅ adventure
        (org-with-point-at (point)
          (let ((id (org-entry-get nil "CUSTOM_ID")))
            (unless id
-             (thread-last (nth 4 (org-heading-components))
-               (s-replace-regexp "[^[:alnum:]']" "-")
-               (s-replace-regexp "-+" "-")
-               (s-chop-prefix "-")
-               (s-chop-suffix "-")
-               (setq id))
+             (setq id (blog--make-slug (nth 4 (org-heading-components))))
              (if (not (member id ids))
                  (push id ids)
                (message-box "Oh no, a repeated id!\n\n\t%s" id)
@@ -4003,7 +4009,6 @@ leaves the heading untouched — absence is intentional (silent edits)."
                   (interactive)
                   (blog--ensure-useful-section-anchors)
                   (blog--assign-slugs)
-                  (blog--vendor-redirects)
                   (blog--bump-modified-stamp)
                   (blog--refresh-posts)
                   (blog--validate-unique-slugs)
@@ -4127,8 +4132,12 @@ file-level keywords so that blog--style-setup runs unchanged."
             (if redirect
                 (with-current-buffer tmp-buf
                   (goto-char (point-max))
+                  ;; Vendor on-the-fly so the #+include: resolves on this machine
+                  ;; and on CI without mutating the source :REDIRECT: property.
                   (insert (format "#+include: \"%s\"\n"
-                                  (expand-file-name redirect (file-name-directory container-file))))
+                                  (expand-file-name
+                                   (blog--vendor-one-redirect slug redirect)
+                                   blog-posts-directory)))
                   (save-buffer))
               (save-excursion
                 (goto-char heading-point)
@@ -4168,7 +4177,7 @@ file-level keywords so that blog--style-setup runs unchanged."
 (defun blog--publish-multiple-articles (container-file)
   "Publish each top-level heading of CONTAINER-FILE as a separate HTML article.
 
-Writes the derived slug back to the heading as a :SLUG: property so future
+Writes the derived slug back to the heading as a :CUSTOM_ID: property so future
 publishes are stable even if the heading title changes.
 
 Returns the list of slugs that were published."
@@ -4181,10 +4190,11 @@ Returns the list of slugs that were published."
           (beginning-of-line)
           (let* ((tags  (mapcar #'downcase (org-get-tags)))
                  (title (org-get-heading t t t t))
-                 (slug  (org-entry-get (point) "SLUG")))
-            (unless (member "noexport" tags)
+                 (slug  (org-entry-get (point) "CUSTOM_ID")))
+            (unless (or (member "noexport" tags)
+                        (org-element-property :commentedp (org-element-at-point)))
               (unless slug
-                (user-error "Container heading %S in %s has no :SLUG: property — run C-x C-s on the source first"
+                (user-error "Container heading %S in %s has no :CUSTOM_ID: property — run C-x C-s on the source first"
                             title (f-filename container-file)))
               (let ((info (blog--find-info-by-slug slug all-infos)))
                 (message "=> Publishing subtree: %s (%s)..." title slug)
@@ -4366,6 +4376,7 @@ Dispatches on #+article_style: per file —
       (if (blog--multiple-style-p)
           (progn
             (message "=> Exporting all articles from %s..." (f-base f))
+            (blog--vendor-redirects)
             (blog--publish-multiple-articles f))
         (let* ((base   (f-base f))
                (target (expand-file-name (concat base ".html") blog-publish-directory)))
@@ -4477,7 +4488,7 @@ same URL, so both must be globally unique."
                              (or (map-elt p "container") (@file p) slug)))
              (prior  (gethash slug seen)))
         (if prior
-            (let ((msg (format "Duplicate slug \"%s\":\n  already claimed by %s\n  also claimed by %s\n  Change one of the :SLUG: properties."
+            (let ((msg (format "Duplicate slug \"%s\":\n  already claimed by %s\n  also claimed by %s\n  Change one of the :CUSTOM_ID: properties."
                                slug prior source)))
               (if noninteractive (error msg) (user-error msg)))
           (puthash slug source seen))))))
