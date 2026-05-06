@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-05-06 Wed 03:02 -->
+<!-- 2026-05-06 Wed 03:44 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Typed Lisp, A Primer</title>
@@ -781,7 +781,7 @@ Goals for this article:
 <ol class="org-ol">
 <li>Multiple examples of type constructions in Lisp.</li>
 <li>Comparing Lisp type systems with modern languages, such as Haskell.</li>
-<li>Show how algebraic <a href="#org498cfa9">polymorphic</a> types like <code>Pair</code> and <code>Maybe</code> can be defined in Lisp.
+<li>Show how algebraic <a href="#orgcbb075d">polymorphic</a> types like <code>Pair</code> and <code>Maybe</code> can be defined in Lisp.
 Including heterogeneously typed lists!</li>
 <li>Convey a passion for an elegant language.</li>
 <li>Augment Lisp with functional Haskell-like type declarations ;-)</li>
@@ -831,7 +831,7 @@ willing to try it out.
 </p>
 
 
-<div id="org1db7843" class="figure">
+<div id="orgc031fc6" class="figure">
 <p><img src="https://imgs.xkcd.com/comics/lisp_cycles.png" alt="lisp_cycles.png" />
 </p>
 <p><span class="figure-number">Figure 1: </span>xkcd - Lisp is a language of timeless elegance</p>
@@ -867,7 +867,7 @@ and I leave it as a loop &#x2014;Breaking news: Two Haskell readers just died.
 </p>
 
 
-<div id="org5c7858c" class="figure">
+<div id="org42d9627" class="figure">
 <p><img src="https://i.stack.imgur.com/jvSOG.png" alt="jvSOG.png" />
 </p>
 <p><span class="figure-number">Figure 2: </span>From the awesome “Land of Lisp” book</p>
@@ -1068,32 +1068,32 @@ comment checked by the machine.
 Let's see some examples:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The universal type &#8220;t&#8221;, has everything as its value.
-</span>(typep 'x 't) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep 12 't) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+<pre class="src src-emacs-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The universal type &#8220;t&#8221;, has everything as its value.
+</span>(typep 'x 't) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep 12 't) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The empty type: nil
-</span>(typep 'x 'nil) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false; nil has no values.
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The empty type: nil
+</span>(typep 'x 'nil) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false; nil has no values.
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The type &#8220;null&#8221; contains the one value &#8220;nil&#8221;.
-</span>(typep nil 'null) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep () 'null)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The type &#8220;null&#8221; contains the one value &#8220;nil&#8221;.
+</span>(typep nil 'null) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep () 'null)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8220;(eql x)&#8221; is the singelton type consisting of only x.
-</span>(typep 3 '(eql 3)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep 4 '(eql 3)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;(eql x)&#8221; is the singelton type consisting of only x.
+</span>(typep 3 '(eql 3)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep 4 '(eql 3)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8220;(member x&#8320; &#8230; x&#8345;)&#8221; denotes the enumerated type consisting of only the x&#7522;.
-</span>(typep 3 '(member 3 x <span style="font-style: italic;">"c"</span>))  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep 'x '(member 3 x <span style="font-style: italic;">"c"</span>)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep 'y '(member 3 x <span style="font-style: italic;">"c"</span>)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;(member x&#8320; &#8230; x&#8345;)&#8221; denotes the enumerated type consisting of only the x&#7522;.
+</span>(typep 3 '(member 3 x <span style="color: #50a14f;">"c"</span>))  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep 'x '(member 3 x <span style="color: #50a14f;">"c"</span>)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep 'y '(member 3 x <span style="color: #50a14f;">"c"</span>)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8220;(satisfies p)&#8221; is the type of values that satisfy predicate p.
-</span>(typep 12 '(satisfies (<span style="font-weight: bold;">lambda</span> (x) (oddp x)))) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(typep 12 '(satisfies evenp) )                <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;(satisfies p)&#8221; is the type of values that satisfy predicate p.
+</span>(typep 12 '(satisfies (<span style="color: #a626a4;">lambda</span> (x) (oddp x)))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(typep 12 '(satisfies evenp) )                <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Computation rule for comprehension types.
-</span><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">(typep x '(satisfies p)) &#8776; (if (p x) t nil)</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Computation rule for comprehension types.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(typep x '(satisfies p)) &#8776; (if (p x) t nil)</span>
 </pre>
 </div>
 
@@ -1101,8 +1101,8 @@ Let's see some examples:
 Here's a convenient one: <code>(booleanp x) ≈ (typep x '(member t nil))</code>.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(booleanp 2)   <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(booleanp nil) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true</span>
+<pre class="src src-emacs-lisp">(booleanp 2)   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(booleanp nil) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true</span>
 </pre>
 </div>
 
@@ -1115,7 +1115,7 @@ Such case analysis is available in languages such as C# &#x2014;c.f.,
 <a href="https://blogs.msdn.microsoft.com/ericlippert/2010/09/16/is-is-as-or-is-as-is/">is is as or is as is</a>. Finally, it is important to realise that <code>cons</code> is a monomorphic
 type
 &#x2014;it just means an (arbitrary) element consisting of two parts called <code>car</code> and <code>cdr</code>&#x2014;
-we show how to form a <a href="#org498cfa9">polymorphic</a> product type below.
+we show how to form a <a href="#orgcbb075d">polymorphic</a> product type below.
 </p>
 
 <p>
@@ -1185,7 +1185,7 @@ Lisp's <code>typep</code>.
 </table>
 
 <p>
-In some sense, dynamic languages make it easy to produce <a href="#org498cfa9">polymorphic</a> functions.
+In some sense, dynamic languages make it easy to produce <a href="#orgcbb075d">polymorphic</a> functions.
 Ironically, the previous sentences is only meaningful if you acknowledge the importance
 of types and type variables.
 </p>
@@ -1195,11 +1195,11 @@ In Lisp, types are inferred and needn't be declared.
 However, the declaration serves as a nice documentation to further readers ;-)
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">setq</span> ellew 314)
-(type-of ellew) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; integer
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">setq</span> ellew 314)
+(type-of ellew) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; integer
 </span>
-(<span style="font-weight: bold;">setq</span> ellew <span style="font-style: italic;">"oh my"</span>)
-(type-of ellew) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; string</span>
+(<span style="color: #a626a4;">setq</span> ellew <span style="color: #50a14f;">"oh my"</span>)
+(type-of ellew) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; string</span>
 </pre>
 </div>
 <ul class="org-ul">
@@ -1220,9 +1220,9 @@ false, it stays quiet in the former and signals a type error in the latter.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(check-type 12 integer)               <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil, i.e., no error
-</span>(check-type 12   (<span style="font-weight: bold;">or</span> symbol integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">nil; i.e., no error
-</span>(check-type <span style="font-style: italic;">"12"</span> (<span style="font-weight: bold;">or</span> symbol integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Crash: Type error!</span>
+<pre class="src src-emacs-lisp">(check-type 12 integer)               <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil, i.e., no error
+</span>(check-type 12   (<span style="color: #a626a4;">or</span> symbol integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">nil; i.e., no error
+</span>(check-type <span style="color: #50a14f;">"12"</span> (<span style="color: #a626a4;">or</span> symbol integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Crash: Type error!</span>
 </pre>
 </div>
 
@@ -1384,13 +1384,13 @@ for the rest of the scope but it does so even in the definitions of pre-defined 
 being invoked in the scope.
 </p>
 <div class="org-src-container">
-<pre class="src src-elisp">(<span style="font-weight: bold;">setq</span> it <span style="font-style: italic;">"bye"</span>)
-(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">go</span> () it)
-(<span style="font-weight: bold;">let</span> ((it 3)) (go)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 3; even though &#8220;it&#8221; does not occur textually!
+<pre class="src src-elisp">(<span style="color: #a626a4;">setq</span> it <span style="color: #50a14f;">"bye"</span>)
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">go</span> () it)
+(<span style="color: #a626a4;">let</span> ((it 3)) (go)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 3; even though &#8220;it&#8221; does not occur textually!
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Temporarily enable lexical binding in Emacs Lisp
-</span>(<span style="font-weight: bold;">setq</span> lexical-binding t)
-(<span style="font-weight: bold;">let</span> ((it 3)) (go)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; bye; as most languages would act</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Temporarily enable lexical binding in Emacs Lisp
+</span>(<span style="color: #a626a4;">setq</span> lexical-binding t)
+(<span style="color: #a626a4;">let</span> ((it 3)) (go)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; bye; as most languages would act</span>
 </pre>
 </div>
 
@@ -1465,7 +1465,7 @@ Some languages call this <i>type casting</i>.
 Here's a cute example.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(coerce '(76 105 115 112) 'string) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; Lisp</span>
+<pre class="src src-emacs-lisp">(coerce '(76 105 115 112) 'string) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Lisp</span>
 </pre>
 </div>
 </div>
@@ -1482,10 +1482,10 @@ Likewise, <code>(the type name)</code> yields <code>name</code> provided it has 
 
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">(+ (the integer 1)
-   (the integer 2)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 3
+   (the integer 2)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 3
 </span>
 (+ (the integer 1)
-   (the integer <span style="font-style: italic;">"2"</span>)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; Type error.</span>
+   (the integer <span style="color: #50a14f;">"2"</span>)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Type error.</span>
 </pre>
 </div>
 
@@ -1516,14 +1516,14 @@ This is specified using union types; nested unions are essentially flattened
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep 12 'integer)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 'a 'symbol)   <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+<pre class="src src-emacs-lisp">(typep 12 'integer)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 'a 'symbol)   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-(<span style="font-weight: bold;">setq</span> woah 12)
-(typep woah '(or integer symbol)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+(<span style="color: #a626a4;">setq</span> woah 12)
+(typep woah '(or integer symbol)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-(<span style="font-weight: bold;">setq</span> woah 'nice)
-(typep woah '(or integer symbol)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+(<span style="color: #a626a4;">setq</span> woah 'nice)
+(typep woah '(or integer symbol)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 
@@ -1539,7 +1539,7 @@ When given a union type, we may want to <i>compute according to the type of a va
 <pre class="src src-emacs-lisp">(typecase woah
   (integer  (+1 woah))
   (symbol  'cool)
-  (t       <span style="font-style: italic;">"yikes"</span>))
+  (t       <span style="color: #50a14f;">"yikes"</span>))
 </pre>
 </div>
 </div>
@@ -1560,11 +1560,11 @@ A type specifier is the name of a type. &#x2014;Paul Graham, ANSI Common Lisp
 Type specifiers are essentially transformed into predicates as follows.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep x '&#964;)                &#8776; (&#964;p x)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">E.g., &#964; &#8776; integer
-</span>(typep x '(and &#964;&#8321; &#8230; &#964;&#8345;))    &#8776; (<span style="font-weight: bold;">and</span> (typep x &#964;&#8321;) &#8230; (typep x &#964;&#8345;))
-(typep x '(or &#964;&#8321; &#8230; &#964;&#8345;))     &#8776; (<span style="font-weight: bold;">or</span> (typep x &#964;&#8321;) &#8230; (typep x &#964;&#8345;))
+<pre class="src src-emacs-lisp">(typep x '&#964;)                &#8776; (&#964;p x)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">E.g., &#964; &#8776; integer
+</span>(typep x '(and &#964;&#8321; &#8230; &#964;&#8345;))    &#8776; (<span style="color: #a626a4;">and</span> (typep x &#964;&#8321;) &#8230; (typep x &#964;&#8345;))
+(typep x '(or &#964;&#8321; &#8230; &#964;&#8345;))     &#8776; (<span style="color: #a626a4;">or</span> (typep x &#964;&#8321;) &#8230; (typep x &#964;&#8345;))
 (typep x '(not &#964;))          &#8776; (not (typep x &#964;))
-(typep x '(member e&#8321; &#8230; e&#8345;)) &#8776; (<span style="font-weight: bold;">or</span> (eql x e&#8321;) &#8230; (eql x e&#8345;))
+(typep x '(member e&#8321; &#8230; e&#8345;)) &#8776; (<span style="color: #a626a4;">or</span> (eql x e&#8321;) &#8230; (eql x e&#8345;))
 (typep x '(satisfies p))    &#8776; (p x)
 </pre>
 </div>
@@ -1596,7 +1596,7 @@ Register it using <a href="https://www.gnu.org/software/emacs/manual/html_mono/c
 
 <p>
 You could just do number 3 directly, but it's useful to have the
-predicate form of a <a href="#org8f3c7bf">type descriptor</a>.
+predicate form of a <a href="#orgaf83411">type descriptor</a>.
 </p></li>
 </ol>
 
@@ -1604,24 +1604,24 @@ predicate form of a <a href="#org8f3c7bf">type descriptor</a>.
 <a href="https://lispcookbook.github.io/cl-cookbook/type.html">For example,</a> here's the three steps for a type of lists of numbers drawn from <code>(-∞..9]</code>.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Make the predicate
-</span>(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">small-number-seq-p</span> (thing)
-  (<span style="font-weight: bold;">and</span> (sequencep thing)
+<pre class="src src-emacs-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Make the predicate
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">small-number-seq-p</span> (thing)
+  (<span style="color: #a626a4;">and</span> (sequencep thing)
        (every #'numberp thing)
-       (every (<span style="font-weight: bold;">lambda</span> (x) (&lt; x 10)) thing)))
+       (every (<span style="color: #a626a4;">lambda</span> (x) (&lt; x 10)) thing)))
 
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Test it
-</span>(<span style="font-weight: bold;">setq</span> yes '(1 2  4))
-(<span style="font-weight: bold;">setq</span> no  '(1 20 4))
-(small-number-seq-p yes) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Test it
+</span>(<span style="color: #a626a4;">setq</span> yes '(1 2  4))
+(<span style="color: #a626a4;">setq</span> no  '(1 20 4))
+(small-number-seq-p yes) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Register it
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Register it
 </span>(deftype small-number-seq ()
   '(satisfies small-number-seq-p))
 
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Use it
-</span>(typep yes 'small-number-seq) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep no 'small-number-seq)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Use it
+</span>(typep yes 'small-number-seq) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep no 'small-number-seq)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false</span>
 </pre>
 </div>
 
@@ -1631,13 +1631,13 @@ arguments without explicit defaults use <code>*</code> instead of <code>nil</cod
 <a href="https://www.gnu.org/software/emacs/manual/html_mono/cl.html#index-cl_002ddeftype-14">From the deftype docs, here are some examples:</a>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">cl-deftype</span> <span style="font-weight: bold; text-decoration: underline;">null</span> () '(satisfies null))    <span style="font-weight: bold; font-style: italic;">; </span><span style="font-weight: bold; font-style: italic;">predefined
-</span>(<span style="font-weight: bold;">cl-deftype</span> <span style="font-weight: bold; text-decoration: underline;">list</span> () '(or null cons))      <span style="font-weight: bold; font-style: italic;">; </span><span style="font-weight: bold; font-style: italic;">predefined
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">cl-deftype</span> <span style="color: #c18401;">null</span> () '(satisfies null))    <span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">predefined
+</span>(<span style="color: #a626a4;">cl-deftype</span> <span style="color: #c18401;">list</span> () '(or null cons))      <span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">predefined
 </span>
-(<span style="font-weight: bold;">cl-deftype</span> <span style="font-weight: bold; text-decoration: underline;">unsigned-byte</span> (<span style="font-weight: bold; text-decoration: underline;">&amp;optional</span> bits)
-  (list 'integer 0 (<span style="font-weight: bold;">if</span> (eq bits '*) bits (1- (lsh 1 bits)))))
+(<span style="color: #a626a4;">cl-deftype</span> <span style="color: #c18401;">unsigned-byte</span> (<span style="color: #c18401;">&amp;optional</span> bits)
+  (list 'integer 0 (<span style="color: #a626a4;">if</span> (eq bits '*) bits (1- (lsh 1 bits)))))
 
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Some equivalences
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Some equivalences
 </span>(unsigned-byte 8)  &#8801;  (integer 0 255)
 (unsigned-byte)    &#8801;  (integer 0 *)
 unsigned-byte      &#8801;  (integer 0 *)
@@ -1651,32 +1651,32 @@ predicate that checks if a list is empty yet <code>null</code> is the type speci
 
 <p>
 Let's form a type of pairs directly &#x2014;which is not ideal!
-This is a <a id="org498cfa9">polymorphic</a> datatype: It takes two type arguments, called <code>a</code> and <code>b</code> below.
+This is a <a id="orgcbb075d">polymorphic</a> datatype: It takes two type arguments, called <code>a</code> and <code>b</code> below.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(deftype pair (a b <span style="font-weight: bold; text-decoration: underline;">&amp;optional</span> type)
-  `(satisfies (<span style="font-weight: bold;">lambda</span> (x) (<span style="font-weight: bold;">and</span>
+<pre class="src src-emacs-lisp">(deftype pair (a b <span style="color: #c18401;">&amp;optional</span> type)
+  `(satisfies (<span style="color: #a626a4;">lambda</span> (x) (<span style="color: #a626a4;">and</span>
       (consp x)
-      (typep (car x) (<span style="font-weight: bold;">quote</span> ,a))
-      (typep (cdr x) (<span style="font-weight: bold;">quote</span> ,b))))))
+      (typep (car x) (<span style="color: #a626a4;">quote</span> ,a))
+      (typep (cdr x) (<span style="color: #a626a4;">quote</span> ,b))))))
 
-(typep '(<span style="font-style: italic;">"x"</span> . 2) '(pair string integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep '(<span style="font-style: italic;">"x"</span> . 2) '(pair symbol integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(typep nil '(pair integer integer))       <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(typep 23 '(pair integer integer))        <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
+(typep '(<span style="color: #50a14f;">"x"</span> . 2) '(pair string integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep '(<span style="color: #50a14f;">"x"</span> . 2) '(pair symbol integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(typep nil '(pair integer integer))       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(typep 23 '(pair integer integer))        <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
 </span>
-(<span style="font-weight: bold;">setq</span> ss <span style="font-style: italic;">"nice"</span> nn 114)
-(typep `(,ss . ,nn) '(pair string integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep (cons ss nn) '(pair string integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+(<span style="color: #a626a4;">setq</span> ss <span style="color: #50a14f;">"nice"</span> nn 114)
+(typep `(,ss . ,nn) '(pair string integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep (cons ss nn) '(pair string integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The following are false since ss and nn are quoted symbols!
-</span>(typep '(ss . nn)    '(pair string integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(typep `(cons ss nn) '(pair string integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The following are false since ss and nn are quoted symbols!
+</span>(typep '(ss . nn)    '(pair string integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(typep `(cons ss nn) '(pair string integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false</span>
 </pre>
 </div>
 
 <p>
-<b>Exercise:</b> Define the <a href="#org498cfa9">polymorphic</a> <code>maybe</code> type
+<b>Exercise:</b> Define the <a href="#orgcbb075d">polymorphic</a> <code>maybe</code> type
 such that <code>(maybe τ)</code> has elements being either <code>nil</code> or a value of <code>τ</code>.
 </p>
 
@@ -1685,28 +1685,28 @@ Let's define type <code>list-of</code> such that <code>(list-of τ)</code> is th
 whose elements are all values of type <code>τ</code>.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Make the predicate
-</span>(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">list-of-p</span> (&#964; thing)
-  (<span style="font-weight: bold;">and</span> (listp thing) (every (<span style="font-weight: bold;">lambda</span> (x) (typep x &#964;)) thing)))
+<pre class="src src-emacs-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Make the predicate
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">list-of-p</span> (&#964; thing)
+  (<span style="color: #a626a4;">and</span> (listp thing) (every (<span style="color: #a626a4;">lambda</span> (x) (typep x &#964;)) thing)))
 
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Test it
-</span>(list-of-p 'integer '(1 2   3)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(list-of-p 'integer '(1 two 3)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(list-of-p 'string '())         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(list-of-p 'string '(no))       <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Test it
+</span>(list-of-p 'integer '(1 2   3)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(list-of-p 'integer '(1 two 3)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(list-of-p 'string '())         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(list-of-p 'string '(no))       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Register it
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Register it
 </span>(deftype list-of (&#964;)
-  `(satisfies (<span style="font-weight: bold;">lambda</span> (thing) (list-of-p (<span style="font-weight: bold;">quote</span> ,&#964;) thing))))
+  `(satisfies (<span style="color: #a626a4;">lambda</span> (thing) (list-of-p (<span style="color: #a626a4;">quote</span> ,&#964;) thing))))
 
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Use it
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Use it
 </span>
-(typep '(1 2  ) 'list) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep '(1 two) 'list) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+(typep '(1 2  ) 'list) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep '(1 two) 'list) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-(typep '(1 2)   '(list-of integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep '(1 <span style="font-style: italic;">"2"</span>) '(list-of string))  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(typep '(1 <span style="font-style: italic;">"2"</span>) '(list-of (<span style="font-weight: bold;">or</span> integer string)))  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true</span>
+(typep '(1 2)   '(list-of integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep '(1 <span style="color: #50a14f;">"2"</span>) '(list-of string))  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(typep '(1 <span style="color: #50a14f;">"2"</span>) '(list-of (<span style="color: #a626a4;">or</span> integer string)))  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true</span>
 </pre>
 </div>
 
@@ -1790,24 +1790,24 @@ as <code>(C a₁ … aₙ)</code>, then a translation to Lisp immediately sugges
 A nearly direct translation follows.
 </p>
 <div class="org-src-container">
-<pre class="src src-lisp">(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">exprp</span> (&#964; thing)
+<pre class="src src-lisp">(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">exprp</span> (&#964; thing)
     (pcase thing
        (`(var ,n)    (typep n &#964;))
        (`(add ,l ,r) (and (exprp &#964; l) (exprp &#964; r)))
        (`(neg ,e)    (exprp &#964; e))))
 
 (setq ex '(add (var 5) (add (var 6) (neg (var 7)))))
-(exprp 'integer ex) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+(exprp 'integer ex) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-<span style="font-weight: bold; font-style: italic;">; </span><span style="font-weight: bold; font-style: italic;">This declarion &#8220;declare-type&#8221; is defined near the end of this article.
+<span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">This declarion &#8220;declare-type&#8221; is defined near the end of this article.
 </span>(declare-type int : (expr-of integer) integer)
-(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">int</span> (thing)
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">int</span> (thing)
     (pcase thing
        (`(var ,n)    n)
        (`(add ,l ,r) (+ (int l) (int r)))
        (`(neg ,e)    (- (int e)))))
 
-(int ex) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 4</span>
+(int ex) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 4</span>
 </pre>
 </div>
 
@@ -1829,23 +1829,23 @@ can be found <a href="https://github.com/stylewarning/cl-algebraic-data-type">he
 <p>
 The Haskell presentation has type-checking baked into it, yet our
 Lisp interpreter <code>int</code> does not! This seems terribly worrying, but
-that <a href="#orgb45adea"><code>declare-type</code></a> declaration actually handles type checking for us!
+that <a href="#org46ee11a"><code>declare-type</code></a> declaration actually handles type checking for us!
 </p>
 <div class="org-src-container">
-<pre class="src src-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Register the type
-</span>(<span style="font-weight: bold;">deftype</span> <span style="font-weight: bold; text-decoration: underline;">expr-of</span> (&#964;)
-  `(satisfies (<span style="font-weight: bold;">lambda</span> (thing) (exprp (quote ,&#964;) thing))))
+<pre class="src src-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Register the type
+</span>(<span style="color: #a626a4;">deftype</span> <span style="color: #c18401;">expr-of</span> (&#964;)
+  `(satisfies (<span style="color: #a626a4;">lambda</span> (thing) (exprp (quote ,&#964;) thing))))
 
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Try it out
-</span>(typep '(1 2)   '(expr-of integer)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
-</span>(typep ex   '(expr-of integer))     <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Try it out
+</span>(typep '(1 2)   '(expr-of integer)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
+</span>(typep ex   '(expr-of integer))     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">This invocation, for example, now yields a helpful error message.
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">This invocation, for example, now yields a helpful error message.
 </span>(int '(var 6 4))
-<span style="font-weight: bold; font-style: italic;">;;</span><span style="font-weight: bold; font-style: italic;">
-</span><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; int: Type mismatch! Expected (expr-of integer) for argument 0 &#8800; Given cons (var 6 4).
-</span><span style="font-weight: bold; font-style: italic;">;;</span><span style="font-weight: bold; font-style: italic;">
-</span><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Which is reasonable since the &#8216;</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">var</span><span style="font-weight: bold; font-style: italic;">&#8217; constructor only takes a single argument.</span>
+<span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; int: Type mismatch! Expected (expr-of integer) for argument 0 &#8800; Given cons (var 6 4).
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Which is reasonable since the &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">var</span><span style="color: #a0a1a7;">&#8217; constructor only takes a single argument.</span>
 </pre>
 </div>
 <p>
@@ -1937,7 +1937,7 @@ the eliminator <code>(|||</code>) &#x2014;from Haskell's <code>Control.Arrow</co
 Some statically typed languages have super weak type systems and ruin the rep
 for everyone else.
 For example, <code>C</code> is great and we all love it of-course, but it's a shame that we can only
-express the <a href="#org498cfa9">polymorphic</a> identity function \(id : ∀{α}. α → α \;=\; λ x → x\),
+express the <a href="#orgcbb075d">polymorphic</a> identity function \(id : ∀{α}. α → α \;=\; λ x → x\),
 by using the C-preprocessor &#x2014;or dismiss the types by casting pointers around.
 </p>
 
@@ -1988,7 +1988,7 @@ and why?
 </p>
 
 <p>
-I may be completely wrong, but below I mention a <a href="#org9309bd6">bunch of papers</a> that suggest
+I may be completely wrong, but below I mention a <a href="#org942681e">bunch of papers</a> that suggest
 it's kind hard to type this stuff.
 </p>
 
@@ -2066,7 +2066,7 @@ A more informative historical account of Lisp &amp; its universal reverence can 
 <a href="https://twobithistory.org/2018/10/14/lisp.html">How Lisp Became God's Own Programming Language</a>.
 </p>
 
-<div id="orgeb82689" class="figure">
+<div id="orga8b71b6" class="figure">
 <p><img src="https://imgs.xkcd.com/comics/lisp.jpg" alt="lisp.jpg" />
 </p>
 <p><span class="figure-number">Figure 3: </span>xkcd</p>
@@ -2087,19 +2087,19 @@ and  <a href="https://shen-language.github.io/">Shen</a> ≈ Haskell + Prolog + 
 <a href="https://news.ycombinator.com/item?id=8593261">For example,</a> Common Lisp admits strong static typing, in <a href="http://www.lispforum.com/viewtopic.php?f=2&amp;t=191">SBCL</a>, as follows.
 </p>
 <div class="org-src-container">
-<pre class="src src-common-lisp"><span style="font-weight: bold; font-style: italic;">; </span><span style="font-weight: bold; font-style: italic;">Type declaration then definition.
-</span>(<span style="font-weight: bold;">declaim</span> (ftype (function (fixnum)) num-id))
-(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">num-id</span> (n) n)
+<pre class="src src-common-lisp"><span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">Type declaration then definition.
+</span>(<span style="color: #a626a4;">declaim</span> (ftype (function (fixnum)) num-id))
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">num-id</span> (n) n)
 
-(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">string-id</span> (s) (<span style="font-weight: bold;">declare</span> (string s)) (num-id s))
-<span style="font-weight: bold; font-style: italic;">; </span><span style="font-weight: bold; font-style: italic;">in: DEFUN STRING-ID
-</span><span style="font-weight: bold; font-style: italic;">;     </span><span style="font-weight: bold; font-style: italic;">(NUM-ID S)
-</span><span style="font-weight: bold; font-style: italic;">;</span><span style="font-weight: bold; font-style: italic;">
-</span><span style="font-weight: bold; font-style: italic;">; </span><span style="font-weight: bold; font-style: italic;">caught WARNING:
-</span><span style="font-weight: bold; font-style: italic;">;   </span><span style="font-weight: bold; font-style: italic;">Derived type of S is
-</span><span style="font-weight: bold; font-style: italic;">;     </span><span style="font-weight: bold; font-style: italic;">(VALUES STRING &amp;OPTIONAL),
-</span><span style="font-weight: bold; font-style: italic;">;   </span><span style="font-weight: bold; font-style: italic;">conflicting with its asserted type
-</span><span style="font-weight: bold; font-style: italic;">;     </span><span style="font-weight: bold; font-style: italic;">FIXNUM.</span>
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">string-id</span> (s) (<span style="color: #a626a4;">declare</span> (string s)) (num-id s))
+<span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">in: DEFUN STRING-ID
+</span><span style="color: #a0a1a7; font-weight: bold;">;     </span><span style="color: #a0a1a7;">(NUM-ID S)
+</span><span style="color: #a0a1a7; font-weight: bold;">;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">caught WARNING:
+</span><span style="color: #a0a1a7; font-weight: bold;">;   </span><span style="color: #a0a1a7;">Derived type of S is
+</span><span style="color: #a0a1a7; font-weight: bold;">;     </span><span style="color: #a0a1a7;">(VALUES STRING &amp;OPTIONAL),
+</span><span style="color: #a0a1a7; font-weight: bold;">;   </span><span style="color: #a0a1a7;">conflicting with its asserted type
+</span><span style="color: #a0a1a7; font-weight: bold;">;     </span><span style="color: #a0a1a7;">FIXNUM.</span>
 </pre>
 </div>
 
@@ -2119,16 +2119,16 @@ whereas Java's approach is <i>classes have methods</i>.
 Here's an example.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">defmethod</span> <span style="font-weight: bold;">doit</span> ((n integer)) <span style="font-style: italic;">"I'm an integer!"</span>)
-(<span style="font-weight: bold;">defmethod</span> <span style="font-weight: bold;">doit</span> ((s string)) <span style="font-style: italic;">"I'm a string!"</span>)
-(<span style="font-weight: bold;">defmethod</span> <span style="font-weight: bold;">doit</span> ((type (eql <span style="font-weight: bold;">:hero</span>)) thing) <span style="font-style: italic;">"I'm a superhero!"</span>)
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defmethod</span> <span style="color: #0184bc;">doit</span> ((n integer)) <span style="color: #50a14f; font-style: italic;">"I'm an integer!"</span>)
+(<span style="color: #a626a4;">defmethod</span> <span style="color: #0184bc;">doit</span> ((s string)) <span style="color: #50a14f; font-style: italic;">"I'm a string!"</span>)
+(<span style="color: #a626a4;">defmethod</span> <span style="color: #0184bc;">doit</span> ((type (eql <span style="color: #e44649;">:hero</span>)) thing) <span style="color: #50a14f; font-style: italic;">"I'm a superhero!"</span>)
 
-(doit 2)             <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; I'm an integer!
-</span>(doit <span style="font-style: italic;">"2"</span>)           <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; I'm a string!
-</span>(doit 'x)            <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; Error: No applicable method
-</span>(doit <span style="font-weight: bold;">:hero</span> 'bobert) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; I'm a superhero!
+(doit 2)             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; I'm an integer!
+</span>(doit <span style="color: #50a14f;">"2"</span>)           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; I'm a string!
+</span>(doit 'x)            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Error: No applicable method
+</span>(doit <span style="color: #e44649;">:hero</span> 'bobert) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; I'm a superhero!
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">C-h o cl-defmethod &#8658; see extensible list of specialisers Elisp supports.</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">C-h o cl-defmethod &#8658; see extensible list of specialisers Elisp supports.</span>
 </pre>
 </div>
 
@@ -2136,21 +2136,21 @@ Here's an example.
 We can of-course make our own classes:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">defclass</span> <span style="font-weight: bold; text-decoration: underline;">person</span>  () ((name)))
-(<span style="font-weight: bold;">defmethod</span> <span style="font-weight: bold;">speak</span> ((x person)) (format <span style="font-style: italic;">"My name is %s."</span> (slot-value x 'name)))
-(<span style="font-weight: bold;">setq</span> p (make-instance 'person))
-(<span style="font-weight: bold;">setf</span> (slot-value p 'name) <span style="font-style: italic;">"bobert"</span>)
-(speak p) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; My name is bobert.
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defclass</span> <span style="color: #c18401;">person</span>  () ((name)))
+(<span style="color: #a626a4;">defmethod</span> <span style="color: #0184bc;">speak</span> ((x person)) (format <span style="color: #50a14f;">"My name is %s."</span> (slot-value x 'name)))
+(<span style="color: #a626a4;">setq</span> p (make-instance 'person))
+(<span style="color: #a626a4;">setf</span> (slot-value p 'name) <span style="color: #50a14f;">"bobert"</span>)
+(speak p) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; My name is bobert.
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Inherits from &#8216;</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">person</span><span style="font-weight: bold; font-style: italic;">&#8217; and has accessor &amp; constructor methods for a new slot
-</span>(<span style="font-weight: bold;">defclass</span> <span style="font-weight: bold; text-decoration: underline;">teacher</span> (person) ((topic <span style="font-weight: bold;">:accessor</span> teacher-topic <span style="font-weight: bold;">:initarg</span> <span style="font-weight: bold;">:studying</span>)))
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Inherits from &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">person</span><span style="color: #a0a1a7;">&#8217; and has accessor &amp; constructor methods for a new slot
+</span>(<span style="color: #a626a4;">defclass</span> <span style="color: #c18401;">teacher</span> (person) ((topic <span style="color: #e44649;">:accessor</span> teacher-topic <span style="color: #e44649;">:initarg</span> <span style="color: #e44649;">:studying</span>)))
 
-(<span style="font-weight: bold;">defmethod</span> <span style="font-weight: bold;">speak</span> ((x teacher))
-  (format <span style="font-style: italic;">"My name is %s,and I study %s."</span> (slot-value x 'name) (teacher-topic x)))
+(<span style="color: #a626a4;">defmethod</span> <span style="color: #0184bc;">speak</span> ((x teacher))
+  (format <span style="color: #50a14f;">"My name is %s,and I study %s."</span> (slot-value x 'name) (teacher-topic x)))
 
-(<span style="font-weight: bold;">setq</span> ins (make-instance 'teacher <span style="font-weight: bold;">:studying</span> <span style="font-style: italic;">"mathematics"</span>))
-(<span style="font-weight: bold;">setf</span> (slot-value ins 'name) <span style="font-style: italic;">"Robert"</span>)
-(speak ins) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; My name is Robert, and I study mathematics.</span>
+(<span style="color: #a626a4;">setq</span> ins (make-instance 'teacher <span style="color: #e44649;">:studying</span> <span style="color: #50a14f;">"mathematics"</span>))
+(<span style="color: #a626a4;">setf</span> (slot-value ins 'name) <span style="color: #50a14f;">"Robert"</span>)
+(speak ins) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; My name is Robert, and I study mathematics.</span>
 </pre>
 </div>
 
@@ -2181,7 +2181,7 @@ then invoke <code>(disassemble 'go)</code> to see something like
 </p>
 
 <dl class="org-dl">
-<dt><a id="org8f3c7bf">Type Descriptor</a></dt><dd><p>
+<dt><a id="orgaf83411">Type Descriptor</a></dt><dd><p>
 Objects holding information about types.
 </p>
 
@@ -2287,9 +2287,9 @@ The relationships between these types are as follows:
 There is no overflow checking.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(expt 2 60) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 1,152,921,504,606,846,976
-</span>(expt 2 61) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; -2,305,843,009,213,693,952
-</span>(expt 2 62) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 0</span>
+<pre class="src src-emacs-lisp">(expt 2 60) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 1,152,921,504,606,846,976
+</span>(expt 2 61) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; -2,305,843,009,213,693,952
+</span>(expt 2 62) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 0</span>
 </pre>
 </div>
 
@@ -2325,40 +2325,40 @@ The type list <code>(integer LOW HIGH)</code> represents all integers between
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"> (typep 4 '(integer 1 5)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true since 1 &#8804; 4 &#8804; 5.
-</span> (typep 4 '(integer 1 3)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil  since 1 &#8804; 4 &#8816; 3.
+<pre class="src src-emacs-lisp"> (typep 4 '(integer 1 5)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true since 1 &#8804; 4 &#8804; 5.
+</span> (typep 4 '(integer 1 3)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil  since 1 &#8804; 4 &#8816; 3.
 </span>
- (typep 12 'integer) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span> (typep 12 'number) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+ (typep 12 'integer) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span> (typep 12 'number) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
- (typep 23 'odd)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+ (typep 23 'odd)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
- (typep 12 '(integer * 14)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t, since 12 &#8804; 14, but no lower bound.
-</span> (typep 12 '(integer 0 *)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t; the &#8216;</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">*</span><span style="font-weight: bold; font-style: italic;">&#8217; denotes a wild-card; anything.
+ (typep 12 '(integer * 14)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t, since 12 &#8804; 14, but no lower bound.
+</span> (typep 12 '(integer 0 *)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t; the &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">*</span><span style="color: #a0a1a7;">&#8217; denotes a wild-card; anything.
 </span>
-(typep -1 '(not (integer 0 *))) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep  1 '(not (integer 0 *))) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
+(typep -1 '(not (integer 0 *))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep  1 '(not (integer 0 *))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
 </span>
-(typep 1 '(integer  1 2))   <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t, including lower bound
-</span>(typep 1 '(integer (1) 2))  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil, excluding lower bound
+(typep 1 '(integer  1 2))   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t, including lower bound
+</span>(typep 1 '(integer (1) 2))  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil, excluding lower bound
 </span>
-(typep 1.23 '(float 1.20 1.24)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+(typep 1.23 '(float 1.20 1.24)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Here's a slighly organised demonstration:
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Here's a slighly organised demonstration:
 </span>
-(typep 1.23 'number) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 123  'number) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 1.23 'real) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 123  'real) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+(typep 1.23 'number) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 123  'number) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 1.23 'real) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 123  'real) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-(typep 1.23 'integer) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
-</span>(typep 123  'integer) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 1.23 'fixnum) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
-</span>(typep 123  'fixnum) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+(typep 1.23 'integer) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
+</span>(typep 123  'integer) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 1.23 'fixnum) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
+</span>(typep 123  'fixnum) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-(typep 1.23 'float) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 123 'float) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
-</span>(typep 123.0 'float) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+(typep 1.23 'float) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 123 'float) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
+</span>(typep 123.0 'float) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div></li>
 
@@ -2375,8 +2375,8 @@ constants <code>most-negative-fixnum</code> and <code>most-postive-fixnum</code>
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Relationship with infinities
-</span>(&lt; -1e+INF most-negative-fixnum most-positive-fixnum 1e+INF) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+<pre class="src src-emacs-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Relationship with infinities
+</span>(&lt; -1e+INF most-negative-fixnum most-positive-fixnum 1e+INF) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div></li>
 </ul>
@@ -2418,8 +2418,8 @@ Whereas <code>?. ≈ 46</code>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(characterp ?f) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(characterp t)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil</span>
+<pre class="src src-emacs-lisp">(characterp ?f) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(characterp t)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil</span>
 </pre>
 </div>
 
@@ -2453,11 +2453,11 @@ and lower case with no dash is a space character.
 A symbol is an object with a name; different objects have different names.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep 'yes 'symbol) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(symbolp 'yes)       <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+<pre class="src src-emacs-lisp">(typep 'yes 'symbol) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(symbolp 'yes)       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-(typep 12   'symbol) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
-</span>(symbolp 12)         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false</span>
+(typep 12   'symbol) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
+</span>(symbolp 12)         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false</span>
 </pre>
 </div>
 
@@ -2479,10 +2479,10 @@ A symbol is an object with a name; different objects have different names.
 </table>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep 'xyz 'bound) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
+<pre class="src src-emacs-lisp">(typep 'xyz 'bound) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
 </span>
-(<span style="font-weight: bold;">setq</span> xyz 123)
-(typep 'xyz 'bound) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+(<span style="color: #a626a4;">setq</span> xyz 123)
+(typep 'xyz 'bound) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 <p>
@@ -2493,11 +2493,11 @@ See this short <a href="https://www.gnu.org/software/emacs/manual/html_node/elis
 <span class="underline">Names have a tremendously flexible syntax.</span>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">setq</span> +*/-_~!@$%^&amp;:&lt;&gt;{}? 23)
-(<span style="font-weight: bold;">setq</span> \+1            23) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Note +1 &#8776; 1, a number.
-</span>(<span style="font-weight: bold;">setq</span> \12            23)
-(<span style="font-weight: bold;">setq</span> this\ is\ woah 23) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Escaping each space!
-</span>(+ this\ is\ woah 1)     <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 24</span>
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">setq</span> +*/-_~!@$%^&amp;:&lt;&gt;{}? 23)
+(<span style="color: #a626a4;">setq</span> \+1            23) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Note +1 &#8776; 1, a number.
+</span>(<span style="color: #a626a4;">setq</span> \12            23)
+(<span style="color: #a626a4;">setq</span> this\ is\ woah 23) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Escaping each space!
+</span>(+ this\ is\ woah 1)     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 24</span>
 </pre>
 </div>
 
@@ -2507,7 +2507,7 @@ If the symbbol name starts with a colon ‘:’, it's called a keyword symbol
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep <span style="font-weight: bold;">:hello</span> 'keyword) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+<pre class="src src-emacs-lisp">(typep <span style="color: #e44649;">:hello</span> 'keyword) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 
@@ -2519,24 +2519,24 @@ Most notably, these include <code>t</code> for true or the top-most type,
 These three evaluate to themselves.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">t      <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>nil    <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil
-</span><span style="font-weight: bold;">:hello</span> <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; :hello
+<pre class="src src-emacs-lisp">t      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>nil    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil
+</span><span style="color: #e44649;">:hello</span> <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; :hello
 </span>
-(<span style="font-weight: bold;">setq</span> t   12) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; Error: Attempt to set a constant symbol
-</span>(<span style="font-weight: bold;">setq</span> nil 12) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; Error: Attempt to set a constant symbol
-</span>(<span style="font-weight: bold;">setq</span> <span style="font-weight: bold;">:x</span>  12) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; Error: Attempt to set a constant symbol
+(<span style="color: #a626a4;">setq</span> t   12) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Error: Attempt to set a constant symbol
+</span>(<span style="color: #a626a4;">setq</span> nil 12) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Error: Attempt to set a constant symbol
+</span>(<span style="color: #a626a4;">setq</span> <span style="color: #e44649;">:x</span>  12) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Error: Attempt to set a constant symbol
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">:x &#8800; 'x
-</span>(set 'x 12) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 12
-</span>x           <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 12
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">:x &#8800; 'x
+</span>(set 'x 12) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 12
+</span>x           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 12
 </span>
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">They're self-evaluating
-</span>(equal t   't)   <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(equal nil 'nil) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(equal <span style="font-weight: bold;">:x</span>  '<span style="font-weight: bold;">:x</span>)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">They're self-evaluating
+</span>(equal t   't)   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(equal nil 'nil) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(equal <span style="color: #e44649;">:x</span>  '<span style="color: #e44649;">:x</span>)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
 </span>
-(equal <span style="font-weight: bold;">:x</span> 'x)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; nil</span>
+(equal <span style="color: #e44649;">:x</span> 'x)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; nil</span>
 </pre>
 </div>
 
@@ -2578,7 +2578,7 @@ The latter is an extensible variant of the former
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep '(1 2 3) 'sequence) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+<pre class="src src-emacs-lisp">(typep '(1 2 3) 'sequence) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 
@@ -2588,9 +2588,9 @@ as a subtype.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep  [1 2 3] 'array)       <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep '(1 2 3) 'cons)        <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep '(1 <span style="font-style: italic;">"2"</span> 'three) 'list) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+<pre class="src src-emacs-lisp">(typep  [1 2 3] 'array)       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep '(1 2 3) 'cons)        <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep '(1 <span style="color: #50a14f;">"2"</span> 'three) 'list) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 
@@ -2606,8 +2606,8 @@ Arrays include strings and vectors.
 </dl>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep <span style="font-style: italic;">"hi"</span> 'string) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep 'hi  'string) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false</span>
+<pre class="src src-emacs-lisp">(typep <span style="color: #50a14f;">"hi"</span> 'string) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep 'hi  'string) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false</span>
 </pre>
 </div></dd>
 
@@ -2640,9 +2640,9 @@ cell are called <i>atoms</i>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">An atom is not a cons.
-</span>(typep 123 'atom) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t
-</span>(typep 'ni 'atom) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+<pre class="src src-emacs-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">An atom is not a cons.
+</span>(typep 123 'atom) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t
+</span>(typep 'ni 'atom) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 
@@ -2704,11 +2704,11 @@ first element is the symbol <code>lambda</code>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(consp     (<span style="font-weight: bold;">lambda</span> (x) x))        <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(functionp (<span style="font-weight: bold;">lambda</span> (x) x))        <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
+<pre class="src src-emacs-lisp">(consp     (<span style="color: #a626a4;">lambda</span> (x) x))        <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(functionp (<span style="color: #a626a4;">lambda</span> (x) x))        <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
 </span>
-(functionp (<span style="font-weight: bold;">lambda</span> is the first)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep (<span style="font-weight: bold;">lambda</span> stuff) 'function)  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true</span>
+(functionp (<span style="color: #a626a4;">lambda</span> is the first)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep (<span style="color: #a626a4;">lambda</span> stuff) 'function)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true</span>
 </pre>
 </div>
 
@@ -2716,8 +2716,8 @@ first element is the symbol <code>lambda</code>.
 It may help to know that a <code>defun</code> just produces an alias for a function:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">  (<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">name</span> (args) <span style="font-style: italic;">"docs"</span> body)
-&#8776; (<span style="font-weight: bold;">defalias</span> (<span style="font-weight: bold;">quote</span> name) (<span style="font-weight: bold;">function</span> (<span style="font-weight: bold;">lambda</span> (args) docs body)))
+<pre class="src src-emacs-lisp">  (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">name</span> (args) <span style="color: #50a14f; font-style: italic;">"docs"</span> body)
+&#8776; (<span style="color: #a626a4;">defalias</span> (<span style="color: #a626a4;">quote</span> name) (<span style="color: #a626a4;">function</span> (<span style="color: #a626a4;">lambda</span> (args) docs body)))
 </pre>
 </div>
 
@@ -2725,12 +2725,12 @@ It may help to know that a <code>defun</code> just produces an alias for a funct
 Here's some more examples.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(typep #'+   'function) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(typep 'nice 'function) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
+<pre class="src src-emacs-lisp">(typep #'+   'function) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(typep 'nice 'function) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
 </span>
-(<span style="font-weight: bold;">defun</span> <span style="font-weight: bold;">it</span> (x) (format <span style="font-style: italic;">"%s"</span> (+1 x)))
-(typep #'it   'function) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(functionp #'it)         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true</span>
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">it</span> (x) (format <span style="color: #50a14f;">"%s"</span> (+1 x)))
+(typep #'it   'function) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(functionp #'it)         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true</span>
 </pre>
 </div>
 </div>
@@ -2748,7 +2748,7 @@ is a function, is considered a macro as long as Emacs Lisp is concerned.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(macrop '(macro (<span style="font-weight: bold;">lambda</span> (x) x))) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true</span>
+<pre class="src src-emacs-lisp">(macrop '(macro (<span style="color: #a626a4;">lambda</span> (x) x))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true</span>
 </pre>
 </div>
 
@@ -2756,8 +2756,8 @@ is a function, is considered a macro as long as Emacs Lisp is concerned.
 Since <code>defmacro</code> produces an alias, as follows,
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">  (<span style="font-weight: bold;">defmacro</span> <span style="font-weight: bold;">name</span> (args) <span style="font-style: italic;">"docs"</span> body)
-&#8776; (<span style="font-weight: bold;">defalias</span> (<span style="font-weight: bold;">quote</span> name) (cons (<span style="font-weight: bold;">quote</span> macro) (<span style="font-weight: bold;">function</span> (<span style="font-weight: bold;">lambda</span> (args) docs body))))
+<pre class="src src-emacs-lisp">  (<span style="color: #a626a4;">defmacro</span> <span style="color: #0184bc;">name</span> (args) <span style="color: #50a14f; font-style: italic;">"docs"</span> body)
+&#8776; (<span style="color: #a626a4;">defalias</span> (<span style="color: #a626a4;">quote</span> name) (cons (<span style="color: #a626a4;">quote</span> macro) (<span style="color: #a626a4;">function</span> (<span style="color: #a626a4;">lambda</span> (args) docs body))))
 </pre>
 </div>
 
@@ -2767,14 +2767,14 @@ gives you a macro you might think its a cons cell of data.
 Fortunately this is not the case:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">defmacro</span> <span style="font-weight: bold;">no-op</span> () )
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defmacro</span> <span style="color: #0184bc;">no-op</span> () )
 
-(macrop #'no-op)    <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; true
-</span>(consp  #'no-op)    <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false; whence it's also not a list.
-</span>(functionp #'no-op) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false
+(macrop #'no-op)    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; true
+</span>(consp  #'no-op)    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false; whence it's also not a list.
+</span>(functionp #'no-op) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false
 </span>
 (typep #'no-op '
-       (satisfies (<span style="font-weight: bold;">lambda</span> (x) (<span style="font-weight: bold;">and</span> (listp x) (equal 'macro (car x)))))) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; false</span>
+       (satisfies (<span style="color: #a626a4;">lambda</span> (x) (<span style="color: #a626a4;">and</span> (listp x) (equal 'macro (car x)))))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; false</span>
 </pre>
 </div>
 
@@ -2821,8 +2821,8 @@ The <code>type-of</code> operator yields the <code>car</code> of instances of su
 </table>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">setq</span> bobert (make-person <span style="font-weight: bold;">:name</span> <span style="font-style: italic;">"bobby"</span> <span style="font-weight: bold;">:age</span> 'too-much))
-(type-of bobert) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; person</span>
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">setq</span> bobert (make-person <span style="color: #e44649;">:name</span> <span style="color: #50a14f;">"bobby"</span> <span style="color: #e44649;">:age</span> 'too-much))
+(type-of bobert) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; person</span>
 </pre>
 </div>
 
@@ -2830,8 +2830,8 @@ The <code>type-of</code> operator yields the <code>car</code> of instances of su
 Componenets may be indexed with <code>aref</code>.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(aref bobert 1)      <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; bobby
-</span>(person-name bobert) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; bobby</span>
+<pre class="src src-emacs-lisp">(aref bobert 1)      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; bobby
+</span>(person-name bobert) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; bobby</span>
 </pre>
 </div>
 
@@ -2839,8 +2839,8 @@ Componenets may be indexed with <code>aref</code>.
 A record is considered a constant for evaulation: Evaluating it yields itself.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(type-of #s(person <span style="font-style: italic;">"mark"</span> twelve)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; person
-</span>(recordp #s(nice))                 <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; t</span>
+<pre class="src src-emacs-lisp">(type-of #s(person <span style="color: #50a14f;">"mark"</span> twelve)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; person
+</span>(recordp #s(nice))                 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; t</span>
 </pre>
 </div>
 </div>
@@ -2858,7 +2858,7 @@ to position, and the result of the computation is of type <code>τ</code>.
 To the best of my knowledge, no one had done this for Emacs Lisp &#x2014;I don't know why.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type 'f ((<span style="font-weight: bold;">:x&#8321;</span> &#963;&#8321;) &#8230; (<span style="font-weight: bold;">:x&#8344;</span> &#963;&#8344;)) (&#964;&#8321; &#8230; &#964;&#8345; &#964;))
+<pre class="src src-emacs-lisp">(declare-type 'f ((<span style="color: #e44649;">:x&#8321;</span> &#963;&#8321;) &#8230; (<span style="color: #e44649;">:x&#8344;</span> &#963;&#8344;)) (&#964;&#8321; &#8230; &#964;&#8345; &#964;))
 </pre>
 </div>
 
@@ -2869,12 +2869,12 @@ approach is to <a href="https://www.gnu.org/software/emacs/manual/html_node/elis
 </p>
 
 <p>
-Below is my attempt: <a id="orgb45adea"><code>declare-type</code></a>. Before you get scared or think it's horrendous, be charitable and
+Below is my attempt: <a id="org46ee11a"><code>declare-type</code></a>. Before you get scared or think it's horrendous, be charitable and
 note that about a third of the following is documentation and a third is local declarations.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="font-weight: bold;">cl-defmacro</span> <span style="font-weight: bold;">declare-type</span> (f key-types <span style="font-weight: bold; text-decoration: underline;">&amp;rest</span> types)
-  <span style="font-style: italic;">"Attach the given list of types to the function &#8216;</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">f</span><span style="font-style: italic;">&#8217;
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">cl-defmacro</span> <span style="color: #0184bc;">declare-type</span> (f key-types <span style="color: #c18401;">&amp;rest</span> types)
+  <span style="color: #50a14f; font-style: italic;">"Attach the given list of types to the function &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">f</span><span style="color: #50a14f; font-style: italic;">&#8217;
    by advising the function to check its arguments&#8217; types
    are equal to the list of given types.
 
@@ -2885,64 +2885,64 @@ note that about a third of the following is documentation and a third is local d
    Using type specifiers we accommodate for unions of types
    and subtypes, etc &#9829;&#8255;&#9829;.
 
-   &#8216;</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">key-types</span><span style="font-style: italic;">&#8217; should be of the shape (:x&#8320; t&#8320; &#8943; :x&#8345; t&#8345;);
+   &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">key-types</span><span style="color: #50a14f; font-style: italic;">&#8217; should be of the shape (:x&#8320; t&#8320; &#8943; :x&#8345; t&#8345;);
     when there are no optional types, use symbol &#8220;:&#8221;.
 
     E.g., (declare-type my-func (:z string :w integer) integer symbol string)
   "</span>
 
-  <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Basic coherency checks. When there aren't optional types, key-types is the &#8220;:&#8221; symbol.
-</span>  (should (<span style="font-weight: bold;">and</span> (listp types) (<span style="font-weight: bold;">or</span> (listp key-types) (symbolp key-types))))
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Basic coherency checks. When there aren't optional types, key-types is the &#8220;:&#8221; symbol.
+</span>  (should (<span style="color: #a626a4;">and</span> (listp types) (<span style="color: #a626a4;">or</span> (listp key-types) (symbolp key-types))))
 
-  (letf* ((pairify (<span style="font-weight: bold;">lambda</span> (xs) (loop for i in xs by #'cddr         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Turn a list of flattenned pairs
-</span>                                      for j in (cdr xs) by #'cddr   <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">into a list of explicit pairs.
-</span>                                      collect (cons i j))))         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">MA: No Lisp method for this!?
+  (letf* ((pairify (<span style="color: #a626a4;">lambda</span> (xs) (loop for i in xs by #'cddr         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Turn a list of flattenned pairs
+</span>                                      for j in (cdr xs) by #'cddr   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">into a list of explicit pairs.
+</span>                                      collect (cons i j))))         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">MA: No Lisp method for this!?
 </span>         (result-type  (car (-take-last 1 types)))
          (types        (-drop-last 1 types))
          (num-of-types (length types))
-         (key-types-og (<span style="font-weight: bold;">unless</span> (symbolp key-types) key-types))
+         (key-types-og (<span style="color: #a626a4;">unless</span> (symbolp key-types) key-types))
          (key-types    (funcall pairify key-types-og))
-         (advice-name  (intern (format <span style="font-style: italic;">"%s-typing-advice"</span> f)))
-         (notify-user  (format <span style="font-style: italic;">"%s now typed %s &#8594; %s &#8594; %s."</span>
+         (advice-name  (intern (format <span style="color: #50a14f;">"%s-typing-advice"</span> f)))
+         (notify-user  (format <span style="color: #50a14f;">"%s now typed %s &#8594; %s &#8594; %s."</span>
                                `,f key-types-og types result-type)))
 
-      `(<span style="font-weight: bold;">progn</span>
-         (<span style="font-weight: bold;">defun</span> ,advice-name (orig-fun <span style="font-weight: bold; text-decoration: underline;">&amp;rest</span> args)
+      `(<span style="color: #a626a4;">progn</span>
+         (<span style="color: #a626a4;">defun</span> ,advice-name (orig-fun <span style="color: #c18401;">&amp;rest</span> args)
 
-           <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Split into positional and key args; optionals not yet considered.
+           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Split into positional and key args; optionals not yet considered.
 </span>           (letf* ((all-args
                      (-split-at
-                       (<span style="font-weight: bold;">or</span> (<span style="font-weight: bold;">--find-index</span> (not (s-blank? (s-shared-start <span style="font-style: italic;">":"</span> (format <span style="font-style: italic;">"%s"</span> it)))) args) ,num-of-types)
-                        args)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The &#8220;or&#8221; is for when there are no keywords provided.
+                       (<span style="color: #a626a4;">or</span> (<span style="color: #a626a4;">--find-index</span> (not (s-blank? (s-shared-start <span style="color: #50a14f;">":"</span> (format <span style="color: #50a14f;">"%s"</span> it)))) args) ,num-of-types)
+                        args)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The &#8220;or&#8221; is for when there are no keywords provided.
 </span>                  (pos-args  (car all-args))
                   (key-args  (funcall ,pairify (cadr all-args)))
                   (fun-result nil)
                   ((symbol-function 'shucks)
-                     (<span style="font-weight: bold;">lambda</span> (e&#964; e g)
-                       (<span style="font-weight: bold;">unless</span> (typep g e&#964;)
-                         (<span style="font-weight: bold;">error</span> <span style="font-style: italic;">"%s: Type mismatch! Expected %s %s &#8800; Given %s %s."</span>
-                                (<span style="font-weight: bold;">function</span> ,f) e&#964; e (type-of g) (prin1-to-string g))))))
+                     (<span style="color: #a626a4;">lambda</span> (e&#964; e g)
+                       (<span style="color: #a626a4;">unless</span> (typep g e&#964;)
+                         (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"%s: Type mismatch! Expected %s %s &#8800; Given %s %s."</span>
+                                (<span style="color: #a626a4;">function</span> ,f) e&#964; e (type-of g) (prin1-to-string g))))))
 
-         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Check the types of positional arguments.
-</span>         (<span style="font-weight: bold;">unless</span> (equal ,num-of-types (length pos-args))
-           (<span style="font-weight: bold;">error</span> <span style="font-style: italic;">"%s: Insufficient number of arguments; given %s, %s, but %s are needed."</span>
-                  (<span style="font-weight: bold;">function</span> ,f) (length pos-args) pos-args ,num-of-types))
-         (loop for (ar ty pos) in (-zip pos-args (<span style="font-weight: bold;">quote</span> ,types) (number-sequence 0 ,num-of-types))
-               do (shucks ty (format <span style="font-style: italic;">"for argument %s"</span> pos) ar))
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Check the types of positional arguments.
+</span>         (<span style="color: #a626a4;">unless</span> (equal ,num-of-types (length pos-args))
+           (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"%s: Insufficient number of arguments; given %s, %s, but %s are needed."</span>
+                  (<span style="color: #a626a4;">function</span> ,f) (length pos-args) pos-args ,num-of-types))
+         (loop for (ar ty pos) in (-zip pos-args (<span style="color: #a626a4;">quote</span> ,types) (number-sequence 0 ,num-of-types))
+               do (shucks ty (format <span style="color: #50a14f;">"for argument %s"</span> pos) ar))
 
-         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Check the types of *present* keys.
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Check the types of *present* keys.
 </span>         (loop for (k . v) in key-args
-               do (shucks (cdr (assoc k (<span style="font-weight: bold;">quote</span> ,key-types))) k v))
+               do (shucks (cdr (assoc k (<span style="color: #a626a4;">quote</span> ,key-types))) k v))
 
-         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Actually execute the orginal function on the provided arguments.
-</span>         (<span style="font-weight: bold;">setq</span> fun-result (apply orig-fun args))
-         (shucks (<span style="font-weight: bold;">quote</span> ,result-type) <span style="font-style: italic;">"for the result type (!)"</span> fun-result)
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Actually execute the orginal function on the provided arguments.
+</span>         (<span style="color: #a626a4;">setq</span> fun-result (apply orig-fun args))
+         (shucks (<span style="color: #a626a4;">quote</span> ,result-type) <span style="color: #50a14f;">"for the result type (!)"</span> fun-result)
 
-         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Return-value should be given to caller.
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Return-value should be given to caller.
 </span>         fun-result))
 
-      <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Register the typing advice and notify user of what was added.
-</span>      (advice-add (<span style="font-weight: bold;">function</span> ,f) <span style="font-weight: bold;">:around</span> (<span style="font-weight: bold;">function</span> ,advice-name))
+      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Register the typing advice and notify user of what was added.
+</span>      (advice-add (<span style="color: #a626a4;">function</span> ,f) <span style="color: #e44649;">:around</span> (<span style="color: #a626a4;">function</span> ,advice-name))
       ,notify-user )))
 </pre>
 </div>
@@ -2958,13 +2958,13 @@ function-types. )
 <b>We accidentally forgot to consider an argument.</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8321; (<span style="font-weight: bold;">:z</span> string <span style="font-weight: bold;">:w</span> list) integer symbol string)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8321; now typed (:z string :w integer) &#8594; (integer symbol) &#8594; string.
+<pre class="src src-emacs-lisp">(declare-type f&#8321; (<span style="color: #e44649;">:z</span> string <span style="color: #e44649;">:w</span> list) integer symbol string)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8321; now typed (:z string :w integer) &#8594; (integer symbol) &#8594; string.
 </span>
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8321;</span> (x y <span style="font-weight: bold; text-decoration: underline;">&amp;key</span> z w) (format <span style="font-style: italic;">"%s"</span> x))
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8321; now defined
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8321;</span> (x y <span style="color: #c18401;">&amp;key</span> z w) (format <span style="color: #50a14f;">"%s"</span> x))
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8321; now defined
 </span>
-(f&#8321; 'x) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8321;: Insufficient number of arguments; given 2, (x), but 3 are needed.</span>
+(f&#8321; 'x) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8321;: Insufficient number of arguments; given 2, (x), but 3 are needed.</span>
 </pre>
 </div>
 <p>
@@ -2975,11 +2975,11 @@ The type declaration said we needed 3 arguments, but we did not consider one of 
 <b>We accidentally returned the wrong value.</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8322; (<span style="font-weight: bold;">:z</span> string <span style="font-weight: bold;">:w</span> list) integer symbol string)
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8322;</span> (x y <span style="font-weight: bold; text-decoration: underline;">&amp;key</span> z w) x)
+<pre class="src src-emacs-lisp">(declare-type f&#8322; (<span style="color: #e44649;">:z</span> string <span style="color: #e44649;">:w</span> list) integer symbol string)
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8322;</span> (x y <span style="color: #c18401;">&amp;key</span> z w) x)
 
 (f&#8322; 144 'two)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8322;: Type mismatch! Expected string for the result type (!) &#8800; Given integer 144.</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8322;: Type mismatch! Expected string for the result type (!) &#8800; Given integer 144.</span>
 </pre>
 </div>
 
@@ -2987,11 +2987,11 @@ The type declaration said we needed 3 arguments, but we did not consider one of 
 <b>We accidentally forgot to supply an argument.</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8323; (<span style="font-weight: bold;">:z</span> string <span style="font-weight: bold;">:w</span> list) integer symbol string)
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8323;</span> (x y <span style="font-weight: bold; text-decoration: underline;">&amp;key</span> z w) (format <span style="font-style: italic;">"%s"</span> x))
+<pre class="src src-emacs-lisp">(declare-type f&#8323; (<span style="color: #e44649;">:z</span> string <span style="color: #e44649;">:w</span> list) integer symbol string)
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8323;</span> (x y <span style="color: #c18401;">&amp;key</span> z w) (format <span style="color: #50a14f;">"%s"</span> x))
 
 (f&#8323; 144)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8323;: Insufficient number of arguments; given 1, (144), but 2 are needed.</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8323;: Insufficient number of arguments; given 1, (144), but 2 are needed.</span>
 </pre>
 </div>
 
@@ -2999,11 +2999,11 @@ The type declaration said we needed 3 arguments, but we did not consider one of 
 <b>A positional argument is supplied of the wrong type.</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(f&#8323; 'one <span style="font-style: italic;">"two"</span>)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658;  f&#8323;: Type mismatch! Expected integer for argument 0 &#8800; Given symbol one.
+<pre class="src src-emacs-lisp">(f&#8323; 'one <span style="color: #50a14f;">"two"</span>)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658;  f&#8323;: Type mismatch! Expected integer for argument 0 &#8800; Given symbol one.
 </span>
-(f&#8323; 144 <span style="font-style: italic;">"two"</span>)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8323;: Type mismatch! Expected symbol for argument 1 &#8800; Given string "two".</span>
+(f&#8323; 144 <span style="color: #50a14f;">"two"</span>)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8323;: Type mismatch! Expected symbol for argument 1 &#8800; Given string "two".</span>
 </pre>
 </div>
 <p>
@@ -3014,16 +3014,16 @@ Notice: When multiple positional arguments have type-errors, the errors are repo
 <b>A keyword argument is supplied of the wrong type.</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(f&#8323; 1 'two <span style="font-weight: bold;">:z</span> 'no&#8320; <span style="font-weight: bold;">:w</span> 'no&#8321;)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8323;: Type mismatch! Expected string :z &#8800; Given symbol no&#8320;.
+<pre class="src src-emacs-lisp">(f&#8323; 1 'two <span style="color: #e44649;">:z</span> 'no&#8320; <span style="color: #e44649;">:w</span> 'no&#8321;)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8323;: Type mismatch! Expected string :z &#8800; Given symbol no&#8320;.
 </span>
-(f&#8323; 1 'two <span style="font-weight: bold;">:z</span> <span style="font-style: italic;">"ok"</span> <span style="font-weight: bold;">:w</span> 'no&#8321;)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8323;: Type mismatch! Expected string :w &#8800; Given symbol no&#8321;.
+(f&#8323; 1 'two <span style="color: #e44649;">:z</span> <span style="color: #50a14f;">"ok"</span> <span style="color: #e44649;">:w</span> 'no&#8321;)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8323;: Type mismatch! Expected string :w &#8800; Given symbol no&#8321;.
 </span>
-(f&#8323; 1 'two <span style="font-weight: bold;">:z</span> <span style="font-style: italic;">"ok"</span> <span style="font-weight: bold;">:w</span> 23)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8323;: Type mismatch! Expected string :w &#8800; Given integer 23.
+(f&#8323; 1 'two <span style="color: #e44649;">:z</span> <span style="color: #50a14f;">"ok"</span> <span style="color: #e44649;">:w</span> 23)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8323;: Type mismatch! Expected string :w &#8800; Given integer 23.
 </span>
-(f&#8323; 1 'two <span style="font-weight: bold;">:z</span> <span style="font-style: italic;">"ok"</span> <span style="font-weight: bold;">:w</span> '(a b 1 2)) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; okay; no type-error.</span>
+(f&#8323; 1 'two <span style="color: #e44649;">:z</span> <span style="color: #50a14f;">"ok"</span> <span style="color: #e44649;">:w</span> '(a b 1 2)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; okay; no type-error.</span>
 </pre>
 </div>
 
@@ -3032,13 +3032,13 @@ Notice: When multiple positional arguments have type-errors, the errors are repo
 </p>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">(declare-type f&#8324; : integer symbol string)
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8324;</span> (x y <span style="font-weight: bold; text-decoration: underline;">&amp;key</span> z w) (format <span style="font-style: italic;">"%s"</span> x))
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8324;</span> (x y <span style="color: #c18401;">&amp;key</span> z w) (format <span style="color: #50a14f;">"%s"</span> x))
 
-(f&#8324; 144 'two <span style="font-weight: bold;">:z</span> <span style="font-style: italic;">"bye"</span>)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658;  f&#8324;: Type mismatch! Expected nil :z &#8800; Given string "bye".
-</span><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">( We shouldn't have any keyword :z according to the type declaration! )
+(f&#8324; 144 'two <span style="color: #e44649;">:z</span> <span style="color: #50a14f;">"bye"</span>)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658;  f&#8324;: Type mismatch! Expected nil :z &#8800; Given string "bye".
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">( We shouldn't have any keyword :z according to the type declaration! )
 </span>
-(f&#8324; 144 'two) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; "144"</span>
+(f&#8324; 144 'two) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; "144"</span>
 </pre>
 </div>
 
@@ -3046,15 +3046,15 @@ Notice: When multiple positional arguments have type-errors, the errors are repo
 <b>We can incorporate type specfiers such as unions!</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8325; : (<span style="font-weight: bold;">or</span> integer string) string)
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8325;</span> (x) (format <span style="font-style: italic;">"%s"</span> x))
+<pre class="src src-emacs-lisp">(declare-type f&#8325; : (<span style="color: #a626a4;">or</span> integer string) string)
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8325;</span> (x) (format <span style="color: #50a14f;">"%s"</span> x))
 
-(f&#8325; 144)     <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; "144"
-</span>(f&#8325; <span style="font-style: italic;">"neato"</span>) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; "neato"
+(f&#8325; 144)     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; "144"
+</span>(f&#8325; <span style="color: #50a14f;">"neato"</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; "neato"
 </span>
 (f&#8325; 'shaka-when-the-walls-fell)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8325;: Type mismatch! Expected (or integer string) for argument 0
-</span><span style="font-weight: bold; font-style: italic;">;;       </span><span style="font-weight: bold; font-style: italic;">&#8800; Given symbol shaka-when-the-walls-fell.</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8325;: Type mismatch! Expected (or integer string) for argument 0
+</span><span style="color: #a0a1a7; font-weight: bold;">;;       </span><span style="color: #a0a1a7;">&#8800; Given symbol shaka-when-the-walls-fell.</span>
 </pre>
 </div>
 
@@ -3062,18 +3062,18 @@ Notice: When multiple positional arguments have type-errors, the errors are repo
 <b>No positional arguments but a complex optional argument!</b>
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8326; (<span style="font-weight: bold;">:z</span> (satisfies (<span style="font-weight: bold;">lambda</span> (it) (<span style="font-weight: bold;">and</span> (integerp it) (= 0 (mod it 5))))))
+<pre class="src src-emacs-lisp">(declare-type f&#8326; (<span style="color: #e44649;">:z</span> (satisfies (<span style="color: #a626a4;">lambda</span> (it) (<span style="color: #a626a4;">and</span> (integerp it) (= 0 (mod it 5))))))
                  character)
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8326;</span> (<span style="font-weight: bold; text-decoration: underline;">&amp;key</span> z) ?A)
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8326;</span> (<span style="color: #c18401;">&amp;key</span> z) ?A)
 
-(f&#8326; 'hi)     <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658;  Keyword argument 144 not one of (:z)
-</span>(f&#8326;)         <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 65; i.e., the character &#8216;</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">A</span><span style="font-weight: bold; font-style: italic;">&#8217;
-</span>(f&#8326; <span style="font-weight: bold;">:z</span> 6)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658;  f&#8326;: Type mismatch!
-</span><span style="font-weight: bold; font-style: italic;">;;    </span><span style="font-weight: bold; font-style: italic;">Expected (satisfies (lambda (it) (and (integerp it) (= 0 (mod it 5))))) :z
-</span><span style="font-weight: bold; font-style: italic;">;;    </span><span style="font-weight: bold; font-style: italic;">&#8800; Given integer 6.
+(f&#8326; 'hi)     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658;  Keyword argument 144 not one of (:z)
+</span>(f&#8326;)         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 65; i.e., the character &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">A</span><span style="color: #a0a1a7;">&#8217;
+</span>(f&#8326; <span style="color: #e44649;">:z</span> 6)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658;  f&#8326;: Type mismatch!
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">Expected (satisfies (lambda (it) (and (integerp it) (= 0 (mod it 5))))) :z
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">&#8800; Given integer 6.
 </span>
-(f&#8326; <span style="font-weight: bold;">:z</span> 10) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 65; i.e., the expected output since 10 mod 5 &#8776; 0 &amp; so 10 is valid input.</span>
+(f&#8326; <span style="color: #e44649;">:z</span> 10) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 65; i.e., the expected output since 10 mod 5 &#8776; 0 &amp; so 10 is valid input.</span>
 </pre>
 </div>
 
@@ -3082,16 +3082,16 @@ Notice: When multiple positional arguments have type-errors, the errors are repo
 essentially a pre-condition; we can do the same on positional arguments.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8327; : (satisfies (<span style="font-weight: bold;">lambda</span> (it) (= it 5)))
+<pre class="src src-emacs-lisp">(declare-type f&#8327; : (satisfies (<span style="color: #a626a4;">lambda</span> (it) (= it 5)))
                    integer)
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8327;</span> (n) n)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The identity on 5 function; and undefined otherwise.
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8327;</span> (n) n)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The identity on 5 function; and undefined otherwise.
 </span>
 (f&#8327; 4)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; f&#8327;: Type mismatch! Expected (satisfies (lambda (it) (= it 5))) for argument 0
-</span><span style="font-weight: bold; font-style: italic;">;;       </span><span style="font-weight: bold; font-style: italic;">&#8800; Given integer 4.
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; f&#8327;: Type mismatch! Expected (satisfies (lambda (it) (= it 5))) for argument 0
+</span><span style="color: #a0a1a7; font-weight: bold;">;;       </span><span style="color: #a0a1a7;">&#8800; Given integer 4.
 </span>
-(f&#8327; 5) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 5</span>
+(f&#8327; 5) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 5</span>
 </pre>
 </div>
 
@@ -3101,23 +3101,23 @@ Given an integer greater than 5, we present an integer greater than 2; i.e.,
 this is a constructive proof that \(∀ n • n > 5 ⇒ n > 2\).
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(declare-type f&#8328; : (satisfies (<span style="font-weight: bold;">lambda</span> (in)  (&gt; in 5)))
-                   (satisfies (<span style="font-weight: bold;">lambda</span> (out) (&gt; out 2))))
-(<span style="font-weight: bold;">cl-defun</span> <span style="font-weight: bold;">f&#8328;</span> (n) n)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">The identity on 5 function; and undefined otherwise.
+<pre class="src src-emacs-lisp">(declare-type f&#8328; : (satisfies (<span style="color: #a626a4;">lambda</span> (in)  (&gt; in 5)))
+                   (satisfies (<span style="color: #a626a4;">lambda</span> (out) (&gt; out 2))))
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">f&#8328;</span> (n) n)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The identity on 5 function; and undefined otherwise.
 </span>
 (f&#8328; 4)
-<span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658;  f&#8328;: Type mismatch! Expected (satisfies (lambda (in) (&gt; in 5))) for argument 0
-</span><span style="font-weight: bold; font-style: italic;">;;        </span><span style="font-weight: bold; font-style: italic;">&#8800; Given integer 4.
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658;  f&#8328;: Type mismatch! Expected (satisfies (lambda (in) (&gt; in 5))) for argument 0
+</span><span style="color: #a0a1a7; font-weight: bold;">;;        </span><span style="color: #a0a1a7;">&#8800; Given integer 4.
 </span>
-(f&#8328; 72) <span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">&#8658; 72; since indeed 72 &gt; 5 for the input, and clearly 72 &gt; 2 for the output.</span>
+(f&#8328; 72) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; 72; since indeed 72 &gt; 5 for the input, and clearly 72 &gt; 2 for the output.</span>
 </pre>
 </div>
 
 <p>
 As it currently stands we cannot make any explicit references between the inputs
 and the output, but that's an easy fix: Simply add a local function <code>old</code> to the
-<a href="#orgb45adea"><code>declare-type</code></a> macro which is intentionally exposed so that it can be used in the
+<a href="#org46ee11a"><code>declare-type</code></a> macro which is intentionally exposed so that it can be used in the
 type declarations to refer to the ‘old’, or initial, values provided to the function.
 Additionally, one could also add keyword arguments <code>:requires</code> and <code>:ensures</code>
 for a more sophisticated pre- and post-condition framework.
@@ -3126,7 +3126,7 @@ for a more sophisticated pre- and post-condition framework.
 
 <p>
 Here's a fun exercise: Recast the <a href="https://liquid.kosmikus.org/01-intro.html#/what-is-liquid-haskell">Liquid Haskell</a> examples in Lisp using this
-<a href="#orgb45adea"><code>declare-type</code></a> form.
+<a href="#org46ee11a"><code>declare-type</code></a> form.
 </p>
 </div>
 </div>
@@ -3198,7 +3198,7 @@ and using the   programming language Common Lisp.</li>
 Lisps attract a certain kind of personality.</li>
 </ul></li>
 
-<li>A <a id="org9309bd6">bunch of papers</a> on <a href="#org498cfa9">polymorphic</a> (modal) type systems
+<li>A <a id="org942681e">bunch of papers</a> on <a href="#orgcbb075d">polymorphic</a> (modal) type systems
 for Lisp-like multi-staged languages:
 <a href="http://ropas.snu.ac.kr/lib/dock/KiYiCa2005.pdf">This</a> is generic, <a href="https://www.iro.umontreal.ca/~monnier/typer-jfla2019.pdf">this</a> is ML + Scheme, <a href="https://link.springer.com/chapter/10.1007/978-1-4615-2836-4_8">this</a> for compile-time typing,
 and <a href="https://hal.archives-ouvertes.fr/hal-01380792/document">this</a> one “allows the programmer to declaratively express the types of
@@ -3207,7 +3207,7 @@ and <a href="https://hal.archives-ouvertes.fr/hal-01380792/document">this</a> on
 <li><a href="http://lambda-the-ultimate.org/node/5426">Type Systems as Macros</a>
 <ul class="org-ul">
 <li><p>
-After defining <a href="#orgb45adea"><code>declare-type</code></a> I thought the slogan “types by macros” sounded nifty;
+After defining <a href="#org46ee11a"><code>declare-type</code></a> I thought the slogan “types by macros” sounded nifty;
 Googling it led me to this paper where the Racket is endowed with types.
 </p>
 

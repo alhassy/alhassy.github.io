@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-05-06 Wed 03:02 -->
+<!-- 2026-05-06 Wed 03:44 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>💐 Making VSCode itself a Java REPL 🔁</title>
@@ -1408,10 +1408,10 @@
 <h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org12a10e1">1. How do people usually code?</a></li>
-<li><a href="#org1208ca5">2. If only we could have our cake, and eat it too! 🍰</a></li>
-<li><a href="#org4ab2aeb">3. Wait, how does the above JavaScript work?</a></li>
-<li><a href="#orgfd52ecb">4. Technically speaking, how is VSCode <i>itself</i> the REPL?</a></li>
+<li><a href="#org148c430">1. How do people usually code?</a></li>
+<li><a href="#org34507e3">2. If only we could have our cake, and eat it too! 🍰</a></li>
+<li><a href="#org357a5f6">3. Wait, how does the above JavaScript work?</a></li>
+<li><a href="#org883fbc5">4. Technically speaking, how is VSCode <i>itself</i> the REPL?</a></li>
 </ul>
 </div>
 </div>
@@ -1429,8 +1429,8 @@ execute arbitrary JS that alters VSCode on-the-fly.  <i>(Inspired by using Emacs
 The relevant docs show how to make a similar REPL for <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1417-L1420">Python</a>, <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1459-L1462">Ruby</a>, <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1475-L1479">Clojure</a>, <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1490-L1494">Common Lisp</a>, <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1509-L1515">JavaScript</a>, <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1527-L1536">Typescript</a>,
 <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1553-L1557">Haskell</a>, and of-course <a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1575-L1585">Java</a>.
 </p>
-<div id="outline-container-org12a10e1" class="outline-2">
-<h2 id="org12a10e1"><span class="section-number-2">1.</span> <a href="#org12a10e1">How do people usually code?</a></h2>
+<div id="outline-container-org148c430" class="outline-2">
+<h2 id="org148c430"><span class="section-number-2">1.</span> <a href="#org148c430">How do people usually code?</a></h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Either you,
@@ -1451,8 +1451,8 @@ features that your code editor provides 🧟‍
 </p>
 </div>
 </div>
-<div id="outline-container-org1208ca5" class="outline-2">
-<h2 id="org1208ca5"><span class="section-number-2">2.</span> <a href="#org1208ca5">If only we could have our cake, and eat it too! 🍰</a></h2>
+<div id="outline-container-org34507e3" class="outline-2">
+<h2 id="org34507e3"><span class="section-number-2">2.</span> <a href="#org34507e3">If only we could have our cake, and eat it too! 🍰</a></h2>
 <div class="outline-text-2" id="text-2">
 <p>
 With a few lines of JavaScript, to alter VSCode, we can get both approaches! No need to switch between the two anymore!
@@ -1482,13 +1482,13 @@ Stick the following code in there; this code will be run every time you open VSC
 </ul>
 
 <div class="org-src-container">
-<pre class="src src-javascript">commands[<span style="font-style: italic;">'Evaluate: Java'</span>] = {
- <span style="font-style: italic;">'ctrl+x ctrl+e'</span>: E.REPL({
-   command: <span style="font-style: italic;">'/usr/bin/jshell'</span>,     <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">Ensure this points to wherever you have JShell
-</span>   prompt: <span style="font-style: italic;">'jshell&gt;'</span>,
-   errorMarkers: [<span style="font-style: italic;">/Error:/</span>, <span style="font-style: italic;">/\|\s*\^-*/</span>, <span style="font-style: italic;">/\|\s+Exception/</span>, <span style="font-style: italic;">/\|\s+at/</span>, <span style="font-style: italic;">/cannot find symbol/</span>, <span style="font-style: italic;">/symbol:/</span>],
-   echo: E.overlay,   <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">For notification-style output, change this to:  E.message
-</span>   stdout: result =&gt; result.includes(<span style="font-style: italic;">' ==&gt; '</span>) ? result.replace(<span style="font-style: italic;">'==&gt;'</span>, <span style="font-style: italic;">'&#11157;'</span>) : <span style="font-style: italic;">`&#11157; ${result} `</span>
+<pre class="src src-javascript">commands[<span style="color: #50a14f;">'Evaluate: Java'</span>] = {
+ <span style="color: #50a14f;">'ctrl+x ctrl+e'</span>: E.REPL({
+   command: <span style="color: #50a14f;">'/usr/bin/jshell'</span>,     <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Ensure this points to wherever you have JShell
+</span>   prompt: <span style="color: #50a14f;">'jshell&gt;'</span>,
+   errorMarkers: [<span style="color: #50a14f;">/Error:/</span>, <span style="color: #50a14f;">/\|\s*\^-*/</span>, <span style="color: #50a14f;">/\|\s+Exception/</span>, <span style="color: #50a14f;">/\|\s+at/</span>, <span style="color: #50a14f;">/cannot find symbol/</span>, <span style="color: #50a14f;">/symbol:/</span>],
+   echo: E.overlay,   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">For notification-style output, change this to:  E.message
+</span>   stdout: result =&gt; result.includes(<span style="color: #50a14f;">' ==&gt; '</span>) ? result.replace(<span style="color: #50a14f;">'==&gt;'</span>, <span style="color: #50a14f;">'&#11157;'</span>) : <span style="color: #50a14f;">`&#11157; ${result} `</span>
  })}
 </pre>
 </div></li>
@@ -1503,8 +1503,8 @@ Now you can select any Java code and press Ctrl+X Ctrl+E to evaluate it! 🥳
 </ol>
 </div>
 </div>
-<div id="outline-container-org4ab2aeb" class="outline-2">
-<h2 id="org4ab2aeb"><span class="section-number-2">3.</span> <a href="#org4ab2aeb">Wait, how does the above JavaScript work?</a></h2>
+<div id="outline-container-org357a5f6" class="outline-2">
+<h2 id="org357a5f6"><span class="section-number-2">3.</span> <a href="#org357a5f6">Wait, how does the above JavaScript work?</a></h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Look at <a href="https://github.com/alhassy/easy-extensibility/blob/main/vscodejs/index.js#L1404-L1438">the docs</a>!
@@ -1529,8 +1529,8 @@ Look at <a href="https://github.com/alhassy/easy-extensibility/blob/main/vscodej
 </table>
 </div>
 </div>
-<div id="outline-container-orgfd52ecb" class="outline-2">
-<h2 id="orgfd52ecb"><span class="section-number-2">4.</span> <a href="#orgfd52ecb">Technically speaking, how is VSCode <i>itself</i> the REPL?</a></h2>
+<div id="outline-container-org883fbc5" class="outline-2">
+<h2 id="org883fbc5"><span class="section-number-2">4.</span> <a href="#org883fbc5">Technically speaking, how is VSCode <i>itself</i> the REPL?</a></h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Let's do what math-nerds call <i>proof by definition-chasing:</i>
@@ -1554,7 +1554,7 @@ Bye! 👋 🥳
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Musa Al-hassy</p>
-<p class="date">Created: 2026-05-06 Wed 03:02</p>
+<p class="date">Created: 2026-05-06 Wed 03:44</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
