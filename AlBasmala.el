@@ -630,11 +630,8 @@ a :CUSTOM_ID: property we can build the vendored filename from."
       (while (re-search-forward "^\\* " nil t)
         (unless (org-element-property :commentedp (org-element-at-point))
           (let ((redirect (org-entry-get (point) "REDIRECT"))
-                (slug     (org-entry-get (point) "CUSTOM_ID"))
-                (tags     (mapcar #'downcase (org-get-tags))))
-            (when (and redirect slug
-                       (not (member "draft" tags))
-                       (not (blog--already-vendored-p redirect)))
+                (slug     (org-entry-get (point) "CUSTOM_ID")))
+            (when (and redirect slug (not (blog--already-vendored-p redirect)))
               (let ((vendored (blog--vendor-one-redirect slug redirect)))
                 (org-entry-put (point) "REDIRECT" vendored)
                 (message "=> Vendored redirect for %s ← %s" slug redirect)))))
@@ -730,7 +727,7 @@ the relevant subset of blog-posts — no copy-then-delete."
                    (kill-buffer buf)))))
     (export-page blog-posts
                  (blog--greeting)
-                 (concat-to-dir blog-publish-directory "index.html")
+                 (concat blog-publish-directory "index.html")
                  "rss.xml")
     (dolist (tag blog-tags)
       (message "=> Generating tag page: %s..." tag)
