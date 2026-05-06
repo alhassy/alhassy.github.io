@@ -1545,18 +1545,13 @@ file-level keywords so that blog--style-setup runs unchanged."
                 (save-buffer))))
 
           ;; 3. Export through the full blog--style-setup pipeline.
+          ;;    Write next to the source (blog-posts-directory/<slug>.html);
+          ;;    .html files are gitignored so this is safe locally.
+          ;;    blog-publish-all handles copying to public/ separately.
           (with-current-buffer tmp-buf
             (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-            (let ((default-directory (file-name-directory tmp-org)))
-              (org-html-export-to-html))
+            (org-export-to-file 'html (expand-file-name (concat slug ".html") blog-posts-directory))
             (remove-hook 'org-export-before-processing-hook #'blog--style-setup))
-
-          ;; 4. Move the resulting HTML to blog-publish-directory/<slug>.html.
-          (let ((html-out (concat (file-name-sans-extension tmp-org) ".html")))
-            (when (file-exists-p html-out)
-              (rename-file html-out
-                           (expand-file-name (concat slug ".html") blog-publish-directory)
-                           t)))
 
           ;; 5. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
@@ -1568,9 +1563,7 @@ file-level keywords so that blog--style-setup runs unchanged."
       (when (buffer-live-p tmp-buf)
         (with-current-buffer tmp-buf (set-buffer-modified-p nil))
         (kill-buffer tmp-buf))
-      (when (file-exists-p tmp-org) (delete-file tmp-org))
-      (let ((tmp-html (concat (file-name-sans-extension tmp-org) ".html")))
-        (when (file-exists-p tmp-html) (delete-file tmp-html))))))
+      (when (file-exists-p tmp-org) (delete-file tmp-org)))))
 
 (defun blog--publish-multiple-articles (container-file)
   "Publish each top-level heading of CONTAINER-FILE as a separate HTML article.
