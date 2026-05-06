@@ -2542,6 +2542,19 @@ earns us nothing here."</span></span><span class="org-block">
            (@url post))
    </span><span class="org-block"><span class="string">"\n@@html:&lt;hr&gt;@@\n"</span></span><span class="org-block">))
 
+(</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--toc-block</span></span><span class="org-block"> (posts)
+  </span><span class="org-block"><span class="doc">"Return a #+begin_export html block listing every post as a linked TOC entry."</span></span><span class="org-block">
+  (concat
+   </span><span class="org-block"><span class="string">"#+begin_export html\n"</span></span><span class="org-block">
+   </span><span class="org-block"><span class="string">"&lt;details id=\"articles-toc\" style=\"text-align:center;<a href="margin:1em">margin:1em</a> 0\"&gt;\n"</span></span><span class="org-block">
+   </span><span class="org-block"><span class="string">"&lt;summary style=\"cursor:pointer;font-size:1.1em;font-weight:bold\"&gt;Articles on this page&lt;/summary&gt;\n"</span></span><span class="org-block">
+   </span><span class="org-block"><span class="string">"&lt;ol style=\"display:inline-block;text-align:left;margin-top:0.5em\"&gt;\n"</span></span><span class="org-block">
+   (mapconcat (</span><span class="org-block"><span class="keyword">lambda</span></span><span class="org-block"> (post)
+                (format </span><span class="org-block"><span class="string">"&lt;li&gt;&lt;a href=\"%s\"&gt;%s&lt;/a&gt;&lt;/li&gt;\n"</span></span><span class="org-block"> (@url post) (@title post)))
+              posts </span><span class="org-block"><span class="string">""</span></span><span class="org-block">)
+   </span><span class="org-block"><span class="string">"&lt;/ol&gt;\n&lt;/details&gt;\n"</span></span><span class="org-block">
+   </span><span class="org-block"><span class="string">"#+end_export\n"</span></span><span class="org-block">))
+
 (</span><span class="org-block"><span class="keyword">defun</span></span><span class="org-block"> </span><span class="org-block"><span class="function-name">blog--make-page-buffer</span></span><span class="org-block"> (posts greeting export-file-name </span><span class="org-block"><span class="type">&amp;optional</span></span><span class="org-block"> rss-file)
   </span><span class="org-block"><span class="doc">"Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
 RSS-FILE is the filename of the associated feed (\"rss.xml\" for the index,
@@ -2561,6 +2574,8 @@ Caller is responsible for killing the buffer when done."</span></span><span clas
        </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;\n"</span></span><span class="org-block">
        greeting </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">
        (format </span><span class="org-block"><span class="string">"#+html: &lt;p style=\"text-align:center;\"&gt;&lt;a href=\"%s\"&gt;&#128225; Subscribe via RSS&lt;/a&gt;&lt;/p&gt;\n"</span></span><span class="org-block"> rss)
+       </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;\n"</span></span><span class="org-block">
+       (blog--toc-block posts)
        </span><span class="org-block"><span class="string">"#+html: &lt;br&gt;\n"</span></span><span class="org-block">
        (mapconcat #'blog--card posts </span><span class="org-block"><span class="string">"\n"</span></span><span class="org-block">)
        </span><span class="org-block"><span class="string">"\n#+begin_export html\n"</span></span><span class="org-block">
