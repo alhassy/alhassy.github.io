@@ -7,17 +7,35 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+# Serialise deploys so two quick master pushes don't race on the
+# gh-pages force-push.  Queue rather than cancel — every deploy lands.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# Build .org → public/, force-push to gh-pages on master.  See README.
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Emacs
         uses: purcell/setup-emacs@v8.0
         with:
           version: 30.1
+
+      - name: Cache Emacs packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.emacs.d/elpa
+          key: elpa-${{ runner.os }}-emacs30.1-${{ hashFiles('.github/workflows/ci.yml') }}
 
       - name: Install Emacs package dependencies
         run: |
@@ -25,52 +43,8 @@ jobs:
             --eval "(require 'package)" \
             --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
             --eval "(package-initialize)" \
-            --eval "(package-refresh-contents)" \
-            --eval "(package-install 'dash)" \
-            --eval "(package-install 'f)" \
-            --eval "(package-install 's)" \
-            --eval "(package-install 'htmlize)" \
-            --eval "(package-install 'org-special-block-extras)" \
-            --eval "(package-install 'org-contrib)" \
-            --eval "(package-install 'org-modern)"
-
-  # Build every article and deploy public/ to the gh-pages branch.
-  #
-  # How this works:
-  #   master branch  →  only .org sources + config (clean; no HTML clutter)
-  #   CI builds all posts, writes HTML to public/, copies CSS/images there too.
-  #   peaceiris/actions-gh-pages force-pushes public/ contents to gh-pages branch.
-  #   GitHub Pages is configured to serve from gh-pages (root /).
-  #   Result: alhassy.com/foo   (flat URL, no /public/ prefix)
-  #
-  # You never commit HTML to master. You never touch gh-pages directly.
-  deploy:
-    needs: validate
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Emacs
-        uses: purcell/setup-emacs@v8.0
-        with:
-          version: 30.1
-
-      - name: Install Emacs package dependencies
-        run: |
-          emacs --batch \
-            --eval "(require 'package)" \
-            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
-            --eval "(package-initialize)" \
-            --eval "(package-refresh-contents)" \
-            --eval "(package-install 'dash)" \
-            --eval "(package-install 'f)" \
-            --eval "(package-install 's)" \
-            --eval "(package-install 'htmlize)" \
-            --eval "(package-install 'org-special-block-extras)" \
-            --eval "(package-install 'org-contrib)" \
-            --eval "(package-install 'org-modern)"
+            --eval "(unless (file-exists-p (expand-file-name \"archives/melpa\" package-user-dir)) (package-refresh-contents))" \
+            --eval "(dolist (p '(dash f s htmlize org-special-block-extras org-contrib org-modern)) (unless (package-installed-p p) (package-install p)))"
 
       - name: Build all articles
         run: |
@@ -88,6 +62,7 @@ jobs:
             --eval "(blog-publish-all)"
 
       - name: Deploy public/ to gh-pages
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
