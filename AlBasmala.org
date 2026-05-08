@@ -3072,25 +3072,42 @@ Guarantees [Org source | xwidget] side-by-side layout:
         (xwidget-webkit-browse-url url)
         (select-window org-win)))))
 
+(defun blog--preview-standalone ()
+  "Export the current standalone Org buffer to HTML and open it in xwidget.
+
+Called from the buffer-local after-save-hook installed by blog-preview.
+Mirrors blog-preview-subtree but for files without #+article_style: multiple."
+  (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html")))
+    (message "=> Previewing %s..." (buffer-name))
+    (add-hook 'org-export-before-processing-hook #'blog--style-setup)
+    (org-export-to-file 'html html)
+    (when (file-exists-p html)
+      (blog--show-preview (concat "file://" html)))))
+
 (cl-defun blog-preview ()
   "Enable preview-on-save, dispatching on #+article_style.
 
-For standalone files (default): existing behaviour — hooks blog--style-setup and
-enables org-preview-html-mode so every C-x C-s regenerates the preview.
+For standalone files (default): installs a buffer-local after-save-hook that
+exports via blog--style-setup and opens the result in xwidget (bypassing
+org-preview-html-mode, which triggers a macOS download dialog for file:// URLs).
 
 For multiple-style files: adds a buffer-local after-save-hook that calls
 blog-preview-subtree, which previews just the heading at point."
   (interactive)
+  ;; Kill any stale org-preview-html-mode — it puts org-preview-html-refresh on
+  ;; after-save-hook, and that errors when --html-file is nil (our path never sets it).
+  (when (bound-and-true-p org-preview-html-mode)
+    (org-preview-html-mode -1))
+  (remove-hook 'after-save-hook #'org-preview-html-refresh t)
   ;; Ensure no xwidget buffer lingers — otherwise Emacs might hang on re-preview.
   (let ((kill-buffer-query-functions nil))
     (mapc #'kill-buffer (blog--xwidget-buffers)))
   (if (blog--multiple-style-p)
       ;; Multiple-style: preview heading at point on every save (buffer-local hook).
       (add-hook 'after-save-hook #'blog-preview-subtree nil t)
-    ;; Standalone: existing behaviour.
-    (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-    (setq org-preview-html-viewer 'xwidget)
-    (org-preview-html-mode)))
+    ;; Standalone: bypass org-preview-html-mode (file:// download bug on macOS).
+    (add-hook 'after-save-hook #'blog--preview-standalone nil t)
+    (blog--preview-standalone)))
 
 (defun blog-preview-subtree ()
   "Preview the top-level heading at point as a standalone blog article.
@@ -3853,35 +3870,6 @@ of two items is the first precisely when the maximum of the two is the second/
 ---d'uh!
 #+end_org-demo
 
-#+html: <br>
-#+begin_details "The script that Org loads by default"
-#+begin_src emacs-lisp -n :noweb-ref my-html-header :tangle no
-"<script type=\"text/x-mathjax-config\">
-    MathJax.Hub.Config({
-        displayAlign: \"center\",
-        displayIndent: \"0em\",
-
-        \"HTML-CSS\": { scale: 100,
-                        linebreaks: { automatic: \"false\" },
-                        webFont: \"TeX\"
-                       },
-        SVG: {scale: 100,
-              linebreaks: { automatic: \"false\" },
-              font: \"TeX\"},
-        NativeMML: {scale: 100},
-        TeX: { equationNumbers: {autoNumber: \"AMS\"},
-               MultLineWidth: \"85%\",
-               TagSide: \"right\",
-               TagIndent: \".8em\"
-             }
-});
-</script>
-<script type=\"text/javascript\"
-        src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML\"></script>
-"
-#+end_src
-#+end_details
-
 ** Unicode Warning!
 :PROPERTIES:
 :CUSTOM_ID: Unicode-Warning
@@ -3924,24 +3912,6 @@ so that math elements have extra whitespace about them
 so as to make them stand-out.
 
 #+HTML_MATHJAX: padding: 25px 25px
-#+begin_details "The script that Org loads by default"
-#+begin_src emacs-lisp -n :noweb-ref my-html-header :tangle no
-"
-<script type=\"text/x-mathjax-config\">
-MathJax.Hub.Config({
-    \"HTML-CSS\": {
-        styles: {
-            \".MathJax nobr\": {
-                padding: \"0.5em 0.5em\"
-            },
-        }
-    }
-});
-</script>
-"
-#+end_src
-#+end_details
-
 
 ** COMMENT Example calculation from that MathJax Setup?
    :PROPERTIES:
