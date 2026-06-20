@@ -10,6 +10,18 @@
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
 
+
+1. Support :HTML_EXPORT_METHOD: property for trees, eg if i have an article I
+   want exported via ox-jeopardy, then I can I can use that?
+2. I want to be able to call on `M-x my/bloggin-mode` from non-blog directory, so
+   that I can make use of the nice CSS/js/etc and the live HTML previews for
+   other Org files.
+   - Query: Where would the generated HTML be for such files? E.g., if I like
+     the styling and I want to share the previewed html file? I guess since the
+     preview is done in xwdiget, I can just ask for the url?
+3. ~/global-org-radio-target
+
+
 #+begin_src emacs-lisp
 ;;; -*- lexical-binding: t; -*-
 (require 'dash)
@@ -48,34 +60,41 @@
 (require 'org-special-block-extras)
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 (require 'ox-extra)
+(load-file (expand-file-name "~/global-org-radio-target/global-org-radio-target.el"))
 (ox-extras-activate '(ignore-headlines))
 #+end_src
 
 * COMMENT Speculative TODO-s
 
-0. (setq org-export-with-broken-links t) ;; TODO: Should avoid this! It's set in the CI!
+1. (setq org-export-with-broken-links t) ;; TODO: Should avoid this! It's set in the CI!
 
+2. Add a link to [[https://alhassy.com/CalcCheck/LectureNotes.html#water-bucket-logics][Mathematics for Computing]], or axe that repo and just make it
+   a blog article now?  lol I think Example 1 has an arithmetic error!?
 
-1. Is this disastrous situation true?
+3. Add a link to
+   https://alhassy.com/next-700-module-systems/proposal/thesis-proposal.pdf and
+   to the actual thesis.
+
+4. Is this disastrous situation true?
    + I have everything in a single directory??
    + Why not have a ~src~ directory consisting of Org source text, a ~resources~
      directory consisting of CSS and JS and image & pdf & video & gif &
      fontsassests, then an output ~public~ directory that copies over statics and
      produces HTML?
   
-2. I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
+5. I want to consistently use the same theme to htmlize Org source, rather than the /current session's/ theme.
 
-3. TODO: The sections that have been tangled from my init: Just move that code
+6. TODO: The sections that have been tangled from my init: Just move that code
    here. That code was written with my blog in mind, and so it deserves to be
    here, and not in my init.
    
-4. TODO: Look at stuff in my init and see what there is specifically serving my
+7. TODO: Look at stuff in my init and see what there is specifically serving my
    blog; and move that here. Can always link to AlBasmala.html.
 
-5. Super simple validation: The number of blog posts can only increase.   
+8. Super simple validation: The number of blog posts can only increase.   
    # ;; (length blog-posts) ⇒ 16
 
-6. TODO: When I'm done, look around and ensure there are no 'TODO's; or if there
+9. TODO: When I'm done, look around and ensure there are no 'TODO's; or if there
    are any, move them to my todo.org::Blog::Ideas section!
 
 
@@ -1939,8 +1958,11 @@ Here are 4 example uses:
 ,#+fileimage: https://unsplash.com/photos/Vc2dD4l57og
 
 + Notice that the second indicates explicit width and height.
-+ (To make the first approach work with local previews,
-   we need the variable EXPLICIT-IMAGE-PATH-PREFIX which is used for local previews in my/blog--style-setup. This requires a slash at the end.)
++ (To make the first approach work in previews regardless of where the
+   buffer's file lives, we need the variable EXPLICIT-IMAGE-PATH-PREFIX,
+   which my/blog--style-setup sets to the deployed
+   https://alhassy.com/resources/ URL rather than a local relative path.
+   This requires a slash at the end.)
 + The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
 "
   (-let [(image width height no-border?) (s-split " " (map-elt json "image"))]
@@ -2585,7 +2607,7 @@ earns us nothing here."
    (format "<h2 class=\"title\"><a href=\"%s\">%s</a></h2>\n"
            (@url post) (blog--title-html (@title post)))
    (format "<center>%s</center>\n" (@tags post))
-   (@image post "resources/")
+   (@image post "https://alhassy.com/resources/")
    "\n#+end_export\n"
    "\n"
    (or (@abstract post) "")
@@ -2998,7 +3020,7 @@ which I place below at the top of the page.)
             (@tags post)
             "</center>"
             "\n#+html: "
-            (@image post "resources/")
+            (@image post "https://alhassy.com/resources/")
             "\n#+html: "
             (blog--badges-bar post (buffer-file-name))
             "\n")
@@ -3077,10 +3099,20 @@ Guarantees [Org source | xwidget] side-by-side layout:
 
 Called from the buffer-local after-save-hook installed by blog-preview.
 Mirrors blog-preview-subtree but for files without #+article_style: multiple."
-  (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html")))
+  (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html"))
+         (defined-words
+          (let (words)
+            (goto-char (point-min))
+            (while (re-search-forward "<<<\\([^>]+\\)>>>" nil t)
+              (push (match-string-no-properties 1) words))
+            words)))
     (message "=> Previewing %s..." (buffer-name))
     (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-    (org-export-to-file 'html html)
+    (add-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
+    (let ((global-org-radio-target-target-map (global-org-radio-target-collect-targets)))
+      (org-export-to-file 'html html))
+    (remove-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
+    (global-org-radio-target-stabilise-anchors html defined-words)
     (when (file-exists-p html)
       (blog--show-preview (concat "file://" html)))))
 
@@ -3348,12 +3380,12 @@ Firstly, we want some styling rules to be loaded.
 (concat
 "<meta name=\"author\" content=\"Musa Al-hassy\">
  <meta name=\"referrer\" content=\"no-referrer\">"
-"<link href=\"resources/usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:usualCSS)
-"<link href=\"resources/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
-"<link href=\"resources/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
-"<link href=\"resources/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
+"<link href=\"https://alhassy.com/resources/usual-org-front-matter.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:usualCSS)
+"<link href=\"https://alhassy.com/resources/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:orgNotesCSS)
+"<link href=\"https://alhassy.com/resources/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:tocCSS)
+"<link href=\"https://alhassy.com/resources/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />" (ref:bannerCSS)
 "<link href=\"https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap\" rel=\"stylesheet\" />"
-"<link rel=\"icon\" href=\"resources/favicon.png\">")
+"<link rel=\"icon\" href=\"https://alhassy.com/resources/favicon.png\">")
 #+end_src
 
 + [[(usualCSS)][usual-org-front-matter.css]] badge:||success|resources/usual-org-front-matter.css|css3 ::
@@ -4072,6 +4104,7 @@ leaves the heading untouched — absence is intentional (silent edits)."
                   (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
     (define-key m (kbd "C-c i i") #'blog-insert-image)
     (define-key m (kbd "C-c i s") #'blog-insert-screenshot)
+    (define-key m (kbd "C-c g")   #'global-org-radio-target-jump)
     m)
   "Keymap for my/blogging-mode.")
 
@@ -4107,9 +4140,18 @@ On deactivation:
         (setq browse-url-browser-function 'xwidget-webkit-browse-url)
         ;; Populate blog-posts/blog-tags now that we're actually editing — avoids
         ;; scanning every .org on bare (require 'AlBasmala).
-        (blog--refresh-posts))
+        (blog--refresh-posts)
+        ;; Activate cross-file radio target fontification and navigation.
+        (setq global-org-radio-target-directories (list blog-posts-directory)
+              global-org-radio-target-base-url blog-url
+              global-org-radio-target-slug-function #'global-org-radio-target--slug-at
+              global-org-radio-target-article-style-function
+              (lambda ()
+                (not (equal (blog--file-keyword nil "article_style") "multiple"))))
+        (org-radio-target-mode 1))
     (org-special-block-extras-mode -1)
-    (setq browse-url-browser-function 'browse-url-default-browser)))
+    (setq browse-url-browser-function 'browse-url-default-browser)
+    (org-radio-target-mode -1)))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
@@ -4210,10 +4252,24 @@ file-level keywords so that blog--style-setup runs unchanged."
           ;;    Write next to the source (blog-posts-directory/<slug>.html);
           ;;    .html files are gitignored so this is safe locally.
           ;;    blog-publish-all handles copying to public/ separately.
-          (with-current-buffer tmp-buf
-            (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-            (org-export-to-file 'html (expand-file-name (concat slug ".html") blog-posts-directory))
-            (remove-hook 'org-export-before-processing-hook #'blog--style-setup))
+          (let* ((html-out (expand-file-name (concat slug ".html") blog-posts-directory))
+                 ;; Collect <<<word>>> definitions from this subtree before export.
+                 (defined-words
+                  (with-current-buffer tmp-buf
+                    (let (words)
+                      (goto-char (point-min))
+                      (while (re-search-forward "<<<\\([^>]+\\)>>>" nil t)
+                        (push (match-string-no-properties 1) words))
+                      words))))
+            (with-current-buffer tmp-buf
+              (add-hook 'org-export-before-processing-hook #'blog--style-setup)
+              (add-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
+              (let ((global-org-radio-target-target-map (global-org-radio-target-collect-targets)))
+                (org-export-to-file 'html html-out))
+              (remove-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
+              (remove-hook 'org-export-before-processing-hook #'blog--style-setup))
+            ;; 4. Stabilise radio-target anchor IDs so cross-file links resolve.
+            (global-org-radio-target-stabilise-anchors html-out defined-words))
 
           ;; 5. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
@@ -4261,6 +4317,20 @@ Returns the list of slugs that were published."
           (org-end-of-subtree t t))))
     (nreverse results)))
 
+#+end_src
+
+** =.dir-locals.el=: auto-activate =my/blogging-mode= for all blog files :details:
+
+Any =.org= file opened from =~/blog/= should automatically activate =my/blogging-mode= —
+fontifying cross-file radio target words and enabling =C-c g= to jump to their definitions.
+We achieve this via a =.dir-locals.el= at the root of the blog directory, which is the
+idiomatic Emacs mechanism: no global hook, no =init.org= change, trivially reversible.
+
+Emacs will prompt once — /"Allow .dir-locals.el to run eval?"/ — answer =!= to mark it
+safe permanently.  Subsequent file opens are silent.
+
+#+begin_src emacs-lisp :tangle ".dir-locals.el"
+((org-mode . ((eval . (my/blogging-mode 1)))))
 #+end_src
 
 * Deployment via CI
@@ -4377,6 +4447,104 @@ can be deployed as-is to gh-pages without the master-branch source tree."
             (copy-file src (expand-file-name asset dist) t)))))))
 #+end_src
 
+** Cross-file radio target links                                    :details:
+
+*** Motivation
+
+Org-mode radio targets (~<<<word>>>~) let you define a term once and have every plain-text
+occurrence of that word in the /same file/ automatically become a clickable link to the
+definition.  We want the same behaviour /across/ articles — define ~<<<clojure>>>~ in one post
+and have the word =clojure= link back to it from every other post that mentions it.
+
+The obstacle: our publishing pipeline exports each top-level article in a multiple-style
+container into its own temp =.org= file before handing it to the HTML exporter.  The radio
+target definition in article A never appears in article B's temp buffer, so Org cannot linkify
+=clojure= there.
+
+The implementation lives in the standalone =~/global-org-radio-target/= package (=global-org-radio-target-= prefix).
+This blog wires it up inside =my/blogging-mode= by setting =global-org-radio-target-directories=, =global-org-radio-target-base-url=,
+and =global-org-radio-target-slug-function=, then calling =(org-radio-target-mode 1)=.
+
+*** Two-pass solution
+
+We solve this with two co-operating passes.
+
+*Pass 1 — pre-export injection* (~global-org-radio-target-inject-links~, a hook on
+=org-export-before-parsing-functions=): before the AST is built for the /referencing/ article,
+we replace each plain-text radio target word with an explicit ~[[https://alhassy.com/slug#word][word]]~ Org link.  The standard HTML exporter then handles it like any other external link.
+
+*Pass 2 — post-export anchor stabilisation* (~global-org-radio-target-stabilise-anchors~, called after
+=org-export-to-file=): org-html exports ~<<<word>>>~ as ~<a id="orgXXXXXXX">word</a>~ where
+=orgXXXXXXX= is a /randomly generated/ ID that changes on every export.  We scan the
+/definition/ article's freshly written HTML, locate the pattern ~<a id="orgXXX">word</a>~,
+rename its =id= to =word=, and rewrite any same-file ~href="#orgXXX"~ references (e.g. a
+heading that Org internally linked to the same anchor) to ~href="#word"~.  This makes =#word=
+a stable, predictable fragment that the cross-file links from Pass 1 can actually reach.
+
+Both passes must happen: Pass 1 alone produces links to a fragment that doesn't exist; Pass 2
+alone fixes anchors that nothing external yet points to.
+
+*** Data flow
+
+#+begin_example
+global-org-radio-target-collect-targets
+  ← pure regex scan of all *.org files in global-org-radio-target-directories (no org-mode activation)
+  ← for multiple-style files: reads :CUSTOM_ID: per heading via global-org-radio-target-slug-function
+  → hash table: word (lowercased) → https://alhassy.com/slug#word
+
+global-org-radio-target-inject-links  [org-export-before-parsing-functions hook]
+  ← reads global-org-radio-target-target-map (dynamic var bound by callers)
+  ← skips words defined via <<<word>>> in the same buffer (Org handles those natively)
+  ← skips #+begin_src…#+end_src, =verbatim=, and ~code~ spans
+  → rewrites plain-text radio-target words to [[url][word]] in the export copy buffer
+
+org-export-to-file  [standard Org HTML export]
+  → slug.html with <a id="orgXXX">word</a> at each <<<word>>> definition site
+
+global-org-radio-target-stabilise-anchors  [called post-export on the definition article's HTML]
+  → renames <a id="orgXXX">word</a> → <a id="word">word</a>
+  → rewrites href="#orgXXX" → href="#word" throughout the same file
+#+end_example
+
+*** In-buffer UX
+
+=org-radio-target-mode= (activated by =my/blogging-mode=) underlines every cross-file radio target word
+via font-lock, and =C-c g= (=global-org-radio-target-jump=) jumps to the =<<<word>>>= definition in whichever
+=.org= file defines it.  No Hyperbole required.
+
+*** Known limitations
+
+- *Definition must exist before reference can resolve* — the cross-file link is injected as an
+  absolute URL at export time.  If the definition article has never been exported (no slug in
+  the map), the reference article will simply have un-linked plain text, as before.  Re-export
+  the definition article first, then the reference article.
+
+- *Slug derived from =:CUSTOM_ID:= only* — =global-org-radio-target--slug-at= (the default =global-org-radio-target-slug-function=)
+  reads the =:CUSTOM_ID:= drawer property.  Headings without an explicit =:CUSTOM_ID:= are
+  skipped.  In practice every published article carries one (the pipeline writes it on first
+  export), but a brand-new heading not yet exported will be missed.
+
+- *Case: link text preserves original capitalisation, URL anchor is the raw target text* — the
+  injected ~[[url][word]]~ preserves whatever capitalisation the reference used (~Clojure~,
+  ~CLOJURE~, etc.) as the visible link text, but the anchor fragment is always the raw text
+  between ~<<<~ and ~>>>~ verbatim.
+
+- *Multi-word targets use =\b= boundaries* — the injection regex uses =\b= word boundaries,
+  which works for single-token targets.  Multi-word targets like ~<<<Type Descriptor>>>~ are
+  collected and injected when the exact phrase appears, but =\b= may behave unexpectedly at
+  phrase boundaries.
+
+- *No cross-file same-file-ref rewriting* — ~global-org-radio-target-stabilise-anchors~ only rewrites
+  ~href="#orgXXX"~ references /within the same HTML file/.  Cross-file same-file-ref rewriting
+  is not supported.
+
+- *Preview order matters* — during ~blog-preview-subtree~, both passes run for the article at
+  point.  But the cross-file link in a referencing article correctly points to
+  ~https://alhassy.com/slug#word~, which resolves only once the definition article is deployed
+  (or at least exported locally).  In local preview, that URL will 404 unless you open the
+  local definition HTML directly.  We accept this trade-off: production links are always
+  correct, local cross-file navigation requires opening the definition article separately.
+
 ** blog-publish-all: CI entry point                                  :details:
 
 =blog-publish-all= is what CI calls.  It exports every post, rebuilds index + tag
@@ -4438,12 +4606,22 @@ Dispatches on #+article_style: per file —
             (blog--vendor-redirects)
             (blog--publish-multiple-articles f))
         (let* ((base   (f-base f))
-               (target (expand-file-name (concat base ".html") blog-publish-directory)))
+               (target (expand-file-name (concat base ".html") blog-publish-directory))
+               (global-org-radio-target-target-map (global-org-radio-target-collect-targets))
+               (defined-words
+                (let (words)
+                  (goto-char (point-min))
+                  (while (re-search-forward "<<<\\([^>]+\\)>>>" nil t)
+                    (push (match-string-no-properties 1) words))
+                  words)))
           ;; Export directly to public/<base>.html so that #+export_file_name:
           ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
           ;; become the output destination.  blog--style-setup is already on
           ;; org-export-before-processing-hook, so the full pipeline still runs.
-          (org-export-to-file 'html target)))))
+          (add-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
+          (org-export-to-file 'html target)
+          (remove-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
+          (global-org-radio-target-stabilise-anchors target defined-words)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
