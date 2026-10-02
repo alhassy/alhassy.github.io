@@ -1,8 +1,7 @@
-
-## # -*- eval: (org-babel-load-file "AlBasmala.org") -*-
 #+title: AlBasmala: @@html: <br>@@ Blogging with Emacs & Org-mode (•̀ᴗ•́)و
 #+description: How my blog is setup (•̀ᴗ•́)و
 #+date: <2020-05-03 Sun>
+#+modified: 2026-10-01
 #+filetags: emacs org html css javascript git lisp meta
 #+fileimage: org_logo.png 150 150 no-border
 #+site_nav: AlBasmala
@@ -10,24 +9,23 @@
 # Use checkmarks instead of boring bullet points
 #+html_head: <style> ul {list-style-type: " ✓"} </style>
 
-
-1. Support :HTML_EXPORT_METHOD: property for trees, eg if i have an article I
-   want exported via ox-jeopardy, then I can I can use that?
-2. I want to be able to call on `M-x my/bloggin-mode` from non-blog directory, so
+1. I want to be able to call on `M-x my/bloggin-mode` from non-blog directory, so
    that I can make use of the nice CSS/js/etc and the live HTML previews for
    other Org files.
    - Query: Where would the generated HTML be for such files? E.g., if I like
      the styling and I want to share the previewed html file? I guess since the
      preview is done in xwdiget, I can just ask for the url?
-3. ~/global-org-radio-target
+2. Support :HTML_EXPORT_METHOD: property for trees, eg if i have an article I
+   want exported via ox-jeopardy, then I can I can use that?
 
-
+?
+?
 #+begin_src emacs-lisp
 ;;; -*- lexical-binding: t; -*-
-(require 'dash)
-(require 'f)
-(require 's)
-(require 'htmlize)
+(use-package dash     :ensure t :demand t)
+(use-package f        :ensure t :demand t)
+(use-package s        :ensure t :demand t)
+(use-package htmlize  :ensure t :demand t)
 
 ;; Load a colour theme so htmlize has real colours (not just bold/italic)
 ;; to bake into the `#+begin_src' blocks of every exported article, and
@@ -57,14 +55,25 @@
     (global-org-modern-mode 1)))
 (advice-add 'htmlize-buffer-1 :around
             (lambda (orig &rest args) (let ((inhibit-message t)) (apply orig args))))
-(require 'org-special-block-extras)
+(use-package lf)
+;; Force the MELPA-installed copy; init.el may have loaded a local dev
+;; version with a different (buggy) API.
+(ignore-errors (unload-feature 'org-special-block-extras t))
+(when-let* ((elpa-ospe (car (directory-files
+                              (expand-file-name "elpa" user-emacs-directory)
+                              t "^org-special-block-extras-[0-9]"))))
+  (load (expand-file-name "org-special-block-extras" elpa-ospe) nil :nomessage))
+(use-package org-special-block-extras :ensure t :demand t)
+(use-package consult                  :ensure t :demand t)
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 (require 'ox-extra)
-(load-file (expand-file-name "~/global-org-radio-target/global-org-radio-target.el"))
 (ox-extras-activate '(ignore-headlines))
 #+end_src
 
 * COMMENT Speculative TODO-s
+:PROPERTIES:
+:CUSTOM_ID: comment-speculative-todo-s
+:END:
 
 1. (setq org-export-with-broken-links t) ;; TODO: Should avoid this! It's set in the CI!
 
@@ -135,7 +144,7 @@
     
     Since I'm producing /massive/ HTML files for each post, trying to review changes with the default Magit buffer /which shows
     all changes in the repository/ can be painfully slow. As such, when I'm blogging, let's change my ~C-x g~ binding from
-    doc:magit-status to doc:magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
+    doc∷magit-status to doc∷magit-file-dispatch, which just narrow's Magit's view to the file I'm currently working with:
     ~C-x g D u~ to see the "u"nstaged "d"ifferences for the file, then stage what I like with ~s~, then ~C-x g c~ to "c"ommit whatever differences I have staged.
     #+begin_src emacs-lisp
     (bind-key "C-x g" #'magit-file-dispatch)
@@ -341,9 +350,6 @@ Write in Org-mode and generate coloured markdown for Jekyll usage
 # Usage ∷ Begin blog server then load AlBasmala, then edit & preview.
 #
 # (shell-command "cd ~/alhassy.github.io/ ; bundle exec jekyll serve &")
-# (find-file "~/alhassy.github.io/content/AlBasmala.el")
-# (preview-article :browser t)
-# (preview-article)
 
 **** Server Setup
    :PROPERTIES:
@@ -1140,8 +1146,7 @@ Here are some notable features of my blog.
 + Beautiful math using LaTeX notation, $\forall \phi ⇒ \exists \phi$ ---
   §[[MathJax-Support]]
 + A floating, yet unobtrusive, table of contents --- §[[floating-toc]]
-+ Headings are clickable links with the resulting anchors being
-  Github-like --- §[[ensuring-useful-html-anchors]] and §[[clickable-headlines]]
+  # + Headings are clickable links with the resulting anchors being Github-like --- §[[ensuring-useful-html-anchors]] and §[[clickable-headlines]]
 + Comments for blog readers --- §[[Comments]]
 + Articles have dedicated images, §[[Images]], which are displayed
   on the blog's welcome page along with the article's abstract, §[[Index]]
@@ -1156,13 +1161,34 @@ Here are some notable features of my blog.
 + Style inline code and tables --- §[[curvy-blocks]]
 + Unfurling links --- §[[unfurling]]
 
-* Image Org Link                                          :details_imagelink:
+* Quick Start
+:PROPERTIES:
+:CUSTOM_ID: quick-start
+:END:
+
+The three-command loop for writing and publishing:
+
+| Action              | How                                            |
+|---------------------+------------------------------------------------|
+| Enable blogging mode | Auto-enabled in =~/blog/= via =.dir-locals.el= |
+| New article         | =M-RET= (standalone) or =M-RET= in a container file |
+| Save + live preview | =C-x C-s= ---stamps anchors, bumps =#+modified:=, previews in xwidget |
+| Insert image        | =C-c i i= (from file) or =C-c i s= (screenshot) |
+| Publish             | =git push= → CI runs =blog-publish-all=        |
+
+# For the full walkthrough see §[[blog-new-article]]; for the two article
+# styles see §[[The-Two-Article-Styles-standalone-vs-multiple]].
+
+* COMMENT Image Org Link                                  :details_imagelink:
+:PROPERTIES:
+:CUSTOM_ID: image-org-link
+:END:
 
 A quick way to embed clickable images, along with tooltip credits and other configs.
 
 #+begin_src emacs-lisp :exports code
-(use-package org-special-block-extras)
-(org-special-block-extras-mode t)
+(use-package org-special-block-extras :ensure t :demand t
+  :config (org-special-block-extras-mode t))
 
 
 (org-deflink image
@@ -1190,36 +1216,10 @@ image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
 
 This will eventually be part of [[http://alhassy.com/org-special-block-extras/][org-special-block-extras]].
 
-* TODO COMMENT Automatically Generate PDFs upon Save                   :details_pdfs:
-
-Here is my =~/.latexmkrc= file: It previews PDFs using Emacs, uses LuaLaTeX for making PDFs, and to update the PDF viewer
-please change focus to the PDF file.
-
-#+begin_src shell :tangle "~/.latexmkrc"
-$pdf_previewer="emacsclient %S";
-$pdflatex = 'lualatex -interaction=nonstopmode -synctex=1 %O %S';
-$pdf_update_method = 4;
-$pdf_update_command = "emacsclient %S &";
-#+end_src
-# $pdf_update_command = "emacsclient -e '(progn (switch-to-buffer-other-window (find-buffer-visiting %S)) (pdf-view-revert-buffer nil t))'";
-
-Then files that want to have this feature should end with:
-#+begin_src org :tangle no
-,* Local Variables :ignore:
-# Ensure EmacsClient can connect to running emacs, enable automatic reverts for whenever PDFs change.
-# Local Variables:
-# eval: (server-start)
-# eval: (global-auto-revert-mode)
-# eval: (add-hook 'after-save-hook 'org-latex-export-to-latex nil t)
-# eval: (compile "latexmk -pdf -pvc -pdflatex='lualatex -shell-escape -interaction nonstopmode'")
-# End:
-#+end_src
-
-
-# alias emacsclient="/usr/local/Cellar/emacs-plus@29/29.0.90/bin/emacsclient"
-# export PATH="/usr/local/Cellar/emacs-plus@29/29.0.90/bin/:$PATH" # emacs & emacsclient
-
 * Redefining Org Section for purposes of blocks              :details_deftag:
+:PROPERTIES:
+:CUSTOM_ID: redefining-org-section-for-purposes-of-blocks
+:END:
 
 image:https://i.redd.it/rre5ggpx9jya1.png|100%|100%|center|Musa
 ([[https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/][Reddit Post]])
@@ -1306,12 +1306,18 @@ Incidentally, orange and `#f2b195' are also nice 'warning' colours."
 
 
 ** COMMENT Demo
+:PROPERTIES:
+:CUSTOM_ID: comment-demo
+:END:
 See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/
 
 @@html: <div style="padding-bottom: 30cm;"></div>@@
 
 
 *** Tags are functions of Org sections                           :quote_blue:
+:PROPERTIES:
+:CUSTOM_ID: tags-are-functions-of-org-sections
+:END:
   Just as a source block is a function on a region of text, so too a tag is
   construable as a function operating on an Org section. Thanks to doc:org-deftag (•̀ᴗ•́)و
 
@@ -1319,6 +1325,9 @@ See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_s
   Look to the buffer to the right for the resulting HTML rendition.
 
 *** Here is the actual implementation                   :details_quoteSource:
+:PROPERTIES:
+:CUSTOM_ID: here-is-the-actual-implementation
+:END:
 
   The implementation is interesting, but it is of low-priority and so it is tagged
   with =:details:= which folds it away via a ~<details>~ element, with an anchor.
@@ -1335,6 +1344,9 @@ See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_s
 See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
 
 *** Bye!                                                             :ignore:
+:PROPERTIES:
+:CUSTOM_ID: bye
+:END:
 
 /Have a great evening!/
 
@@ -1343,6 +1355,9 @@ See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
 
 @@html: <div style="padding-bottom: 30cm;"></div>@@
 ** Known bug and proposed fix.                                     :noexport:
+:PROPERTIES:
+:CUSTOM_ID: known-bug-and-proposed-fix
+:END:
 Warning!
 #+begin_src org :tangle no
 ,* Useful notes :noexport:
@@ -1539,15 +1554,24 @@ Almost all ~#+keyword:⋯~ lines are parsed by =blog--info= to build the post-al
 used for index/tag-page generation.
 
 ** The Two Article Styles: =standalone= vs =multiple=
+:PROPERTIES:
+:CUSTOM_ID: the-two-article-styles-standalone-vs-multiple
+:END:
 
 We support two ways to author blog posts, selectable per-file via =#+article_style:=.
 
 *** =standalone= (the default)
+:PROPERTIES:
+:CUSTOM_ID: standalone-the-default
+:END:
 
 One =.org= file = one article.  File-level keywords (=#+title:=, =#+filetags:=, etc.)
 supply all the metadata.  This is the original AlBasmala workflow — unchanged.
 
 *** =multiple= (container files)
+:PROPERTIES:
+:CUSTOM_ID: multiple-container-files
+:END:
 
 One =.org= file = N articles, one per /top-level heading/.  This exists entirely to
 reduce the friction of starting a new post: instead of creating a file, choosing a slug,
@@ -1603,6 +1627,9 @@ Key rules:
   =** Abstract :ignore:= child heading body → first paragraph of the heading.
 
 *** How the export pipeline connects the two styles
+:PROPERTIES:
+:CUSTOM_ID: how-the-export-pipeline-connects-the-two-styles
+:END:
 
 The central challenge is that our existing =blog--style-setup= hook (which injects tags,
 image, abstract-wrapping, header, and footer into every export) reads metadata by
@@ -1632,6 +1659,9 @@ This means /standalone and multiple articles go through an identical export pipe
 the only difference is how they arrive at the temp buffer.
 
 *** Slug derivation, write-back, and global uniqueness
+:PROPERTIES:
+:CUSTOM_ID: slug-derivation-write-back-and-global-uniqueness
+:END:
 
 Each container heading gets a URL slug derived from its title (lowercase, strip
 non-alphanum, collapse spaces → dashes).  Collisions /within/ the same container get
@@ -1652,6 +1682,9 @@ container subtree whose written-back =:SLUG:= is =X=.  The companion =X.org.html
 colourised sources are validated in the same pass.
 
 *** Functions introduced for the =multiple= style
+:PROPERTIES:
+:CUSTOM_ID: functions-introduced-for-the-multiple-style
+:END:
 
 | Function | Role |
 |---|---|
@@ -1686,6 +1719,9 @@ Below are the methods to make a new article, to get the meta-data about each
 article, to create the JSON file, and to load it.
 
 ** Basic facts (global variables) of my blog                        :details:
+:PROPERTIES:
+:CUSTOM_ID: basic-facts-global-variables-of-my-blog
+:END:
 
 The =.org= source files in =~/blog/= are first-class citizens; the generated
 =.html= artefacts are not.  We achieve clean separation via a two-branch model:
@@ -1739,6 +1775,9 @@ as a post and every file with #+site_nav: as a nav page; files with neither
 See blog-make-index-page and blog-publish-directory.")
 #+end_src
 ** blog-new-article: Helper function to make a new article          :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-new-article-helper-function-to-make-a-new-article
+:END:
 #+BEGIN_SRC emacs-lisp -n
 (defun blog-new-article ()
 "Make a new article for my blog; prompting for the necessary ingredients.
@@ -1770,9 +1809,7 @@ nearly instantaneously."
             "\n#+author: " user-full-name
             "\n#+email: "  user-mail-address
             "\n#+modified: " (format-time-string "%Y-%m-%d")
-            "\n#+filetags: " (s-join " " (helm-comp-read "Tags: "
-                                                         blog-tags
-                                                         :marked-candidates t))
+            "\n#+filetags: " (s-join " " (completing-read-multiple "Tags: " blog-tags))
             "\n#+fileimage: emacs-birthday-present.png"
             ;; "\n#+fileimage: " (completing-read
             ;;                    "Image: "
@@ -1787,6 +1824,9 @@ nearly instantaneously."
 #+END_SRC
 
 ** blog-new-post: Insert a heading skeleton in a multiple-style container file :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-new-post-insert-a-heading-skeleton-in-a-multiple-style-container-file
+:END:
 
 The lowest-friction entry point for adding a new article.  Just =M-x blog-new-post=
 (or bind it) while visiting a container file, answer two prompts, and start writing.
@@ -1832,6 +1872,9 @@ a draft until you remove it before publishing."
 #+end_src
 
 ** Convenient accessor methods: Given a JSON hashmap, get the specified key values :details:
+:PROPERTIES:
+:CUSTOM_ID: convenient-accessor-methods-given-a-json-hashmap-get-the-specified-key-values
+:END:
 
 Since "accessor" begins with 'a', and '@' looks like an 'a', all these methods
 start with '@'.
@@ -1884,6 +1927,9 @@ then escape to '&lt;br&gt;' and be shown as text."
 #+end_src
 
 ** @history: Get an HTML badge that points to the Github history of a given file name, in my blog :details:
+:PROPERTIES:
+:CUSTOM_ID: history-get-an-html-badge-that-points-to-the-github-history-of-a-given-file-name-in-my-blog
+:END:
 #+begin_src emacs-lisp
 (defun @history (json)
   "Get an HTML badge that points to the Github history of a given file name, in my blog."
@@ -1895,6 +1941,9 @@ then escape to '&lt;br&gt;' and be shown as text."
 #+end_src
 
 ** @tags: Get an HTML listing of tags, as shields.io bages, associated with the given file :details:
+:PROPERTIES:
+:CUSTOM_ID: tags-get-an-html-listing-of-tags-as-shieldsio-bages-associated-with-the-given-file
+:END:
 
 Org forbids dashes in tag names — we use underscores internally (e.g., =programming_language=)
 and convert them to dashes everywhere they appear in HTML: display label, badge URL, and tag-page
@@ -1934,6 +1983,9 @@ Example use:  (@tags (seq-elt blog-posts 0))
 #+end_src
 
 ** @image :details:
+:PROPERTIES:
+:CUSTOM_ID: image
+:END:
 <<Images>>
 
 Every article declaratively has an associated image ^_^
@@ -1984,6 +2036,9 @@ Here are 4 example uses:
 #+end_src
 
 ** blog--info: Core helper to get the plist/JSON metadata about each post :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-info-core-helper-to-get-the-plistjson-metadata-about-each-post
+:END:
 #+begin_src emacs-lisp
 (defun blog--info (post-filename)
   "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
@@ -2041,6 +2096,9 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
 #+end_src
 
 ** blog--article-style, blog--make-slug: Utilities for the =multiple= article style :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-article-style-blog-make-slug-utilities-for-the-multiple-article-style
+:END:
 
 =blog--article-style= is the dispatch predicate used everywhere: in =blog-preview=,
 =blog-publish-all=, =blog--compute-posts=, and =blog-new-post=.  It reads
@@ -2060,6 +2118,9 @@ Explicit slugs bypass =blog--make-slugs-for-headings= entirely — no suffix is 
 and uniqueness is your responsibility.
 
 **** Tag-based image selection: =blog--image-for-tags=
+:PROPERTIES:
+:CUSTOM_ID: tag-based-image-selection-blog-image-for-tags
+:END:
 
 Picking an image for every post is friction we can eliminate.  =blog--image-for-tags=
 maps a list of Org heading tags to a default image, checked in priority order — first
@@ -2155,6 +2216,9 @@ detect and fix collisions."
 #+end_src
 
 ** blog--info-subtree, blog--info-multiple: Extract metadata from container headings :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-info-subtree-blog-info-multiple-extract-metadata-from-container-headings
+:END:
 
 These are the =multiple=-style analogue of =blog--info=.  Where =blog--info= extracts
 metadata from file-level =#+keyword:= lines via regex, =blog--info-subtree= reads it
@@ -2298,6 +2362,9 @@ Headings tagged :draft: are included but marked."
 #+end_src
 
 ** REDIRECT: zero-duplication bridges to external Org files :details:
+:PROPERTIES:
+:CUSTOM_ID: redirect-zero-duplication-bridges-to-external-org-files
+:END:
 
 Often a project already has a lovingly maintained =README.org= (or a
 self-contained section of =~/.emacs.d/init.org=) that /is/ the article — there is
@@ -2327,7 +2394,8 @@ whose body was typed directly in the container.
 
 Neither =~/.emacs.d/= nor an arbitrary HTTPS URL is reachable from a CI
 runner, so =C-x C-s= /vendors/ every =:REDIRECT:= into
-=resources/redirects/<slug>.org= (see §[[Vendoring redirects so CI can resolve them]])
+=resources/redirects/<slug>.org=
+# (see §[[Vendoring redirects so CI can resolve them]])
 and rewrites the property in place to point at the in-repo copy.  After
 one preview-save, the property reads
 =:REDIRECT: resources/redirects/my-literate-emacs-config.org=, CI has the
@@ -2344,8 +2412,9 @@ keyword preamble (=#+title:=, =#+date:=, etc.) and then appends
 No subtree content is copied or promoted — the export proceeds through the
 identical =blog--style-setup= pipeline as any other article.
 
-Forcing a republish is a matter of nudging the staleness check (see
-§[[MODIFIED-stale-check]]).  Any of the following suffice:
+Forcing a republish is a matter of nudging the staleness check
+# (see §[[MODIFIED-stale-check]]).
+Any of the following suffice:
 
 - Axe the =:MODIFIED:= property from the drawer.
 - Delete =~/blog/<slug>.html= outright.
@@ -2356,6 +2425,9 @@ The new key ="redirect"= is surfaced in every alist produced by
 feed, and the index all treat redirect articles identically to hand-authored ones.
 
 *** Vendoring redirects so CI can resolve them                       :details:
+:PROPERTIES:
+:CUSTOM_ID: vendoring-redirects-so-ci-can-resolve-them
+:END:
 
 A =:REDIRECT:= of =~/.emacs.d/init.org= works beautifully on the author's
 laptop and catastrophically on CI — the runner has no =~/.emacs.d/= and
@@ -2492,7 +2564,8 @@ checking out =gh-pages= and incrementally updating), =:MODIFIED:=
 resurrects as the natural cache key: set the property explicitly on a
 heading you want re-exported, and the cached HTML older than that date
 gets invalidated.  For the RSS guid's "edits re-notify readers" story
-we took a different route — see §[[RSS feeds: one per tag, plus a global one]] —
+we took a different route
+# — see §[[RSS feeds: one per tag, plus a global one]] —
 because it works without the author having to remember to stamp anything.
 
 ** SITE_NAV: data-driven site navigation from container subtrees :details:
@@ -2540,6 +2613,9 @@ The implementation lives in three new/modified functions (all in the
 | =blog--refresh-posts= | Updated to populate =blog-pages= and call =blog--rebuild-preamble= |
 
 ** The <code>#+begin_abstract</code> is an Org-mode Special Block :details_orange:
+:PROPERTIES:
+:CUSTOM_ID: the-codebeginabstractcode-is-an-org-mode-special-block
+:END:
 
 Every article is intended to have a section named =Abstract=, whose contents are
 used as the preview of the article, in the index landing page.
@@ -2575,6 +2651,9 @@ In this article, we learn to have fun!
 #+end_abstract
 
 ** Generating the Index Page :details:
+:PROPERTIES:
+:CUSTOM_ID: generating-the-index-page
+:END:
 
 <<Index>>
 
@@ -2696,6 +2775,9 @@ the relevant subset of blog-posts — no copy-then-delete."
 #+end_src
 
 ** RSS feeds: one per tag, plus a global one                         :details:
+:PROPERTIES:
+:CUSTOM_ID: rss-feeds-one-per-tag-plus-a-global-one
+:END:
 
 RSS (/Really Simple Syndication/) is a plain-text format a website uses to
 announce its new content.  A reader program — Feedly, Inoreader, Newsboat,
@@ -2857,6 +2939,9 @@ consumer (index/RSS loops)."
 #+end_src
 
 ** blog-posts, blog-tags, and their consumers: tag & index page generation :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-posts-blog-tags-and-their-consumers-tag-index-page-generation
+:END:
 
 =blog-posts= is a sorted list of post-alists (newest first), computed by
 scanning =~/blog/*.org= directly.  Its heavyweight consumer is
@@ -2942,7 +3027,6 @@ Initialized at end of file; refresh with (blog--refresh-posts).")
   "Tags for my blog articles. Initialized at end of file; refresh with (blog--refresh-posts).")
 #+end_src
 
-
 * /Seamlessly/ Previewing Articles /within/ Emacs 😲
 :PROPERTIES:
 :CUSTOM_ID: Seamlessly-Previewing-Articles-within-Emacs
@@ -2958,6 +3042,9 @@ web-page in a JavaScript-supported browser /within/ Emacs.
 
 We accomplish these goals via the following methods.
 ** org-link/blog: Using My Blog Styles Anywhere :details:
+:PROPERTIES:
+:CUSTOM_ID: org-linkblog-using-my-blog-styles-anywhere
+:END:
 
 In any Org-mode file ---including random ones that are not even for my blog--- I'll use the Org links ~blog:header~ and
 ~blog:footer~ to obtain the nice styling of my blog.
@@ -2990,6 +3077,9 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:
 See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 
 ** COMMENT blog-posts FUNCTION
+:PROPERTIES:
+:CUSTOM_ID: comment-blog-posts-function
+:END:
 #+begin_src emacs-lisp
 (defun blog-posts (file-name)
   "Retrieve the JSON cache from blog-posts regarding FILE-NAME.
@@ -3000,6 +3090,9 @@ Example usage: (blog-posts \"java-cheat-sheet\")
 #+end_src
 
 ** blog--style-setup: A function to insert org-link/blog into a buffer :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-style-setup-a-function-to-insert-org-linkblog-into-a-buffer
+:END:
 #+begin_src emacs-lisp
 (defun blog--style-setup (_backend)
   "Insert blog header (fancy title), tags, blog image (before \"* Abstract\"), and footer (links to tags).
@@ -3048,12 +3141,16 @@ which I place below at the top of the page.)
 #+end_src
 
 ** Inserting org-link/blog <em>seamlessly</em> via the export process; <em>then</em> preview with every save :details:
+:PROPERTIES:
+:CUSTOM_ID: inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save
+:END:
 
 Both =blog-preview= (standalone) and =blog-preview-subtree= (multiple style) open the
 rendered article in an in-Emacs =xwidget-webkit= browser buffer.  This requires Emacs
 to be compiled with xwidgets support.  On macOS with =emacs-plus=:
 
 #+begin_src shell :tangle no
+#+modified: 2026-10-01
 brew reinstall emacs-plus@30 --with-xwidgets --with-imagemagick --with-dbus --with-debug
 #+end_src
 
@@ -3079,6 +3176,7 @@ Guarantees [Org source | xwidget] side-by-side layout:
 - If there is already an xwidget window on the right, reuse it.
 - Otherwise split the current window to the right and open there.
 - The Org source window is never taken over."
+  (delete-other-windows)  
   (let* ((org-win   (selected-window))
          (xw-buf    (car (blog--xwidget-buffers)))
          (xw-win    (and xw-buf (get-buffer-window xw-buf))))
@@ -3099,20 +3197,10 @@ Guarantees [Org source | xwidget] side-by-side layout:
 
 Called from the buffer-local after-save-hook installed by blog-preview.
 Mirrors blog-preview-subtree but for files without #+article_style: multiple."
-  (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html"))
-         (defined-words
-          (let (words)
-            (goto-char (point-min))
-            (while (re-search-forward "<<<\\([^>]+\\)>>>" nil t)
-              (push (match-string-no-properties 1) words))
-            words)))
-    (message "=> Previewing %s..." (buffer-name))
+  (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html")))
+    (message "=> Previewing standalone %s..." (buffer-name))
     (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-    (add-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
-    (let ((global-org-radio-target-target-map (global-org-radio-target-collect-targets)))
-      (org-export-to-file 'html html))
-    (remove-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
-    (global-org-radio-target-stabilise-anchors html defined-words)
+    (org-html-export-to-html)
     (when (file-exists-p html)
       (blog--show-preview (concat "file://" html)))))
 
@@ -3174,7 +3262,6 @@ maintaining a stable [Org source | xwidget] side-by-side layout."
           ;; blog--show-preview reuses the existing xwidget window when present,
           ;; so the [Org | xwidget] split is stable across repeated saves.
           (blog--show-preview (concat "file://" (expand-file-name html-out))))))))
-
 #+end_src
 
 Upon a save, kbd:C-x_C-s, a new HTML file is created ---bearing the same name as the Org file. It seems an /incremental/
@@ -3240,6 +3327,9 @@ the temp buffer by `blog--info'."
 #+end_src
 
 ** blog--htmlize-file: Generate an htmlized version of a given source file; return an HTML badge linking to the colourised file :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-htmlize-file-generate-an-htmlized-version-of-a-given-source-file-return-an-html-badge-linking-to-the-colourised-file
+:END:
 
 Every =.org.html= colourised-source page is produced with htmlize in
 =inline-css= mode — colours are baked directly into the spans by the
@@ -3268,6 +3358,9 @@ the file as, serialised into HTML.
 #+end_src
 
 ** blog--license: HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-license-html-for-creative-commons-attribution-sharealike-30-unported-license
+:END:
 <<Comments>>
 
 #+begin_src emacs-lisp
@@ -3303,6 +3396,9 @@ the file as, serialised into HTML.
 #+end_src
 
 ** blog--comments: Embed Disqus Comments for my blog :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-comments-embed-disqus-comments-for-my-blog
+:END:
 #+begin_src emacs-lisp -n
 (defun blog--comments ()
   "Embed Disqus Comments for my blog"
@@ -3327,6 +3423,9 @@ var disqus_shortname = 'life-and-computing-science';
 #+end_src
 
 ** blog--read-remaining-js: HTML to use ReadRemaining.js :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-read-remaining-js-html-to-use-readremainingjs
+:END:
 #+begin_src emacs-lisp
 (defun blog--read-remaining-js ()
   "Get the HTML required to make use of ReadRemaining.js"
@@ -3461,7 +3560,8 @@ to useful parts of my blog.
 The banner is no longer hardcoded — it is data-driven via =:SITE_NAV: t= subtrees
 collected by =blog--refresh-posts= into =blog-pages=.  Any container subtree carrying
 =:SITE_NAV: t= will appear as a header link on every page; axing it from the
-drawer removes it from the nav.  See §[[SITE_NAV-section]] for the full design.
+drawer removes it from the nav.
+# See §[[SITE_NAV-section]] for the full design.
 
 The initial preamble is populated at file-load time after =blog--refresh-posts= runs.
 When =blog-pages= is still empty (e.g. on a fresh load before any =:SITE_NAV:= subtrees
@@ -3568,7 +3668,13 @@ for the JavaScript code in this tag.
 #+end_details
 
 ** Miscellaneous Styles
+:PROPERTIES:
+:CUSTOM_ID: miscellaneous-styles
+:END:
 ** Curvy Source Blocks & Pink Inline :details:
+:PROPERTIES:
+:CUSTOM_ID: curvy-source-blocks-pink-inline
+:END:
 
 <<curvy-blocks>>
 
@@ -3609,6 +3715,9 @@ pre.src:before {
 Code such as ~(= 2 (+ 1 1))~ now sticks out with a pink background ♥‿♥
 
 ** Pink Tables :details:
+:PROPERTIES:
+:CUSTOM_ID: pink-tables
+:END:
 #+begin_src css :tangle resources/blog-banner.css :noeval -n
 table {
      background: pink;
@@ -3655,6 +3764,9 @@ table {
 #+end_src
 
 ** Let's show folded, details, regions with a nice greenish colour :details:
+:PROPERTIES:
+:CUSTOM_ID: lets-show-folded-details-regions-with-a-nice-greenish-colour
+:END:
 This is part of =org-special-block-extras=, and it's something like this:
 #+begin_src css :tangle resources/blog-banner.css :noeval -n
 details {
@@ -3785,6 +3897,9 @@ Finally,
 #+end_src
 
 * Clickable Sections with Sensible Anchors
+:PROPERTIES:
+:CUSTOM_ID: clickable-sections-with-sensible-anchors
+:END:
 ** Ensuring Useful HTML Anchors
 :PROPERTIES:
 :CUSTOM_ID: Ensuring-Useful-HTML-Anchors
@@ -4025,9 +4140,10 @@ For a given article =blog-publish-all= dispatches on =#+article_style:=:
   =blog--publish-single-subtree= for each.
 
 =blog--publish-single-subtree= is the core of the container export pipeline.
-See §[[The Two Article Styles: standalone vs multiple]] for a full explanation
-of the synthetic temp-file trick it uses to route every sub-article through
-the unchanged =blog--style-setup= pipeline.  The short version: we build a
+# See §[[The Two Article Styles: standalone vs multiple]] for a full explanation
+# of the synthetic temp-file trick it uses to route every sub-article through
+# the unchanged =blog--style-setup= pipeline.
+The short version: we build a
 temp =.org= file with the right =#+keyword:= lines, paste the promoted subtree
 body into it, and run =org-html-export-to-html= exactly as for a standalone post.
 
@@ -4104,7 +4220,6 @@ leaves the heading untouched — absence is intentional (silent edits)."
                   (if (blog--multiple-style-p) (blog-new-post) (blog-new-article))))
     (define-key m (kbd "C-c i i") #'blog-insert-image)
     (define-key m (kbd "C-c i s") #'blog-insert-screenshot)
-    (define-key m (kbd "C-c g")   #'global-org-radio-target-jump)
     m)
   "Keymap for my/blogging-mode.")
 
@@ -4134,24 +4249,15 @@ On deactivation:
   :keymap my/blogging-mode-map
   (if my/blogging-mode
       (progn
-        (require 'org-special-block-extras)
-        (require 'org-preview-html)
+        (use-package org-special-block-extras :ensure t :demand t)
+        (use-package org-preview-html         :ensure t :demand t)
         (org-special-block-extras-mode 1)
         (setq browse-url-browser-function 'xwidget-webkit-browse-url)
         ;; Populate blog-posts/blog-tags now that we're actually editing — avoids
         ;; scanning every .org on bare (require 'AlBasmala).
-        (blog--refresh-posts)
-        ;; Activate cross-file radio target fontification and navigation.
-        (setq global-org-radio-target-directories (list blog-posts-directory)
-              global-org-radio-target-base-url blog-url
-              global-org-radio-target-slug-function #'global-org-radio-target--slug-at
-              global-org-radio-target-article-style-function
-              (lambda ()
-                (not (equal (blog--file-keyword nil "article_style") "multiple"))))
-        (org-radio-target-mode 1))
+        (blog--refresh-posts))
     (org-special-block-extras-mode -1)
-    (setq browse-url-browser-function 'browse-url-default-browser)
-    (org-radio-target-mode -1)))
+    (setq browse-url-browser-function 'browse-url-default-browser)))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
@@ -4252,26 +4358,13 @@ file-level keywords so that blog--style-setup runs unchanged."
           ;;    Write next to the source (blog-posts-directory/<slug>.html);
           ;;    .html files are gitignored so this is safe locally.
           ;;    blog-publish-all handles copying to public/ separately.
-          (let* ((html-out (expand-file-name (concat slug ".html") blog-posts-directory))
-                 ;; Collect <<<word>>> definitions from this subtree before export.
-                 (defined-words
-                  (with-current-buffer tmp-buf
-                    (let (words)
-                      (goto-char (point-min))
-                      (while (re-search-forward "<<<\\([^>]+\\)>>>" nil t)
-                        (push (match-string-no-properties 1) words))
-                      words))))
+          (let* ((html-out (expand-file-name (concat slug ".html") blog-posts-directory)))
             (with-current-buffer tmp-buf
               (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-              (add-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
-              (let ((global-org-radio-target-target-map (global-org-radio-target-collect-targets)))
-                (org-export-to-file 'html html-out))
-              (remove-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
-              (remove-hook 'org-export-before-processing-hook #'blog--style-setup))
-            ;; 4. Stabilise radio-target anchor IDs so cross-file links resolve.
-            (global-org-radio-target-stabilise-anchors html-out defined-words))
+              (org-export-to-file 'html html-out)
+              (remove-hook 'org-export-before-processing-hook #'blog--style-setup)))
 
-          ;; 5. Per-article colourised source: htmlize the subtree narrowed copy.
+          ;; 4. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
 
       ;; Cleanup temp files regardless of errors.
@@ -4320,9 +4413,11 @@ Returns the list of slugs that were published."
 #+end_src
 
 ** =.dir-locals.el=: auto-activate =my/blogging-mode= for all blog files :details:
+:PROPERTIES:
+:CUSTOM_ID: dir-localsel-auto-activate-myblogging-mode-for-all-blog-files
+:END:
 
-Any =.org= file opened from =~/blog/= should automatically activate =my/blogging-mode= —
-fontifying cross-file radio target words and enabling =C-c g= to jump to their definitions.
+Any =.org= file opened from =~/blog/= should automatically activate =my/blogging-mode=.
 We achieve this via a =.dir-locals.el= at the root of the blog directory, which is the
 idiomatic Emacs mechanism: no global hook, no =init.org= change, trivially reversible.
 
@@ -4330,7 +4425,10 @@ Emacs will prompt once — /"Allow .dir-locals.el to run eval?"/ — answer =!= 
 safe permanently.  Subsequent file opens are silent.
 
 #+begin_src emacs-lisp :tangle ".dir-locals.el"
-((org-mode . ((eval . (my/blogging-mode 1)))))
+((org-mode . ((eval . (progn
+                        (load-file (expand-file-name "AlBasmala.el"
+                                     (file-name-directory (buffer-file-name))))
+                        (my/blogging-mode 1))))))
 #+end_src
 
 * Deployment via CI
@@ -4374,7 +4472,8 @@ prior HTML) — axed along with the =:MODIFIED:= write-back machinery.
 Because the rebuild is always total, the consequence for validation is
 direct: a check either runs before every HTML is written, or it never
 runs at all.  That's why slug uniqueness is policed at =C-x C-s= preview
-time rather than on the CI path (see §[[Seamlessly Previewing Articles within Emacs]]):
+time rather than on the CI path
+# (see §[[Seamlessly-Previewing-Articles-within-Emacs]]):
 authoring is where collisions get introduced, and preview is where they
 get caught.  The tradeoff is that a never-previewed-but-pushed edit with
 a duplicate slug would slip into CI and silently overwrite one HTML with
@@ -4413,6 +4512,9 @@ beats ~45 seconds of saved wall-clock for a blog that deploys a handful of
 times per week.
 
 ** Asset sync                                                        :details:
+:PROPERTIES:
+:CUSTOM_ID: asset-sync
+:END:
 
 =blog--sync-assets= copies =resources/= wholesale into =public/resources/= so
 the deployed subtree is self-contained.  Exported HTML references assets with
@@ -4447,105 +4549,12 @@ can be deployed as-is to gh-pages without the master-branch source tree."
             (copy-file src (expand-file-name asset dist) t)))))))
 #+end_src
 
-** Cross-file radio target links                                    :details:
 
-*** Motivation
-
-Org-mode radio targets (~<<<word>>>~) let you define a term once and have every plain-text
-occurrence of that word in the /same file/ automatically become a clickable link to the
-definition.  We want the same behaviour /across/ articles — define ~<<<clojure>>>~ in one post
-and have the word =clojure= link back to it from every other post that mentions it.
-
-The obstacle: our publishing pipeline exports each top-level article in a multiple-style
-container into its own temp =.org= file before handing it to the HTML exporter.  The radio
-target definition in article A never appears in article B's temp buffer, so Org cannot linkify
-=clojure= there.
-
-The implementation lives in the standalone =~/global-org-radio-target/= package (=global-org-radio-target-= prefix).
-This blog wires it up inside =my/blogging-mode= by setting =global-org-radio-target-directories=, =global-org-radio-target-base-url=,
-and =global-org-radio-target-slug-function=, then calling =(org-radio-target-mode 1)=.
-
-*** Two-pass solution
-
-We solve this with two co-operating passes.
-
-*Pass 1 — pre-export injection* (~global-org-radio-target-inject-links~, a hook on
-=org-export-before-parsing-functions=): before the AST is built for the /referencing/ article,
-we replace each plain-text radio target word with an explicit ~[[https://alhassy.com/slug#word][word]]~ Org link.  The standard HTML exporter then handles it like any other external link.
-
-*Pass 2 — post-export anchor stabilisation* (~global-org-radio-target-stabilise-anchors~, called after
-=org-export-to-file=): org-html exports ~<<<word>>>~ as ~<a id="orgXXXXXXX">word</a>~ where
-=orgXXXXXXX= is a /randomly generated/ ID that changes on every export.  We scan the
-/definition/ article's freshly written HTML, locate the pattern ~<a id="orgXXX">word</a>~,
-rename its =id= to =word=, and rewrite any same-file ~href="#orgXXX"~ references (e.g. a
-heading that Org internally linked to the same anchor) to ~href="#word"~.  This makes =#word=
-a stable, predictable fragment that the cross-file links from Pass 1 can actually reach.
-
-Both passes must happen: Pass 1 alone produces links to a fragment that doesn't exist; Pass 2
-alone fixes anchors that nothing external yet points to.
-
-*** Data flow
-
-#+begin_example
-global-org-radio-target-collect-targets
-  ← pure regex scan of all *.org files in global-org-radio-target-directories (no org-mode activation)
-  ← for multiple-style files: reads :CUSTOM_ID: per heading via global-org-radio-target-slug-function
-  → hash table: word (lowercased) → https://alhassy.com/slug#word
-
-global-org-radio-target-inject-links  [org-export-before-parsing-functions hook]
-  ← reads global-org-radio-target-target-map (dynamic var bound by callers)
-  ← skips words defined via <<<word>>> in the same buffer (Org handles those natively)
-  ← skips #+begin_src…#+end_src, =verbatim=, and ~code~ spans
-  → rewrites plain-text radio-target words to [[url][word]] in the export copy buffer
-
-org-export-to-file  [standard Org HTML export]
-  → slug.html with <a id="orgXXX">word</a> at each <<<word>>> definition site
-
-global-org-radio-target-stabilise-anchors  [called post-export on the definition article's HTML]
-  → renames <a id="orgXXX">word</a> → <a id="word">word</a>
-  → rewrites href="#orgXXX" → href="#word" throughout the same file
-#+end_example
-
-*** In-buffer UX
-
-=org-radio-target-mode= (activated by =my/blogging-mode=) underlines every cross-file radio target word
-via font-lock, and =C-c g= (=global-org-radio-target-jump=) jumps to the =<<<word>>>= definition in whichever
-=.org= file defines it.  No Hyperbole required.
-
-*** Known limitations
-
-- *Definition must exist before reference can resolve* — the cross-file link is injected as an
-  absolute URL at export time.  If the definition article has never been exported (no slug in
-  the map), the reference article will simply have un-linked plain text, as before.  Re-export
-  the definition article first, then the reference article.
-
-- *Slug derived from =:CUSTOM_ID:= only* — =global-org-radio-target--slug-at= (the default =global-org-radio-target-slug-function=)
-  reads the =:CUSTOM_ID:= drawer property.  Headings without an explicit =:CUSTOM_ID:= are
-  skipped.  In practice every published article carries one (the pipeline writes it on first
-  export), but a brand-new heading not yet exported will be missed.
-
-- *Case: link text preserves original capitalisation, URL anchor is the raw target text* — the
-  injected ~[[url][word]]~ preserves whatever capitalisation the reference used (~Clojure~,
-  ~CLOJURE~, etc.) as the visible link text, but the anchor fragment is always the raw text
-  between ~<<<~ and ~>>>~ verbatim.
-
-- *Multi-word targets use =\b= boundaries* — the injection regex uses =\b= word boundaries,
-  which works for single-token targets.  Multi-word targets like ~<<<Type Descriptor>>>~ are
-  collected and injected when the exact phrase appears, but =\b= may behave unexpectedly at
-  phrase boundaries.
-
-- *No cross-file same-file-ref rewriting* — ~global-org-radio-target-stabilise-anchors~ only rewrites
-  ~href="#orgXXX"~ references /within the same HTML file/.  Cross-file same-file-ref rewriting
-  is not supported.
-
-- *Preview order matters* — during ~blog-preview-subtree~, both passes run for the article at
-  point.  But the cross-file link in a referencing article correctly points to
-  ~https://alhassy.com/slug#word~, which resolves only once the definition article is deployed
-  (or at least exported locally).  In local preview, that URL will 404 unless you open the
-  local definition HTML directly.  We accept this trade-off: production links are always
-  correct, local cross-file navigation requires opening the definition article separately.
 
 ** blog-publish-all: CI entry point                                  :details:
+:PROPERTIES:
+:CUSTOM_ID: blog-publish-all-ci-entry-point
+:END:
 
 =blog-publish-all= is what CI calls.  It exports every post, rebuilds index + tag
 pages + RSS, then syncs assets.  Running it locally works too — useful for a full
@@ -4607,7 +4616,6 @@ Dispatches on #+article_style: per file —
             (blog--publish-multiple-articles f))
         (let* ((base   (f-base f))
                (target (expand-file-name (concat base ".html") blog-publish-directory))
-               (global-org-radio-target-target-map (global-org-radio-target-collect-targets))
                (defined-words
                 (let (words)
                   (goto-char (point-min))
@@ -4618,16 +4626,16 @@ Dispatches on #+article_style: per file —
           ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
           ;; become the output destination.  blog--style-setup is already on
           ;; org-export-before-processing-hook, so the full pipeline still runs.
-          (add-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
-          (org-export-to-file 'html target)
-          (remove-hook 'org-export-before-parsing-functions #'global-org-radio-target-inject-links)
-          (global-org-radio-target-stabilise-anchors target defined-words)))))
+          (org-export-to-file 'html target)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
 #+end_src
 
 ** Media insertion: images and screenshots                           :details:
+:PROPERTIES:
+:CUSTOM_ID: media-insertion-images-and-screenshots
+:END:
 
 We have two commands for dropping media into an article at point — both copy the
 file into =~/blog/resources/=, git-add it, and insert an Org inline-image link that
@@ -4681,6 +4689,9 @@ you are prompted for a meaningful name; the timestamp default is just a fallback
 #+end_src
 
 ** Validation: no orphans, unique slugs                              :details:
+:PROPERTIES:
+:CUSTOM_ID: validation-no-orphans-unique-slugs
+:END:
 
 Two guards run as part of every local publish and as explicit CI steps:
 
@@ -4758,6 +4769,9 @@ Reports orphans as a hard error in CI (noninteractive) and a warning interactive
 #+end_src
 
 ** CI workflow: =.github/workflows/ci.yml=                           :details:
+:PROPERTIES:
+:CUSTOM_ID: ci-workflow-githubworkflowsciyml
+:END:
 
 The =validate= job runs on every push and PR; the =deploy= job runs only on pushes
 to =master= (after =validate= passes) and does the full build + deploy.
@@ -4909,54 +4923,3 @@ Further resources:
 - [[https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site][Managing a custom domain for your GitHub Pages site - GitHub Docs]]
 - [[https://richpauloo.github.io/2019-11-17-Linking-a-Custom-Domain-to-Github-Pages/][Linking A Custom Domain To Github Pages]]
 #+end_details
-
-* TODO COMMENT Archives
-** Org Marco: "This section has been #+include'd from my init.org"   :ignore:
-:PROPERTIES:
-:CUSTOM_ID: Org-Marco-This-section-has-been-include'd-from-my-init-org
-:END:
-
-# Some sections in this article come from my init.org.
-#
-# As such, the {{{from-my-init}}} macro is used to provide a nice, small, linkable, message.
-
-# Implementation below. ############################################################
-
-# This CSS rule targets all images within anchors within a <center> that has a class named "tiny". In particular, it's used
-# to target badges so that they are about the same size as <small> text.
-#+html: <style> center.tiny a img { height: 15px } </style>
-
-#+macro: init badge:A_Life_Configuring|Emacs|green|https://alhassy.github.io/emacs.d|gnu-emacs
-#+macro: from-my-init-text /This section has been =#+include='d from my init.org/, {{{init}}}
-#+macro: from-my-init @@html: <center class="tiny" style="font-size: 15px">@@ {{{from-my-init-text}}} @@html: </center>@@
-
-*** COMMENT Example usage
-
-
-{{{from-my-init}}}
-<<ensuring-useful-html-anchors>>
-#+include: "~/.emacs.d/init.org::*Ensuring Useful HTML Anchors"  :only-contents t
-** COMMENT unsplash link setup                         :Leave_as_cute_remark:
-:PROPERTIES:
-:CUSTOM_ID: COMMENT-unsplash-link-setup
-:END:
-#+begin_src emacs-lisp :exports code
-;; If you download images, from unspash, you'll have to host them somewhere!
-;; An alternative is just to provide direct links to the unsplash images themselves!
-;;
-;; Example usage:
-;;   unsplash:gySMaocSdqs
-;;
-;; This shows an image along with a useful tooltip; image size is 200x200 by default.
-;; The image is also a link, redirecting to the source, including whomever took the original photo.
-#+end_src
-
-(-let [unsplash (cl-second (s-match ".*unsplash.com/photos/\\(.*\\)" "https://unsplash.com/photos/Vc2dD4l57og"))]
-(if unsplash
-  (format "<center><a href=\"https://unsplash.com/photos/%s\" class=\"tooltip\" title=\"Photo from Unsplash\"><img
-src=\"https://source.unsplash.com/%s/300x300\"></a></center>"
-unsplash unsplash)))
-
-unsplash:XXX0GQfgMy8
-
-
