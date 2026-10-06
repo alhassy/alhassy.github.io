@@ -1,0 +1,3249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>interactive-way-to-c.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+#+title: <span style="font-weight: bold;">An Interactive Way To C
+</span><span style="color: #a0a1a7;">#+modified: 2019-01-12 19:29</span>
+#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+<span style="color: #a0a1a7;">#+description: Learning C program proving using Emacs --reminiscent of Coq proving with Proof General.</span>
+
+<span style="color: #a0a1a7;">#+filetags: program-proving c emacs frama-c</span>
+<span style="color: #a0a1a7;">#+fileimage: interactive_way_to_c.png 450 450</span>
+
+<span style="color: #0184bc; font-weight: bold;">* </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #0184bc; font-weight: bold;"> READ ME</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">comment-read-me</span>
+<span style="font-weight: bold;">:END:</span>
+
+When you first open this file, you will be asked &#8220;y or n&#8221; to applying the local variables
+in the file. Confirm that my scripts do nothing malicious to your machine, then
+(revert-buffer) and enter &#8220;y&#8221;. My locals will produce ~InteractiveWayToC.el~, which contains
+the utility functions ~f6~-~f9~ for in-Emacs programming and proving.
+
+<span style="text-decoration: underline;"><a href="https://orgmode.org/worg/org-tutorials/org4beginners.html">Org mode beginning at the basics</a></span> is a brief tutorial that covers a lot of Org and,
+from the get-go, covers &#8220;the absolute minimum you need to know about Emacs!&#8221;
+
+On my machine, I am using:
+
++ GNU Emacs 26.1 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.22.30) of 2019-01-10
+<span style="color: #a0a1a7;">  #</span>
+<span style="color: #a0a1a7;">  # (insert (emacs-version))</span>
++ Frama-C 15.0 &#8220;Phosphorus&#8221;
+  - This is rather dated.
+  - The latest version, Frama-C 18.0 &#8220;Argon&#8221;, may be installed from
+    <span style="text-decoration: underline;"><a href="http://frama-c.com/">http://frama-c.com/</a></span>
+
+Have fun!
+
+<span style="color: #0184bc; font-weight: bold;">* Abstract                                                           </span><span style="color: #0184bc; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">abstract</span>
+<span style="font-weight: bold;">:END:</span>
+
+Do you know what the above program accomplishes?
+If you do, did you also spot a special edge case?
+
+We aim to present an approach to program proving in C using a minimal Emacs setup
+so that one may produce literate C programs and be able to prove them correct
+--or execute them-- using a single button press; moreover the output is again in Emacs.
+
+The goal is to learn program proving using the Frama-C tool
+--without necessarily invoking its gui-- by loading the source of this file into
+Emacs then editing, executing, &amp; proving as you read along.
+One provides for the formal specification of properties of C programs --e.g., using ACSL--
+ which can then be verified for the implementations using tools that interpret such annotation
+--e.g., Frama-C invoked from within our Emacs setup.
+
+Read on, and perhaps you'll figure out how to solve the missing ~FixMe~ pieces &#128521;
+
+The intent is for rapid editing and checking.
+Indeed, the Frama-c gui does not permit editing in the gui, so one must switch between
+their text editor and the gui.
+<span style="text-decoration: underline;"><a href="https://orgmode.org/worg/org-tutorials/org4beginners.html">Org mode beginning at the basics</a></span> is a brief tutorial that covers a lot of Org and,
+from the get-go, covers &#8220;the absolute minimum you need to know about Emacs!&#8221;
+
+If anything, this effort can be construed as a gateway into interactive theorem proving
+such as with Isabelle, Coq, or Agda.
+
+The article <span style="font-style: italic;">/aims/</span> to be self-contained --not even assuming familiarity with any C!
+
+
+<span style="color: #a0a1a7;">#+BEGIN_QUOTE
+</span>  The presentation and examples are largely inspired by
+
+  + Gilles Dowek's exquisite text <span style="text-decoration: underline;"><a href="https://www.springer.com/gp/book/9781848820319">Principles of Programming Languages</a></span>.
+     - It is tremendously accessible!
+
+  + Allan Blanchard's excellent tutorial
+    <span style="text-decoration: underline;"><a href="https://allan-blanchard.fr/publis/frama-c-wp-tutorial-en.pdf">Introduction to C Program Proof using Frama-C and its WP Plugin</a></span>.
+
+  Another excellent and succinct tutorial is Virgile Prevosto's <span style="text-decoration: underline;"><a href="https://frama-c.com/download/acsl-tutorial.pdf">ACSL Mini-Tutorial</a></span>.
+  In contrast, the tutorial <span style="text-decoration: underline;"><a href="https://www.cs.umd.edu/class/spring2016/cmsc838G/frama-c/ACSL-by-Example-12.1.0.pdf">ACSL By Example</a></span> aims to provide a variety of algorithms
+  rendered in ACSL.
+<span style="color: #a0a1a7;">#+END_QUOTE
+</span>
+There are no solutions since it's too easy to give up and look at the solutions that're
+nearby. Moreover, I intend to use some of the exercises for a class I'm teaching ;-)
+
+<span style="color: #0184bc; font-weight: bold;">* Introduction</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">introduction</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #8b4513; font-weight: bold;">** Intro                                                            </span><span style="color: #8b4513; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">intro</span>
+<span style="font-weight: bold;">:END:</span>
+Despite its age, C is a widely used language and so is available on many platforms.
+Moreover, many systems rely on code historically written in C that needs to be maintained.
+
+The traditional way to obtain confidence that a program correctly works is to provide
+inputs we believe to be representative of the actual use of the program and
+verify the results we get are correct. Incidentally, the unexpected cases are often not
+considered whereas they are generally the most dangerous ones.
+Since we cannot test everything, we need to employ great care in selecting good tests.
+
+Since it is hard to answer &#8220;Is our software tested enough?&#8221;, we consider mathematically
+proving that there cannot be problems at runtime. That is, a specification of the expected
+behaviour is provided, which is satisfied by the <span style="font-style: italic;">/resulting/</span> program
+--note the order: Specify <span style="font-style: italic;">/then obtain/</span> code! This two-stage process can produce errors
+in either stage, yet whereas testing ensures &#8220;the program avoids the bugs we tested against&#8221;
+this approach is a big step ensuring &#8220;the program doesn't contain bugs that don't exist in
+the specification.&#8221;
+
+The goal here is to use a tool to learn the basics of C program proof
+--Frama-C: FRAmework for Modular Analysis of C code.
+In particular, to demonstrate the ability to write programs without any error
+by emphasising the simple notions needed to write programs more confidently.
+
+Testing is &#8216;dynamic analysis&#8217; since it requires the actual execution of programs,
+whereas our program proof approach is &#8216;static&#8217; since no execution is performed but instead
+we reason on a semantic model of the reachable states.
+The semantics associated with the C language control structures and statements we will
+use is known as Hoare Logic. One writes a &#8220;Hoare Triple&#8221; <span style="font-style: italic;">/{G} S {R}/</span> to express that
+&#8220;Starting in a given state (satisfying) <span style="font-style: italic;">/G/</span>, the execution of <span style="font-style: italic;">/S/</span> terminates such that the
+resulting state (satisfies) R&#8221;.
+
+How does one <span style="font-style: italic;">/prove/</span> such a triple? Programs are constructed from a variety of pieces,
+so it suffices to look at each of those. That is, <span style="font-style: italic;">/{G} S {R}/</span> has the code <span style="font-style: italic;">/S/</span> transform
+the required predicate <span style="font-style: italic;">/R/</span> to the given <span style="font-style: italic;">/G/</span> --since we usually know what is required
+and it is the goal of the program. In general, we find the <span style="font-style: italic;">/weakest/</span> precondition that
+works since then it allows the largest possible number of inputs;
+if <span style="font-style: italic;">/G/</span> is at least as strong as the weakest precondition, then our program is correct but
+may allow less then the largest amount of possible inputs.
+
+For example, <span style="font-style: italic;">/{5 &#8804; x &#8804; 10} x &#8788; x + 1 { 3 &#8804; x &#8804; 11}/</span> is a correct program that ends in state
+<span style="font-style: italic;">/3 &#8804; x &#8804; 11/</span>, however its precondition could be weakened to <span style="font-style: italic;">/2 &#8804; x &#8804; 10/</span> thereby allowing
+many more  valid inputs.
+
+In Frama-C, we do not use curly braces like this for such assertions but instead
+express our properties as code annotations using the ANSI C Specification Language
+--ACSL or &#8220;axel&#8221;. The weakest precondition plugin uses the annotation and the code to
+automatically ensure the program is correct according to the Hoare Logic fashion
+mentioned earlier.
+
+<span style="color: #8b4513; font-weight: bold;">** Getting Started</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">getting-started</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># Installation: ~apt install frama-c~</span>
+
+The aim of this section is to introduce the Emacs controls that bring C to life within
+literate code.
+
+| <span style="text-decoration: underline;">_Key Press_</span>         | <span style="text-decoration: underline;">_Elisp Command_</span>    | <span style="text-decoration: underline;">_Description_</span>                                                          |
+| Enter ~&lt;s~ then ~TAB~ | &#9472;                | Produces a &#8220;Hello World&#8221; C template program.                         |
+| ~F6~                | ~(interpret)~      | Execute currently focused code blocks in a new buffer.               |
+| ~F7~                | ~(show-code)~      | Shows currently focused code blocks in a new buffer.                 |
+| ~F8~                | ~(frama-c)~        | Open the Frama-C gui on the currently focused code blocks.           |
+| ~F9~                | ~(frama-c-no-gui)~ | Invoke Frama-C on the currently focused code blocks in a new buffer. |
+
+Which code blocks are currently under focus is controlled by the command
+~(currently-working-with "nameHere")~, which produces a file ~nameHere.c~ that is used
+for the utility functions. If multiple blocks use the same filename, then the file is
+appended to.
+While reading this tutorial, bring/take code blocks in/out of focus by
+toggling between ~(currently-working-with "nameHere")~ and
+~(not-currently-working-with "nameHere")~ ---that is, simply prepend ~not-~.
+Remember to undo such a toggle when you're done with a code block.
+
+When no name is provided to ~[not-]currently-working-with~, the name of the buffer is used.
+
+<span style="color: #a626a4; font-weight: bold;">*** Exercise: Hello World</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">exercise-hello-world</span>
+<span style="font-weight: bold;">:END:</span>
+
+0. Insert the text ~&lt;s~ then press the ~TAB~ key.
+1. A new C program template has appeared.
+2. Press ~F6~ to execute the code in another buffer.
+3. Press ~F7~ to inspect the code in another buffer.
+4. Alter the program to output your name, press ~F6~.
+
+Now toggle that code block so that you are ~not~ currently working with it.
++ Make a change to the code block, such as printing 42. Notice that ~F6~ refers
+  to the old file on disk since there is no currently focused block.
+
+<span style="color: #a626a4; font-weight: bold;">*** Exercise: Verifying Swap</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">exercise-verifying-swap</span>
+<span style="font-weight: bold;">:END:</span>
+
+Consider the fully annotated ~swap~ algorithm, i.e., remove the ~not-~ prefix,
+<span style="color: #a0a1a7;">#+NAME: Simple swap example</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">#include&lt;stdio.h&gt; // for IO
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@
+requires \valid(a) &amp;&amp; \valid(b);
+assigns *a, *b;
+ensures *a == \old(*b);
+ensures *b == \old(*a);
+</span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">swap</span>(<span style="color: #c18401;">int</span>* <span style="color: #8b4513;">a</span>, <span style="color: #c18401;">int</span>* <span style="color: #8b4513;">b</span>)
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">tmp</span> = *a;
+  *a = *b;
+  *b = tmp;
+}
+
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">printf("Hello World!\n");
+</span>
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">a</span> = 42;
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">b</span> = 37;
+
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert Before_Swap: a == 442 &amp;&amp; b == 37;
+</span>  swap(&amp;a, &amp;b);
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert After_Swap: a == 37 &amp;&amp; b == 42;
+</span>
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+We can see that Frama-C proves these assertions by obtaining &#8220;green bullets&#8221;
+beside them if we execute
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE shell
+</span>frama-c-gui -wp -rte myfile.c
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Or check-boxes beside them if we instead execute
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE shell
+</span>frama-c-gui -gui-theme colorblind -wp -rte myfile.c
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>The best way to know which options are available is to use
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE shell
+</span>frama-c -wp-help
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+We will however use the special Emacs calls defined at the bottom of this file,
+~frama-c~ and ~frama-c-no-gui~, to avoid having to switch between a terminal and a
+text editor. Thank-you extensible editor Emacs &#8995;&#776; &#9829;
+
++ Press ~F8~ to invoke the Frama-C gui.
++ Press ~F9~ to invoke Frama-C within Emacs and obtain status about the program proof.
+
+If you uncomment the IO matter, Frama-C may yield an error.
+<span style="font-weight: bold;">*Separate your IO into its own driver file!*</span>
+Invoke Frama-C only on programs you want to prove --without any IO.
+
+Go back to the above example, and change the first assertion in ~main,
+~a == 42~, to assert that ~a~ equals ~432~. Now invoke ~M-x framac-no-gui~, or press ~F9~,
+to obtain the message,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE
+</span>Frama-C: 90&#65130; of proof complete!
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Moreover, another buffer will be open and in red will be highlighted,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE
+</span>[wp] [Alt-Ergo] Goal typed_main_assert_Before_Swap : Unknown (Qed:0.63ms) (57ms)
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>This indicates that, in method ~main~, the named assertion ~Before_Swap~ could not be proven.
+
+<span style="color: #a0a1a7;"># If we &#8220;generate&#8221; proof matter, then</span>
+<span style="color: #a0a1a7;"># it reports a false assertion at line 24 --look for the phrase ~goal main_assert: false~.</span>
+<span style="color: #a0a1a7;"># Indeed if you invoke ~M-x show-code~ then head to line 24,</span>
+<span style="color: #a0a1a7;"># you will find yourself at the line you altered. Neato!</span>
+
+Now revert all alterations and in the specification of ~swap~, alter
+~ensures *a ==== \old(*b);~ to become ~ensures *a == \old(*a);~, thereby expressing
+that the value of ~a~ is unaltered by the program. Checking this yields a false
+assertion! Neato.
+
+As such, I suggest the following literate process:
+1. Write your code in Org-mode code blocks,
+2. Check it works with ~frama-c-no-gui~ (F9) or ~frama-c~ (F8).
+   - If we open the gui, we may right-click on a function name and select
+     ~Prove function annotations by WP~ to have our assertions checked.
+   - Remember that the frama-c gui does not allow source code edition.
+3. Investigate output, then make changes in source file and re-check.
+
+Observe
++ Program proof is a way to ensure that our programs only have correct behaviours,
+  described by our specification;
++ It is still our work to ensure that this specification is correct.
+
+<span style="color: #a0a1a7;"># Don't forget to mark the above code block as</span>
+<span style="color: #a0a1a7;"># (not-currently-working-with)</span>
+<span style="color: #a0a1a7;"># !~!</span>
+
+<span style="color: #8b4513; font-weight: bold;">** A Prelude</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">a-prelude</span>
+<span style="font-weight: bold;">:END:</span>
+Since C's ~#include~ is essentially a copy-paste, we can re-export other libraries
+from a make-shift &#8216;Prelude&#8217;.
+
+<span style="color: #a0a1a7;">#+NAME: Prelude -- common utilities for program proving</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (currently-working-with "Prelude")
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Artefacts so that exercises let the system progress as much as possible.
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ predicate Exercise = \false;
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ predicate FixMe = \false;
+</span><span style="color: #e44649;">#define</span> <span style="color: #8b4513;">FixMeCode</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Tendency to require this header file to specfiy avoidance of overflow.
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+We will continue to be ~(currently-working-with "Prelude")~ in the future to add more
+content. For now, we put the artefacts needed to let the exercises pass.
+
+<span style="color: #a0a1a7;">#+BEGIN_QUOTE
+</span>The use of ~\false~ is not the most appropriate, since its occurrence in a precondition
+  vacuously makes everything true! This is something that should change.
+
+The current setup produces only ~.c~ files, whence we use the prelude by declaring
+~#include "Prelude.c".~ Forgive my use of a ~.c~ file in-place of a header file.
+The alternative is to force all code block names to end in a ~.c~.
+<span style="color: #a0a1a7;">#+END_QUOTE
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Basic Constructs</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">basic-constructs</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;"># Imperative Core</span>
+
+<span style="color: #8b4513; font-weight: bold;">** Introduction for Basics                                           </span><span style="color: #8b4513; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">introduction-for-basics</span>
+<span style="font-weight: bold;">:END:</span>
+Recall that a Hoare Triple <span style="font-style: italic;">/{G} S {R}/</span> expresses that if execution of program ~S~ is begun
+in a state satisfying proposition <span style="font-style: italic;">/G/</span> then it terminates in a state satisfying proposition <span style="font-style: italic;">/R/</span>.
+We usually know <span style="font-style: italic;">/R/</span> --it is the required behaviour on ~S~ after all-- but otherwise we usually
+only have a vague idea of what <span style="font-style: italic;">/G/</span> could possible be.
+Dijkstra's <span style="font-style: italic;">/weakest precondition/</span> operator &#8216;wp&#8217; tells us how to <span style="font-weight: bold;">*compute*</span> <span style="font-style: italic;">/G/</span> from <span style="font-style: italic;">/R/</span>
+--in the process we usually <span style="font-weight: bold;">*discover*</span> ~S~.
+
+Hence, all in all, programming begins with the required goal from which code is then derived.
+
+<span style="color: #a0a1a7;">#+begin_details Frama-C Lingo
+</span>Post-conditions <span style="font-style: italic;">/R/</span> are expressed using the ~ensures~ clause, and dually pre-conditions <span style="font-style: italic;">/G/</span>
+are expressed using ~requires~ clauses. These <span style="font-style: italic;">/G/</span> are properties assumed for the input
+and it is the callers responsibility to ensure that they are true
+--recall that when a contract is breached, the implementation may behave arbitrarily.
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Since &#8216;wp&#8217; is intended to <span style="font-weight: bold;">*compute*</span> the weakest precondition establishing a given
+postcondition <span style="font-style: italic;">/R/</span> for a statement ~S~, it necessarily satisfies
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>    { G } S { R }   &#8801;   G &#8658; wp S R
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+The left side may be rendered using ACSL,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE c
+</span><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">@ assert G;
+</span>S;
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">@ assert R;
+</span><span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+The WP plugin for Frama-C essentially works by computing ~wp S R~ then attempts to obtain
+a proof for ~G &#8658; wp S R~.
+In particular, by the reflexivity of implication, &#8216;wp&#8217; guarantees to produce a
+precondition so that the following Hoare triple is valid.
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>   { wp S R } S { R }
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+Most programming languages have, among others, five constructs:
+Assignment, variable declaration, sequence, test, and loop.
+These constructs from the <span style="font-style: italic;">/imperative core/</span> of the language.
+Since programs are built using such primitive control structures, it suffices to define
+wp &#8220;by induction&#8221; on the shape of ~S~.
+
+One reasonable property we impose on wp from the outset is: \\
+If <span style="font-style: italic;">/S/</span> establishes <span style="font-style: italic;">/R/</span> which implies <span style="font-style: italic;">/R&#8242;/</span>, then <span style="font-style: italic;">/S/</span> also establishes <span style="font-style: italic;">/R&#8242;/</span>.
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE
+</span>Monotonicity: R &#8658; R&#8242;   implies  wp S R &#8658; wp S R&#8242;
+                       That is, {wp S R} S {R&#8242;}
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Whence for each definitional clause of wp, we must ensure this desirable property is held.
+
+<span style="color: #a0a1a7;">#+begin_details Relationship To Semantics Brackets
+</span>
+Imperative programs alter state, as such a statement ~S~ is essentially a function
+that transforms the memory state of the computer.
+Expressing in English what happens when a statement is executed is possible
+for simple examples, but such explanations quickly become complicated and imprecise.
+Therefore, one introduces a theoretical framework reifying statements as state transformers.
+
+# We shall write ~wp S~ for the function associated with a statement ~S.~
+# This is also a partial function since execution of a statement ~S~ may produce a computational &#8216;error&#8217;.
+
+The two popular notions are the &#8220;forwards&#8221; ~&#10214;S&#10215;~ moves current state to a new state,
+whereas we are working with &#8220;backwards&#8221; ~wp S~ which takes a desired state and yields
+a necessary previous state. The forward notion &#8216;executes&#8217; a program by starting in
+the empty state and stepping through each command to result in some final state.
+Whereas the backwards notion takes an end goal and suggests which programming constructs
+are needed to obtain it.
+Hence, &#8216;forwards&#8217; is verification whereas &#8216;backwards&#8217; is correct-by-construction
+programming.
+
+Suppose there is an infinite set ~Var~ of variables and an infinite set ~Val~ of values,
+which are integers, booleans, etc. In the &#8216;forwards&#8217; notion, a <span style="font-style: italic;">/state/</span> is a partial
+function from variables to values --`partial' since it may be undefined at some
+variables, since we usually use only finitely many
+in our programs anyways. E.g., state ~{x &#8614; 5, y &#8614; 6}~ associates the value 5 to variable ~x~
+but is undefined for variable ~z~. Dually, in the &#8216;backwards&#8217; notion, a <span style="font-style: italic;">/state/</span> is a predicate of the
+variables and their values that satisfy the predicate; e.g., the previous example state
+corresponds to the predicate ~x = 5 &#8743; y = 6~, where ~z~ can have <span style="font-style: italic;">/any/</span> value.
+Hence the predicate formulation is more relaxed and we shall refer to it instead.
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Assignment</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">assignment</span>
+<span style="font-weight: bold;">:END:</span>
+The <span style="font-style: italic;">/assignment/</span> construct allows the creation of a statement with a variable
+~x~ and an expression ~E~. The assignment statement is written ~x = E;~.
+- Variables are identifiers which are written with one or more letters.
+- Expressions are composed of variables, constants, and operator calls.
+- Sometimes one <span style="font-style: italic;">/notates/</span> assignment by ~x &#8788; E~ even though it is invalid C code.
+
+To understand the execution of an assignment, suppose that within the
+recesses of your computer's memory, there is a compartment labelled ~x~.
+Obtain the <span style="font-style: italic;">/value/</span> of ~E~ --possibly having to look up values of variables
+that ~E~ mentions-- then erase the contents of ~x~ and fill the compartment
+with the newly obtained value.
+
+The whole of the contents of the computer's memory is called a <span style="font-style: italic;">/state/</span>.
+We also say &#8220;predicate <span style="font-style: italic;">/R/</span> is the current state&#8221; as shorthand for:
+The current state is (non-deterministically) <span style="font-style: italic;">/any/</span> variable-value assignment
+such that predicate <span style="font-style: italic;">/R/</span> is true.
+
+All in all, executing ~x &#8788; E~ loads memory location ~x~ with the value of expression ~E~;
+hence state <span style="font-style: italic;">/R/</span> is satisfied after an assignment precisely when it is satisfied
+with variable ~x~ replaced by expression ~E~. For example, ~wp (x &#8788; x+1) (x = 5)  &#8801;  (x+1 = 5)~.
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>wp (x &#8788; E) R  &#8801;  R[x &#8788; E]
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+Before being able to assign values to a variable ~x~, it must be <span style="font-style: italic;">/declared/</span>,
+which associates the name ~x~ to a location in the computer's memory.
+<span style="font-style: italic;">/Variable declaration/</span> is a construct that allows the creation of a statement
+composed of a variable, an expression, and a statement. This is written
+~{T x = e; p}~, then variable ~x~ can be used in statement ~p~, which is called
+the <span style="font-style: italic;">/scope/</span> of variable ~x~.
+( When ~p~ has no assignments, functional programmers would call this statement
+  a <span style="font-style: italic;">/let statement/</span> since it lets ~x~ take on the value ~e~ in ~p~. )
+
+<span style="color: #a0a1a7;">#+begin_details Some C Arithmetical Operations
+</span>+ Division:
+  If both arguments are integers, then the operation rounds down; write, e.g., ~5 / 2.0~
+  to mark the result as floating point.
+
++ Modulo: The number ~a % b~ is ~a - b * (a / b).~
+
++ Ternary Conditional: For all types, the expression ~(c) ? t : f~
+   yields ~t~ if boolean ~c~ holds and is ~f~ otherwise.
+
++ A useful inclusion: <span style="font-style: italic;">/2*10^9 &lt;= 2^32 &lt;= 2*10^10/</span>
+
+   <span style="font-weight: bold;">:Proof:</span>
+Indeed
+
+   2&#179;&#178; &#8804; 2*10&#7510;
+&#8801;  2&#179;&#185; &#8804; 10&#7510;                 -- Divide by 2
+&#8801; log&#8321;&#8320; 2&#179;&#185; &#8804; p              -- Take logs
+&#8801; log&#8321;&#8320; 2 &#8804; p / 31           -- Log properties
+&#8771; 1/3 &#8804; p / 31              -- (log 2 10) &#8776; 0.3
+&#8771; 31 * 1/3 &#8804; p              -- Multiply both sides
+&#8771; 10 &#8804; p                    -- Approximate arithmetic
+
+;; (log number base)
+(log 2 10)  ==&gt; 0.301029
+
+<span style="font-weight: bold;">:End:</span>
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Overshadowing &amp; Explicit Scope Delimitation</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">overshadowing-explicit-scope-delimitation</span>
+<span style="font-weight: bold;">:END:</span>
+Imperative languages generally do not allow the declaration of the same variable multiple
+times, e.g., the following program crashes with ~error: redefinition of &#8216;x&#8217;~.
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "overshadowing_error")
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span> = 3;
+  printf(<span style="color: #50a14f;">"x has value: %d"</span>, x);
+
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span> = 4;
+  printf(<span style="color: #50a14f;">"x has value: %d"</span>, x);
+
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>However, if we <span style="font-style: italic;">/explicitly delimit the scope/</span> of a variable by using braces, then we can
+obtain multiple declarations:
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "explicit_scope_delimitation")
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span> = 3;
+  printf(<span style="color: #50a14f;">" x has value: %d"</span>, x);  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">3
+</span>
+  { <span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span> = 4;
+    printf(<span style="color: #50a14f;">"\n x has value: %d"</span>, x); <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">4
+</span>  }
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+When explicitly delimiting scope, it is the most recent declarations
+that are used. We say that earlier declarations are <span style="font-style: italic;">/hidden/</span>, or <span style="font-style: italic;">/overshadowed/</span>,
+by the later declarations.
+
+<span style="color: #a0a1a7;">#+begin_details Frama-C Rendition
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "explicit_scope_framac")
+int main()
+{
+  int x = 3;
+
+  //@ assert x == 3;
+
+  { // Begun new scope
+
+    // Old facts are still true.
+    //@ assert x == 3;
+
+    // Now overshadowing &#8216;x&#8217;
+    int x = 4;
+
+    // This new &#8216;x&#8217; is equal to 4.
+    //@ assert x == 4;
+  }
+
+  <span style="font-style: italic;">// Back to the parent scope.
+  //</span> In this scope, &#8216;x&#8217; still has its orignal value.
+  //@ assert x == 3;
+
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Constant Variables</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">constant-variables</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="font-style: italic;">/Constant variables/</span> are variables which may have only one initial value that
+can never be changed. A non-constant variable is called <span style="font-style: italic;">/mutable/</span>, which is
+the default in imperative languages. For example, the following
+crashes with ~error: assignment of read-only variable &#8216;x&#8217;~.
+
+<span style="color: #a0a1a7;">#+BEGIN_SRC c
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #a626a4;">const</span> <span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span> = 3;
+  x = 4;
+  printf(<span style="color: #50a14f;">"x has value: %d"</span>, x);
+
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Sequence</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">sequence</span>
+<span style="font-weight: bold;">:END:</span>
+
+A <span style="font-style: italic;">/sequence/</span> is a construct that allows a single statement to be created out of
+two statements ~p~ and ~q~; it is written ~{p q}~.
+The sequence is executed in state ~s~ by first executing ~p~ in state ~s~ thereby
+producing a new state ~s'~ in which statement ~q~ is then executed.
+- The statement ~{p&#8321; {p&#8322; { ... p&#8345; } ...}}~ can also be written ~{p&#8321; p&#8322; ... p&#8345;}~.
+
+Usually a &#8216;;&#8217; symbol is used in favour of a space, with braces, to yield,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>wp (S&#8321;;S&#8322;) R  &#8801;  wp S&#8321; (wp S&#8322; R)
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>The pre-condition of the second statement becomes the post-condition of the first
+statement. Hence, we &#8220;push&#8221; along the post-condition into a sequence:
+In the upcoming swapping example, we read the proof steps from bottom to top!
+
+Rendered pointfree, i.e., ignoring <span style="font-style: italic;">/R/</span>, this rule becomes: <span style="font-style: italic;">/wp (S&#8321;;S&#8322;)  = wp S&#8321; &#8728; wp S&#8322;/</span>.
+
+Recall that we need to ensure monotonicity is satisfied, and indeed: If <span style="font-style: italic;">/R &#8658; R&#8242;/</span>, then
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>  wp (S&#8321;;S&#8322;) R
+&#8801; wp S&#8321; (wp S&#8322; R)    -- Definition of wp on sequence
+&#8658; wp S&#8321; (wp S&#8322; R&#8242;)   -- Monotoncity for S&#7522;, twice; with assumption R &#8658; R&#8242;
+&#8801; wp (S&#8321;;S&#8322;) R      -- Definition of wp on sequence
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Neato!
+
+Moreover, notice we have the useful &#8216;transitivity&#8217; property for Hoare triples:
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>   {G} S&#8321; {R&#8242;}  &#8743;  {R&#8242;} S&#8322; {R}
+&#8801;  (G &#8658; wp S&#8321; R&#8242;)  &#8743;  (R&#8242; &#8658; wp S&#8322; R)              -- Characterisation of wp
+&#8658; (G &#8658; wp S&#8321; R&#8242;)  &#8743;  (wp S&#8321; R&#8242; &#8658; wp S&#8321; (wp S&#8322; R)) -- Monotonicity of wp
+&#8658; (G &#8658; wp S&#8321; (wp S&#8322; R))                           -- Transitivity of implication
+&#8801;  G &#8658; wp (S&#8321;;S&#8322;) R                               -- Definition of wp on sequence
+&#8801;  {G} S&#8321;;S&#8322; {R}                                  -- Characterisation of wp
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+Exercise: Show that ~wp (x &#8788; E; S) R  &#8801;  (wp S R)[x &#8788; E]~.
+
+<span style="color: #8b4513; font-weight: bold;">** Skip</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">skip</span>
+<span style="font-weight: bold;">:END:</span>
+
+The &#8220;empty sequence&#8221; is denoted ~{}~ or just ~;~ in the C language.
+It is also commonly known as the ~skip~ construct and its importance is akin to that
+of zero to addition.
+
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>wp skip R  &#8801;  R
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>The &#8220;do nothing&#8221; program ~skip~ is rendered as simple ~;~ or as whitespace in the C language.
+This program does not alter the state at all, thus it truthifies <span style="font-style: italic;">/R/</span> precisely when <span style="font-style: italic;">/R/</span>
+was true to begin with.
+
+Most often this appears in a weakening/strengthening form,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE c
+</span>...code here...
+<span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert P;
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert Q;
+</span>...code here...
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Where <span style="font-style: italic;">/P &#8658; Q/</span> is provable.
+
+More concretely,
+<span style="color: #a0a1a7;">#+NAME: Example of using skip</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 3 &lt; a &lt; 9;
+  @ ensures  -20 &lt;= \result &lt;= 99;
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">using_skip</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">a</span>)
+{
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert our_strong_pre:         3 &lt; a &lt; 9;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert weakened_intermediary: -7 &lt;= a &lt;= 14;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert weakening_futher:     -20 &lt;= a &lt;= 99;
+</span>  <span style="color: #a626a4;">return</span> a;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>Woah! It looks like the identity function somehow transforms input satisfying
+<span style="font-style: italic;">/3 &lt; x &lt; 9/</span> to input satisfying <span style="font-style: italic;">/-20 &#8804; x &#8804; 99/</span>.
+Wait, the former implies the latter and that's just the definition of <span style="font-style: italic;">/wp/</span> on ~skip~.
+
+The above example suggests the following calculation,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>   (G&#8242; &#8658; G)  &#8743;  {G} S {R}  &#8743;  (R &#8658; R&#8242;)
+&#8801;  (G&#8242; &#8658; G)  &#8743;  (G &#8658; wp S R)  &#8743;  (R &#8658; R&#8242;) -- Characterisation of wp
+&#8658; (G&#8242; &#8658; wp S R)  &#8743;  (R &#8658; R&#8242;)              -- Transitivity of implication
+&#8658; (G&#8242; &#8658; wp S R)  &#8743;  (wp S R &#8658; wp S R&#8242;)    -- Monotonicity of wp
+&#8658; (G&#8242; &#8658; wp S R&#8242;)                          -- Transitivity of implication
+&#8801;  {G&#8242;} S {R&#8242;}                            -- Characterisation of wp
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>That is, strengthening the precondition or weakening the post-condition leaves
+a Hoare triple valid. In some industry circles --e.g., C#--, this is referred to as
+contravariance (antitone) in the input and covariance (monotone) in the output.
+
+For example, if ~G&#8242;, G, R, R&#8242;~ were classes such that ~G&#8242;~ is a subclass of ~G~
+and ~R~ is a subclass of ~R&#8242;~, then the program ~S~ takes an input of type ~G~ yielding an
+output of type ~R&#8242;~. However, any input of type ~G&#8242;~ can be cast into the parent-class
+type ~G~ and, likewise, ~R~ objects can be cast into the parent-type ~R&#8242;~.
+Thus, program ~S~ can also take the type of ~G&#8242;~ to ~R&#8242;~.
+
+Writing ~&lt;:~ for &#8216;sub-type&#8217;, or &#8216;sub-class&#8217;, we have argued,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>Provided    G&#8242; &lt;: G  and R &lt;: R&#8242;
+Then
+       G &#8594; R  &lt;:  G&#8242; &#8594; R&#8242;
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>It is now easier to see that the second argument of function-type former &#8216;&#8594;&#8217; stays
+on the same side of the ~&lt;:~ symbol, whereas it is flipped for the first argument.
+
+Completely unrelated --or not-- a nearly identical property holds for implication:
+If <span style="font-style: italic;">/G&#8242; &#8658; G/</span> and <span style="font-style: italic;">/R &#8658; R&#8242;/</span> then (G &#8658; R) &#8658; (G&#8242; &#8658; R&#8242;). How coincidental ... or not!
+\\ ( Foreshadowing: Curry-Howard Correspondence! )
+
+Anyhow, this strengthening-weakening law will be useful when computing the <span style="font-style: italic;">/wp/</span> of a
+statement directly is difficult --and possibly unhelpful-- but we have a stronger
+precondition and so it suffices to use that.
+( Foreshadowing: Loops! )
+
+Before we close, here is an <span style="font-weight: bold;">*exercise*</span> to the reader: An alternate proof of the above law.
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>   (G&#8242; &#8658; G)  &#8743;  {G} S {R}  &#8743;  (R &#8658; R&#8242;)
+&#8801;  {G&#8242;} skip {G} &#8743; {G} S {R} &#8743; {R} skip {R&#8242;}    -- ???
+&#8658; {G&#8242;} skip; S {R} &#8743; {R} skip {R&#8242;}             -- ???
+&#8658; {G&#8242;} skip; S; skip {R&#8242;}                      -- ???
+&#8801;  {G&#8242;} S {R&#8242;}                                  -- skip is no-op &amp; can be removed.
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+The last hint in the above calculation deserves some attention.
+0. Rendered pointfree, i.e., ignoring <span style="font-style: italic;">/R/</span>, the skip rule becomes: <span style="font-style: italic;">/wp skip  = id/</span>.
+   - Where <span style="font-style: italic;">/id/</span> is the identity function: <span style="font-style: italic;">/id(x) = x/</span>.
+1. &#8220;Program Equality&#8221;: Say ~S &#8776; T~ precisely when ~wp S = wp T~.
+   - Two programs are considered equal precisely when they have the same
+     <span style="font-style: italic;">/observational/</span> behaviour --i.e., can satisfy the same set of post-conditions <span style="font-style: italic;">/R/</span>.
+2. Identity of Sequence Theorem: ~S ; skip  &#8776;  S  &#8776;  skip ; S~.
+3. Likewise, define <span style="font-style: italic;">/wp abort R &#8801; false/</span>  -- i.e., ~abort~ is a program that crashes on
+   any input.
+4. Zero of Sequence Theorem: ~S ; abort  &#8776;  abort  &#8776;  abort ; S~.
+
+<span style="color: #8b4513; font-weight: bold;">** Examples Using the Assignment, Sequence, Skip Rules</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">examples-using-the-assignment-sequence-skip-rules</span>
+<span style="font-weight: bold;">:END:</span>
+To avoid having to write the verbose ~\at(x, Pre)~ to refer to the value of a variable ~x~
+before method execution, we may use a <span style="font-style: italic;">/ghost variable/</span>: A variable whose purpose is only
+to make the assertions provable, and otherwise is not an execution-relevant variable.
+
+<span style="color: #a0a1a7;">#+NAME: Using ghost variables to demonstrate assignment rule</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(x) &amp;&amp; \valid(y);
+  @ requires INT_MIN &lt; *x + *y &lt; INT_MAX;
+  @ requires \separated(x, y); // Exercise: It's a swap, why is this needed?
+  @ assigns *x, *y;
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">swap</span>(<span style="color: #c18401;">int</span> *<span style="color: #8b4513;">x</span>, <span style="color: #c18401;">int</span> *<span style="color: #8b4513;">y</span>)
+{
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ ghost int X = *x;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ ghost int Y = *y;
+</span>
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert  *y == Y  &amp;&amp; *x == X;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert  *y == Y  &amp;&amp; (*x + *y) - *y == X;
+</span>  *x = *x + *y;
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert  *y == Y  &amp;&amp; *x - *y == X;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert  *x - (*x - *y) == Y  &amp;&amp; *x - *y == X;
+</span>  *y = *x - *y;
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert  *x - *y == Y  &amp;&amp; *y == X;
+</span>  *x = *x - *y;
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert  *x == Y  &amp;&amp; *y == X;
+</span>
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">&#120034;&#120061;&#120042;&#120059;&#120061; upwards reading from here;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">each assertion is obtained by the assigment, skip, and sequence rules.
+</span>}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Here is a more complicated exercise that also makes use of external functions...
+
+<span style="color: #a0a1a7;">#+begin_details Randomness with the Assignment, Skip, and Sequence Rules
+</span>
+#+NAME: random_between
+#+BEGIN_SRC c :tangle (not-currently-working-with "randomness")
+#include "Prelude.c"
+
+#define RAND_MAX 32767
+
+/*@
+  @ assigns \nothing;
+  @ ensures 0 &lt;= \result &lt;= RAND_MAX;
+*/
+int rand();
+
+/*@ requires min &lt;= max;
+  @ requires min + RAND_MAX &lt; INT_MAX;
+  @ requires max - min &lt; INT_MAX;
+  @ assigns \nothing;
+  @ ensures min &lt;= \result &lt;= max;
+*/
+int random_between(int min, int max)
+{
+  int it = rand();
+  //@ assert weakening: 0 &lt;= it &lt;= RAND_MAX;
+  //@ assert assignment_rule_again: FixMe;
+  it = it % (max - min + 1);
+  <span style="font-style: italic;">// @ assert simplify: FixMe;
+  //</span> @ assert assignment_rule: FixMe;
+  it = it + min;
+  // @ assert min &lt;= it;
+
+  <span style="font-style: italic;">// Start at the bottom, and push assertion upwards!
+  </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> The assertion names are also intended to be read upwards;
+  //</span> Each justifies how it was obtained.
+
+  return it;
+
+  <span style="font-style: italic;">// That is,
+  //</span> return (rand() % (max - min + 1)) + min;
+}
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a0a1a7;">#+begin_comment
+</span>Now press ~F6~ a few times to see some random output.
+
+#+NAME: Trying out our random_between method
+#+BEGIN_SRC c :tangle (not-currently-working-with "randomness_driver")
+#include&lt;stdlib.h&gt; <span style="font-style: italic;">// to use rand
+#include&lt;stdio.h&gt; //</span> for IO
+#include&lt;time.h&gt;
+
+#undef RAND_MAX   <span style="font-style: italic;">// It's defined as INT_MAX in stdlib.h
+#include "randomness.c" //</span> The above code block
+
+int main()
+{
+   // Intializes random number generator with current time
+  srand((unsigned) time(0));
+
+  printf("Random: %d", rand());
+  printf("\nRandom between 4 and 15: %d", random_between(4,15));
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_comment
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Test; Conditional</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">test-conditional</span>
+<span style="font-weight: bold;">:END:</span>
+
+A <span style="font-style: italic;">/test/</span> is a statement formed from a Boolean expression and two statements; it is
+written \\ ~if (b) p else q~ --sometimes a &#8216;then&#8217; keyword is used for readability, but
+such is not valid C code.
+This is executed in a state by evaluating the Boolean
+then deciding which branch to execute in the same state.
+
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>wp (if B then S&#8321; else S&#8322;) R  &#8803;  if B then wp S&#8321; R else wp S&#8322; R
+                             &#8801; (B &#8658; wp S&#8321; R) &#8743; (&#172; B &#8658; wp S&#8322; R)
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>A conditional ensures <span style="font-style: italic;">/R/</span> precisely when its branches each ensure <span style="font-style: italic;">/R/</span>.
+
+Observe the following calculation,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>   { G } if B then S&#8321; else S&#8322; { R }
+&#8801;  G &#8658; wp (if B then S&#8321; else S&#8322;) R         -- Characterisation of wp
+&#8801;  G &#8658; (B &#8658; wp S&#8321; R) &#8743; (&#172; B &#8658; wp S&#8322; R)     -- Definition of wp on conditional
+&#8801;  (G &#8658; B &#8658; wp S&#8321; R) &#8743; (G &#8658; &#172; B &#8658; wp S&#8322; R) -- Characterisation of meets
+&#8801;  (G &#8743; B &#8658; wp S&#8321; R) &#8743; (G &#8743; &#172; B &#8658; wp S&#8322; R) -- Shunting
+&#8801;  {G &#8743; B} S&#8321; {R}  &#8743;  {G &#8743; &#172; B} S&#8322; {R}     -- Characterisation of wp
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>That is, Hoare triples on a conditional &#8216;distribute&#8217; into the branches
+with each branch precondition obtaining the branch guard.
+
+<span style="color: #8b4513; font-weight: bold;">** Loop</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">loop</span>
+<span style="font-weight: bold;">:END:</span>
+
+A <span style="font-style: italic;">/loop/</span> is a construct formed from a Boolean expression and a statement; it is
+written ~while (b) p~.
+A loop is one of the ways in which we can express an infinite object --which may
+fail to terminate-- using a finite expression. Indeed, its executional behaviour
+can be understood by realising it as a shorthand for the expression
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE
+</span>if (b) {p if (b) {p if (b) ...
+                    else skip}
+          else skip}
+else skip
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Where ~skip~ is the fictional statement that performs no action when executed.
+
+To understand the semantics of the loop:
+0. Let ~giveup, terminate~ be aliases for ~abort~ and ~skip~.
+1. Recalling that a loop is a shorthand for an infinite nesting of conditionals,
+    we try to approach it as a limit of finite approximations.
+<span style="color: #a0a1a7;">  #+BEGIN_EXAMPLE
+</span>     while (b) q  &#8776;  lim&#8345; p&#8345;
+
+  Where:
+  p&#8320; = if (b) giveup else terminate
+  p&#8321; = if (b) {q ; if b giveup else terminate} else terminate
+  &#8943;
+  p&#8345;&#8330;&#8321; = if (b) {q; p&#8345;} else terminate;
+<span style="color: #a0a1a7;">  #+END_EXAMPLE
+</span>
+2. The statement ~p&#8345;~ tries to execute the statement ~while (b) q~ by completing
+    a maximum of ~n~ trips through the loop. If, after ~n~ loops, it has not
+    terminated on its own, it gives up.
+
+3. If the loop terminates in <span style="font-style: italic;">/m/</span> trips, it also terminates in <span style="font-style: italic;">/n &#8805; m/</span> trips.
+    - <span style="font-style: italic;">/&#8704; m. p&#8344; defined &#8658; &#8704; n &#8805; m. p&#8345; defined/</span>
+    - <span style="font-style: italic;">/&#8704; m. p&#8344; defined &#8658; &#8704; n &#8805; m. p&#8345; &#8776; p&#8344;/</span>
+
+    Where &#8216;defined&#8217; means it terminates without aborting.
+4. Hence, by these two claims, we know that the sequence <span style="font-style: italic;">/p&#8345;/</span> either never defined
+    or it is defined beyond a certain point, and in this case, it is constant over its domain.
+5. Hence: ~while(b) q &#8776; lim&#8345; p&#8345;~.
+
+The definition of &#8216;wp&#8217; for loops is complicated and generally unhelpful, however
+from it we can prove the so called &#8220;Invariance Theorem&#8221;:
+If a property is maintained by the body of the loop
+and there is an integral value expressed using the body's variables
+that starts out non-negative and is decreased by each loop pass,
+then the loop will terminate and the property it maintained will be true.
+
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>   {Inv &#8743; B &#8743; bf = c} S {Inv &#8743; bf &lt; c}
+&#8658;
+   {Inv &#8743; bf &#8805; 0}  while(B) S  {&#172;B &#8743; Inv}
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>A property that is maintained to be true throughout the loop is referred to as an
+<span style="font-style: italic;">/invariant/</span>. In contrast, a value that changes through every pass
+--such as the number of passes remaining, the ~bf~-- is known as a <span style="font-style: italic;">/variant/</span>.
+
+In Frama-C rendition,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE c
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ loop invariant &#8943;  // property that is maintained by the loop body
+  @ loop assigns &#8943;    // variables that are altered by the loop body
+  @ loop variant &#8943;    // a bound on the total number of loops
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #a626a4;">while</span>(B) S;
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+Incidentally the primary function of the ~assigns~ clause is that variables its does
+not mention essentially have the invariant property of being equal to their value
+before the loop. That is, the ~assigns~ clause reduces clutter regarding constants
+from the invariant!
+
+<span style="color: #a626a4; font-weight: bold;">*** A silly example to get us on our way                   </span><span style="color: #a626a4; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">a-silly-example-to-get-us-on-our-way</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_details A silly example to get us on our way
+</span>#+NAME: Sum the first N numbers
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include&lt;limits.h&gt;
+/*@ requires N &gt;= 0;
+  @ requires N * (N + 1) /2 &lt; INT_MAX;
+  @ assigns \nothing;
+  @ ensures \result == N * (N + 1) / 2;
+  */
+int euclid(int N)
+{
+  int sum = 0; int n = 0;
+  //@ assert invariant_intially_estabished: 2 * sum == 0 * (0 + 1);
+
+  /*@ loop invariant main_item: sum == n * (n + 1) / 2;
+    @ loop invariant always_in_range: 0 &lt;= n &lt;= N;
+    @ loop invariant range_for_sum: 0 &lt;= sum;
+    // Exercise: Why can we comment out the following two lines?
+    @ loop invariant no_overflow1: n &lt; INT_MAX;
+    @ loop invariant no_overflow2: sum &lt;= INT_MAX;
+    @ loop assigns n, sum;
+    @ loop variant N - n;
+   */
+  while(n != N)
+  {
+    //@ assert sum + n &lt; INT_MAX;
+    n   = n + 1;
+    //@ assert sum + n &lt;= INT_MAX;
+    sum = sum + n;
+    //@ assert sum &lt;= INT_MAX;
+  }
+  //@ assert invariant_and_not_guard: n == N  &amp;&amp;  sum == n * (n + 1) / 2;
+  <span style="font-style: italic;">//@ assert post_condition:    sum </span><span style="font-style: italic;">==</span><span style="font-style: italic;"> N * (N + 1) / 2;
+  </span><span style="font-style: italic;">//</span><span style="font-style: italic;">         rewrite_post:  2 * sum ==</span><span style="font-style: italic;"> N * (N + 1);  //</span> Not true, due to &#8216;rounding&#8217;!
+
+  return sum;
+}
+#+END_SRC
+<span style="font-weight: bold;">*Exercise:*</span> Why is ~sum &#8804; INT_MAX~ true at the end of the loop body? Fill in the proof:
+#+BEGIN_EXAMPLE haskell
+   sum &#8804; INT_MAX
+&#8801;  n * (n + 1) / 2 &#8804; INT_MAX                     --  ???
+&#8656; n * (n + 1) / 2 &#8804; N * (N + 1) / 2 &#8804; INT_MAX   --  Transtivitity of &#8804;
+&#8801;  N * (N + 1) / 2 &#8804; INT_MAX                     --  ???
+&#8801;  true                                          --  ???
+#+END_EXAMPLE
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Simple Exercise on loops: Increment by 10              </span><span style="color: #a626a4; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">simple-exercise-on-loops-increment-by-10</span>
+<span style="font-weight: bold;">:END:</span>
+Here's a simple exercise,
+<span style="color: #a0a1a7;">#+begin_details Adding 10 to the input
+</span>#+NAME: Adding 10 to the input
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include&lt;limits.h&gt;
+
+/*@ requires a + 10 &lt; INT_MAX;
+  @ ensures \result == \old(a) + 10;
+ */
+int look_ma_no_new_locals(int a)
+{
+  //@ ghost const int A = a;
+
+  int i;                   <span style="font-style: italic;">// So we can refer to this &#8216;i&#8217; </span><span style="font-weight: bold; font-style: italic;">*after*</span><span style="font-style: italic;"> the loop.
+  </span><span style="font-style: italic;">/* </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> @ loop assigns ???;         </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> Fix me.
+    @ loop invariant a </span><span style="font-style: italic;">== 666;      //</span> Fix me.
+    @ loop invariant 0 &lt;= i &lt;= 10;
+    @ loop variant   666;           <span style="font-style: italic;">// Fix me.
+    @*/</span>
+  for(i = 0; i != 10; i++) a++;
+//@ assert after_loop_guarantees: i == 10  &amp;&amp; a == A + i;
+//@ assert weakening_previous_gives: a == A + 10;
+  return a;
+}
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="font-weight: bold;">*Warning*</span> Without the ~loop assigns~, you are more likely to have trouble proving a loop
+is correct!
+
+<span style="color: #a626a4; font-weight: bold;">*** Simple Exercise on loops: Randomly increment by </span><span style="color: #a626a4; font-weight: bold; font-style: italic;">/at most/</span><span style="color: #a626a4; font-weight: bold;"> </span><span style="color: #a626a4; font-weight: bold;">~max~</span><span style="color: #a626a4; font-weight: bold;"> </span><span style="color: #a626a4; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">simple-exercise-on-loops-randomly-increment-by-at-most-max</span>
+<span style="font-weight: bold;">:END:</span>
+Now a bit harder...
+
+<span style="color: #a0a1a7;">#+begin_details Randomly increment by at most max
+</span>
+#+NAME: Randomly increment by at most max
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include&lt;limits.h&gt;
+
+/*@ assigns \nothing;
+  @ ensures 0 &lt;= \result &lt;= 1;
+ */
+int random_bool(); // { return random_between(0, 1); }
+
+/*@ requires \valid(it);
+  @ requires *it + max &lt;= INT_MAX;
+  <span style="font-style: italic;">// @ requires FixMe -- a property on `max`;
+  //</span> @ assigns FixMe;
+  @ ensures  \old(it) &lt;= it &lt;= it + max;
+  */
+void increment_randomly(int *it, int max)
+{
+   /*@ loop assigns i, *it;
+     @ loop invariant *it == \at(*it, Pre) + i;
+     <span style="font-style: italic;">// @ loop invariant range_of_i: FixMe;
+     </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> @ loop variant FixMe;
+    */</span>
+   for(int i = 0; i != max &amp;&amp; random_bool(); i++) (*it)++;
+}
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #0184bc; font-weight: bold;">* ACSL Properties</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">acsl-properties</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># Documentation on more logic functions provided by ACSL</span>
+<span style="color: #a0a1a7;"># <a href="http://frama-c.com/download.html">http://frama-c.com/download.html</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Predicates</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">predicates</span>
+<span style="font-weight: bold;">:END:</span>
+
+Our invaraints were getting out of hand, the trouble can be mitigated by defining our own
+predicates rather than just using the built in ones. However, such definitions must be
+<span style="font-style: italic;">/functional/</span> in nature: They do not produce side-effects, such as altering state.
+Moreover, they are generally parameterised by a <span style="font-style: italic;">/label/</span> that refers to the C memory state
+in which they would be invoked --within the definition we cannot however reference the
+special labels ~Here, Pre, Post~. Otherwise parameter passing is by value as in C.
+
+The ~predicate~ keyword declares Boolean values functions:
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE c
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate name_here {Label&#8320;, &#8230;, Label&#8342;} (type&#8320; arg&#8320;, &#8230;, type&#8344; arg&#8344;) =
+  @ // A Boolean valued relationship between all these things.
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+<span style="color: #a0a1a7;">#+NAME: unchanged predicate</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">An integer memory location remains unaltered between given program points.
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate unchanged{L0, L1} (int *i)   =  \at(*i, L0) == \at(*i, L1);
+</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">i</span> = 13, <span style="color: #8b4513;">j</span> = 12;
+
+  <span style="font-weight: bold; text-decoration: underline;">DoSomeWork</span>:
+  j = 32;
+
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert unchanged{DoSomeWork, Here}(&amp;i);
+</span>
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #a0a1a7;"># Oddly we cannot have a variable declaration right after a label is declared!</span>
+
+More usefully, there is the need to ensure a given integer is indeed a non-negative
+length of an array.
+<span style="color: #a0a1a7;">#+NAME: valid_array predicate</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate valid_array(int* arr, integer len) =
+  @ 0 &lt;= len &amp;&amp; \valid(arr + (0 .. len - 1));
+</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>Notice that we did not specify a memory label.
+That's okay, one is provided for us and the entire definition is considered to transpire
+at that memory location. In particular, unlike the previous example, we cannot refer to
+distinct memory locations --after all we haven't named any!
+At the call site, the implicit memory location would be ~Here~ thereby referring to the
+current memory state --however we may still explicitly provide a different label at the
+call site.
+
+<span style="color: #8b4513; font-weight: bold;">** Logic Functions</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">logic-functions</span>
+<span style="font-weight: bold;">:END:</span>
+
+Predicates must be either true or false, but ~logic~ functions are methods that
+can be invoked in our specifications --you may have noticed that C methods <span style="font-weight: bold;">*cannot*</span>
+be called in a specification, which is reasonably since they may produce side-effects!
+Since assignment, sequence, and loops rely on side effects they now suddenly become
+useless and our definitions must rely on recursion.
+Such logical functions generally need not worry about runtime issues such as overflow
+--which however must be handled at the call site, if need be.
+
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE c
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ logic return_type function_name {Label&#8320;, &#8230;, Label&#8342;} (type&#8320; arg&#8320;, &#8230;, type&#8344; arg&#8344;) =
+  @  // A formula using the arguments arg&#7522;, possibly at labels Label&#7522;
+</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ logic integer factorial(integer n)  =  (n &lt;= 0) ? 1 : n * factorial(n-1);
+</span><span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+If we wrote a program that contained many occurrences to ~factorial~ then the definition
+would need to be invoked each time. If the occurrences all happened, for example, on the
+same input, say 12 --any larger would be an ~unsigned int~ overflow-- then it might
+make matters faster if we simply had that as a <span style="font-style: italic;">/lemma/</span> that is proven once and used many
+times by the underlying provers. Indeed this can be accomplished by using the ~lemma~
+phrase, and this can be done for any property.
+
+<span style="font-weight: bold;">:IgnoreMe:</span>
+<span style="color: #a0a1a7;">#+NAME: Warning: C's unsigned does not &#8220;overflow&#8221;!</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ logic integer factorial(integer n)  =  (n &lt;= 0) ? 1 : n * factorial(n-1);
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@
+  @ assigns \nothing;
+  @ ensures \result == factorial(n);
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">unsigned</span> <span style="color: #0184bc;">fact</span>(<span style="color: #c18401;">unsigned</span> <span style="color: #8b4513;">n</span>){ <span style="color: #a626a4;">return</span> (n &lt;= 0) ? 1 : n * fact(n-1); }
+
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">lemma factorial_of_12:  factorial(12) == 479001600;
+</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #a0a1a7;"># Warning: C's unsigned does not &#8220;overflow&#8221;!</span>
+<span style="font-weight: bold;">:End:</span>
+
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE c
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma name_of_property {Label&#8320;, &#8230;, Label&#8320;}:  property_here ;
+</span><span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+For example,
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma lt_plus_lt: \forall integer i,j; i &lt; j ==&gt; i + 1 &lt; j + 1;
+</span><span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Axiomatic Definitions</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">axiomatic-definitions</span>
+<span style="font-weight: bold;">:END:</span>
+
+Sometimes a proof may take too long to be proven, or it cannot be proven with the
+back-end provers, and, moreover, we do not wish to bother with its proof directly.
+In such cases, we may tell Frama-C to trust our judgement and take our word for it
+--if we're not careful, our &#8216;word&#8217; may lead us to conclude <span style="font-style: italic;">/false = true/</span>!
+
+<span style="color: #a0a1a7;">#+NAME: ?</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic my_axioms {
+  @ axiom antisymmetry: \forall integer i, j; i &lt;= j &lt;= i  ==&gt;  i == j;
+  @ }
+</span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Unlike lemmas, which require a proof, axioms are simply assumed to be true.
+It is the responsibility of the user to ensure no inconsistencies arise, as in:
+<span style="color: #a0a1a7;">#+NAME: ex falso quodlibet</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ axiomatic UhOh{ axiom false_is_true: \false; }
+</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Examples of proven properties
+</span>
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert \false;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert \forall integer x; x == 31;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert \false == \true;
+</span>  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+However, ~axiomatic~ definitions of recursive functions are useful since the underlying
+provers do not unroll the recursion when possible
+--after all, we are simply declaring the type of a function and some properties about
+it, which incidentally, happen to be its defining equations.
+
+<span style="color: #a0a1a7;"># Don't forget to &#8220;tangle no&#8221; the previous block!</span>
+
+<span style="color: #a0a1a7;">#+NAME: axiomatic formulation of factorial</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle FramaC.c
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic Factorial
+  {
+     logic integer factorial(integer n);
+
+     axiom factorial_base: \forall integer i;  i &lt;= 0  ==&gt;  factorial(i) == 0;
+     axiom factorial_inductive:
+          \forall integer i; i &gt;  0  ==&gt;  factorial(i) == i * factorial(i - 1);
+  }
+</span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+A small subtlety is that access to memory locations must be specified in the function
+headers, for example:
+<span style="color: #a0a1a7;">#+NAME: using &#8220;reads&#8221;</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic is_constant
+  {
+     predicate constant{L}(int * a, integer b, integer e, integer val) reads a[b .. e-1];
+
+     axiom constant_empty{L}:
+       \forall int * a, integer b, e, val; b &gt;= e  ==&gt; constant{L}(a, b, e, val);
+
+     axiom constant_non_empty{L}:
+       \forall int * a, integer b, e, val; b &lt; e ==&gt;
+          ( constant{L}(a,b,e, val)  &lt;==&gt;  constant{L}(a,b,e-1, val) &amp;&amp; a[e-1] == val );
+  }
+</span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="font-weight: bold;">:IgnoreMe:</span>
+ToDo: Maybe discuss certain nuance of inductive proof and show some interactive Coq?
+<span style="color: #a0a1a7;">#+NAME: Alterante presentation of make_constant</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate same_elems{L1,L2}(int* a, integer b, integer e) =
+      \forall integer i; b &lt;= i &lt; e ==&gt; \at(a[i],L1) == \at(a[i],L2);
+
+  @ axiomatic My_Props { axiom no_changes{L1,L2}:
+      \forall int* a, integer b, e, val;
+      same_elems{L1,L2}(a,b,e) ==&gt; constant{L1}(a,b,e, val) ==&gt; constant{L2}(a,b,e, val);
+    }
+</span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
+
+<span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Method from before:
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 0 &lt; N;                        // N is the length of the array
+  @ requires \valid(array + (0 .. N - 1)); // Need write access.
+  @ requires element &lt; INT_MAX;
+  @ assigns array[0 .. N-1];
+  @
+  @ ensures constant(array, 0, N, element);
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">make_constant</span>(<span style="color: #c18401;">int</span>* <span style="color: #8b4513;">array</span>, <span style="color: #c18401;">int</span> <span style="color: #8b4513;">N</span>, <span style="color: #c18401;">int</span> <span style="color: #8b4513;">element</span>)
+{
+  <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ loop assigns N, array[0 .. \at(N,Pre)-1];
+    @ loop invariant 0 &lt;= N &lt;= \at(N, Pre);
+    @ loop invariant constant_so_far: constant(array, N, \at(N, Pre), element);
+    @ loop variant N;
+</span><span style="color: #a0a1a7; font-weight: bold;">    */</span>
+  <span style="color: #a626a4;">for</span> (; 0 != N; N--)
+  { <span style="font-weight: bold; text-decoration: underline;">L</span>: array[N-1] = element;
+    <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert same_elems{L, Here}(array, N, \at(N, Pre));
+</span>  }
+}
+
+<span style="color: #a0a1a7;">#+END_SRC
+</span><span style="font-weight: bold;">:End:</span>
+
+<span style="color: #a0a1a7;"># ToDo: See &#10216;78&#10217;</span>
+<span style="color: #0184bc; font-weight: bold;">* Functions</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">functions</span>
+<span style="font-weight: bold;">:END:</span>
+
+We will be proving code blocks satisfy Hoare triples, but code blocks are essentially
+methods with the given predicate acting as a pre-condition and the required predicate
+acting as post-condition. As such, we investigate Hoare triples by using methods.
+
+A contract stipulates under what conditions a method will behave
+--if those conditions are not met, then it's behaviour may be arbitrary.
+For example, a method may behave in a manner ensuring \\ ~x &gt; 1/y~ under the condition ~y &gt; 0~,
+and it may do anything it wants --such as aborting the system or setting ~x = -1~--
+when that condition is not met.
+
+All in all, a function call establishes property <span style="font-style: italic;">/R/</span> precisely when evaluating its
+arguments then executing the function body together establish the property.
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>wp &#8497;(t&#8321;, &#8230;, t&#8345;) R  &#8801;  wp (x&#8321; &#8788; t&#8321;; &#8943; ; x&#8345; &#8788; t&#8345;; &#8492;) R
+
+where &#8497;(x&#8321;, &#8230;, x&#8345;) = &#8492;  -- Definition of &#8497;
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+<span style="color: #8b4513; font-weight: bold;">** What are Functions?</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">what-are-functions</span>
+<span style="font-weight: bold;">:END:</span>
+
+Functions permit abstraction over program design since parts may
+be constructed independently and also promotes avoidance of repetition.
+
+Unlike functional languages where the result of a function is the final
+term in its body, imperative languages signal result values by the ~return~ keyword;
+which immediately stops execution of the function regardless of the keyword's position.
+
+Functions which return no value but instead perform some effectful action, i.e., are <span style="font-style: italic;">/procedures/</span>,
+are marked with the ~void~ keyword in-place of a return type --surprisingly, this &#8216;return type&#8217;
+is not a type at all! One cannot declare a variable of type ~void~.
+
+Function calls that yield a value are terms whereas those that do not constitute statements.
+<span style="color: #a0a1a7;">#+begin_details The &#8216;fun&#8217; in &#8216;function&#8217;
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "fun_in_function")
+#include&lt;stdio.h&gt; // for IO
+
+int  f(){ return 3;}
+void g(){ printf("g(): Hello There!"); }
+
+int main()
+{
+  // Valid invocations
+  int x = f();
+  f();           // Bad form! Result is discarded.
+  g();
+
+  <span style="font-style: italic;">// T y = g(); //</span> Type error! No possible type T!
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+A <span style="font-style: italic;">/program/</span> is an sequence of global variables, function declarations, then a special
+function called ~main~. Since sequences are ordered, all names are declared before use!
+In C, ~main~ usually exits with ~return 0~. Global variables tend to pollute
+the namespace and are more trouble than they're worth, so we shall ignore them
+--however they are already included by default since assignment is a top-level construct.
+Incidentally, function declarations with no arguments may be used to simulate global
+constants.
+
+Note that C does not permit function overloading.
+Moreover, C uses the same namespace for methods as well as simple variables
+--which in is not the case in, say, Java which permits naming a method ~f~ and a
+variable ~f~ to obtain the valid invocation ~f(f)~!
+
+<span style="color: #a0a1a7;">#+begin_details Crash! There is no overloading in C.
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "no_overloading_in_c")
+int it(int x){ return x; }
+int it = 5;
+int maybe = it(it);
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Effectful Expressions</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">effectful-expressions</span>
+<span style="font-weight: bold;">:END:</span>
+
+In C, any expression followed by a semicolon is a statement:
+The value of the expression is simply ignored when it is used as a statement.
+
+Conversely, statements may be regarded as an effectful expression.
+For example, assignment ~x &#8788; E~ assigns the value of ~E~ to ~x~ and <span style="font-style: italic;">/returns/</span> the value of ~E~.
+Whence, the notion of
+<span style="color: #a0a1a7;">#+begin_details &#8220;Continued Assignments&#8221; are right-associative
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "assgns_are_right_assoc")
+void continued_assgns()
+{
+  int x = 1, y = 2, z = 4;
+
+  //@ assert x == 1  &amp;&amp;  y == 2  &amp;&amp; z == 4;
+
+  x -= y += z;         // Assignments are right-associative!
+
+  //@ assert z == 4  &amp;&amp;  y == 2+4  &amp;&amp; x == 1-(2+4);
+  //@ assert z == 4  &amp;&amp;  y == 6    &amp;&amp; x == -5;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #8b4513; font-weight: bold;">** An Example Functional Contract</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">an-example-functional-contract</span>
+<span style="font-weight: bold;">:END:</span>
+
+Look at the definition of ~abs~ below and notice:
+
++ Frama-C contracts are comments beginning with an ~@~ symbol and concluded with a ~;~ symbol.
++ The post-condition is introduced with the ~ensures~ clause; which may contain the
+  ~\result~ keyword to refer to the returned value of the method.
++ We may combine multiple ~ensures~ clauses by using conjunction ~&amp;&amp;~, or have them on
+  separate lines. We may also use implication ~==&gt;~, disjunction ~||~, negation ~!~,
+  value equality ~==~, and Boolean equivalence ~&lt;==&gt;~.
+  - Notice that implication:  ~A ==&gt; B~ informs that when ~A~ is true then so is ~B~,
+    and if ~A~ is false then we don't care and consider the whole thing to be true.
++ Notice that we may <span style="font-style: italic;">/name/</span> our conditions, which is helpful to remind us of their purpose
+  as well as being helpful in the frama-c output.
+
+<span style="color: #a0a1a7;">#+NAME: Incomplete Absolute Value</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ ensures always_nonnegative: \result &gt;= 0;
+  @ ensures val &gt; 0  ==&gt;  \result == val;
+  @ ensures val &lt; 0  ==&gt;  \result == -val;
+</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">abs</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">val</span>)
+{
+  <span style="color: #a626a4;">return</span> (val &lt; 0) ? -val : val;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Pressing ~F9~, you will notice that we are also checking for runtime errors by using the RTE plugin
+whose goal is to ensure the program cannot create runtime errors such as integer overflow,
+invalid pointer dereferencing, division by 0, etc.
+
+In our case, we have runtime problems that do not crash but instead produce logical errors:
+The return value of ~abs~ is not positive! Indeed, in addition to the above block, add focus
+to the following block by removing the prefix ~-not~, then run the code with ~F6~ to see the output.
+--Remember to undo this alteration when you're done, otherwise the next invocation to frama-c
+will take a while dealing with ~printf~!
+<span style="color: #a0a1a7;">#+NAME: Runtime problems with abs</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span>   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">bounds on integers
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;math.h&gt;</span>
+
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Our implementation is faulty..
+</span>  printf(<span style="color: #50a14f;">"    INT_MIN      = %d\n"</span>, INT_MIN);
+  printf(<span style="color: #50a14f;">"abs(INT_MIN)     = %d\n\n"</span>, abs(INT_MIN));
+
+  printf(<span style="color: #50a14f;">"    INT_MIN + 1  = %d\n"</span>, INT_MIN+1);
+  printf(<span style="color: #50a14f;">"abs(INT_MIN + 1) = %d\n\n"</span>, abs(INT_MIN+1));
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Using standard library works..
+</span>  printf(<span style="color: #50a14f;">"fabs(INT_MIN)    = %.0f"</span>, fabs(INT_MIN));
+
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+The WP plugin forms the necessary proof obligations to ensure the program meets its
+specification, simplifies them using a module called ~Qed~, then asks a prover such as
+~Alt-Ergo~ whether the obligation is provable or not. Sometimes a property is not
+verified for two possible reasons:
+1. There is not enough information --e.g., given assumptions-- for the proof to go through.
+2. The proof search timed-out --which can be configured.
+
+<span style="color: #a626a4; font-weight: bold;">*** Exercise: Fixing </span><span style="color: #a626a4; font-weight: bold;">~abs~</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">exercise-fixing-abs</span>
+<span style="font-weight: bold;">:END:</span>
+
+0. Remove focus from the ~main()~ code block.
+1. Go back to the Incomplete Absolute Value code block.
+2. Include the limits header file.
+3. Add ~@ requires INT_MIN &lt; val;~ to the top of the function contract.
+4. Check that the contract passes by pressing ~F9~.
+5. What bound conditions can you place on the result?
+6. Experiment by altering the conditions or method body.
+
+<span style="color: #a626a4; font-weight: bold;">*** Behaviours</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">behaviours</span>
+<span style="font-weight: bold;">:END:</span>
+
+Notice that our absolute value function has two disjoint behaviours
+--depending on whether the input is positive or negative.
+Each behaviour has some assumptions and some conclusions.
+Moreover, our behaviours are
++ ~disjoint~: Every input can only satisfy the assumptions of <span style="font-style: italic;">/at most/</span> one of the behaviours.
+  As such, the program is &#8216;deterministic&#8217;: At most one of the behaviours is possible.
+  --The program is really a relation and this ensures it is <span style="font-style: italic;">/univalent/</span>; i.e., a <span style="font-style: italic;">/partial function/</span>--
++ ~complete~: Every input satisfies the assumptions of <span style="font-style: italic;">/at least/</span> one of the behaviours.
+  As such, the program is &#8216;total&#8217;: At least one behaviour is possible.
+  --The program is really a relation and this ensures it is <span style="font-style: italic;">/total/</span>; i.e., defined on all
+  inputs--
+
+We expressed our behaviours in the forms ~ensures &#10216;assumptions&#10217;  ==&gt;  &#10216;consequences&#10217;~.
+However this can get unruly when there are many assumptions and many consequences.
+Moreover, expressing disjointness is tedious and error-prone even in our little
+example, below, where it becomes the assertion: (~val &lt; 0 &amp;&amp; val &gt;= 0) &lt;==&gt; \false~.
+As such there is the alternative ~behavior~ syntax --note the American spelling!
+Using this syntax, we can ask WP to verify that the behaviours are complete or disjoint,
+or both.
+
+<span style="color: #a0a1a7;">#+NAME: Absolute Value using behaviours</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires INT_MIN &lt; val;
+  @ ensures always_nonnegative: \result &gt;= 0;
+  @
+  @ behavior positive_input:
+  @    assumes val &gt; 0;
+  @    ensures \result == val;
+  @
+  @ behavior negative_input:
+  @    assumes val &lt;= 0;
+  @    ensures \result == -val;
+  @
+  @ complete behaviors;
+  @ disjoint behaviors;
+</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">abs</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">val</span>)
+{
+  <span style="color: #a626a4;">return</span> (val &lt; 0) ? -val : val;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #a0a1a7;">#+begin_details Exercises on Behaviours
+</span>
+<span style="font-weight: bold;">*Exercise*</span>
+Replace each FixMe so that the program is proven correct.
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+/*@ requires INT_MIN &lt; val;
+  @ ensures always_nonnegative: \result &gt;= 0;
+  @ ensures Exercise:
+  @      FixMe                             <span style="font-style: italic;">// Positive case
+  @   &amp;&amp; (val &lt;= 0  </span><span style="font-style: italic;">==&gt; \result </span><span style="font-style: italic;">==</span><span style="font-style: italic;"> -val)   </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> Negative or 0 case
+  @   &amp;&amp; !(val &gt; 0 &amp;&amp; val &lt;=</span><span style="font-style: italic;"> 0)            </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> Disjointness condition
+  @   &amp;&amp; FixMe                             //</span> Completeness condition
+  @   ;
+ */
+int abs(int val)
+{
+  return (val &lt; 0) ? -val : val;
+}
+#+END_SRC
+
+<span style="font-weight: bold;">*Exercise*</span>
+Replace each FixMe with the weakest proposition so that the program is proven correct.
+
+#+NAME: Weakest propositions to make the behaviours complete
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+/*@ requires INT_MIN &lt; val;
+  @ ensures always_nonnegative: \result &gt;= 0;
+  @
+  @ behavior positive_input:
+  @    assumes Exercise: FixMe;
+  @    ensures \result == val;
+  @
+  @ behavior negative_input:
+  @    assumes Exercise: FixMe;
+  @    ensures \result == -val;
+  @
+  @ complete behaviors;    <span style="font-style: italic;">// Frama-C complain here, but please fix the &#8220;Exercises&#8221;!
+ */</span>
+int abs(int val)
+{
+  return (val &lt; 0) ? -val : val;
+}
+#+END_SRC
+
+<span style="font-weight: bold;">*Exercise*</span>
+Replace each FixMe with the strongest proposition so that the program is proven correct.
+
+#+NAME: Strongest propositions to make the behaviours disjoint
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+/*@ requires INT_MIN &lt; val;
+  @ ensures always_nonnegative: \result &gt;= 0;
+  @
+  @ behavior positive_input:
+  @    assumes Exercise: FixMe;
+  @    ensures \result == val;
+  @
+  @ behavior negative_input:
+  @    assumes Exercise: FixMe;
+  @    ensures \result == -val;
+  @
+  @ disjoint behaviors;
+ */
+int abs(int val)
+{
+  return (val &lt; 0) ? -val : val;
+}
+
+// This program passes 100%, but that is because it assumes false, the &#8220;FixMe&#8221;.
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span><span style="color: #8b4513; font-weight: bold;">** Proving is Programming</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">proving-is-programming</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># For each exercise remember to toggle the focus for the code blocks!)</span>
+
+In this section we step back a little to get more comfortable with ~requires~
+preconditions and ~ensures~ postconditions. Moreover, we use this time to remind
+ourselves of some elementary logic. After all, we use logic to express properties
+and hope Frama-C can verify them.
+
+In some sense <span style="font-style: italic;">/false, true/</span> behave for the &#120121;ooleans as <span style="font-style: italic;">/-&#8734;, +&#8734;/</span> behave for the &#8469;umbers.
+| <span style="text-decoration: underline;">_&#120121;ooleans_</span>      | <span style="text-decoration: underline;">_&#8469;umbers_</span>    |
+| p &#8658; true      | n &#8804; +&#8734;      |
+| false &#8658; p     | -&#8734; &#8804; n      |
+| Implication &#8658; | Inclusion &#8804; |
+| Conjunction &#8743;  | Minimum &#8595;   |
+| Disjunction &#8744;  | Maximum &#8593;   |
+
+Using this correspondence we can rephrase the &#8220;Golden Rule&#8221; <span style="font-style: italic;">/p &#8743; q &#8801; p &#8801; q &#8801; p &#8744; q/</span>
+as the following trivial property <span style="font-style: italic;">/x &#8595; y = x  &#8801;  y = x &#8593; y/</span>
+--&#8220;The minimum of two numbers is the first precisely when the second is their maximum.&#8221;
+Neat Stuff!
+
+<span style="color: #a0a1a7;">#+begin_details Exercises on Implication
+</span>
+<span style="font-weight: bold;">*Ex falso quodlibet*</span> From <span style="font-style: italic;">/false/</span>, anything follows: <span style="font-style: italic;">/false &#8658; p,/</span> for any <span style="font-style: italic;">/p/</span>.
+Edit ~FixMe~ in the following snippet so that it ensures the result is equal to 42.
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+/*@ requires uhOh: a &lt; 0 &amp;&amp; a &gt; 0;
+  @ ensures  what: Exercise: FixMe;
+  */
+int id(int a){ return a;}
+#+END_SRC
+
+<span style="font-weight: bold;">*Right Identity of Implication*</span> Everything implies <span style="font-style: italic;">/true/</span>; that is <span style="font-style: italic;">/p &#8658; true,/</span> for any <span style="font-style: italic;">/p/</span>.
+Edit ~FixMe~ in the following snippet so that it there are no errors.
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+<span style="font-style: italic;">/*@ requires Exercise: FixMe;   //</span> &lt;-- Change this false positive.
+  @ ensures \true;
+  */
+int id(int a){ return a; }
+#+END_SRC
+
+<span style="font-weight: bold;">*Exercise*</span>
+Replace each ~FixMe~ with the weakest possible predicate so that it passes.
+#+NAME: Maximum Function
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+/*@ requires \true;
+  @ ensures UpperBound: a &lt;= \result  &amp;&amp;  b &lt;= \result;
+  @ ensures Exercise: Selection1: FixMe  ==&gt; \result == b;
+  @ ensures Exercise: Selection2: FixMe  ==&gt; \result == a;
+  @*/
+int max(int a, int b)
+{
+  return a &lt; b ? b : a;
+}
+#+END_SRC
+
+Conversely, that maximum is the least upper bound,
+<span style="font-style: italic;">/x &#8804; z  &#8743;  y &#8804; z  &#8801;  x &#8593; y &#8804; z/</span>, corresponds to the
+characterisation of disjunction <span style="font-style: italic;">/(p &#8658; r) &#8743; (q &#8658; r)  &#8801;  (p &#8744; q) &#8658; r/</span>
+--incidentally this is also known as &#8220;case analysis&#8221; since one proves
+<span style="font-style: italic;">/p &#8744; q &#8658; r/</span> by providing a proofs that if <span style="font-style: italic;">/p &#8744; q/</span> is true due to <span style="font-style: italic;">/p/</span> then
+with <span style="font-style: italic;">/p/</span> in hand we need to show <span style="font-style: italic;">/r/</span>, and likewise if <span style="font-style: italic;">/p &#8744; q/</span> is true due to <span style="font-style: italic;">/q/</span>.
+
+<span style="font-weight: bold;">*Exercise*</span>
+Replace ~FixMeCode~ with the least amount of code so that the following passes.
+#+NAME: case_analysis
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+#define max(a,b) (a &lt; b ? b : a)   // Ignore me.
+
+/*@ requires max(a, b) &lt;= c;
+  @ ensures a &lt;= c  &amp;&amp;  b &lt;= c;
+  @*/
+void case_analysis(int a, int b, int c)
+{
+  FixMeCode;
+}
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Maintaining The Sequence Rule</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">maintaining-the-sequence-rule</span>
+<span style="font-weight: bold;">:END:</span>
+
+Since function calls may alter memory state, the computation of a term may now
+not only produce a value, as before, but also alter the state altogether.
+( Foreshadowing: The ~assigns~ ACSL keyword! )
+
+Since a ~return~ interrupts executation, the sequence computation rule
+~wp (S&#8321;;S&#8322;) = wp S&#8321; &#8728; wp S&#8322;~ is no longer valid when the execution of ~S&#8321;~ causes the
+execution of a ~return~ thereby necessitating that ~S&#8322;~ is not executed.
+As we have already seen, we keep the rule valid by simply defining ~wp U R &#8801; true~
+for any unreachable code ~U~ --as is ~S&#8322;~ when ~S&#8321;~ has a return.
+
+That is, unreachable assertions are always &#8216;true&#8217;:
+They are never in a memory state, and so cannot even be evaluated, let alone be false!
+<span style="color: #a0a1a7;">#+NAME: woah: Unreachable is true!</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #a626a4;">goto</span> <span style="font-weight: bold; text-decoration: underline;">End</span>;
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@assert my_cool_nonsense: 0 == 1;    // This is unreachale but &#8216;true&#8217;.
+</span>
+  <span style="font-weight: bold; text-decoration: underline;">End</span>:
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>Likewise with infinite loops,
+<span style="color: #a0a1a7;">#+NAME: woah: Unreachable is true! --now with loops</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #a626a4;">while</span>(1 &gt; 0);
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@assert my_cool_nonsense: 0 == 1;    // This is unreachale but &#8216;true&#8217;.
+</span>  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>That is, Frama-C considers &#8216;partial correctness&#8217;: A specification is satisfied,
+<span style="font-style: italic;">/provided/</span> it terminates.
+
+In addition, since imperative expressions can modify memory, considerations must be
+given to the fact arguments of a function are evaluated from left to right.
+For example, suppose ~x,y~ are imperative constructions yield integers, then
+ ~x + y~ and ~y + x~ are not guaranteed to produce the same behaviour!
+
+<span style="color: #a0a1a7;">#+begin_details Addition with side-effects is *not* symmetric!
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "no_symmetry_for_us")
+#include&lt;stdio.h&gt; // for IO
+
+int f(){ printf("\nf(): Hello with Four!");  return 4;}
+int g(){ printf("\ng(): Hello with Three!"); return 3;}
+
+int main()
+{
+  int result;
+
+  <span style="font-style: italic;">// The output to the screen changes,
+  //</span> even though the <span style="font-weight: bold;">*value*</span> of result does not.
+  result = f() + g();
+  printf("\n---");
+  result = g() + f();
+
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+The C language does not specify the order of evaluation of function arguments
+--albeit it is usually left-to-right--, and it is up to the programmer to write
+programs whose result does not depend on the order of evaluation.
+
+<span style="font-weight: bold;">*Exercise:*</span> Produce a Frama-C checked variant of this example.
+Remember to remove all ~printf~'s!
+
+<span style="color: #8b4513; font-weight: bold;">** Passing Arguments by Value and by Reference</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">passing-arguments-by-value-and-by-reference</span>
+<span style="font-weight: bold;">:END:</span>
+
+Applying the definition of ~wp~ to the body of the following ~swap~ gives us
+~wp swap = id~, thereby demonstrating that <span style="font-style: italic;">/this/</span> ~swap~ does not change the
+values of two variables!
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "useless_swap")
+</span><span style="color: #c18401;">void</span> <span style="color: #0184bc;">swap</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">a</span>, <span style="color: #c18401;">int</span> <span style="color: #8b4513;">b</span>){ <span style="color: #c18401;">int</span> <span style="color: #8b4513;">c</span>; c = a; a = b; b = c; }
+<span style="color: #a0a1a7;">#+END_SRC
+</span>The default mechanism of argument passing is that of <span style="font-style: italic;">/pass by value/</span>:
+Only values are sent to function bodies, which cannot alter the original variables.
+Indeed, what should ~swap(x+y, 2)~ perform if it were to &#8220;alter the given variables&#8221;?
+
+To say that two <span style="font-style: italic;">/distinct/</span> variables share the <span style="font-style: italic;">/same location/</span> in memory
+requires us to formally introduce a notion of location that variables may reference.
+Rather than introduce a new such type, C makes the convention that certain numeric
+values act --possibly dual roles-- as reference locations.
+
+Hence we can associate variables to references which are then associated to values.
+That is, a state now consists of two pieces: An <span style="font-style: italic;">/environment/</span> mapping variables to
+references and a <span style="font-style: italic;">/memory state/</span> mapping references to values.
+The key insight is that the environment may be non-injective thereby associating
+distinct variables to the same reference thereby permitting them to alter the shared value.
+Incidentally, the shared value can be thought of as a buffer for message passing between
+the two variable agents. Neato!
+
+<span style="color: #a0a1a7;"># X ; e.g., ~ref : Name &#8594; Value; isRef : Value &#8594; &#120121;; &#8704; r. isRef r &#8658; unref r &#8712; Value.~</span>
+<span style="color: #a0a1a7;"># X The ~unref~ operation yields an honest to goodness value.</span>
+<span style="color: #a0a1a7;"># State  &#8776;  Environment &#215; MemoryState  &#8776;  Locations &#215; Values</span>
+
+In C, passing by reference is not a primitive construct, but it can be simulated.
+The type of references that can be associated with a value of type ~T~ in memory
+is written ~T*~ in C. Incidentally, the dereference operator is written ~*~ in C.
+For example, in environment ~u &#8614; r&#8321;~ and memory state ~r&#8321; &#8614; r&#8322;, r&#8322; &#8614; 4~ we have
+that ~u~ has <span style="font-style: italic;">/value/</span> ~r&#8322;~ whereas ~*u~ has <span style="font-style: italic;">/value/</span> ~4~. That is, ~u~ is a reference value at location ~r&#8321;~
+having contents ~r&#8322;~, which when dereferenced refer to the value contained in location ~r&#8322;~
+which is 4.
+
+The reference associated with variable ~x~ in a C environment is written ~&amp;x~.
+E.g., in environment ~x &#8614; r~ and memory state ~r &#8614; 4~, the value of ~x~ is the integer 4
+whereas the value of ~&amp;x~ is the reference ~r~. Moreover, the value of ~*&amp;x~ is the integer 4.
+
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>&amp;_ : &#8704;{T} &#8594;  Variable T &#8594; Reference T   -- &#8220;address of&#8221;
+*_ : &#8704;{T} &#8594; Reference T &#8594; T             -- &#8220;value of&#8221;
+
+-- Using &#8216;value equality&#8217;:
+Inverses:  &#8704; a : Var T.  *&amp;a   &#8776; a
+Inverses:  &#8704; r : Ref T.  &amp;(*r) &#8776; r
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+<span style="color: #a0a1a7;">#+begin_details &#8216;Proofs&#8217; of Inverse Laws
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "understanding_references")
+void understanding_references()
+{
+  int  a = 4;    <span style="font-style: italic;">// integer a refers to 4
+  int* x = &amp;a;   //</span> integer reference x refers to the location of a
+
+  <span style="font-style: italic;">// Facts thus far
+  //</span>
+  //@ assert a_is_a_number: a == 4;
+  //@ assert x_points_to_a: *x == a == 4;
+  //@ assert x_is_a_location: x == &amp;a;
+
+  <span style="font-style: italic;">// The inverse law: a == *(&amp;a).
+  //</span>
+  //@ assert x_points_to_a: *x == a == 4;
+  //@ assert x_is_a_location: x == &amp;a;
+  //@ assert equals_for_equals: *(&amp;a) == *x == a;
+
+  <span style="font-style: italic;">// The inverse law: &amp;(*x) == x
+  //</span>
+  //@ assert x_points_to_a: *x == a == 4;
+  //@ assert x_is_a_location: x == &amp;a;
+  //@ assert equals_for_equals: &amp;(*x) == &amp;a == x;
+
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+If ~t~ is an expression of type ~T*~ then the C language has the assignment
+construct ~*t = u~: The reference of ~t~ is now associated with the value
+of ~u~. The notation alludes to this executional behaviour:
+The contents of ~t~, i.e., ~*t~, now refer to the value of ~u~.
+
+For example, ~*&amp;x = u~ has the same behaviour as the assignment ~x = u~.
+
+<span style="color: #a0a1a7;">#+begin_details A Detailed Look At &#8216;swap&#8217;
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "swap_in_detail")
+#include&lt;stdio.h&gt; // for IO
+
+<span style="font-style: italic;">// x and y themselves cannot be assigned to: They're constant.
+</span><span style="font-style: italic;">//</span><span style="font-style: italic;"> I.e., assignments &#8220;x = t&#8221; are forbidden, but &#8220;*x = t&#8221; are permitted.
+</span><span style="font-style: italic;">//</span><span style="font-style: italic;"> This makes the compiler complain if we accidently made that assignment instead.
+</span><span style="font-style: italic;">//</span><span style="font-style: italic;">
+</span><span style="font-style: italic;">//</span><span style="font-style: italic;"> However, &#8220;const int* x&#8221; works in the opposite: x=t okay, but not </span><span style="font-weight: bold; font-style: italic;">*x=t.
+//</span><span style="font-weight: bold;"> Declaration &#8220;const int*</span> const x&#8221; prevents both types of assignments.
+void swap(int* const x, int* const y)
+{
+  int z;
+  z  = *x; <span style="font-style: italic;">// z gets the value referenced to by x
+  *x = *y; </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> the location x references now gets the value referenced by y
+  *y =  z; //</span> the location y references now gets the value z
+}
+
+int main()
+{
+  int x = 5, y = 10;
+  swap(&amp;x, &amp;y);         // Note that the function is applied to the references.
+  printf("x = %d, y = %d", x , y);
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Dangling References: Segmentation Faults</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">dangling-references-segmentation-faults</span>
+<span style="font-weight: bold;">:END:</span>
+
+In C, we may look for references that do not exist:
+C removes from memory the reference associated with a variable
+when that variable is removed from the environment.
+
+<span style="color: #a0a1a7;">#+begin_details Dereferencing Garbage
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "dangling_references")
+#include&lt;stdio.h&gt; // for IO
+
+int* f(const int p)
+{
+  int n = p;
+  return &amp;n;
+
+  <span style="font-style: italic;">// n only exists locally,
+  //</span> whence its reference is removed when it no longer exists.
+}
+
+int main()
+{
+  int* u = f(5);
+  int* v = f(10);
+  printf("u = %d, v = %d", *u , *v); // Segmentation fault!
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+The compiler gives us
+~warning: function returns address of local variable [-Wreturn-local-addr].~
+We may thus turn on that warning --and all warnings really!-- so that it becomes
+an error at compile time.
+
+Since we used a reference that is not declared in memory, C does not produce
+a compile error but the runtime result is unpredictable. Execute the above
+snippet to see different kinds of segmentation fault codes.
+<span style="color: #a626a4; font-weight: bold;">*** Pointers in ACSL</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">pointers-in-acsl</span>
+<span style="font-weight: bold;">:END:</span>
+
+The ~\old~ function is a built-in logical operation of ACSL.
+It can only be used in the post-condition and it denotes the value <span style="font-style: italic;">/before/</span> execution
+of the method body. If we want to access the value at a particular memory state,
+we simply refer to a label at that time frame using the ~\at~ construct --see below.
+
+<span style="color: #a0a1a7;">#+NAME: Example use of \at, \valid, \old</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(a);
+  @ ensures *a == \old(*a);
+  @ ensures \at(*a, Post) == \at(*a, Pre); // Alternative way to say the same thing.
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">at_example</span>(<span style="color: #c18401;">int</span> *<span style="color: #8b4513;">a</span>)
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">tmp</span> = *a;
+  <span style="font-weight: bold; text-decoration: underline;">AfterLine1</span>:
+  *a = 23;
+  <span style="font-weight: bold; text-decoration: underline;">AfterLine2</span>:
+  *a = 42;
+  <span style="font-weight: bold; text-decoration: underline;">AfterLine3</span>:
+  *a = tmp;
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">We are now in the memory state after the fourth line.
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
+</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Here are some true facts about the memory states:
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert *a == \at(*a, Pre);     // Current value of *a is same as before method.
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert \at(*a, Here) == \at(*a, Pre);     // More explicitly.
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert 42 == \at(*a, AfterLine3);
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert 23 == \at(*a, AfterLine2);
+</span>}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Besides user-defined labels, ~\at~ can also be used with the built-in labels:
++ ~Pre~ : Value <span style="font-style: italic;">/before/</span> function call.
++ ~Post~: Value <span style="font-style: italic;">/after/</span> function call. --Can only be used in the post-condition.
++ ~Here~: Value at the current program point. --This' the default for stand-alone variables.
+
+Whereas ~\old~ can only be used in the post-condition, ~\at~ can be used anywhere.
+
+Notice that we used the built-in ~\valid~ to ensure that access to pointers is safe
+--i.e., pointing to a real memory location-- thereby avoiding runtime errors.
+We may also write ~\valid(p + (l .. u))~ to express the validity of pointers
+~p + i~ for <span style="font-style: italic;">/l &#8804; i &#8804; u/</span> --this will be helpful when working with arrays.
+Moreover, when working with constant, non-mutable, pointers, or if we wish to
+be more accurate, we may use ~\valid_read(p)~ to express that the pointer ~p~ is valid for
+read-access only --no writing permitted.
+
+
+<span style="color: #8b4513; font-weight: bold;">** Side-effects: </span><span style="color: #8b4513; font-weight: bold;">~assigns~</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">side-effects-assigns</span>
+<span style="font-weight: bold;">:END:</span>
+
+Since methods may alter state, thereby producing side-effects, it becomes important
+to indicate which global and local variables a method assigns to
+--that way its effects are explicit. We use the ~assigns~ clause to declare this.
+Unless stated otherwise, WP assumes a method can modify anything in memory;
+as such, the use of ~assigns~ becomes almost always necessary.
+When a method has no side-effects, thereby not assigning to anything, we may
+declare ~assigns \nothing~.
+
+<span style="color: #a0a1a7;">#+NAME: Swap function</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(a) &amp;&amp; \valid(b);
+  // @ assigns *a, *b;
+  @ ensures *a == \old(*b);
+  @ ensures *b == \old(*a);
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">swap</span>(<span style="color: #c18401;">int</span> *<span style="color: #8b4513;">a</span>, <span style="color: #c18401;">int</span> *<span style="color: #8b4513;">b</span>)
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">tmp</span> = *a;
+  *a = *b;
+  *b = tmp;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Notice that the following block fails to prove all goals
+--comment out the ~assigns~ clause <span style="font-style: italic;">/below/</span> and re-check ... still no luck!
+This can be fixed by un-commenting the ~assigns~ clause <span style="font-style: italic;">/above/</span>.
+
+<span style="color: #a0a1a7;">#+NAME: Example showing need of &#8220;assigns&#8221;</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #c18401;">int</span> <span style="color: #8b4513;">h</span> = 12; <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">new global variable!
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assigns \nothing;  // In particular, this method does not alter &#8220;h&#8221;.
+</span><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">a</span> = 1; <span style="color: #c18401;">int</span> <span style="color: #8b4513;">b</span> = 2;
+
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert h == 12;
+</span>  swap(&amp;a, &amp;b);
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert h == 12;
+</span>  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Finally it is to be noted that ~assigns~ do not occur within a ~behavior~
+--it occurs before by declaring <span style="font-style: italic;">/all/</span> variables that may be altered, then
+each ~behavior~ would include a clause for the unmodified variables by indicating
+their new value is equal to their ~\old~ one.
+
+<span style="color: #8b4513; font-weight: bold;">** Pointer Aliasing: </span><span style="color: #8b4513; font-weight: bold;">~separated~</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">pointer-aliasing-separated</span>
+<span style="font-weight: bold;">:END:</span>
+
+The raison d'&#234;tre of pointers is to be able to have aliases for memory locations.
+When the pointers refer to simple data, we may act <span style="font-style: italic;">/functionally/</span> in that we copy
+data to newly allocated memory locations. However, sometimes --such as when we program
+with linked lists-- copying large amounts of data is unreasonable and we may simply
+want to alter given pointers directly. When the given pointers are <span style="font-style: italic;">/identical/</span> then an
+alteration to one of them is actually an alteration to the rest!
+
+When we program with lists, we shall see that if we catenate two lists by altering
+the first to eventually point to the second then it all works.
+However, if we catenate a list with itself then the resulting alteration
+is not the catenation of the list with itself but instead is an
+infinite cycle of the first list! --We'll see this later on.
+
+Here is a simpler example,
+<span style="color: #a0a1a7;">#+NAME: Example use of \separated</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(fst) &amp;&amp; \valid_read(snd);
+  @ requires no_flow: INT_MIN &lt;= *fst + *snd &lt;= INT_MAX;
+  // @ requires \separated(fst, snd);
+  @ assigns *fst;
+  @ ensures uhOh: *fst == \old(*fst) + *snd;
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">increment_first_by_second</span>(<span style="color: #c18401;">int</span> *<span style="color: #8b4513;">fst</span>, <span style="color: #c18401;">int</span> <span style="color: #a626a4;">const</span> *<span style="color: #8b4513;">snd</span>)
+{
+  *fst += *snd;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Notice since we're only assigning to ~*fst~, we need not explicitly state
+~ensures *snd == \old(*snd)~. However, in the event that ~fst~ and ~snd~ both point
+to the same memory location, then we actually are assigning to both!
+As such the final ~ensures~ is not necessarily true either!
+
+We need to uncomment the ~separated~ declaration: The memory locations are distinct.
+
+Notice that in the final call below, since the pre-condition to
+~increment_first_by_second~ fails, we have breached its contract and therefore
+no longer guarenteed the behaviour it ~ensures~.
+Since the contract does not tells what happens when we breach it, anything is possible
+and so anything is &#8220;true&#8221;!
+<span style="color: #a0a1a7;">#+NAME: Example of how contract breach is dangerous on the logical consequences</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">life</span> = 42, <span style="color: #8b4513;">universe</span> = 12;
+
+  <span style="color: #c18401;">int</span> *<span style="color: #8b4513;">this</span> = &amp;life;
+  <span style="color: #c18401;">int</span> *<span style="color: #8b4513;">new</span>  = &amp;universe;
+
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert *this == 42  &amp;&amp; *new == 12;
+</span>  increment_first_by_second(this, new);
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert *this == 42 + 12  &amp;&amp; *new == 12;   // Yay!
+</span>
+  <span style="color: #c18401;">int</span> *<span style="color: #8b4513;">that</span> = &amp;life;  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">uh-oh!
+</span>
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert *this == 54  &amp;&amp; *that == 54;
+</span>  increment_first_by_second(this, that);
+  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert *this == 54 + 54  &amp;&amp; *that == 54;   // Nope...?
+</span>  <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assert 1 == 0;                             // Notice everything is now &#8220;true&#8221;!
+</span>
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+We may invoke ~\separated(p&#8321;, &#8230;, p&#8345;)~ to express the pointers ~p&#7522;~ should refer to distinct
+memory locations and therefore are non-overlapping.
+
+<span style="color: #8b4513; font-weight: bold;">** Functional Composition</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">functional-composition</span>
+<span style="font-weight: bold;">:END:</span>
+
+As a matter of abstraction, or separation of concerns, a program may be split up
+into an interface of declarations --a &#8216;header&#8217; file-- and an implementation file.
+Frama-C permits this approach by allowing us to use a specification of a declared
+method, which it assumes to be correct, and so we need to verify its precondition
+is established whenever we call it. In some sense, for proof purposes, this allows
+us to &#8216;postulate&#8217; a correct method and use it elsewhere --this idea is very helpful
+when we want to use an external libary's methods but do not --or cannot-- want to prove them.
+
+<span style="color: #a0a1a7;">#+begin_details Specifying abs and max, and using them, but no implementation.
+</span>
+#+NAME: Example of using un-implemented methods' specifications
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include&lt;limits.h&gt;
+
+/*@ requires val &gt; INT_MIN;
+  @ assigns \nothing;
+  @ ensures always_non_negative: \result &gt;= 0;
+  @ ensures non_negative: 0 &lt;= val ==&gt; \result == val;
+  @ ensures negative: val &lt; 0  ==&gt; \result == -val;
+  @ */
+int abs(int val);
+
+/*@ assigns \nothing;
+  @ ensures UpperBound: a &lt;= \result  &amp;&amp;  b &lt;= \result;
+  @ ensures Selection1: a &lt;= b  ==&gt;  \result == b;
+  @ ensures Selection2: b &lt;= a  ==&gt;  \result == a;
+  @*/
+int max(int a, int b);
+
+<span style="font-style: italic;">// Uncomment this to observe proof obligations failing.
+</span><span style="font-style: italic;">//</span><span style="font-style: italic;">
+//</span> int max(int a, int b){ return 5; }
+
+/*@ requires inherited_from_abs: a &gt; INT_MIN  &amp;&amp; b &gt; INT_MIN;
+
+  @ assigns \nothing;
+
+  @ ensures always_non_negative: inherited_from_abs: \result &gt;= 0;
+
+  @ ensures upper_bound: inherited_from_max:
+         \result &gt;= a &amp;&amp; \result &gt;= -a    <span style="font-style: italic;">// &#8776; result &#8805; |a|
+      &amp;&amp; \result &gt;= b &amp;&amp; \result &gt;= -b;   //</span> &#8776; result &#8805; |b|
+
+  @ ensures selection: inherited_from_max:
+          \result == a || \result == -a
+       || \result == b || \result == -b;
+*/
+int abs_max(int a, int b)
+{
+  return max(abs(a), abs(b));
+}
+#+END_SRC
+
+If we press ~F8~, the frama-c gui shows green bullets for the declarations'
+specifications. They have no implementation and so are assumed to be true.
+Then the ~abs_max~ operation &#8216;inherits&#8217; the preconditions and postconditions of
+the methods it calls along the variables it uses.
+
+<span style="color: #a0a1a7;">#+end_details
+</span><span style="color: #0184bc; font-weight: bold;">* Records</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">records</span>
+<span style="font-weight: bold;">:END:</span>
+
+Thus far we have only considered built-in types, we now turn to considering
+user-defined types that are more complex and are composites of simpler types
+by using the <span style="font-style: italic;">/record/</span> construct.
+
++ Record &#8776; Tuple with named fields
+
+A tuple ~x = (x&#8320;, x&#8321;, &#8230;, x&#8345;)~ is a function over the domain ~0..n~, but in programming
+the domain is usually of <span style="font-style: italic;">/named fields, labels,/</span> and then it is called a <span style="font-style: italic;">/record/</span>.
+E.g., ~{name = "Jasim", age = 27, language = "ar"}~ is a record.
+In the case that the labels <span style="font-style: italic;">/are/</span> numbers, we obtain the notion of an <span style="font-style: italic;">/array/</span>.
+
+In other languages, this may be known as a ~class~.
+In Haskell this is the ~data~ keyword with &#8216;record syntax&#8217;,
+and in Agda we may go on to use the ~record~ keyword.
+
+C records are known as <span style="font-style: italic;">/structures/</span> and they are just a list of
+labels with their types. In using ~struct~ types, the ~struct~
+keyword must precede the type name in all declarations.
+<span style="color: #a0a1a7;">#+NAME: Looking at a struct and some operations on it</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "playing_with_structs")
+</span><span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span>
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">fst</span>;
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">snd</span>;
+};
+
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Note that &#8220;struct&#8221; always precedes the type name &#8220;Pair&#8221;.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Structs are passed in by value: They are copied locally.
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assigns \nothing;
+</span><span style="color: #c18401;">void</span> <span style="color: #0184bc;">doesNothing</span>(<span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span> <span style="color: #8b4513;">p</span>)
+{
+  p.fst = 666;
+}
+
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">As usual, we use pointers to pass values by reference.
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(p);
+  @ assigns (*p).fst;
+</span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">woah</span>(<span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span>* <span style="color: #8b4513;">p</span>)
+{
+  (*p).fst = 313;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span><span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># Remember to have blocks with printf out of focus when proving with f8 or f9.</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;">#+NAME: Example uses of structs</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "playing_with_structs")
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+
+  <span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span> <span style="color: #8b4513;">p</span>; <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">no initalisation
+</span>
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Composite type without a name.
+</span>  <span style="color: #a626a4;">struct</span> {<span style="color: #c18401;">int</span> <span style="color: #8b4513;">one</span>; <span style="color: #c18401;">int</span> <span style="color: #8b4513;">two</span>;} <span style="color: #8b4513;">q</span>;
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Initialisation with declaration.
+</span>  <span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span> <span style="color: #8b4513;">r</span> = {11, 13};
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Note that in C, non-initialised variables have &#8220;arbitrary&#8221; values
+</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">which may change according to each new compilation!
+</span>
+  printf(<span style="color: #50a14f;">"\n p = &#10216;fst: %d, snd: %d&#10217;"</span>, p.fst, p.snd);
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Set only first field.
+</span>  p.fst = 3;
+  printf(<span style="color: #50a14f;">"\n p = &#10216;fst: %d, snd: %d&#10217;"</span>, p.fst, p.snd);
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Zero-out all fields.
+</span>  <span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span> <span style="color: #8b4513;">s</span> = {};
+  printf(<span style="color: #50a14f;">"\n s = &#10216;fst: %d, snd: %d&#10217;"</span>, s.fst, s.snd);
+
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Invoke functions
+</span>
+  doesNothing(s);
+  printf(<span style="color: #50a14f;">"\n s = &#10216;fst: %d, snd: %d&#10217;"</span>, s.fst, s.snd);
+
+  woah(&amp;s);
+  printf(<span style="color: #50a14f;">"\n s = &#10216;fst: %d, snd: %d&#10217;"</span>, s.fst, s.snd);
+
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Allocation of a Record</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">allocation-of-a-record</span>
+<span style="font-weight: bold;">:END:</span>
++ Recall that a variable declaration associates the variable with a reference to
+  the variable in memory --i.e., it's address--,
+  moreover this reference is associated a value for the variable.
+
++ Record variables declared without a value are given the special default value ~null~.
+
++ In Java, a record variable's reference is not directly associated with a record in memory!
+  It is usually associated with ~null~ or another reference.
+<span style="color: #a0a1a7;">  # Java is designed this way to reduce direct reference manipulation?</span>
+
+To associate a record with a variable, we need to create memory large enough to contain the record
+contents. Some languages use the keyword ~new~ to accomplish this task: Create a new reference
+and associated it with the record variable being defined.
+
+For example, in Java,
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE java
+</span><span style="color: #a626a4;">class</span> <span style="color: #c18401;">Pair</span>
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">fst</span>;
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">snd</span>;
+}
+
+<span style="color: #c18401;">Pair</span> <span style="color: #8b4513;">p</span> = <span style="color: #a626a4;">new</span> <span style="color: #c18401;">Pair</span>();
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>The resulting environment is ~p &#8614; r~ and the resulting memory state is
+~r &#8614; r', r' &#8614; {fst = 0, snd = 0}~. Note that default values are used.
+
++ A reference that was added to memory by the construct ~new~ is called a <span style="font-style: italic;">/cell/</span>.
++ The set of memory cells is called a <span style="font-style: italic;">/heap/</span>.
++ The operation that adds a new cell to the memory state is called <span style="font-style: italic;">/allocation/</span>.
+
+Interestingly in C the creation of records does <span style="font-style: italic;">/not/</span> allocate cells and so there
+is no need for the ~new~ keyword. Indeed record variables cannot ever have the value ~null~.
+C directly associates a variable with a reference which has the record contents as its value.
+That is, C has one less level of indirection than is found in Java.
+E.g., ~struct Pair p = {2, 3};~ gives us environment ~p &#8614; r~ and memory state ~r &#8614; {fst = 2, snd = 3}~,
+whereas Java would have ~p &#8614; r&#8242;~ in the environment and ~r&#8242; &#8614; r~ additionally in the memory state
+That is to say, <span style="font-style: italic;">/records in Java correspond to references to records in C/</span>
+and so Java access notation ~r.f~ is rendered in C as ~(*r).f~.
+
+Remember that references are themselves first-class values and it is possible for a
+reference to be associated to another reference.
+
+<span style="color: #8b4513; font-weight: bold;">** The Four Constructs of Records</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">the-four-constructs-of-records</span>
+<span style="font-weight: bold;">:END:</span>
+
+Records are usually handled using four constructs:
++ Defining a record type; e.g., using ~class~ or ~struct~.
++ Allocating a cell; e.g., using ~new~ or ~malloc~.
++ Accessing a field; e.g., ~myRecord.myField~.
++ Assigning to a field; e.g., ~myRecord.myField = myValue~.
+
+Understanding records in a language is thus tantamount to understanding
+these fundamental basics. E.g., in functional languages, assignment to a field
+is essentially record copying or, more efficiently, reference redirection.
+Incidentally, neither Haskell nor Agda make use of the ~new~ keyword:
+Declarations <span style="font-style: italic;">/must be/</span> accompanied by initialisation which indicate the need
+for cell allocation --consequently there is no need for a ~null~ value.
+The use of ~new~ may be used for careful efficiency optimisations,
+or memory management --which is rarely brought to the forefront in functional languages.
+
+The act of assigning to each field of a record
+is so common that they are usually placed into a so-called <span style="font-style: italic;">/constructor/</span> method.
+
+<span style="color: #8b4513; font-weight: bold;">** Sharing, Equality, &amp; Garbage</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">sharing-equality-garbage</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a626a4; font-weight: bold;">*** Assignments</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">assignments</span>
+<span style="font-weight: bold;">:END:</span>
+
+Suppose ~x~ and ~y~ are variables of type ~Pair~, with environment and memory state:
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>locations  =  x &#8614; r&#8321;, y &#8614; r&#8322;
+values     =  r&#8321; &#8614; r&#8323;, r&#8322; &#8614; r&#8324;, r&#8323; &#8614; {fst = 3, snd = 5}, r&#8324; &#8614; {fst = 7, snd = 9}
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>Then assignment ~y &#8788; x~ results in:
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>locations  =  x &#8614; r&#8321;, y &#8614; r&#8322;
+values     =  r&#8321; &#8614; r&#8323;, r&#8322; &#8614; r&#8323;, r&#8323; &#8614; {fst = 3, snd = 5}, r&#8324; &#8614; {fst = 7, snd = 9}
+                      -Change Here-
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>That is, the value of ~x~ is computed which is the reference ~r&#8323;~
+--since ~value (location x) &#8776; value r&#8321; &#8776; r&#8323;~--
+and we associate this value with the location of ~y~, that is, reference ~r&#8322;~.
+
+Notice that now no variable has the value of ~r&#8324;~ and so it is considered <span style="font-style: italic;">/garbage/</span>
+in our state. Moreover, nothing can get to it since values are only associated with
+locations, none of which have address ~r&#8324;~. Hence there is no <span style="font-style: italic;">/observable/</span> affect to
+their absence or presence. We want to recycle the physical memory
+or else we would quickly run out of memory. A <span style="font-style: italic;">/garbage collector/</span> is an automated
+system that collects and recycles such cells. Older languages like C do not
+have such a system and so memory must be managed by hand.
+
+Anyhow, henceforth ~x~ and ~y~ <span style="font-weight: bold;">*share*</span> the values of the record thereby all alterations,
+through either variable, are observable by the other.
+
+Since ~x~ and ~y~ are reference values, the assignment makes ~x == y~ a true statement
+since they <span style="font-style: italic;">/share/</span> the same cell. This is known as <span style="font-style: italic;">/physical equality/</span>.
+
+Sometimes we wish for two variables to <span style="font-style: italic;">/share/</span> a single integer, which may
+not be possible with built-in types, but can be accomplished by using <span style="font-style: italic;">/wrapper record types/</span>:
+Records that have a lone single field. This idea of `boxing up' primitive types
+allows us, for example, to define functions with arguments that are passed by reference
+thereby modifying their arguments; such as the ~swap~ function that swaps the contents of its
+arguments.
+
+<span style="color: #a626a4; font-weight: bold;">*** Copy</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">copy</span>
+<span style="font-weight: bold;">:END:</span>
+
+If we instead execute ~y.fst &#8788; x.fst; y.snd &#8788; x.snd~
+Then the resulting state is:
+<span style="color: #a0a1a7;">#+BEGIN_EXAMPLE haskell
+</span>locations  =  x &#8614; r&#8321;, y &#8614; r&#8322;
+values     =  r&#8321; &#8614; r&#8323;, r&#8322; &#8614; r&#8324;, r&#8323; &#8614; {fst = 3, snd = 5}, r&#8324; &#8614; {fst = 3, snd = 5}
+                                                                    -Change Here-
+<span style="color: #a0a1a7;">#+END_EXAMPLE
+</span>
+In this case, any alteration to ~x~'s values are <span style="font-style: italic;">/not/</span> observable by ~y~.
+
+Moreover, in this case, all fields are equal and so we have ~x~ and ~y~
+are <span style="font-style: italic;">/structurally equal/</span>. This notion is sometimes called ~equals method~
+and the previous is ~equals equals (==)~.
+
+<span style="color: #8b4513; font-weight: bold;">** Arrays</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">arrays</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="font-style: italic;">/Arrays/</span> are essentially records whose labels are numeric <span style="font-style: italic;">/and/</span> all labels have
+the same type. The number of fields of an array is determined during allocation
+of the array, and not during the declaration of its type, as is the case with records.
+This trade-off makes arrays more desirable in certain contexts.
+
+The fields are usually numbered ~0~ to ~n-1~, where ~n~ is the number of fields.
+
+Once an array is allocated, its size cannot be changed.
+--Stop &amp; think: Why not?
+
++ Arrays of type ~T~ are denoted by ~T[]~ in C/Java.
+  - Matrices, or arrays of arrays, are denoted by ~T[][]~ with access
+    by ~T[i][j]~.
+
+C arrays, like records, are not allocated.
+Consequently, their size cannot be determined by allocation and so must be
+  a part of their type.
+
+C arrays of type ~T~ of length ~n~ are declared using the mixfix syntax: ~T x[n];~
+Each element of the array is arbitrary --with no designated defaults--
+so it is best to initialise them. E.g., ~int x[10] = {};~ sets all elements of
+the array to 0.
+
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle no
+</span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">makeFive</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span>[], <span style="color: #c18401;">int</span> <span style="color: #8b4513;">length</span>)
+{
+  <span style="color: #a626a4;">for</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">i</span>=0; i != length; i++)
+    x[i] = 5;
+}
+
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">x</span>[3] = {};
+  printf(<span style="color: #50a14f;">"\n x = [%d, %d, %d]"</span>, x[0], x[1], x[2]);
+
+  makeFive(x, 3);
+  printf(<span style="color: #50a14f;">"\n x = [%d, %d, %d]"</span>, x[0], x[1], x[2]);
+
+  <span style="color: #a626a4;">return</span> 0;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+However, C arrays differ from C records in that array variables are actually
+references that are associated in memory with an array. Consequently, array
+arguments to methods are automatically pass by reference!
+
+Moreover this means the assignment ~t[k] = u~ works in a rather general sense:
+~t~ suffices to be any expression whose <span style="font-style: italic;">/value/</span> is a reference associated in memory
+with an array.
+<span style="color: #0184bc; font-weight: bold;">* Arrays -- </span><span style="color: #0184bc; font-weight: bold;">~\forall, \exists~</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">arrays-forall-exists</span>
+<span style="font-weight: bold;">:END:</span>
+
+Arrays are commonly handled using loops; let's look at some examples.
+
+<span style="color: #a0a1a7;">#+NAME: linear search yielding found index, or length otherwise</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with)
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 0 &lt; N;
+  @ requires \valid_read(array + (0 .. N - 1));  // N is the length of the array
+  @
+  @ assigns \nothing;
+  @
+  @ behavior found_element:
+  @    assumes \exists integer i; 0 &lt;= i &lt; N  &amp;&amp;  array[i] == element;
+  @    ensures 0 &lt;= \result &lt; N;
+  @
+  @ behavior did_not_find_element:
+  @    assumes \forall integer i; 0 &lt;= i &lt; N  ==&gt; array[i] != element;
+  @    ensures \result == N;
+  @
+  @ disjoint behaviors;
+  @ complete behaviors;
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">linear_search</span>(<span style="color: #c18401;">int</span>* <span style="color: #8b4513;">array</span>, <span style="color: #c18401;">int</span> <span style="color: #8b4513;">N</span>, <span style="color: #c18401;">int</span> <span style="color: #8b4513;">element</span>)
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">n</span> = 0;
+
+  <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ loop assigns n;
+    @ loop invariant 0 &lt;= n &lt;= N;
+    @ loop invariant not_found_yet: \forall integer i; 0 &lt;= i &lt; n  ==&gt;  array[i] != element;
+    @ loop variant N - n;
+</span><span style="color: #a0a1a7; font-weight: bold;">    */</span>
+  <span style="color: #a626a4;">while</span>( n != N  &amp;&amp; array[n] != element ) n++;
+  <span style="color: #a626a4;">return</span> n &lt; N ? n : N;
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Some remarks are in order.
+
++  ~\valid_read(array + (0 .. N - 1))~ ensures that the memory addresses
+   ~array + 0, ..., array + N-1~ can be read --as discussed when introducing ~\valid~.
+
++ The loop continues as long as we have not yet found the element.
+  - As such, every index thus far differs from the element sought after.
+  - That is, forall index <span style="font-style: italic;">/i/</span> in the array bounds, we have <span style="font-style: italic;">/array[i] &#8800; element/</span>.
+  - This invariant is stated using the ~forall~ syntax.
+
++ The variable naming ~n, N~ is intended to be suggestive:
+  When <span style="font-style: italic;">/n = N/</span> then we have traversed the whole array.
+  - We began at 0 and are working upward to <span style="font-style: italic;">/N/</span>.
+  - At each step, we traverse the array by one more item
+    thereby decreasing the amount of items remaining --which is <span style="font-style: italic;">/N - n/</span>.
+
++ If it is <span style="font-style: italic;">/provable/</span> that some index contains the desired element,
+  then in that case our program ensures the output result is a valid index.
+
++ The ACSL type ~integer~ is preferable to the C type ~int~ since it is not constrained by
+  any representation limitations and instead acts more like its pure mathematical counterpart &#8484;.
+
+It is important to note that the universal &#8216;&#8704;&#8217; uses ~==&gt;~ to delimit the
+range from the body predicate, whereas the existential &#8216;&#8707;&#8217; uses ~&amp;&amp;~
+--this observation is related to the &#8220;trading laws&#8221; for quantifiers.
+
+| ~\forall type x; r(x) ==&gt; p(x)~ | Every element ~x~ in range ~r~ satisfies ~p~ |
+| ~\exists type x; r(x) &amp;&amp; p(x)~  | Some  element ~x~ in range ~r~ satisfies ~p~ |
+
+Notice the striking difference between
+the ~\exists integer x; \false &amp;&amp; even x~
+--which is unprovable since false is never true!--
+and ~\exists integer x; \false ==&gt; even x~
+--which can be satisfied by infinitely many ~x~, since false implies anything.
+
+<span style="color: #a626a4; font-weight: bold;">*** Exercise: Linear Search Downwards with No Explicit Locals      </span><span style="color: #a626a4; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">exercise-linear-search-downwards-with-no-explicit-locals</span>
+<span style="font-weight: bold;">:END:</span>
+Of course we could start at the end of the array and &#8220;work down&#8221; until
+we find the element, or otherwise, say, return -1. Let's do so without using
+a new local variable ~n~.
+
+<span style="color: #a0a1a7;">#+begin_details Exercise: Linear Search Downwards with No Explicit Locals
+</span>#+NAME: linear search yielding found index, or -1 otherwise
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+
+<span style="font-style: italic;">/*@ requires 0 &lt; N;
+  //</span> @ requires Exercise: read access to a[0], ..., a[N-1];
+  @
+  // @ assigns FixMe;
+  @
+  @ behavior found_element:
+  @    assumes Exercise: FixMe;  <span style="font-style: italic;">// &#8220;element &#8712; array&#8221;
+  @    ensures Exercise: FixMe;  //</span> Output is valid index in array
+  @
+  @ behavior did_not_find_element:
+  @    assumes Exercise: FixMe;     // &#8220;element &#8713; array&#8221;
+  @    ensures \result == -1;
+  @
+  @ disjoint behaviors;
+  @ complete behaviors;
+  <span style="font-weight: bold;">*/
+int linear_search_no_local(int*</span> array, int N, int element)
+{
+  /*@ loop assigns N;
+    @ loop invariant 0 &lt;= N &lt;= \at(N, Pre);
+    <span style="font-style: italic;">// @ loop invariant not_found_yet: Exercise: FixMe;
+    </span><span style="font-style: italic;">//</span><span style="font-style: italic;"> @ loop variant Exercise: FixMe: 666;
+    */</span>
+  while( 0 != N  &amp;&amp; array[N-1] != element ) N--;
+  return N - 1;
+}
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Exercise: Make an array constantly the same element            </span><span style="color: #a626a4; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">exercise-make-an-array-constantly-the-same-element</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_details Exercise: Make an array constantly the same element
+</span>#+NAME: Assign every element in the array to be the given value
+#+BEGIN_SRC c :tangle (not-currently-working-with)
+#include "Prelude.c"
+
+<span style="font-style: italic;">/*@ requires Exercise: FixMe; //</span> array[0], ..., array[N-1] are accessible
+  @ requires element &lt; INT_MAX;
+  @ assigns array[0 .. N-1];
+  @
+  @ ensures Exercise: all_array_equals_element: FixMe;
+  <span style="font-weight: bold;">*/
+void make_constant(int*</span> array, int N, int element)
+{
+  /*@ loop assigns N, array[0 .. \at(N,Pre)-1];
+    @ loop invariant range_on_N: FixMe;
+    @ loop invariant constant_so_far: FixMe;
+    @ loop variant N;
+    */
+  for (; 0 != N; N--) array[N-1] = element;
+}
+#+END_SRC
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Closing                                                        </span><span style="color: #a626a4; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">closing</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+HTML: &lt;br&gt;</span>
+
+Notice that the invariants are getting way too long --and worse: Repetitive!
+We can abstract common formulae into more general and reusable shapes by
+declaring them as ACSL logical functions --keep reading!
+
+On an unrelated note, sometimes we try to prove a program that we just
+coded incorrectly, so if things are going nowhere then maybe try a few tests
+to ensure you're on the right track.
+<span style="color: #0184bc; font-weight: bold;">* Recursion</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">recursion</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #8b4513; font-weight: bold;">** Introduction for recursion                                        </span><span style="color: #8b4513; font-weight: bold;">:ignore:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">introduction-for-recursion</span>
+<span style="font-weight: bold;">:END:</span>
+The definition of ~wp~ for function calls is correct provided the function body
+itself only contains invocations to <span style="font-style: italic;">/previously/</span> defined functions?
+
+What about <span style="font-style: italic;">/recursive function definitions/</span>:
+Definitions invoking the function being defined or invoking functions that invoke
+functions that eventually invoke the function currently being defined?
+
+Since invocations are delegated to the state, which handles all defined names,
+we may invoke whatever function provided its name is found.
+Since C requires names to be declared before use, we may have mutually recursive
+functions by &#8216;prototyping&#8217;: Declaring the function signature, then at some point
+providing the actual implementation.
+<span style="color: #a0a1a7;">#+begin_details Example Prototyping for Mutual Recursion
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "prototyping")
+#include&lt;stdio.h&gt; // for IO
+#include&lt;stdbool.h&gt;
+
+bool odd(int); // protoyping the odd function
+
+bool even(int n) // using odd here, even though it's not yet defined
+{
+  if (n == 0) return true;
+  else        return odd(n - 1);
+}
+
+bool odd(int n)
+{
+  if (n == 0) return false;
+  else        return even(n - 1);
+}
+
+int main()
+{
+  printf("\n 7 is even? ... %d", even(7));
+  printf("\n 7 is odd? ... %d", odd(7));
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Anyhow, e.g., ~void f(int x){ f(x); }~ has the definition of ~wp f(x)~ using the value of ~wp f(x)~
+and so is circular. How can this be avoided?
+
+Note that a <span style="font-style: italic;">/recursive definition/</span> is <span style="font-weight: bold;">*not*</span> just a definition that uses the object which it
+is defining. Otherwise, the previous ~f~ might as well have been the definition of
+the factorial function that on input ~x~ simply invokes itself; then again it could
+have been any function!
+
+<span style="color: #a0a1a7;">#+begin_details Recursion  &#8800;  &#8469;-Induction
+</span>We generally think of recursive definitions as definitions by usual &#8469;-induction, however
+this is not absolutely true.
+E.g., the following function at ~n~ not only relies on
+values on smaller inputs but also on values at larger inputs to compute the value at ~n~!
+#+BEGIN_SRC c :tangle (not-currently-working-with "recursion_neq_induction")
+#include&lt;stdio.h&gt; // for IO
+
+int iterations = 0;
+#define RETURN(i, n) { printf("\n <span style="font-weight: bold;">**Computed value for input %d is %d**</span>", i, n); \
+                       iterations++; return n; }
+
+// Uses smaller as well as larger values just to compute current value!
+int f(int n)
+{
+  printf("\n Computing value for: %d", n);
+
+  if (n &lt;= 1)     RETURN(n, 1)
+  if (n % 2 == 0) RETURN(n, 1 + f(n / 2))
+  else            RETURN(n, 2 * f(n + 1))
+}
+
+int main()
+{
+  f(12);
+  printf("\n\n The function was invoked for a total of %d times!", iterations);
+  return 0;
+}
+#+END_SRC
+
+Similarly the Ackermann function is a recursive function that has been proven
+to be undefinable using only nested definitions by &#8469;-induction.
+( However, since &#8469;&#215;&#8469; is well-ordered, it is a valid definition. )
+<span style="color: #a0a1a7;">#+end_details
+</span>
+We may try to remove recursive calls by replacing every recursive call with
+the function body itself, which then has a new recursive call. We may continue
+to expand forever by replacing recursive calls with the original function body.
+The &#8220;result&#8221; will be an non-recursive program that is infinitely long.
+
+Thus, recursive programs, like ~while~ loops, are a means of expressing infinite
+programs and, like ~while~ loops, they introduce the possibility of non-termination.
+
+As for ~while~ loops, we can approximate the infinitely long non-recursive program
+by simply giving-up on the ~n~-th expansion, not making any more recursive calls.
+Essentially, we do ~n~ recursive calls then give-up if the program has not completed.
+Hence, we again consider the limit.
+
+<span style="color: #a0a1a7;"># For multiple mutually recursive functions, we consider a /family/ of computation</span>
+<span style="color: #a0a1a7;"># functions then take the limit over that.</span>
+
+<span style="color: #8b4513; font-weight: bold;">** Recursive Definitions and Fixed Point Equations</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">recursive-definitions-and-fixed-point-equations</span>
+<span style="font-weight: bold;">:END:</span>
+
+A recursive function such as the factorial function can be seen as
+an equation where the unknown variable is the function currently being defined.
+For example, the factorial function is the <span style="font-style: italic;">/unique partial function/</span> ~f~ satisfying
+the equation
+<span style="color: #a0a1a7;">#+BEGIN_SRC haskell
+</span>f  &#8776; (x &#8614; if x &#8776; 0 then 1 else x * f(x-1))
+<span style="color: #a0a1a7;">#+END_SRC
+</span>This equation has the form ~f &#8776; F(f)~, so it is a &#8220;fixed point equation&#8221;.
+
+Since recursive functions may not terminate, the functions they describe
+are partial. It can be proven that any fixed point equation <span style="font-style: italic;">/always/</span> has
+at least one solution; i.e., it defines at least one partial function on the integers.
+For example, the equation ~f &#8776; (x &#8614; 1 + f(x))~ corresponding to
+<span style="color: #a0a1a7;">#+BEGIN_SRC c
+</span><span style="color: #c18401;">int</span> <span style="color: #0184bc;">loop</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">n</span>){ <span style="color: #a626a4;">return</span> 1 + loop(n); }
+<span style="color: #a0a1a7;">#+END_SRC
+</span>Has one solution: The empty function, which is not defined on any input.
+
+The set of possible solutions can be ordered by inclusion
+of their graphs and so one of them is the smallest.
+Incidentally, this least solution is also obtained by the aforementioned limit!
+
+E.g., every function is a solution to the equation ~f &#8776; (x &#8614; f x)~.
+
+<span style="color: #8b4513; font-weight: bold;">** Programming without Assignment --the Functional Core</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">programming-without-assignment-the-functional-core</span>
+<span style="font-weight: bold;">:END:</span>
+
+Notice that the factorial function can be written without using assignments:
+<span style="color: #a0a1a7;">#+begin_details Here's a freebie!
+</span>#+BEGIN_SRC c :tangle (not-currently-working-with "Prelude")
+/*@ axiomatic Factorial
+  @ {
+  @    logic integer factorial(integer n);
+  @
+  @    axiom fact_zero:  \forall integer n;    factorial(0) == 1;
+  @
+  @    axiom fact_succ:  \forall integer n; 0 &lt;= n
+  @                 ==&gt;  factorial (n + 1) == n * factorial (n);
+  @
+  @    axiom fact_monotone : \forall integer m,n; 0 &lt;= m &lt;= n
+  @          ==&gt; factorial(m) &lt;= factorial(n);
+  @ }
+  */
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span><span style="color: #a0a1a7;">#+NAME: Two ways to write factorial</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "factorial_two_ways")
+</span><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires Exercise: FixMe;
+  @ assigns \nothing;
+  @ ensures Exercise: FixMe;
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">fact_imp</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">n</span>)
+{
+  <span style="color: #c18401;">int</span> <span style="color: #8b4513;">r</span> = 1;
+
+  <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ loop assigns i, r;
+    @ loop invariant range_on_i: FixMe;
+    @ loop invariant relationship_between_r_i_n: FixMe;
+    @ loop variant FixMe: 666;
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+  <span style="color: #a626a4;">for</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">i</span> = 1; i &lt;= n; i++)
+    r = r * i;
+
+  <span style="color: #a626a4;">return</span> r;
+}
+
+<span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">&#8776;
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 0 &lt;= n;
+  @ requires factorial(n) &lt;= INT_MAX;
+  @ assigns \nothing;
+  @ ensures \result == factorial(n);
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #c18401;">int</span> <span style="color: #0184bc;">fact_functional</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">n</span>)
+{
+  <span style="color: #a626a4;">if</span> (n == 0) <span style="color: #a626a4;">return</span> 1;
+  <span style="color: #a626a4;">return</span> n * fact_functional(n - 1);
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>( Notice that <span style="font-style: italic;">/&#172;(i &#8804; n)[i &#8788; 1]  &#8801;  n = 0/</span> when considering <span style="font-style: italic;">/n : &#8469;/</span>. )
+
+Hence if we remove assignments, then the memory state for computation is
+always empty and so sequences and loops become useless. We are left with
+only variable declarations, function calls, and the built-in operations.
+This is the <span style="font-style: italic;">/functional core/</span> of the language and it is surprisingly as powerful
+as the imperative core. Why? Recall that a term, or statement, can be thought
+of as a (partial) function of its free variables; now the functions obtained
+this way using only the functional core are the same as those obtained by also
+using the whole of the imperative core!
+Note that omitting recursion falsifies this result.
+
+<span style="color: #0184bc; font-weight: bold;">* Hehner's Problem</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">hehners-problem</span>
+<span style="font-weight: bold;">:END:</span>
+
+We have now covered enough material to tackle the problem posed
+at the very beginning ---that of ~whatDo~.
+
+<span style="color: #a0a1a7;">#+begin_details The Enticing Puzzle
+</span>#+NAME: Enticing Puzzle
+#+BEGIN_SRC c :tangle (not-currently-working-with "enticing")
+#include "Prelude.c"
+
+/*@  requires \valid(x) &amp;&amp; \valid(y);
+     requires 0 &lt;= *x &lt; 31;
+     requires Exercise: FixMe;
+     assigns *x, *y;
+     ensures Exercise: FixMe;
+ <span style="font-weight: bold;">*/
+void whatDo(int*</span> x, int* y)
+{
+  if (*x == 0)
+    {
+      *y = 1; *x = 3;
+    }
+  else
+    {
+      *x -= 1; *y = 7;
+      whatDo(x, y);
+      *y *= 2; *x = 5;
+    }
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Running a few test inputs, it can be seen that this program
+sets ~y~ to be the power of ~x~. Further testing may reveal interesting
+issues when ~x~ and ~y~ refer to the same memory location!
+
+<span style="color: #a0a1a7;">#+begin_details Some Tests
+</span>#+BEGIN_EXAMPLE
+&#10216;x = 0, y = 0&#10217; &#8614; &#10216;x = 3, y = 1&#10217;
+&#10216;x = 1, y = 2&#10217; &#8614; &#10216;x = 5, y = 2&#10217;
+&#10216;x = 3, y = 4&#10217; &#8614; &#10216;x = 5, y = 8&#10217;
+&#10216;x = 5, y = 6&#10217; &#8614; &#10216;x = 5, y = 32&#10217;
+&#10216;x = 7, y = 8&#10217; &#8614; &#10216;x = 5, y = 128&#10217;
+&#10216;x = 0, y = 99&#10217; &#8614; &#10216;x = 3, y = 1&#10217;
+
+x == y  &#8658;  Segmentation Fault
+#+END_EXAMPLE
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a0a1a7;">#+begin_comment
+</span>#+NAME: Testing the previous code block
+#+BEGIN_SRC c :tangle (not-currently-working-with "enticing_tests")
+#include "enticing.c"
+#include&lt;stdio.h&gt;
+
+#define MkTest(aa, bb)   a = aa, b = bb; whatDo(x, y); \
+                         printf("\n&#10216;x = %d, y = %d&#10217; &#8614; &#10216;x = %d, y = %d&#10217;", aa, bb, *x, *y);
+
+int main()
+{
+  int a, b;
+  int *x = &amp;a, *y = &amp;b;
+
+  MkTest(0, 0)
+  MkTest(1,2)
+  MkTest(3,4)
+  MkTest(5,6)
+  MkTest(7,8)
+  MkTest(0, 99)
+
+  /*  Segmentation fault: Need x and y to refer to distinct memory locations!
+  x = y;
+  whatDo(x, y);
+  */
+
+  return 0;
+}
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_comment
+</span>
+With this guidance in hand, we aim to axiomatise the power function:
+<span style="color: #a0a1a7;">#+NAME: axiomatisation of power function</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "Prelude")
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic Pow
+  @ {
+  @    logic integer pow(integer b, integer n);
+  @
+  @    axiom pow_zero:  \forall integer b;        pow(b, 0) == 1;
+  @
+  @    axiom pow_one:  \forall integer b;        pow(b, 1) == b;
+  @
+  @    axiom pow_homomorphism:  \forall integer b, m, n;
+  @                 pow(b, m + n) == pow(b, m) * pow(b, n);
+  @
+  @    axiom pow_monotone : \forall integer b,m,n; b &gt;= 0  &amp;&amp;  0 &lt;= m &lt;= n
+  @          ==&gt; pow(b,m) &lt;= pow(b,n);
+  @ }
+</span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+Notice that there are infinitely many solutions ~f~ to the equations
++ ~pow_zero~: <span style="font-style: italic;">/f(0) = 1/</span>
++ ~pow_homomorphism~: <span style="font-style: italic;">/f(m + n) = f(m) * f(n)/</span>
+
+Which ones? Since every natural number is of the form <span style="font-style: italic;">/1 + 1 + &#8943; + 0/</span>
+the second requirement yields \\ <span style="font-style: italic;">/f(n) = f (1 + 1 + &#8943; + 0) = f 1 * f 1 * &#8943; f 1 * f 0;/</span>
+which by the first requirement simplifies to <span style="font-style: italic;">/f(n) = (f 1)&#8319;/</span>.
+Hence for any choice of number <span style="font-style: italic;">/f(1) : &#8469;/</span>, we obtain a function <span style="font-style: italic;">/f/</span>
+that satisfies these definitions. If we want <span style="font-style: italic;">/f/</span> to be the <span style="font-style: italic;">/n/</span> product of a number
+<span style="font-style: italic;">/b/</span> then we need to insist <span style="font-style: italic;">/f 1 = b/</span> --which is just ~pow_one~!
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># This is related to the First Homomorphism Theorem for lists ;-)</span>
+<span style="color: #a0a1a7;"># More generally, the theorem for adjunctions!</span>
+
+From the axioms, we obtain some useful lemmas.
+<span style="color: #a0a1a7;">#+NAME: some lemmas about pow</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "Prelude")
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma pow_succ:  \forall integer b, n; n &gt;= 0  ==&gt;     pow(b, n + 1) == pow(b, n) * b;
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma powNonNeg : \forall integer b,n; b &gt;= 0 ==&gt; n &gt;= 0 ==&gt; pow(b,n) &gt;= 0;
+</span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma pow2bound : \forall integer n; 0 &lt;= n &lt; 31 ==&gt; pow(2, n) &lt; INT_MAX;
+</span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ lemma powPredT : \forall integer b,n,m;  b &gt;= 0  &amp;&amp;  n &gt; 0
+                                &amp;&amp;  pow(b, n) &lt;= m  ==&gt;  b * pow(b, n-1) &lt;= m;</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+With this setup, the reader should now be able to solve the ~FixMe~'s in ~whatDo~
+--which I've renamed to &#8220;hehner&#8221;, after the fellow who showed it as an example
+in his excellent specifications and correctness text, <span style="text-decoration: underline;"><a href="http://www.cs.toronto.edu/~hehner/aPToP/">A Practical Theory of Programming</a></span>.
+<span style="color: #a0a1a7;">#+NAME: hehner -- annotated problem</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC c :tangle (not-currently-working-with "hehner")
+</span><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@  requires \valid(x) &amp;&amp; \valid(y);
+     requires 0 &lt;= *x &lt; 31;
+     requires Exercise: FixMe;      // Assuming \false, gives us anything!
+     assigns *x, *y;
+     ensures Exercise: FixMe;
+</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+<span style="color: #c18401;">void</span> <span style="color: #0184bc;">hehner</span>(<span style="color: #c18401;">int</span>* <span style="color: #8b4513;">x</span>, <span style="color: #c18401;">int</span>* <span style="color: #8b4513;">y</span>)
+{
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Introduce a local for reasoning, to avoid having to write \at(*x, Pre).
+</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">ghost const int X = *x;
+</span>
+  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert given: 0 &lt;= X &lt; 31;
+</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert taking_powers_with_monotonicity: 1 &lt;= pow(2,X) &lt;= INT_MAX;
+</span>  <span style="color: #a626a4;">if</span> (*x == 0)
+    {
+      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert condition: X == 0;
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert taking_powers: pow(2,X) == 1;
+</span>      *y = 1; *x = 3;
+      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert *y == pow(2,X);
+</span>    }
+  <span style="color: #a626a4;">else</span>
+    {
+      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert condition: 0 &lt; X &lt; 31;
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert pow_with_monotonicity: 1 &lt; pow(2, X) &lt;= INT_MAX;
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert factoring: 2 * pow(2, X-1) &lt;= INT_MAX;
+</span>
+      *x -= 1; *y = 7;
+      hehner(x, y);
+
+      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert function_ensures: *y == pow(2, X - 1);
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert pow(2, X) == 2 * pow(2, X - 1);
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert     pow(2, X    ) &#8804; INT_MAX;
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert 2 * pow(2, X - 1) &#8804; INT_MAX;
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert y2_no_overflow: *y * 2 &#8804; INT_MAX;
+</span>
+      *y *= 2; *x = 5;
+
+      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert our_goal: *y == pow(2, X);
+</span>      <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">assert incidentally: *y &lt;= INT_MAX;
+</span>    }
+}
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+I've left the ~assert~'s since they may make the program proof more comprehensible
+to the reader --yet notice that I did not use ~@~ and so they are not visible,
+nor necessary, to Frama-C.
+
+<span style="color: #0184bc; font-weight: bold;">* Advanced Data Structures</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">advanced-data-structures</span>
+<span style="font-weight: bold;">:END:</span>
+
+This is what I have so far, yet I look forward to including material
+utilising linked lists as well as making more of the Curry-Howard Correspondence.
+
+Anyhow, I hope you've enjoyed yourself and hopefully learned something neat! Byebye!
+
+<span style="color: #0184bc; font-weight: bold;">* The Underlying Elisp</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">the-underlying-elisp</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># The Elisp Supporting The Interactivity of C</span>
+
+The following utilities are loaded when this file is opened.
+After the first time the file ~InteractiveWayToC.el~ is created and this section
+may be deleted, or ~COMMENT~-ed, as it is loaded in the ~footer~ section at the end of this file.
+
+0. Make some changes, look at them with ~f7~.
+    - Or execute with ~f6~ if there is a ~main~ method.
+1. Check your progress with ~f9~, within Emacs.
+2. If confused, open the Frama-C gui with ~f8~.
+
+Note: There is a 10 second time limit on the proof search.
+
+Every source block is in &#8216;focus&#8217; when the variables ~NAME~ and ~NAMECode~ refer to it.
+<span style="color: #a0a1a7;">#+begin_details Local Variables
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(setq Language "c" LanguageExtension "c")
+(setq NAMEEXT (buffer-name) NAME (file-name-sans-extension NAMEEXT))
+(setq NAMECode (concat NAME "." LanguageExtension))
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+We explicitly change focus using ~[not-]currently-working-with~ methods.
+<span style="color: #a0a1a7;">#+begin_details [not-]currently-working-with
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(defun buffer-name-sans-extension () ""
+  (file-name-sans-extension (buffer-name))
+)
+
+(defun currently-working-with (&amp;optional name)
+  "Provide the name (without extension) of the source block's resulting file.
+   The name is then tied to the &#8220;NAMECode&#8221; global variable utilised
+   by the &#8220;show-code&#8221; method, &lt;f7&gt;, and the &#8220;interpret&#8221; command's global variable &#8220;NAME&#8221;.
+
+   If no argument is provided, we use &#8220;&#10218;BufferName&#10219;.c&#8221; as default file name.
+  "
+  (unless name (setq name (buffer-name-sans-extension)))
+  (setq NAME name)
+  (setq NAMECode (concat name ".c"))
+)
+
+(defun not-currently-working-with (&amp;optional name)
+  "When &#8220;:tangle fn&#8221; has &#8220;fn&#8221; being the empty string, the tangle does not transpire.
+   As such, it is as if we are not actually generating the source block.
+
+   This operation only returns the empty string and does not alter any existing state.
+   If we alter state, then earlier invocations to (currently-working-with) are rendered
+   useless!
+  "
+
+  ""   ;; Our return value.
+)
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Notice that the ~InteractiveWayToC.el~ methods --&lt;F6&gt; to &lt;F9&gt;-- target the
+source block(s) with (~currently-working-with name)~ where ~name~ is the most
+recent name. Note that the ~name~ component need not be unique: Blocks having
+the same one write to the same file.
+<span style="color: #a0a1a7;"># Alternate approach to using (currently-working-with)</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># (defun get-name () "" NAMECode)</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># PROPERTY: header-args :tangle (get-name)</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># While this works, it neceisstates using an (eval ...) in a source block's header;</span>
+<span style="color: #a0a1a7;"># which I do not think is much better than using &#8220;:tangle&#8221; outright.</span>
+
+In a new line enter ~&lt;s~ then at the end press ~TAB~ to obtain a nice hello-world
+template. Some code will be generated for you --free of charge--, edit it as you like.
+<span style="color: #a0a1a7;">#+begin_details Hello World Template Using &lt;s
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(make-variable-buffer-local 'org-structure-template-alist)
+(setq TEMPLATE
+  (concat
+   "#+NAME: ???? -- goal of this code block"
+   "\n#+BEGIN_SRC " Language " :tangle (currently-working-with \"HelloWorld\") \n"
+   "#include&lt;stdio.h&gt; // for IO"
+   "\nint main() \n{\n  printf(\"--Hello, World!--\");\n  return 0; \n}"
+   "\n#+END_SRC"))
+(add-to-list 'org-structure-template-alist `("s" ,TEMPLATE))
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Then to see the code generated by this file press ~M-x~ then enter ~show-code~ then enter;
+alternatively, press ~C-x C-e~ after the final parenthesis: (show-code).
+
+My definition of ~(show-code)~ begins with closing the code buffer if it exists,
+then continue by extracting the most recent code and displaying it below the current buffer.
+The definition of ~(interpret)~ is nearly the same except we switch to an output buffer,
+and create it if it doesn't exist.
+Note that our interpretation command is essentially the following command line invocation:
+~NAME=myfilename ; gcc $NAME.c -o $NAME.exe ; ./$NAME.exe~
+
+<span style="color: #a0a1a7;">#+begin_details Commands for showing code, running code, and running frama-c
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(defun show-code () "Show focused source blocks in a new buffer."
+  (interactive)
+  (ignore-errors (kill-buffer NAMECode))
+  (save-buffer)
+  (org-babel-tangle)
+  (split-window-below)
+  (find-file NAMECode)
+  (other-window 1))
+
+;; Since there are many generated files, let's mention the name
+;; of the program file currently being executed, or proven.
+;;
+(defun insert-focused-name ()
+   "Insert the name of the focused source blocks at the beginning of the buffer."
+  (beginning-of-buffer)
+  (insert "================\n&#10218; " NAME ".c &#10219;\n================\n\n"))
+
+(defun interpret () "Execute focused source blocks in a new buffer."
+  (interactive)
+  (save-buffer)
+  (org-babel-tangle)
+  (switch-to-buffer-other-window "<span style="font-weight: bold;">*Shell Command Output*</span>")
+  (shell-command
+    (concat "cd " default-directory "; NAME=" NAME " ; gcc $NAME.c -o $NAME.exe ; ./$NAME.exe"))
+  (insert-focused-name)
+  ;; Go back to the literate buffer.
+  (other-window 1))
+
+(defun frama-c () ""
+  (interactive)
+  (save-buffer)
+  (org-babel-tangle)
+  (shell-command (concat "frama-c-gui " NAMECode " -wp -rte &amp;")))
+
+(defun try (this that) ""
+  (condition-case nil (eval this) (error (eval that))))
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+The ~frama-c-no-gui~ command tries to find where an error happens by placing the cursor
+near an unproven assertion. It does so by looking for the phrase ~false~ in the shell output
+buffer after the ~frama-c~ program is invoked. If it cannot find it, you are placed at
+the end of the buffer and, ideally but not necessarily, should see all goals have passed.
+
+<span style="color: #a0a1a7;"># Alternate command for frama-c.</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># We invoke frama-c on a file by first having WP &#8220;focus&#8221; on the functional properties</span>
+<span style="color: #a0a1a7;"># then we incorporate into its knowledge base technical properties regarding runtime errors.</span>
+<span style="color: #a0a1a7;"># No gui: (shell-command (concat "frama-c " NAMECode " -wp -wp-msg-key=print-generated -then -rte -wp"))</span>
+<span style="color: #a0a1a7;"># Yes gui: (shell-command (concat "frama-c-gui " NAMECode " -wp -then -rte -wp &amp;"))</span>
+
+<span style="color: #a0a1a7;">#+begin_details frama-c-no-gui
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(defun frama-c-no-gui () ""
+  (interactive)
+  (org-babel-tangle)
+  ;; Avoid generating proof goal statements --for now.
+  ;; (shell-command (concat "frama-c " NAMECode " -wp -wp-msg-key=print-generated -rte"))
+  (shell-command (concat "frama-c " NAMECode " -wp -wp-timeout 10 -rte"))
+
+  (switch-to-buffer-other-window "<span style="font-weight: bold;">*Shell Command Output*</span>")
+  (insert-focused-name)
+  (hl-line-mode)
+
+  (setq frama-c-state (catch 'state   ;; Global variable indicating current state
+  (dolist (elem '("Exercise" "unknown" "user error" "false" "Timeout" "Proved goals"))
+    (beginning-of-buffer)
+    (try '(and (search-forward elem) (throw 'state elem)) 'nil)
+  )))
+
+  ;; global variable about status
+  (setq frama-c-status (format "Frama-C: %d&#65130; of proof complete!" (frama-c-progress)))
+
+  ;; Use the red colour of failure.
+  (set-face-background 'hl-line "pink")
+
+  ;; Or did we succeed?
+  ;; We might have halted a &#8220;false&#8221; <span style="font-weight: bold;">*constant*</span> even though all goals pass.
+  ;; &#10216; This is not an issue when proofs are not being generated. &#10217;
+  (if (equal frama-c-state "Exercise")
+        (setq frama-c-status (concat frama-c-status " &#10218;There are holes!&#10219;"))
+        (when (or (equal frama-c-state "Proved goals")
+                  (eq (frama-c-progress) 100))
+              (set-face-background 'hl-line "pale green")
+              (try '(search-forward "Proved goals") t)))
+  (message frama-c-status)
+  (minimize-window) ;; Make current buffer roughly 3 lines in height.
+)
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Where the ~frama-c-progress~ command yields the percentage denoting the number of goals proven.
+<span style="color: #a0a1a7;">#+begin_details frama-c-progress
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(defun frama-c-progress () ""
+  (let ( (here (point)) )
+  (beginning-of-buffer)
+  (try '(search-forward "Proved goals:") 0)
+  ;; (kill-line)
+    (copy-region-as-kill (point) (point-at-eol))
+    (goto-char here)
+    (* 100 (string-to-number (calc-eval (current-kill 0))))
+  ))
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+Finally,
+<span style="color: #a0a1a7;">#+begin_details Local Function Keys
+</span>#+BEGIN_SRC emacs-lisp :tangle InteractiveWayToC.el
+(local-set-key (kbd "&lt;f6&gt;") 'interpret)
+(local-set-key (kbd "&lt;f7&gt;") 'show-code)
+(local-set-key (kbd "&lt;f8&gt;") 'frama-c)
+(local-set-key (kbd "&lt;f9&gt;") 'frama-c-no-gui)
+#+END_SRC
+<span style="color: #a0a1a7;">#+end_details
+</span>
+It is to be noted: I only know enough Elisp to get by.
+
+Again: Hope you had fun!
+
+<span style="color: #0184bc; font-weight: bold;">* </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #0184bc; font-weight: bold;"> footer</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">comment-footer</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># (set-background-color "mistyrose1")</span>
+
+Note: I need to define [not-]currently-working-with so that the (org-babel-tangle)
+may happen without being interrupted with undefined issues. Whence the definitions below.
+
+<span style="color: #a0a1a7;"># Local Variables&#58;</span>
+<span style="color: #a0a1a7;"># eval: (defun currently-working-with (&amp;optional name) "")</span>
+<span style="color: #a0a1a7;"># eval: (defun not-currently-working-with (&amp;optional name) "")</span>
+<span style="color: #a0a1a7;"># eval: (org-babel-tangle)</span>
+<span style="color: #a0a1a7;"># eval: (load-file "InteractiveWayToC.el")</span>
+<span style="color: #a0a1a7;"># eval: (visual-line-mode t)</span>
+<span style="color: #a0a1a7;"># eval: (progn (fci-mode) (setq fci-rule-column 90))</span>
+<span style="color: #a0a1a7;"># compile-command: (interpret)</span>
+<span style="color: #a0a1a7;"># End:</span>
+</pre>
+  </body>
+</html>

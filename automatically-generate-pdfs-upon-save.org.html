@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title> *blog-htmlize-subtree*</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #0184bc; font-weight: bold;">* Automatically Generate PDFs upon Save </span><span style="color: #0184bc; font-weight: bold;">:emacs:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2025-12-03 Wed 09:25]</span>
+<span style="color: #a626a4;">:SLUG:</span>        <span style="color: #383a42; background-color: #fafafa;">automatically-generate-pdfs-upon-save</span>
+<span style="color: #a626a4;">:MODIFIED:</span> <span style="color: #383a42; background-color: #fafafa;">2026-10-01</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">Live preview when writing LaTeX!</span>
+<span style="color: #a626a4;">:IMAGE:</span>       <span style="color: #383a42; background-color: #fafafa;">./resources/emacs-birthday-present.png 350 350</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">automatically-generate-pdfs-upon-save</span>
+<span style="font-weight: bold;">:END:</span>
+ 
+Here is my =~/.latexmkrc= file: It previews PDFs using Emacs, uses LuaLaTeX for making PDFs, and to update the PDF viewer
+please change focus to the PDF file.
+
+<span style="color: #a0a1a7;">#+begin_src shell :tangle "~/.latexmkrc"
+</span>$<span style="color: #8b4513;">pdf_previewer</span>=<span style="color: #50a14f;">"emacsclient %S"</span>;
+$<span style="color: #8b4513;">pdflatex</span> = <span style="color: #50a14f;">'lualatex -interaction=nonstopmode -synctex=1 %O %S'</span>;
+$<span style="color: #8b4513;">pdf_update_method</span> = 4;
+$<span style="color: #8b4513;">pdf_update_command</span> = <span style="color: #50a14f;">"emacsclient %S &amp;"</span>;
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;"># $pdf_update_command = "emacsclient -e '(progn (switch-to-buffer-other-window (find-buffer-visiting %S)) (pdf-view-revert-buffer nil t))'";</span>
+
+Then files that want to have this feature should end with:
+<span style="color: #a0a1a7;">#+begin_src org :tangle no
+</span>,* Local Variables :ignore:
+<span style="color: #a0a1a7;"># Ensure EmacsClient can connect to running emacs, enable automatic reverts for whenever PDFs change.</span>
+<span style="color: #a0a1a7;"># Local Variables&#58;</span>
+<span style="color: #a0a1a7;"># eval: (server-start)</span>
+<span style="color: #a0a1a7;"># eval: (global-auto-revert-mode)</span>
+<span style="color: #a0a1a7;"># eval: (add-hook 'after-save-hook 'org-latex-export-to-latex nil t)</span>
+<span style="color: #a0a1a7;"># eval: (compile "latexmk -pdf -pvc -pdflatex='lualatex -shell-escape -interaction nonstopmode'")</span>
+<span style="color: #a0a1a7;"># End:</span>
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;"># alias emacsclient="/usr/local/Cellar/emacs-plus@29/29.0.90/bin/emacsclient"</span>
+<span style="color: #a0a1a7;"># export PATH="/usr/local/Cellar/emacs-plus@29/29.0.90/bin/:$PATH" # emacs &amp; emacsclient</span>
+</pre>
+  </body>
+</html>
