@@ -779,7 +779,7 @@ colourised sources are validated in the same pass.
 | <span style="font-weight: bold; font-style: italic;">=blog--info-subtree-abstract=</span><span style="font-weight: bold; font-style: italic;"> </span>| Resolves abstract from property / child heading / first paragraph |
 | <span style="font-weight: bold; font-style: italic;">=blog--info-subtree=</span><span style="font-weight: bold; font-style: italic;"> </span>| Extracts one heading's metadata via =org-element= |
 | <span style="font-weight: bold; font-style: italic;">=blog--info-multiple=</span><span style="font-weight: bold; font-style: italic;"> </span>| Parses an entire container; returns a list of alists |
-| <span style="font-weight: bold; font-style: italic;">=blog--publish-single-subtree=</span><span style="font-weight: bold; font-style: italic;"> </span>| Exports one heading &#8594; =~/blog/&lt;slug&gt;.html= + =&lt;slug&gt;.org.html= |
+| <span style="font-weight: bold; font-style: italic;">=blog--publish-single-subtree=</span><span style="font-weight: bold; font-style: italic;"> </span>| Exports one heading &#8594; =public/&lt;slug&gt;.html= + =&lt;slug&gt;.org.html= |
 | <span style="font-weight: bold; font-style: italic;">=blog--publish-multiple-articles=</span><span style="font-weight: bold; font-style: italic;"> </span>| Orchestrates per-heading exports; assumes every heading carries =:CUSTOM_ID:= |
 | <span style="font-weight: bold; font-style: italic;">=blog--validate-unique-slugs=</span><span style="font-weight: bold; font-style: italic;"> </span>| Errors on the first duplicate slug, naming both conflicting articles |
 | <span style="font-weight: bold; font-style: italic;">=blog--validate-no-orphan-html=</span><span style="font-weight: bold; font-style: italic;"> </span>| Warns/errors when =X.html= or =X.org.html= has no matching slug or =X.org= source |
@@ -2957,7 +2957,7 @@ htmlize, and write the result."</span>
 
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--publish-single-subtree</span> (heading-point container-file info)
-  <span style="color: #50a14f; font-style: italic;">"Export the subtree at HEADING-POINT in the current buffer to ~/blog/SLUG.html.
+  <span style="color: #50a14f; font-style: italic;">"Export the subtree at HEADING-POINT in the current buffer to `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-directory</span><span style="color: #50a14f; font-style: italic;">'/SLUG.html.
 
 INFO is the pre-resolved metadata alist for this heading (a single entry
 from `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--info-multiple</span><span style="color: #50a14f; font-style: italic;">').  The slug is read from INFO.
@@ -3025,10 +3025,9 @@ file-level keywords so that blog--style-setup runs unchanged."</span>
                 (save-buffer))))
 
           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">3. Export through the full blog--style-setup pipeline.
-</span>          <span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">Write next to the source (blog-posts-directory/&lt;slug&gt;.html);
-</span>          <span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">.html files are gitignored so this is safe locally.
-</span>          <span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">blog-publish-all handles copying to public/ separately.
-</span>          (<span style="color: #a626a4;">let*</span> ((html-out (expand-file-name (concat slug <span style="color: #50a14f;">".html"</span>) blog-posts-directory)))
+</span>          <span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">Write straight to public/&lt;slug&gt;.html, mirroring the standalone path in
+</span>          <span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">`</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">blog-publish-all</span><span style="color: #a0a1a7;">'; nothing else copies it there, so CI would never deploy it.
+</span>          (<span style="color: #a626a4;">let*</span> ((html-out (expand-file-name (concat slug <span style="color: #50a14f;">".html"</span>) blog-publish-directory)))
             (<span style="color: #a626a4;">with-current-buffer</span> tmp-buf
               (add-hook 'org-export-before-processing-hook #'blog--style-setup)
               (org-export-to-file 'html html-out)

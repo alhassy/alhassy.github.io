@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-06 Tue 14:49 -->
+<!-- 2026-10-07 Wed 19:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>An Interactive Way To C</title>
@@ -1490,7 +1490,7 @@ to the old file on disk since there is no currently focused block.</li>
 Consider the fully annotated <code>swap</code> algorithm, i.e., remove the <code>not-</code> prefix,
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="orge5aa683"><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">#include&lt;stdio.h&gt; // for IO
+<pre class="src src-c" id="orga107358"><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">#include&lt;stdio.h&gt; // for IO
 </span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@
 requires \valid(a) &amp;&amp; \valid(b);
@@ -1525,19 +1525,19 @@ ensures *b == \old(*a);
 We can see that Frama-C proves these assertions by obtaining “green bullets”
 beside them if we execute
 </p>
-<pre class="example" id="org7d9907c">
+<pre class="example" id="org9e6e768">
 frama-c-gui -wp -rte myfile.c
 </pre>
 <p>
 Or check-boxes beside them if we instead execute
 </p>
-<pre class="example" id="orgb2a5c6f">
+<pre class="example" id="org5fbad57">
 frama-c-gui -gui-theme colorblind -wp -rte myfile.c
 </pre>
 <p>
 The best way to know which options are available is to use
 </p>
-<pre class="example" id="orge6ffe8b">
+<pre class="example" id="orgb919069">
 frama-c -wp-help
 </pre>
 
@@ -1563,13 +1563,13 @@ Go back to the above example, and change the first assertion in <code>main,
 ~a == 42</code>, to assert that <code>a</code> equals <code>432</code>. Now invoke <code>M-x framac-no-gui</code>, or press <code>F9</code>,
 to obtain the message,
 </p>
-<pre class="example" id="orgb03c183">
+<pre class="example" id="org8d6073d">
 Frama-C: 90﹪ of proof complete!
 </pre>
 <p>
 Moreover, another buffer will be open and in red will be highlighted,
 </p>
-<pre class="example" id="org1cd8a2e">
+<pre class="example" id="org4205a68">
 [wp] [Alt-Ergo] Goal typed_main_assert_Before_Swap : Unknown (Qed:0.63ms) (57ms)
 </pre>
 <p>
@@ -1617,7 +1617,7 @@ from a make-shift ‘Prelude’.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orgda6ce8d">
+<pre class="src src-c" id="org6dc1535">
 <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Artefacts so that exercises let the system progress as much as possible.
 </span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
 </span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ predicate Exercise = \false;
@@ -1694,14 +1694,14 @@ and it is the callers responsibility to ensure that they are true
 Since ‘wp’ is intended to <b>compute</b> the weakest precondition establishing a given
 postcondition <i>R</i> for a statement <code>S</code>, it necessarily satisfies
 </p>
-<pre class="example" id="orgc59c301">
+<pre class="example" id="orgafbe0ac">
 { G } S { R }   ≡   G ⇒ wp S R
 </pre>
 
 <p>
 The left side may be rendered using ACSL,
 </p>
-<pre class="example" id="orga0a154a">
+<pre class="example" id="org04d872b">
 // @ assert G;
 S;
 // @ assert R;
@@ -1713,7 +1713,7 @@ a proof for <code>G ⇒ wp S R</code>.
 In particular, by the reflexivity of implication, ‘wp’ guarantees to produce a
 precondition so that the following Hoare triple is valid.
 </p>
-<pre class="example" id="org84016d8">
+<pre class="example" id="org0bb39c3">
 { wp S R } S { R }
 </pre>
 
@@ -1729,7 +1729,7 @@ wp “by induction” on the shape of <code>S</code>.
 One reasonable property we impose on wp from the outset is: <br />
 If <i>S</i> establishes <i>R</i> which implies <i>R′</i>, then <i>S</i> also establishes <i>R′</i>.
 </p>
-<pre class="example" id="orgad68d06">
+<pre class="example" id="org2645d14">
 Monotonicity: R ⇒ R′   implies  wp S R ⇒ wp S R′
                        That is, {wp S R} S {R′}
 </pre>
@@ -1819,7 +1819,7 @@ All in all, executing <code>x ≔ E</code> loads memory location <code>x</code> 
 hence state <i>R</i> is satisfied after an assignment precisely when it is satisfied
 with variable <code>x</code> replaced by expression <code>E</code>. For example, <code>wp (x ≔ x+1) (x = 5)  ≡  (x+1 = 5)</code>.
 </p>
-<pre class="example" id="org8070435">
+<pre class="example" id="org06f0d8f">
 wp (x ≔ E) R  ≡  R[x ≔ E]
 </pre>
 
@@ -2001,7 +2001,7 @@ producing a new state <code>s'</code> in which statement <code>q</code> is then 
 <p>
 Usually a ‘;’ symbol is used in favour of a space, with braces, to yield,
 </p>
-<pre class="example" id="orgcc28095">
+<pre class="example" id="orgcf0e7da">
 wp (S₁;S₂) R  ≡  wp S₁ (wp S₂ R)
 </pre>
 <p>
@@ -2017,7 +2017,7 @@ Rendered pointfree, i.e., ignoring <i>R</i>, this rule becomes: <i>wp (S₁;S₂
 <p>
 Recall that we need to ensure monotonicity is satisfied, and indeed: If <i>R ⇒ R′</i>, then
 </p>
-<pre class="example" id="org93c2164">
+<pre class="example" id="org88e9d8a">
   wp (S₁;S₂) R
 ≡ wp S₁ (wp S₂ R)    -- Definition of wp on sequence
 ⇒ wp S₁ (wp S₂ R′)   -- Monotoncity for Sᵢ, twice; with assumption R ⇒ R′
@@ -2030,7 +2030,7 @@ Neato!
 <p>
 Moreover, notice we have the useful ‘transitivity’ property for Hoare triples:
 </p>
-<pre class="example" id="orgd877408">
+<pre class="example" id="org1a3315d">
    {G} S₁ {R′}  ∧  {R′} S₂ {R}
 ≡  (G ⇒ wp S₁ R′)  ∧  (R′ ⇒ wp S₂ R)              -- Characterisation of wp
 ⇒ (G ⇒ wp S₁ R′)  ∧  (wp S₁ R′ ⇒ wp S₁ (wp S₂ R)) -- Monotonicity of wp
@@ -2053,7 +2053,7 @@ It is also commonly known as the <code>skip</code> construct and its importance 
 of zero to addition.
 </p>
 
-<pre class="example" id="org3e17045">
+<pre class="example" id="org0cba86c">
 wp skip R  ≡  R
 </pre>
 <p>
@@ -2065,7 +2065,7 @@ was true to begin with.
 <p>
 Most often this appears in a weakening/strengthening form,
 </p>
-<pre class="example" id="org422a967">
+<pre class="example" id="org9f0002b">
 ...code here...
 //@ assert P;
 //@ assert Q;
@@ -2079,7 +2079,7 @@ Where <i>P ⇒ Q</i> is provable.
 More concretely,
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org2e5635c"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 3 &lt; a &lt; 9;
+<pre class="src src-c" id="org098b367"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 3 &lt; a &lt; 9;
   @ ensures  -20 &lt;= \result &lt;= 99;
 </span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
 <span style="color: #c18401;">int</span> <span style="color: #0184bc;">using_skip</span>(<span style="color: #c18401;">int</span> <span style="color: #8b4513;">a</span>)
@@ -2100,7 +2100,7 @@ Wait, the former implies the latter and that's just the definition of <i>wp</i> 
 <p>
 The above example suggests the following calculation,
 </p>
-<pre class="example" id="orge343ae1">
+<pre class="example" id="orgc9e64a2">
    (G′ ⇒ G)  ∧  {G} S {R}  ∧  (R ⇒ R′)
 ≡  (G′ ⇒ G)  ∧  (G ⇒ wp S R)  ∧  (R ⇒ R′) -- Characterisation of wp
 ⇒ (G′ ⇒ wp S R)  ∧  (R ⇒ R′)              -- Transitivity of implication
@@ -2125,7 +2125,7 @@ Thus, program <code>S</code> can also take the type of <code>G′</code> to <cod
 <p>
 Writing <code>&lt;:</code> for ‘sub-type’, or ‘sub-class’, we have argued,
 </p>
-<pre class="example" id="org768f9fd">
+<pre class="example" id="org4b8197a">
 Provided    G′ &lt;: G  and R &lt;: R′
 Then
        G → R  &lt;:  G′ → R′
@@ -2151,7 +2151,7 @@ precondition and so it suffices to use that.
 <p>
 Before we close, here is an <b>exercise</b> to the reader: An alternate proof of the above law.
 </p>
-<pre class="example" id="org498194f">
+<pre class="example" id="orge0f375b">
    (G′ ⇒ G)  ∧  {G} S {R}  ∧  (R ⇒ R′)
 ≡  {G′} skip {G} ∧ {G} S {R} ∧ {R} skip {R′}    -- ???
 ⇒ {G′} skip; S {R} ∧ {R} skip {R′}             -- ???
@@ -2189,7 +2189,7 @@ to make the assertions provable, and otherwise is not an execution-relevant vari
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org3537915"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="org8ec058b"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(x) &amp;&amp; \valid(y);
   @ requires INT_MIN &lt; *x + *y &lt; INT_MAX;
@@ -2237,7 +2237,7 @@ Here is a more complicated exercise that also makes use of external functions&#x
                   </summary>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orgb71184b"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="orgc9ba524"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 
 <span style="color: #e44649;">#define</span> <span style="color: #8b4513;">RAND_MAX</span> 32767
 
@@ -2292,7 +2292,7 @@ This is executed in a state by evaluating the Boolean
 then deciding which branch to execute in the same state.
 </p>
 
-<pre class="example" id="orgbaedf49">
+<pre class="example" id="org3c6eee4">
 wp (if B then S₁ else S₂) R  ≣  if B then wp S₁ R else wp S₂ R
                              ≡ (B ⇒ wp S₁ R) ∧ (¬ B ⇒ wp S₂ R)
 </pre>
@@ -2303,7 +2303,7 @@ A conditional ensures <i>R</i> precisely when its branches each ensure <i>R</i>.
 <p>
 Observe the following calculation,
 </p>
-<pre class="example" id="org204464b">
+<pre class="example" id="org8c1ffc8">
    { G } if B then S₁ else S₂ { R }
 ≡  G ⇒ wp (if B then S₁ else S₂) R         -- Characterisation of wp
 ≡  G ⇒ (B ⇒ wp S₁ R) ∧ (¬ B ⇒ wp S₂ R)     -- Definition of wp on conditional
@@ -2327,7 +2327,7 @@ A loop is one of the ways in which we can express an infinite object &#x2013;whi
 fail to terminate&#x2013; using a finite expression. Indeed, its executional behaviour
 can be understood by realising it as a shorthand for the expression
 </p>
-<pre class="example" id="org6169faf">
+<pre class="example" id="orga088021">
 if (b) {p if (b) {p if (b) ...
                     else skip}
           else skip}
@@ -2346,7 +2346,7 @@ To understand the semantics of the loop:
 Recalling that a loop is a shorthand for an infinite nesting of conditionals,
 we try to approach it as a limit of finite approximations.
 </p>
-<pre class="example" id="orge2d8104">
+<pre class="example" id="org13c05db">
    while (b) q  ≈  limₙ pₙ
 
 Where:
@@ -2385,7 +2385,7 @@ that starts out non-negative and is decreased by each loop pass,
 then the loop will terminate and the property it maintained will be true.
 </p>
 
-<pre class="example" id="org0848c8b">
+<pre class="example" id="orga836233">
    {Inv ∧ B ∧ bf = c} S {Inv ∧ bf &lt; c}
 ⇒
    {Inv ∧ bf ≥ 0}  while(B) S  {¬B ∧ Inv}
@@ -2399,7 +2399,7 @@ A property that is maintained to be true throughout the loop is referred to as a
 <p>
 In Frama-C rendition,
 </p>
-<pre class="example" id="orgffabef8">
+<pre class="example" id="org345d9c7">
 /*@ loop invariant ⋯  // property that is maintained by the loop body
   @ loop assigns ⋯    // variables that are altered by the loop body
   @ loop variant ⋯    // a bound on the total number of loops
@@ -2429,7 +2429,7 @@ from the invariant!
                     </strong>
                   </summary>
 <div class="org-src-container">
-<pre class="src src-c" id="org4bb6140"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="org3509f9b"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires N &gt;= 0;
   @ requires N * (N + 1) /2 &lt; INT_MAX;
   @ assigns \nothing;
@@ -2468,7 +2468,7 @@ from the invariant!
 <p>
 <b>Exercise:</b> Why is <code>sum ≤ INT_MAX</code> true at the end of the loop body? Fill in the proof:
 </p>
-<pre class="example" id="org36c947c">
+<pre class="example" id="orge5d557d">
    sum ≤ INT_MAX
 ≡  n * (n + 1) / 2 ≤ INT_MAX                     --  ???
 ⇐ n * (n + 1) / 2 ≤ N * (N + 1) / 2 ≤ INT_MAX   --  Transtivitity of ≤
@@ -2498,7 +2498,7 @@ Here's a simple exercise,
                     </strong>
                   </summary>
 <div class="org-src-container">
-<pre class="src src-c" id="org6d98301"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="org33fd12f"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires a + 10 &lt; INT_MAX;
   @ ensures \result == \old(a) + 10;
@@ -2550,7 +2550,7 @@ Now a bit harder&#x2026;
                   </summary>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org35b784f"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="orgdffa69b"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ assigns \nothing;
   @ ensures 0 &lt;= \result &lt;= 1;
@@ -2600,14 +2600,14 @@ special labels <code>Here, Pre, Post</code>. Otherwise parameter passing is by v
 <p>
 The <code>predicate</code> keyword declares Boolean values functions:
 </p>
-<pre class="example" id="orgeae057b">
+<pre class="example" id="org0b2e16e">
 /*@ predicate name_here {Label₀, …, Labelₖ} (type₀ arg₀, …, typeₘ argₘ) =
   @ // A Boolean valued relationship between all these things.
   */
 </pre>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org11e119c"><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">An integer memory location remains unaltered between given program points.
+<pre class="src src-c" id="org77a95e8"><span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">An integer memory location remains unaltered between given program points.
 </span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">
 </span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate unchanged{L0, L1} (int *i)   =  \at(*i, L0) == \at(*i, L1);
 </span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
@@ -2631,7 +2631,7 @@ More usefully, there is the need to ensure a given integer is indeed a non-negat
 length of an array.
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org79b1edf"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate valid_array(int* arr, integer len) =
+<pre class="src src-c" id="org9c9d919"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ predicate valid_array(int* arr, integer len) =
   @ 0 &lt;= len &amp;&amp; \valid(arr + (0 .. len - 1));
 </span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
 </pre>
@@ -2660,7 +2660,7 @@ Such logical functions generally need not worry about runtime issues such as ove
 &#x2013;which however must be handled at the call site, if need be.
 </p>
 
-<pre class="example" id="org45f3ccb">
+<pre class="example" id="org8f33d2d">
 /*@ logic return_type function_name {Label₀, …, Labelₖ} (type₀ arg₀, …, typeₘ argₘ) =
   @  // A formula using the arguments argᵢ, possibly at labels Labelᵢ
  */
@@ -2677,7 +2677,7 @@ times by the underlying provers. Indeed this can be accomplished by using the <c
 phrase, and this can be done for any property.
 </p>
 
-<pre class="example" id="orgfda43ea">
+<pre class="example" id="org98f0205">
 //@ lemma name_of_property {Label₀, …, Label₀}:  property_here ;
 </pre>
 
@@ -2701,7 +2701,7 @@ In such cases, we may tell Frama-C to trust our judgement and take our word for 
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org45e2813"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic my_axioms {
+<pre class="src src-c" id="orgbd3977e"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic my_axioms {
   @ axiom antisymmetry: \forall integer i, j; i &lt;= j &lt;= i  ==&gt;  i == j;
   @ }
 </span><span style="color: #a0a1a7; font-weight: bold;">*/</span>
@@ -2713,7 +2713,7 @@ Unlike lemmas, which require a proof, axioms are simply assumed to be true.
 It is the responsibility of the user to ensure no inconsistencies arise, as in:
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="orgda085ce"><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ axiomatic UhOh{ axiom false_is_true: \false; }
+<pre class="src src-c" id="org94125af"><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ axiomatic UhOh{ axiom false_is_true: \false; }
 </span>
 <span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
 {
@@ -2735,7 +2735,7 @@ it, which incidentally, happen to be its defining equations.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org264720a"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic Factorial
+<pre class="src src-c" id="orge30cf5e"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic Factorial
   {
      logic integer factorial(integer n);
 
@@ -2752,7 +2752,7 @@ A small subtlety is that access to memory locations must be specified in the fun
 headers, for example:
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org34ee05c"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic is_constant
+<pre class="src src-c" id="orgaa4972f"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic is_constant
   {
      predicate constant{L}(int * a, integer b, integer e, integer val) reads a[b .. e-1];
 
@@ -2790,7 +2790,7 @@ when that condition is not met.
 All in all, a function call establishes property <i>R</i> precisely when evaluating its
 arguments then executing the function body together establish the property.
 </p>
-<pre class="example" id="org56e7857">
+<pre class="example" id="org76838e2">
 wp ℱ(t₁, …, tₙ) R  ≡  wp (x₁ ≔ t₁; ⋯ ; xₙ ≔ tₙ; ℬ) R
 
 where ℱ(x₁, …, xₙ) = ℬ  -- Definition of ℱ
@@ -2966,7 +2966,7 @@ as well as being helpful in the frama-c output.</li>
 </ul>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org98a6fe0"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ ensures always_nonnegative: \result &gt;= 0;
+<pre class="src src-c" id="org7c905f5"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ ensures always_nonnegative: \result &gt;= 0;
   @ ensures val &gt; 0  ==&gt;  \result == val;
   @ ensures val &lt; 0  ==&gt;  \result == -val;
 </span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
@@ -2991,7 +2991,7 @@ to the following block by removing the prefix <code>-not</code>, then run the co
 will take a while dealing with <code>printf</code>!
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org32a21d7"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span>   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+<pre class="src src-c" id="org1d3e52d"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span>   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
 </span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>  <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">bounds on integers
 </span><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;math.h&gt;</span>
 
@@ -3067,7 +3067,7 @@ or both.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org9f0bef4"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="orgec1d0d6"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires INT_MIN &lt; val;
   @ ensures always_nonnegative: \result &gt;= 0;
   @
@@ -3132,7 +3132,7 @@ Replace each FixMe with the weakest proposition so that the program is proven co
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orgab36875"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="orga9033b2"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires INT_MIN &lt; val;
   @ ensures always_nonnegative: \result &gt;= 0;
   @
@@ -3159,7 +3159,7 @@ Replace each FixMe with the strongest proposition so that the program is proven 
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org10a4e49"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="orgf76a614"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires INT_MIN &lt; val;
   @ ensures always_nonnegative: \result &gt;= 0;
   @
@@ -3295,7 +3295,7 @@ Edit <code>FixMe</code> in the following snippet so that it there are no errors.
 Replace each <code>FixMe</code> with the weakest possible predicate so that it passes.
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org4b98885"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="org0cd3fbb"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \true;
   @ ensures UpperBound: a &lt;= \result  &amp;&amp;  b &lt;= \result;
   @ ensures Exercise: Selection1: FixMe  ==&gt; \result == b;
@@ -3322,7 +3322,7 @@ with <i>p</i> in hand we need to show <i>r</i>, and likewise if <i>p ∨ q</i> i
 Replace <code>FixMeCode</code> with the least amount of code so that the following passes.
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org3c6a410"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="org5b348da"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 <span style="color: #e44649;">#define</span> <span style="color: #0184bc;">max</span>(<span style="color: #8b4513;">a</span>,<span style="color: #8b4513;">b</span>) (a &lt; b ? b : a)   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Ignore me.
 </span>
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires max(a, b) &lt;= c;
@@ -3362,7 +3362,7 @@ That is, unreachable assertions are always ‘true’:
 They are never in a memory state, and so cannot even be evaluated, let alone be false!
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="orga5dff1a"><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+<pre class="src src-c" id="org27cfd76"><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
 {
   <span style="color: #a626a4;">goto</span> <span style="font-weight: bold; text-decoration: underline;">End</span>;
   <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@assert my_cool_nonsense: 0 == 1;    // This is unreachale but &#8216;true&#8217;.
@@ -3376,7 +3376,7 @@ They are never in a memory state, and so cannot even be evaluated, let alone be 
 Likewise with infinite loops,
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org3bb59ba"><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+<pre class="src src-c" id="org23993dd"><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
 {
   <span style="color: #a626a4;">while</span>(1 &gt; 0);
   <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@assert my_cool_nonsense: 0 == 1;    // This is unreachale but &#8216;true&#8217;.
@@ -3497,7 +3497,7 @@ E.g., in environment <code>x ↦ r</code> and memory state <code>r ↦ 4</code>,
 whereas the value of <code>&amp;x</code> is the reference <code>r</code>. Moreover, the value of <code>*&amp;x</code> is the integer 4.
 </p>
 
-<pre class="example" id="orgaba11ef">
+<pre class="example" id="org246d82e">
 &amp;_ : ∀{T} →  Variable T → Reference T   -- “address of”
 *_ : ∀{T} → Reference T → T             -- “value of”
 
@@ -3679,7 +3679,7 @@ we simply refer to a label at that time frame using the <code>\at</code> constru
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org920e33e"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(a);
+<pre class="src src-c" id="orgf7cba89"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(a);
   @ ensures *a == \old(*a);
   @ ensures \at(*a, Post) == \at(*a, Pre); // Alternative way to say the same thing.
 </span><span style="color: #a0a1a7; font-weight: bold;">  */</span>
@@ -3743,7 +3743,7 @@ declare <code>assigns \nothing</code>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orgb783caa"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(a) &amp;&amp; \valid(b);
+<pre class="src src-c" id="org52a0b23"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(a) &amp;&amp; \valid(b);
   // @ assigns *a, *b;
   @ ensures *a == \old(*b);
   @ ensures *b == \old(*a);
@@ -3764,7 +3764,7 @@ This can be fixed by un-commenting the <code>assigns</code> clause <i>above</i>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="org9003d46"><span style="color: #c18401;">int</span> <span style="color: #8b4513;">h</span> = 12; <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">new global variable!
+<pre class="src src-c" id="org4875ed9"><span style="color: #c18401;">int</span> <span style="color: #8b4513;">h</span> = 12; <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">new global variable!
 </span>
 <span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ assigns \nothing;  // In particular, this method does not alter &#8220;h&#8221;.
 </span><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
@@ -3811,7 +3811,7 @@ infinite cycle of the first list! &#x2013;We'll see this later on.
 Here is a simpler example,
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="orgde7ae80"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="org13cab83"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires \valid(fst) &amp;&amp; \valid_read(snd);
   @ requires no_flow: INT_MIN &lt;= *fst + *snd &lt;= INT_MAX;
@@ -3845,7 +3845,7 @@ Since the contract does not tells what happens when we breach it, anything is po
 and so anything is “true”!
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org7a90d2c"><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
+<pre class="src src-c" id="org8544705"><span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
 {
   <span style="color: #c18401;">int</span> <span style="color: #8b4513;">life</span> = 42, <span style="color: #8b4513;">universe</span> = 12;
 
@@ -3903,7 +3903,7 @@ when we want to use an external libary's methods but do not &#x2013;or cannot&#x
                   </summary>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orgb40c146"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
+<pre class="src src-c" id="orgd4e7b9e"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;limits.h&gt;</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires val &gt; INT_MIN;
   @ assigns \nothing;
@@ -3990,7 +3990,7 @@ labels with their types. In using <code>struct</code> types, the <code>struct</c
 keyword must precede the type name in all declarations.
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org9eeaf7e"><span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span>
+<pre class="src src-c" id="org6ff4a09"><span style="color: #a626a4;">struct</span> <span style="color: #c18401;">Pair</span>
 {
   <span style="color: #c18401;">int</span> <span style="color: #8b4513;">fst</span>;
   <span style="color: #c18401;">int</span> <span style="color: #8b4513;">snd</span>;
@@ -4019,7 +4019,7 @@ keyword must precede the type name in all declarations.
 </div>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orgb6991e1"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
+<pre class="src src-c" id="org2bc1a63"><span style="color: #e44649;">#include</span><span style="color: #50a14f;">&lt;stdio.h&gt;</span> <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">for IO
 </span>
 <span style="color: #c18401;">int</span> <span style="color: #0184bc;">main</span>()
 {
@@ -4081,7 +4081,7 @@ and associated it with the record variable being defined.
 <p>
 For example, in Java,
 </p>
-<pre class="example" id="org311df5d">
+<pre class="example" id="org07a9821">
 class Pair
 {
   int fst;
@@ -4158,14 +4158,14 @@ is so common that they are usually placed into a so-called <i>constructor</i> me
 <p>
 Suppose <code>x</code> and <code>y</code> are variables of type <code>Pair</code>, with environment and memory state:
 </p>
-<pre class="example" id="org7255e65">
+<pre class="example" id="org73e1ba2">
 locations  =  x ↦ r₁, y ↦ r₂
 values     =  r₁ ↦ r₃, r₂ ↦ r₄, r₃ ↦ {fst = 3, snd = 5}, r₄ ↦ {fst = 7, snd = 9}
 </pre>
 <p>
 Then assignment <code>y ≔ x</code> results in:
 </p>
-<pre class="example" id="org070092a">
+<pre class="example" id="org590c4f3">
 locations  =  x ↦ r₁, y ↦ r₂
 values     =  r₁ ↦ r₃, r₂ ↦ r₃, r₃ ↦ {fst = 3, snd = 5}, r₄ ↦ {fst = 7, snd = 9}
                       -Change Here-
@@ -4213,7 +4213,7 @@ arguments.
 If we instead execute <code>y.fst ≔ x.fst; y.snd ≔ x.snd</code>
 Then the resulting state is:
 </p>
-<pre class="example" id="orgdd5bf1d">
+<pre class="example" id="org832da67">
 locations  =  x ↦ r₁, y ↦ r₂
 values     =  r₁ ↦ r₃, r₂ ↦ r₄, r₃ ↦ {fst = 3, snd = 5}, r₄ ↦ {fst = 3, snd = 5}
                                                                     -Change Here-
@@ -4315,7 +4315,7 @@ Arrays are commonly handled using loops; let's look at some examples.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-c" id="orged380ac"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 0 &lt; N;
+<pre class="src src-c" id="orgb5de926"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 0 &lt; N;
   @ requires \valid_read(array + (0 .. N - 1));  // N is the length of the array
   @
   @ assigns \nothing;
@@ -4432,7 +4432,7 @@ a new local variable <code>n</code>.
                     </strong>
                   </summary>
 <div class="org-src-container">
-<pre class="src src-c" id="org6cca83b"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="orgb8143b3"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires 0 &lt; N;
   // @ requires Exercise: read access to a[0], ..., a[N-1];
@@ -4482,7 +4482,7 @@ a new local variable <code>n</code>.
                     </strong>
                   </summary>
 <div class="org-src-container">
-<pre class="src src-c" id="org4f6a3a5"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="orgedc73eb"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires Exercise: FixMe; // array[0], ..., array[N-1] are accessible
   @ requires element &lt; INT_MAX;
@@ -4754,7 +4754,7 @@ Notice that the factorial function can be written without using assignments:
 
 </details>
 <div class="org-src-container">
-<pre class="src src-c" id="orgf1204fa"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="org2c4f37b"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ requires Exercise: FixMe;
   @ assigns \nothing;
@@ -4830,7 +4830,7 @@ at the very beginning &#x2014;that of <code>whatDo</code>.
                     </strong>
                   </summary>
 <div class="org-src-container">
-<pre class="src src-c" id="orgb24f647"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="org58b3592"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@  requires \valid(x) &amp;&amp; \valid(y);
      requires 0 &lt;= *x &lt; 31;
@@ -4877,7 +4877,7 @@ issues when <code>x</code> and <code>y</code> refer to the same memory location!
                       </font>
                     </strong>
                   </summary>
-<pre class="example" id="org0586dfa">
+<pre class="example" id="org652e730">
 ⟨x = 0, y = 0⟩ ↦ ⟨x = 3, y = 1⟩
 ⟨x = 1, y = 2⟩ ↦ ⟨x = 5, y = 2⟩
 ⟨x = 3, y = 4⟩ ↦ ⟨x = 5, y = 8⟩
@@ -4895,7 +4895,7 @@ x == y  ⇒  Segmentation Fault
 With this guidance in hand, we aim to axiomatise the power function:
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="orgd15bbff"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic Pow
+<pre class="src src-c" id="org01280c7"><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ axiomatic Pow
   @ {
   @    logic integer pow(integer b, integer n);
   @
@@ -4934,7 +4934,7 @@ that satisfies these definitions. If we want <i>f</i> to be the <i>n</i> product
 From the axioms, we obtain some useful lemmas.
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org3353fa2"><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma pow_succ:  \forall integer b, n; n &gt;= 0  ==&gt;     pow(b, n + 1) == pow(b, n) * b;
+<pre class="src src-c" id="org6e1b049"><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma pow_succ:  \forall integer b, n; n &gt;= 0  ==&gt;     pow(b, n + 1) == pow(b, n) * b;
 </span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma powNonNeg : \forall integer b,n; b &gt;= 0 ==&gt; n &gt;= 0 ==&gt; pow(b,n) &gt;= 0;
 </span><span style="color: #a0a1a7; font-weight: bold;">//</span><span style="color: #a0a1a7;">@ lemma pow2bound : \forall integer n; 0 &lt;= n &lt; 31 ==&gt; pow(2, n) &lt; INT_MAX;
 </span><span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@ lemma powPredT : \forall integer b,n,m;  b &gt;= 0  &amp;&amp;  n &gt; 0
@@ -4948,7 +4948,7 @@ With this setup, the reader should now be able to solve the <code>FixMe</code>'s
 in his excellent specifications and correctness text, <a href="http://www.cs.toronto.edu/~hehner/aPToP/">A Practical Theory of Programming</a>.
 </p>
 <div class="org-src-container">
-<pre class="src src-c" id="org31d41a9"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
+<pre class="src src-c" id="org6073724"><span style="color: #e44649;">#include</span> <span style="color: #50a14f;">"Prelude.c"</span>
 
 <span style="color: #a0a1a7; font-weight: bold;">/*</span><span style="color: #a0a1a7;">@  requires \valid(x) &amp;&amp; \valid(y);
      requires 0 &lt;= *x &lt; 31;
