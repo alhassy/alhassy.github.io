@@ -771,7 +771,7 @@ colourised sources are validated in the same pass.
 | =blog--info-subtree-abstract= | Resolves abstract from property / child heading / first paragraph |
 | =blog--info-subtree= | Extracts one heading's metadata via =org-element= |
 | =blog--info-multiple= | Parses an entire container; returns a list of alists |
-| =blog--publish-single-subtree= | Exports one heading → =~/blog/<slug>.html= + =<slug>.org.html= |
+| =blog--publish-single-subtree= | Exports one heading → =public/<slug>.html= + =<slug>.org.html= |
 | =blog--publish-multiple-articles= | Orchestrates per-heading exports; assumes every heading carries =:CUSTOM_ID:= |
 | =blog--validate-unique-slugs= | Errors on the first duplicate slug, naming both conflicting articles |
 | =blog--validate-no-orphan-html= | Warns/errors when =X.html= or =X.org.html= has no matching slug or =X.org= source |
@@ -2949,7 +2949,7 @@ htmlize, and write the result."
 
 
 (defun blog--publish-single-subtree (heading-point container-file info)
-  "Export the subtree at HEADING-POINT in the current buffer to ~/blog/SLUG.html.
+  "Export the subtree at HEADING-POINT in the current buffer to `blog-publish-directory'/SLUG.html.
 
 INFO is the pre-resolved metadata alist for this heading (a single entry
 from `blog--info-multiple').  The slug is read from INFO.
@@ -3017,10 +3017,9 @@ file-level keywords so that blog--style-setup runs unchanged."
                 (save-buffer))))
 
           ;; 3. Export through the full blog--style-setup pipeline.
-          ;;    Write next to the source (blog-posts-directory/<slug>.html);
-          ;;    .html files are gitignored so this is safe locally.
-          ;;    blog-publish-all handles copying to public/ separately.
-          (let* ((html-out (expand-file-name (concat slug ".html") blog-posts-directory)))
+          ;;    Write straight to public/<slug>.html, mirroring the standalone path in
+          ;;    `blog-publish-all'; nothing else copies it there, so CI would never deploy it.
+          (let* ((html-out (expand-file-name (concat slug ".html") blog-publish-directory)))
             (with-current-buffer tmp-buf
               (add-hook 'org-export-before-processing-hook #'blog--style-setup)
               (org-export-to-file 'html html-out)
