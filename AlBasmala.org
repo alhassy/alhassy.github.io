@@ -2864,7 +2864,7 @@ leaves the heading untouched — absence is intentional (silent edits)."
               (end-of-line)))
           (insert "\n#+modified: " today)))))))
 
-(defvar my/blogging-mode-map
+(defconst my/blogging-mode-map ;; Not defvar: reloading must refresh stale bindings.
   (let ((m (make-sparse-keymap)))
     (define-key m (kbd "C-x C-s")
                 (lambda ()
@@ -2902,11 +2902,11 @@ runs `blog-publish-all' on a fresh checkout.
 
 On activation:
   - enables org-special-block-extras-mode (badges, doc: links, tooltips)
-  - switches browse-url to xwidget-webkit for in-Emacs previews
+  - switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)
 
 On deactivation:
   - disables org-special-block-extras-mode
-  - restores browse-url to the system browser (Arc/Chrome etc.)"
+  - restores this buffer's browse-url to the global default"
   :lighter " Blog"
   :keymap my/blogging-mode-map
   (if my/blogging-mode
@@ -2914,12 +2914,15 @@ On deactivation:
         (use-package org-special-block-extras :ensure t :demand t)
         (use-package org-preview-html         :ensure t :demand t)
         (org-special-block-extras-mode 1)
-        (setq browse-url-browser-function 'xwidget-webkit-browse-url)
+        (setq-local browse-url-browser-function 'xwidget-webkit-browse-url)
         ;; Populate blog-posts/blog-tags now that we're actually editing — avoids
         ;; scanning every .org on bare (require 'AlBasmala).
         (blog--refresh-posts))
     (org-special-block-extras-mode -1)
-    (setq browse-url-browser-function 'browse-url-default-browser)))
+    (kill-local-variable 'browse-url-browser-function)))
+
+;; Modeline indicator independent of :lighter, which minions-mode hides in its menu.
+(add-to-list 'mode-line-misc-info '(my/blogging-mode " ✍Blog "))
 
 
 (defun blog--htmlize-subtree (heading-point slug)
