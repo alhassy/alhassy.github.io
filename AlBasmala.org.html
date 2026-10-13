@@ -65,6 +65,7 @@
 </span>(<span style="color: #a626a4;">unless</span> (fboundp 'org-deftag)
   (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"AlBasmala needs an org-special-block-extras with org-deftag; M-x package-upgrade it"</span>))
 (<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">xml</span>)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">xml-escape-string for blog--make-one-rss-feed
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">lf</span>)   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">lf-assert; already a dependency of org-special-block-extras
 </span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">ox-extra</span>)
 (ox-extras-activate '(ignore-headlines))
 <span style="color: #a0a1a7;">#+end_src
@@ -1127,7 +1128,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
       (<span style="color: #a626a4;">let*</span> ((keyword-pairs
               (<span style="color: #a626a4;">cl-loop</span> for (prop.name prop.regex prop.default) on
                     `(<span style="color: #50a14f;">"title"</span>                <span style="color: #50a14f;">"^\\#\\+title:[ ]*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">$"</span>                ,post-filename
-                      <span style="color: #50a14f;">"date"</span>                 <span style="color: #50a14f;">"^\\#\\+modified:[ ]*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[0-9][-0-9 a-zA-Z:]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">$"</span> ,(format-time-string <span style="color: #50a14f;">"%Y-%m-%d"</span>)
+                      <span style="color: #50a14f;">"date"</span>                 <span style="color: #50a14f;">"^\\#\\+modified:[ ]*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">$"</span>             ,(format-time-string <span style="color: #50a14f;">"%Y-%m-%d"</span>)
                       <span style="color: #50a14f;">"image"</span>                <span style="color: #50a14f;">"^\\#\\+fileimage: </span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">"</span>                <span style="color: #50a14f;">"emacs-birthday-present.png 350 350"</span>
                       <span style="color: #50a14f;">"description"</span>          <span style="color: #50a14f;">"^\\#\\+description:[ ]*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">$"</span>          <span style="color: #50a14f;">"I learned something neat, and wanted to share!"</span>
                       <span style="color: #50a14f;">"tags"</span>                 <span style="color: #50a14f;">"^\\#\\+filetags:[ ]*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">$"</span>             <span style="color: #50a14f;">""</span> <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">String; Space-separated
@@ -1813,14 +1814,24 @@ consumer (index/RSS loops)."</span>
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">blog-posts-blog-tags-and-their-consumers-tag-index-page-generation</span>
 <span style="font-weight: bold;">:END:</span>
 
-- =blog-posts= ---every post-alist from =~/blog/*.org=, newest first; =blog-make-index-page=
+- =blog-posts= ---every post-alist from the =.org= files under =~/blog/=, newest first; =blog-make-index-page=
   turns each into a card on the index and tag pages.
 - =blog-tags= ---the sorted, unique tags of =blog-posts=; for tag pages and completion.
 
 =(blog--refresh-posts)= sets both, at the bottom of this file and after every publish.
 
+Every post-alist enters through =blog--file-infos=, so that is where we check it.  =date-to-time=
+never complains: =#+modified: Fri= silently becomes 1970, and =2023-13-45= some other day, misplacing
+the article on the index and in the RSS feed.  Hence an =lf-assert= that each date names a real
+calendar day; on failure it shows the source file, title, and offending date at once.
+
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp  -n
-</span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog--file-infos-cache</span> (make-hash-table <span style="color: #e44649;">:test</span> #'equal)
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--date-p</span> (str)
+  <span style="color: #50a14f; font-style: italic;">"STR &#8614; non-nil iff it names a real calendar day; e.g., &#8220;2026-05-04 Mon&#8221; &#8614; t, &#8220;Fri&#8221; &#8614; nil, &#8220;2023-02-30&#8221; &#8614; nil."</span>
+  (<span style="color: #a626a4;">pcase-let</span> ((`(,_ ,_ ,_ ,day ,month ,year) (parse-time-string (<span style="color: #a626a4;">or</span> str <span style="color: #50a14f;">""</span>))))
+    (<span style="color: #a626a4;">and</span> day month year (&lt;= 1 month 12) (&lt;= 1 day (date-days-in-month year month)))))
+
+(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog--file-infos-cache</span> (make-hash-table <span style="color: #e44649;">:test</span> #'equal)
   <span style="color: #50a14f; font-style: italic;">"FILE &#8614; (MTIME . INFOS): what `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--file-infos</span><span style="color: #50a14f; font-style: italic;">' last computed for FILE."</span>)
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--file-infos</span> (file)
@@ -1839,11 +1850,15 @@ C-x C-s refreshes the registry on every save; with the cache that costs one
                                (<span style="color: #a626a4;">if</span> (blog--multiple-style-p file)
                                    (blog--info-multiple file)
                                  (list (blog--info file))))))))
+        (<span style="color: #a626a4;">dolist</span> (info infos)
+          (<span style="color: #a626a4;">lf-assert</span> (map-elt info <span style="color: #50a14f;">"source"</span>) t
+                     (@title info)           t
+                     (@date info)            (blog--date-p it)))
         (puthash file (cons mtime infos) blog--file-infos-cache)
         infos))))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--compute-posts-and-pages</span> ()
-  <span style="color: #50a14f; font-style: italic;">"Scan ~/blog/*.org and return (posts . pages).
+  <span style="color: #50a14f; font-style: italic;">"Scan every .org file under `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-posts-directory</span><span style="color: #50a14f; font-style: italic;">' and return (posts . pages).
 
 Every .org file is processed uniformly ---there is no special-cased directory.
 Container files (#+article_style: multiple) yield many post entries; standalone
