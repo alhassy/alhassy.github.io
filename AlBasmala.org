@@ -53,9 +53,9 @@
                                     t "^org-special-block-extras-[0-9]")))))
   (load (expand-file-name "org-special-block-extras" elpa-ospe) nil :nomessage))
 (use-package org-special-block-extras :ensure t :demand t)
-;; The `blog' backend derives from `html'; ospe ≥ 20261013 renders its blocks for derived backends.
-(unless (fboundp 'org--base-backend)
-  (user-error "AlBasmala needs org-special-block-extras ≥ 20261013; M-x package-upgrade it"))
+;; An ospe with `org-deftag' also renders its blocks for our derived `blog' backend.
+(unless (fboundp 'org-deftag)
+  (user-error "AlBasmala needs an org-special-block-extras with org-deftag; M-x package-upgrade it"))
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 (require 'ox-extra)
 (ox-extras-activate '(ignore-headlines))
@@ -3462,8 +3462,7 @@ Reports orphans as a hard error in CI (noninteractive) and a warning interactive
 This block /is/ the workflow: it tangles to =.github/workflows/ci.yml=, so a CI
 workaround cannot land without its explanation sitting right here.  One =build=
 job checks out =master=, installs the few packages we need ---upgrading a cached
-org-special-block-extras older than 20261013.211, whose blocks the derived =blog=
-backend relies on--- tangles this file
+org-special-block-extras that predates =org-deftag=, which gives us the =:details:= tag--- tangles this file
 ---=AlBasmala.el= plus the generated =resources/*.css=--- loads the result, and runs
 =blog-publish-all=, which validates slugs before writing a single page.  On pushes
 to =master=, =public/= is then force-pushed to =gh-pages=.
@@ -3516,7 +3515,7 @@ jobs:
             --eval "(package-initialize)" \
             --eval "(unless (file-exists-p (expand-file-name \"archives/melpa\" package-user-dir)) (package-refresh-contents))" \
             --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))" \
-            --eval "(unless (package-installed-p 'org-special-block-extras '(20261013 211)) (package-refresh-contents) (package-upgrade 'org-special-block-extras))"
+            --eval "(unless (locate-library \"org-deftag\") (package-refresh-contents) (package-upgrade 'org-special-block-extras))"
 
       - name: Build all articles
         run: |
@@ -3661,144 +3660,6 @@ image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
           it)))))
 #+end_src
 
-*** Redefining Org Section for purposes of blocks            :details_deftag:
-:PROPERTIES:
-:CUSTOM_ID: redefining-org-section-for-purposes-of-blocks
-:END:
-
-image:https://i.redd.it/rre5ggpx9jya1.png|100%|100%|center|Musa
-([[https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/][Reddit Post]])
-
-This will eventually be part of [[http://alhassy.com/org-special-block-extras/][org-special-block-extras]].
-
-#+BEGIN_SRC emacs-lisp :export none
-(defmacro org-deftag (name args docstring &rest body)
-  "Re-render an Org section in any way you like, by tagging the section with NAME.
-
-That is to say, we essentially treat tags as functions that act on Org headings:
-We redefine Org sections for the same purposes as Org special blocks.
-
-Anyhow:
-ARGS are the sequence of items seperated by underscores after the NAME of the new tag.
-BODY is a form that may anaphorically mention:
-- O-BACKEND: The backend we are exporting to, such as latex or html.
-- O-HEADING: The string denoting the title of the tagged section heading.
-
-DOCSTRING is mandatory; everything should be documented for future maintainability.
-
-The result of this anaphoric macro is a symbolic function name org-deftag/NAME,
-which is added to org-export-before-parsing-hook.
-
-----------------------------------------------------------------------
-
-Below is the motivating reason for inventing this macro. It is used:
-
-     ,** Interesting, but low-priority, content   :details_red:
-     Blah blah blah blah blah blah blah blah blah blah blah.
-     Blah blah blah blah blah blah blah blah blah blah blah.
-
-Here is the actual implementation:
-
-(org-deftag details (color)
-   \"HTML export a heading as if it were a <details> block; COLOR is an optional
-   argument indicating the background colour of the resulting block.\"
-   (insert \"\n#+html:\"
-           (format \"<details style=\\\"background-color: %s\\\">\" color)
-           \"<summary>\" (s-replace-regexp \"^\** \" \"\" heading) \"</summary>\")
-   (org-next-visible-heading 1)
-   (insert \"#+html: </details>\"))
-
-"
-  (let ((func-name (intern (format "org-deftag/%s" name))))
-    `(progn
-       (cl-defun ,func-name (o-backend)
-         ,docstring
-         (outline-show-all)
-         (org-map-entries
-          (lambda ()
-            (kill-line)
-            (let ((o-heading (car kill-ring)))
-              (if (not (s-contains? (format ":%s" (quote ,name)) o-heading 'ignoring-case))
-                  (insert o-heading)
-                (-let [,args (cdr (s-split "_" (car (s-match (format "%s[^:]*" (quote ,name)) o-heading))))]
-                  (setq o-heading (s-replace-regexp (format ":%s[^:]*:" (quote ,name)) "" o-heading))
-                  ,@body)
-                ;; Otherwise we impede on the auto-inserted "* footer :ignore:"
-                (insert "\n"))))))
-       (add-hook 'org-export-before-parsing-hook (quote ,func-name))
-       (quote ,func-name))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :export none
-(org-deftag details (anchor color)
-   "HTML export a heading as if it were a <details> block; ANCHOR & COLOR are optional
-   arguments indicating the anchor for this block as well as the background colour of the resulting block.
-
-For example, in my blog, I would use :details_rememberthis_#F47174: to mark a section as
-friendly-soft-red to denote it as an 'advanced' content that could be ignored
-on a first reading of my article.
-Incidentally, orange and `#f2b195' are also nice 'warning' colours."
-   (insert "\n#+html:"
-           (format "<div>%s <details class=\"float-child\" style=\"background-color: %s\">"
-                   (if anchor (format "<a style=\"width: 1%%;float: left; padding: 0px\" id=\"%s\" href=\"#%s\">🔗</a>" anchor anchor) "")
-                   color)
-           "<summary> <strong> <font face=\"Courier\" size=\"3\" color=\"green\">"
-           (s-replace-regexp "^\** " "" o-heading)
-           "</font> </strong> </summary>")
-   (org-next-visible-heading 1)
-   (insert "#+html: </details> </div>"))
-#+END_SRC
-
-
-*** COMMENT Demo
-:PROPERTIES:
-:CUSTOM_ID: comment-demo
-:END:
-See: https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/
-
-@@html: <div style="padding-bottom: 30cm;"></div>@@
-
-
-**** Tags are functions of Org sections                          :quote_blue:
-:PROPERTIES:
-:CUSTOM_ID: tags-are-functions-of-org-sections
-:END:
-  Just as a source block is a function on a region of text, so too a tag is
-  construable as a function operating on an Org section. Thanks to doc:org-deftag (•̀ᴗ•́)و
-
-  For instance, this tree is tagged =:quote:= with the single parameter =blue=.
-  Look to the buffer to the right for the resulting HTML rendition.
-
-**** Here is the actual implementation                  :details_quoteSource:
-:PROPERTIES:
-:CUSTOM_ID: here-is-the-actual-implementation
-:END:
-
-  The implementation is interesting, but it is of low-priority and so it is tagged
-  with =:details:= which folds it away via a ~<details>~ element, with an anchor.
-
-#+begin_src emacs-lisp
-(org-deftag quote (color)
-   "HTML export a section as if it were a <blockquote> block; COLOR is an optional
-   argument indicating the text colour of the resulting block."
-   (insert "\n#+html:" (format "<blockquote style=\"color: %s\">" color))
-   (org-next-visible-heading 1)
-   (insert "#+html: </blockquote>"))
-#+end_src
-
-See http://alhassy.com/AlBasmala#deftag for the definition of =org-deftag=.
-
-**** Bye!                                                            :ignore:
-:PROPERTIES:
-:CUSTOM_ID: bye
-:END:
-
-/Have a great evening!/
-
-
-
-
-@@html: <div style="padding-bottom: 30cm;"></div>@@
 *** Known bug and proposed fix.                                    :noexport:
 :PROPERTIES:
 :CUSTOM_ID: known-bug-and-proposed-fix
