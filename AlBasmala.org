@@ -237,7 +237,37 @@ Nothing is global: kbd:C-c_C-e_h_h on an unrelated Org file is untouched.
                    (:html-table-caption-above nil nil nil)
                    (:html-format-headline-function nil nil #'blog--format-headline))
   :translate-alist '((headline . blog--headline)
+                     (link . blog--link)
                      (inner-template . blog--inner-template)))
+
+(defvar blog--link-base-directory nil
+  "Directory that relative file links resolve against; nil means the exported file's own directory.
+
+`blog--publish-single-subtree' binds it to the container's directory, since it exports a temp copy.")
+
+(defun blog--link (link desc info)
+  "Org's HTML for LINK, a relative file path re-rooted at `blog-posts-directory'; the site is flat.
+
+By way of example, in =emacs/foo.org=, =[[file:../resources/x.png]]= ↦ =resources/x.png= and
+=[[file:../life/bar.org]]= ↦ =bar.html=, since every page is served from the root.  Files outside
+the blog keep their links as written.  Radio links point at their =<<<target>>>='s label, not a random id."
+  (let ((root (file-name-as-directory (expand-file-name blog-posts-directory)))
+        (base (or blog--link-base-directory
+                  (file-name-directory (or (plist-get info :input-file) default-directory))))
+        (path (org-element-property :path link)))
+    (when (and (equal (org-element-property :type link) "file")
+               (not (file-name-absolute-p path))
+               (file-in-directory-p base root))
+      (let ((target (expand-file-name path base)))
+        ;; Another article is a sibling on the flat site, wherever its source lives.
+        (org-element-put-property link :path (if (equal (file-name-extension target) "org")
+                                                 (file-name-nondirectory target)
+                                               (file-relative-name target root)))))
+    ;; Org's own radio links use a random id, while their <<<target>>> uses its label; agree on the label.
+    (if-let ((radio (and (equal (org-element-property :type link) "radio")
+                         (org-export-resolve-radio-link link info))))
+        (format "<a href=\"#%s\">%s</a>" (org-html--reference radio info) desc)
+      (org-html-link link desc info))))
 
 (defun blog--inner-template (contents info)
   "(CONTENTS, INFO) ↦ header ⊕ tags ⊕ image ⊕ badges ⊕ Org's own body (TOC titled Ξ) ⊕ footer."
@@ -372,7 +402,11 @@ Guarantees [Org source | xwidget] side-by-side layout:
 
 Called from the buffer-local after-save-hook installed by blog-preview.
 Mirrors blog-preview-subtree but for files without #+article_style: multiple."
-  (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html")))
+  ;; Under the blog, write to its root ---as CI does--- so a nested file's re-rooted links resolve.
+  (let* ((root (expand-file-name blog-posts-directory))
+         (html (if (file-in-directory-p buffer-file-name root)
+                   (expand-file-name (concat (f-base buffer-file-name) ".html") root)
+                 (concat (file-name-sans-extension buffer-file-name) ".html"))))
     (message "=> Previewing standalone %s..." (buffer-name))
     (org-export-to-file 'blog html)
     (when (file-exists-p html)
@@ -759,7 +793,10 @@ The =.org= sources are first-class citizens; the generated =.html= is not.  CI e
 =public/= ---our =blog-publish-directory=, gitignored on =master=--- and deploys it to =gh-pages=;
 see §[[#Deployment-via-CI][Deployment via CI]].
 
-Articles sit beside =resources/=, so =resources/foo.png= resolves both locally and when deployed.
+Subdirectories are ours alone: we may file articles under =emacs/= or =life/= to stay sane, but the
+blog never sees them.  =blog--org-files= finds every =.org= file recursively, every page is served
+flat from the root ---so basenames must be unique, as =blog--validate-slugs= checks--- and
+=blog--link= re-roots relative links; e.g., =../resources/foo.png= in =emacs/foo.org= ↦ =resources/foo.png=.
 
 #+begin_src emacs-lisp :exports code
 (defvar blog-title "Life & Computing Science"
@@ -772,9 +809,10 @@ Articles sit beside =resources/=, so =resources/foo.png= resolves both locally a
   "PATH… ↦ its absolute URL on the blog; e.g., (blog--url \"tag-\" \"emacs\" \".html\")."
   (apply #'concat blog-url "/" path))
 
-(defun blog--history-url (base)
-  "BASE ↦ the GitHub commit history of BASE.org."
-  (format "https://github.com/alhassy/alhassy.github.io/commits/master/%s.org" base))
+(defun blog--history-url (file)
+  "FILE ↦ the GitHub commit history of FILE, by its path relative to `blog-posts-directory'."
+  (format "https://github.com/alhassy/alhassy.github.io/commits/master/%s"
+          (file-relative-name (expand-file-name file) (expand-file-name blog-posts-directory))))
 
 (defvar blog-publish-directory "~/blog/public/"
   "Directory containing published HTML files.
@@ -787,11 +825,22 @@ That gives flat URLs (alhassy.com/foo) while the master working tree stays clean
 (defvar blog-posts-directory "~/blog"
   "Directory containing source Org files.
 
-All article .org files ---including AlBasmala.org itself--- live here alongside
-resources/.  blog--compute-posts-and-pages collects every .org file with #+date:
+All article .org files ---including AlBasmala.org itself--- live here, in any
+subdirectories we like; see `blog--org-files'.  blog--compute-posts-and-pages collects every .org file with #+date:
 as a post and every file with #+site_nav: as a nav page; files with neither
 (e.g. MathJaxPreamble.org) are silently skipped.
 See blog-make-index-page and blog-publish-directory.")
+
+(defun blog--org-files ()
+  "Every .org file under `blog-posts-directory', recursively; subdirectories are for us, not the blog.
+
+Skips hidden directories, `blog-publish-directory', and resources/ (vendored :REDIRECT: sources)."
+  (let ((root (expand-file-name blog-posts-directory))
+        (skip (list (directory-file-name (expand-file-name blog-publish-directory))
+                    (expand-file-name "resources" blog-posts-directory))))
+    (directory-files-recursively
+     root "\\`[^.#].*\\.org\\'" nil
+     (lambda (dir) (not (or (member dir skip) (string-prefix-p "." (f-filename dir))))))))
 #+end_src
 *** blog-new-article: Helper function to make a new article         :details:
 :PROPERTIES:
@@ -811,12 +860,13 @@ Under `my/blogging-mode', every save, C-x C-s, live-previews the article."
   (interactive)
   (let (file desc)
 
-    (thread-last blog-posts-directory
-      f-entries
-      (mapcar #'f-filename)
-      (completing-read "Filename (Above are existing): ")
-      (concat blog-posts-directory)
-      (setq file))
+    ;; Subdirectories are welcome, e.g., "emacs/new-trick.org"; the blog stays flat regardless.
+    (setq file (expand-file-name
+                (completing-read "Filename (Above are existing): "
+                                 (mapcar (lambda (f) (file-relative-name f (expand-file-name blog-posts-directory)))
+                                         (blog--org-files)))
+                blog-posts-directory))
+    (make-directory (file-name-directory file) t)
 
     ;; For some reason, 'find-file' in the thread above
     ;; wont let the completing-read display the possible completions.
@@ -907,7 +957,7 @@ Since "accessor" begins with 'a', and '@' looks like one, every accessor starts 
   "Strip Org export-snippet markers from TITLE so embedded HTML renders.
 
 Titles like 'AlBasmala: @@html: <br>@@ …' carry Org export snippets that
-`#+begin_export html' blocks and raw format strings ship verbatim --- so the
+`#+begin_export html' blocks and raw format strings ship verbatim ---so the
 `@@html:' / `@@' markers leak into the output.  Axe them, keeping the payload
 (here, the literal `<br>') so HTML contexts render it as intended.  RSS feeds
 should keep calling (esc (@title post)) and avoid this helper: `<br>' would
@@ -1094,7 +1144,7 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
          ;; over the auto-derived URL based on the file basename.
          (cons "history"
                (or (cdr (assoc "history_url" keyword-pairs))
-                   (blog--history-url (f-base post-filename))))
+                   (blog--history-url post-filename)))
          (cons "abstract" (when-let ((bounds (blog--abstract-bounds)))
                             (buffer-substring-no-properties (car bounds) (cdr bounds)))))))))
 #+end_src
@@ -1257,7 +1307,7 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              ;; urls
              (container-base (f-base container-file))
              (url     (blog--url slug))
-             (history (blog--history-url container-base)))
+             (history (blog--history-url container-file)))
         (list (cons "file"        container-base)
               (cons "slug"        slug)
               (cons "container"   container-base)
@@ -1775,9 +1825,12 @@ C-x C-s refreshes the registry on every save; with the cache that costs one
     (if (and hit (equal mtime (car hit)))
         (cdr hit)
       (let ((infos (when (blog--publishable-p file)
-                     (if (blog--multiple-style-p file)
-                         (blog--info-multiple file)
-                       (list (blog--info file))))))
+                     ;; Each info remembers its source's path, e.g., "emacs/foo.org", for error messages.
+                     (let ((source (file-relative-name file (expand-file-name blog-posts-directory))))
+                       (mapcar (lambda (info) (cons (cons "source" source) info))
+                               (if (blog--multiple-style-p file)
+                                   (blog--info-multiple file)
+                                 (list (blog--info file))))))))
         (puthash file (cons mtime infos) blog--file-infos-cache)
         infos))))
 
@@ -1793,11 +1846,10 @@ posts ---all entries, sorted newest-first.
 pages ---site_nav entries, unsorted (used for the nav bar)."
   (let ((posts '())
         (pages '()))
-    (dolist (file (f-files blog-posts-directory))
-      (when (s-ends-with? ".org" file)
-        (dolist (info (blog--file-infos file))
-          (when (map-elt info "site_nav") (push info pages))
-          (push info posts))))
+    (dolist (file (blog--org-files))
+      (dolist (info (blog--file-infos file))
+        (when (map-elt info "site_nav") (push info pages))
+        (push info posts)))
     (cons (sort posts (lambda (a b)
                         (time-less-p (date-to-time (@date b))
                                      (date-to-time (@date a)))))
@@ -2679,7 +2731,8 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
           ;;    `blog-publish-all'; nothing else copies it there, so CI would never deploy it.
           (let* ((html-out (expand-file-name (concat slug ".html") blog-publish-directory)))
             (with-current-buffer tmp-buf
-              (org-export-to-file 'blog html-out)))
+              (let ((blog--link-base-directory (file-name-directory (expand-file-name container-file))))
+                (org-export-to-file 'blog html-out))))
 
           ;; 4. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
@@ -2748,7 +2801,7 @@ kbd:M-x_load-file it; =require= recognises the file by the feature it =provide=-
 #+begin_src emacs-lisp :tangle ".dir-locals.el"
 ((org-mode . ((eval . (progn
                         (require 'AlBasmala (expand-file-name "AlBasmala"
-                                              (file-name-directory (buffer-file-name))))
+                                              (locate-dominating-file default-directory ".dir-locals.el")))
                         (my/blogging-mode 1))))))
 #+end_src
 
@@ -2874,30 +2927,32 @@ alhassy.com/foo not alhassy.com/public/foo.
 Dispatches on #+article_style: per file:
   standalone (default) → one .org → one HTML file,
   multiple            → one subtree → one HTML file (via `blog--publish-multiple-articles')."
-  (make-directory blog-publish-directory t)
-  (blog--refresh-posts)
-  (blog--validate-slugs)
-  (dolist (f (f-entries blog-posts-directory
-                        (lambda (x) (and (s-suffix? ".org" x)
-                                         (blog--publishable-p x)))))
-    (with-current-buffer (find-file-noselect f)
-      ;; badge:/doc:/tweet: links in articles are registered as Org link types
-      ;; by org-special-block-extras-mode.  It's a buffer-local minor mode, so
-      ;; turn it on per buffer ---without it those links leak verbatim to HTML.
-      (org-special-block-extras-mode 1)
-      (if (blog--multiple-style-p)
-          (progn
-            (message "=> Exporting all articles from %s..." (f-base f))
-            (blog--vendor-redirects)
-            (blog--publish-multiple-articles f))
-        (let ((target (expand-file-name (concat (f-base f) ".html") blog-publish-directory)))
-          ;; Export directly to public/<base>.html so that #+export_file_name:
-          ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
-          ;; become the output destination.
-          (org-export-to-file 'blog target)))))
-  (blog-make-index-page)
-  (blog--make-rss-feed)
-  (blog--sync-assets))
+  ;; CI passes relative directories, e.g., "./public/"; pin them now, else a nested article's
+  ;; buffer would resolve them against its own subdirectory.
+  (let ((blog-posts-directory   (expand-file-name blog-posts-directory))
+        (blog-publish-directory (file-name-as-directory (expand-file-name blog-publish-directory))))
+    (make-directory blog-publish-directory t)
+    (blog--refresh-posts)
+    (blog--validate-slugs)
+    (dolist (f (seq-filter #'blog--publishable-p (blog--org-files)))
+      (with-current-buffer (find-file-noselect f)
+        ;; badge:/doc:/tweet: links in articles are registered as Org link types
+        ;; by org-special-block-extras-mode.  It's a buffer-local minor mode, so
+        ;; turn it on per buffer ---without it those links leak verbatim to HTML.
+        (org-special-block-extras-mode 1)
+        (if (blog--multiple-style-p)
+            (progn
+              (message "=> Exporting all articles from %s..." (f-base f))
+              (blog--vendor-redirects)
+              (blog--publish-multiple-articles f))
+          (let ((target (expand-file-name (concat (f-base f) ".html") blog-publish-directory)))
+            ;; Export directly to public/<base>.html so that #+export_file_name:
+            ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
+            ;; become the output destination.
+            (org-export-to-file 'blog target)))))
+    (blog-make-index-page)
+    (blog--make-rss-feed)
+    (blog--sync-assets)))
 #+end_src
 
 *** Media insertion: images and screenshots                         :details:
@@ -2909,7 +2964,7 @@ kbd:C-c_i_i inserts an image file, and kbd:C-c_i_s a screenshot; each lands in =
 
 #+begin_src emacs-lisp
 (defun blog-insert-image (file)
-  "Copy FILE into ~/blog/resources/, git-add it, and insert an Org link at point.
+  "Copy FILE into ~/blog/resources/, git-add it, and insert an Org link, relative to this file, at point.
 
 With a \\[universal-argument] prefix, prompts for a new filename after the
 default name is pre-filled so you can rename the resource before committing."
@@ -2921,7 +2976,7 @@ default name is pre-filled so you can rename the resource before committing."
          (dest (expand-file-name dest-name (expand-file-name "resources/" blog-posts-directory))))
     (copy-file file dest t)
     (blog--git "add resources/%s" dest-name)
-    (insert (format "[[file:resources/%s]]" dest-name))
+    (insert (format "[[file:%s]]" (file-relative-name dest)))  ; Relative to this file; `blog--link' re-roots it.
     (org-display-inline-images nil t (line-beginning-position) (line-end-position))))
 
 (defun blog-insert-screenshot ()
@@ -2939,7 +2994,7 @@ you are prompted for a meaningful name; the timestamp default is just a fallback
              (dest (expand-file-name dest-name (expand-file-name "resources/" blog-posts-directory))))
         (rename-file tmp dest t)
         (blog--git "add resources/%s" dest-name)
-        (insert (format "[[file:resources/%s]]" dest-name))
+        (insert (format "[[file:%s]]" (file-relative-name dest)))  ; Relative to this file; `blog--link' re-roots it.
         (org-display-inline-images nil t (line-beginning-position) (line-end-position))))))
 #+end_src
 
@@ -2964,14 +3019,17 @@ like =PathCat= is a long-published URL."
       (let* ((slug   (or (@slug p) (@file p)))  ; effective URL slug
              (source (format "\"%s\" (%s)"
                              (or (map-elt p "title") slug)
-                             (or (map-elt p "container") (@file p) slug)))
+                             (or (map-elt p "source") slug)))
              (prior  (gethash slug seen)))
         (when (and (@slug p) (not (equal slug (blog--make-slug slug))))
           (user-error "Slug \"%s\" of %s isn't lower-case kebab-case; use :CUSTOM_ID: %s"
                       slug source (blog--make-slug slug)))
         (when prior
-          (user-error "Duplicate slug \"%s\":\n  already claimed by %s\n  also claimed by %s\n  Change one of the :CUSTOM_ID: properties."
-                      slug prior source))
+          ;; Subdirectories don't reach the flat site: emacs/foo.org and life/foo.org both claim foo.html.
+          (user-error "Duplicate slug \"%s\":\n  already claimed by %s\n  also claimed by %s\n  %s"
+                      slug prior source
+                      (if (@slug p) "Change one of the :CUSTOM_ID: properties."
+                        "Rename one of the files; subdirectories don't count, the site is flat.")))
         (puthash slug source seen)))))
 #+end_src
 
