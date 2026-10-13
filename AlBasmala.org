@@ -95,10 +95,9 @@ Here are some notable features of my blog.
   .org file
      │
      ▼  (C-x C-s, after-save-hook)
-  blog--style-setup           ← injects header/footer/image/tags/abstract
-     │
+  org-export-to-file 'blog    ← header/footer/image/tags via the blog backend;
+     │                           blog--style-setup wraps the abstract
      ▼
-  org-html-export-to-html
      │
      ▼
   blog--show-preview          ← xwidget side-by-side
@@ -107,7 +106,7 @@ Here are some notable features of my blog.
      │
      ▼
   CI: blog-publish-all        ← iterates all .org files
-        ├── standalone  → org-html-export-to-html
+        ├── standalone  → org-export-to-file 'blog
         └── multiple    → blog--publish-single-subtree × N headings
                               ├── synthesize temp .org
                               ├── run export
@@ -174,8 +173,8 @@ We accomplish these goals via the following methods.
 The live-preview subsystem. Key pieces:
 
 • org-link/blog ---an Org link type. Writing blog:header or blog:footer in any .org file injects the full blog CSS/JS stack. This lets arbitrary Org files look like real blog posts.
-• blog--style-setup ---an org-export-before-processing-hook. Before any export, it surgically inserts the blog:header, tags, article image, badges, and blog:footer into the export buffer (without touching the source file).
-• blog-preview / blog--preview-standalone ---installs a buffer-local after-save-hook. On every C-x C-s, it: runs blog--style-setup → org-html-export-to-html → opens/reuses an xwidget buffer to the right.
+• the =blog= export backend ---derived from =html=; its =inner-template= wraps every article in the header, tags, article image, badges, and footer, and its =:options-alist= sets the blog's defaults.  =blog--style-setup= only wraps the =* Abstract= section, and only for =blog= exports.
+• blog-preview / blog--preview-standalone ---installs a buffer-local after-save-hook. On every C-x C-s, it: exports with the =blog= backend → opens/reuses an xwidget buffer to the right.
 • blog-preview-subtree ---same, but for multiple-style container files (one .org → many articles); previews just the heading at point.
 • blog--show-preview ---enforces a fixed [Org source | xwidget] side-by-side layout; reuses an existing xwidget window rather than spawning new ones.
 • blog--footer, blog--htmlize-file, blog--comments, blog--read-remaining-js ---footer assembly: colorized htmlized source badge, GitHub history link, Disqus comments embed, and the ReadRemaining.js "X min left" reading-time widget.
@@ -201,70 +200,93 @@ Finally, I want to avoid any `@@backend:...@@' from appearing in the browser fra
 We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:sanitise-title'.
 "
       (pcase o-label
-        ("header" (concat
-                   blog-page-preamble
-                   blog-page-header
-                   "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
-                   (format "<br><center><h1 class=\"post-title\">%s</h1></center>"
-                           (blog--title-html (@title (blog--info (buffer-file-name)))))))
+        ("header" (blog--header-html (blog--info (buffer-file-name))))
         ("footer" (blog--footer (buffer-file-name)))
-        ("sanitise-title" "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>")
+        ("sanitise-title" blog--sanitise-title-js)
         (_ "")))
+
+(defconst blog--sanitise-title-js
+  "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>"
+  "Strip any `@@backend:...@@' from the browser frame's title.")
+
+(defun blog--header-html (post)
+  "POST ↦ the site nav, CSS/JS stack, and fancy title that open every article."
+  (concat
+   blog-page-preamble
+   blog-page-header
+   "<link href=\"https://alhassy.github.io/org-notes-style.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"https://alhassy.github.io/floating-toc.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
+   (format "<br><center><h1 class=\"post-title\">%s</h1></center>" (blog--title-html (@title post)))))
 #+end_src
 
 See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 
-** blog--style-setup: A function to insert org-link/blog into a buffer :details:
+** The =blog= export backend: header, tags, image, badges, and footer :details:
 :PROPERTIES:
 :CUSTOM_ID: blog-style-setup-a-function-to-insert-org-linkblog-into-a-buffer
 :END:
+
+Every article is exported with =blog=, an HTML backend derived from =html=.  We
+get the blog look by overriding exactly two things:
+
++ =:options-alist= ---the defaults: a 2-level TOC, no drawers, no classic Org
+  title (our header shows it) nor postamble, table captions below tables, and
+  clickable headlines.  An article's own =#+options:= still win.
++ =inner-template= ---the body: header, tags, image and badges, then Org's
+  usual TOC + contents + footnotes, then the footer.
+
+Nothing is global: an ordinary =C-c C-e h h= of some unrelated Org file, and the
+index/tag pages ---which bring their own preamble--- export with plain =html=,
+untouched.
+
 #+begin_src emacs-lisp
-(defun blog--style-setup (_backend)
-  "Insert blog header (fancy title), tags, blog image (before \"* Abstract\"), and footer (links to tags).
+(org-export-define-derived-backend 'blog 'html
+  :options-alist '((:with-toc nil "toc" 2)
+                   (:with-drawers nil "d" nil)
+                   (:with-title nil "title" nil)
+                   (:html-postamble nil "html-postamble" nil)
+                   (:html-table-caption-above nil nil nil)
+                   (:html-format-headline-function nil nil #'blog--format-headline))
+  :translate-alist '((inner-template . blog--inner-template)))
 
-There are default options: TOC is at 2 levels, no classic Org HTML postamble nor drawers are shown.
-Notice that if you explicitly provide options to change the toc, date, or show drawers, etc;
-then your options will be honoured. (Since they will technically come /after/ the default options,
-which I place below at the top of the page.)
-"
-  (goto-char (point-min))
-  (let ((post (blog--info (buffer-file-name))))
-    (insert "#+options: toc:2 html-postamble:nil d:nil"
-            (if (buffer-narrowed-p) "\n#+options: broken-links:t" "")
-            "\n blog:header blog:sanitise-title \n"
-            "\n* Tags, then Image :ignore:"
-            "\n#+html: "
-            "<center>"
-            (@tags post)
-            "</center>"
-            "\n#+html: "
-            (@image post "https://alhassy.com/resources/")
-            "\n#+html: "
-            (blog--badges-bar post (buffer-file-name))
-            "\n")
+(defun blog--inner-template (contents info)
+  "(CONTENTS, INFO) ↦ header ⊕ tags ⊕ image ⊕ badges ⊕ Org's own body (TOC titled Ξ) ⊕ footer."
+  (let* ((file (plist-get info :input-file))
+         (post (blog--info file)))
+    (concat
+     (blog--header-html post)
+     blog--sanitise-title-js
+     "<center>" (@tags post) "</center>"
+     (@image post "https://alhassy.com/resources/")
+     (blog--badges-bar post file)
+     (replace-regexp-in-string "<h\\([0-9]\\)>Table of Contents</h\\1>"
+                               (lambda (h) (s-replace "Table of Contents" (blog--toc-title) h))
+                               (org-html-inner-template contents info) t t)
+     (blog--footer file))))
 
-    ;; Wrap contents of "* Abstract" section in the "abstract" Org-special-block
-    ;; (In case we are narrowed, we only act when we can find the Abstract.)
-    ;; TODO: Replace this with (@abstract (blog--info (buffer-file-name))), or: (@abstract post)
-    (when (re-search-forward "^\* Abstract" nil t)
+(defun blog--style-setup (backend)
+  "Wrap the “* Abstract” section in an abstract block, for =blog= exports only.
+
+(The abstract is an ordinary section in the source, so this is the one thing that
+must happen before parsing; everything else lives in the =blog= backend.)"
+  (when (org-export-derived-backend-p backend 'blog)
+    (goto-char (point-min))
+    ;; Previewing a narrowed subtree: links to the rest of the file are expected to dangle.
+    (when (buffer-narrowed-p) (insert "#+options: broken-links:t\n"))
+    (when (re-search-forward "^\\* Abstract" nil t)
       (beginning-of-line)
-      (-let [start (point)]
-        (org-narrow-to-subtree)
-        (org-show-entry)
-        (re-search-forward "^ * :END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
-        (forward-line)
-        (insert "\n#+begin_abstract\n")
-        (call-interactively #'org-forward-heading-same-level)
-        ;; In case there is no next section, just go to end of file.
-        (when (equal start (point)) (goto-char (point-max)))
-        (insert "\n#+end_abstract\n")
-        (widen)))
+      (save-restriction
+        (let ((start (point)))
+          (org-narrow-to-subtree)
+          (re-search-forward "^ *:END:" nil t) ;; Ignore :PROPERTIES: drawer, if any.
+          (forward-line)
+          (insert "\n#+begin_abstract\n")
+          (goto-char start)
+          (org-end-of-subtree t t)
+          (insert "\n#+end_abstract\n"))))))
 
-    (goto-char (point-max))
-    ;; The Org file's title is already shown via blog:header, above, so we disable it in the preview.
-    (insert (format "\n* footer :ignore: \n blog:footer \n #+options: title:nil \n"))))
+(add-hook 'org-export-before-processing-hook #'blog--style-setup)
 #+end_src
 
 ** Inserting org-link/blog <em>seamlessly</em> via the export process; <em>then</em> preview with every save :details:
@@ -325,8 +347,7 @@ Called from the buffer-local after-save-hook installed by blog-preview.
 Mirrors blog-preview-subtree but for files without #+article_style: multiple."
   (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html")))
     (message "=> Previewing standalone %s..." (buffer-name))
-    (add-hook 'org-export-before-processing-hook #'blog--style-setup)
-    (org-html-export-to-html)
+    (org-export-to-file 'blog html)
     (when (file-exists-p html)
       (blog--show-preview (concat "file://" html)))))
 
@@ -726,7 +747,7 @@ We resolve this with a /synthetic temp file/ trick (in =blog--publish-single-sub
    now-redundant top-level heading line, and promote all children up one level —
    so =** Abstract :ignore:= becomes =* Abstract :ignore:=, which =blog--style-setup='s
    existing =re-search-forward= finds correctly.
-4. Run the normal =org-html-export-to-html= with =blog--style-setup= hooked in.
+4. Export with the =blog= backend, exactly as for a standalone post.
    It reads from the temp file and produces fully-styled HTML — /zero changes/ to
    =blog--style-setup= itself.
 5. Htmlize a narrowed copy of the subtree → =<slug>.org.html= for the per-article
@@ -2406,11 +2427,8 @@ table {
 # =#+PROPERTY: header-args -n= at the top of the file
 # to have all blocks displayed with line numbers.
 
-#+begin_src emacs-lisp
-;; Table captions should be below the tables
-(setq org-html-table-caption-above nil
-      org-export-latex-table-caption-above nil)
-#+end_src
+Table captions should be below the tables; the =blog= backend's =:html-table-caption-above= default
+(§[[#blog-style-setup-a-function-to-insert-org-linkblog-into-a-buffer][The blog export backend]]) sees to that.
 
 *** Let's show folded, details, regions with a nice greenish colour :details:
 :PROPERTIES:
@@ -2513,36 +2531,29 @@ Hence, we can style the table of contents by writing rules that target those
 Since the table of contents floats, the phrase /Table of Contents/ is rather
 'in your face', so let's use the more subtle Greek [[https://en.wikipedia.org/wiki/Xi_(letter)][letter]] =Ξ=.
 #+begin_src emacs-lisp -n
-(advice-add 'org-html--translate :before-until 'blog--display-toc-as-Ξ)
-;; (advice-remove 'org-html--translate 'display-toc-as-Ξ)
-
-(defun blog--display-toc-as-Ξ (phrase info)
-  (when (equal phrase "Table of Contents")
-    (s-collapse-whitespace
-    " <a href=\"javascript:window.scrollTo(0,0)\"
+(defun blog--toc-title ()
+  "The TOC's heading: a Ξ that scrolls back to the top of the page."
+  (s-collapse-whitespace
+    " <a href=\"javascript:window.scrollTo(0,0)\"
         style=\"color: black !important; border-bottom: none !important;\"
         class=\"tooltip\"
         title=\"Go to the top of the page\">
       Ξ
-    </a> ")))
+    </a> "))
 #+end_src
 
 How did I get here?
 1. How does Org's HTML export TOCs? ⇒ doc:org-html-toc
-2. Looking at its source, we see doc:org-html--translate being
-   the only place mentioning the string /Table of Contents/
-3. Let's advise it, with doc:advice-add, to return "Ξ"
-   /only/ on that particular input string.
+2. Looking at its source, it emits =<h2>Table of Contents</h2>= ---the phrase
+   coming from the internal doc:org-html--translate.
+3. Rather than advise that internal (and every other Org→HTML export in the
+   session along with it), the =blog= backend's =inner-template= swaps the
+   phrase for "Ξ" in its own output.
 4. Joy ♥‿♥
 
 # ( The Unicode whitespace ' ' before and after =Ξ= is to appease the [[clickable-headlines][clickable headlines utility]], below. )
 
-Finally,
-#+begin_src emacs-lisp :exports code
-;; I'd like to have tocs and numbered headings
-(setq org-export-with-toc t)
-(setq org-export-with-section-numbers t)
-#+end_src
+Finally, I'd like to have TOCs and numbered headings ---Org's defaults, so there's nothing to set.
 
 ** Clickable Sections with Sensible Anchors
 :PROPERTIES:
@@ -2612,17 +2623,17 @@ resulting in a link to the headline itself.
 #+begin_details org-html-format-headline-function
 #+begin_src emacs-lisp
 ;; Src: https://writepermission.com/org-blogging-clickable-headlines.html
-(setq org-html-format-headline-function
-      (lambda (todo todo-type priority text tags info)
-        "Format a headline with a link to itself."
-        (let* ((headline (get-text-property 0 :parent text))
-               (id (or (org-element-property :CUSTOM_ID headline)
-                       (ignore-errors (org-export-get-reference headline info))
-                       (org-element-property :ID headline)))
-               (link (if id
-                         (format "<a href=\"#%s\">%s</a>" id text)
-                       text)))
-          (org-html-format-headline-default-function todo todo-type priority link tags info))))
+;; Installed as the `blog' backend's :html-format-headline-function default.
+(defun blog--format-headline (todo todo-type priority text tags info)
+  "Format a headline with a link to itself."
+  (let* ((headline (get-text-property 0 :parent text))
+         (id (or (org-element-property :CUSTOM_ID headline)
+                 (ignore-errors (org-export-get-reference headline info))
+                 (org-element-property :ID headline)))
+         (link (if id
+                   (format "<a href=\"#%s\">%s</a>" id text)
+                 text)))
+    (org-html-format-headline-default-function todo todo-type priority link tags info)))
 #+end_src
 #+end_details
 
@@ -2778,7 +2789,7 @@ The build pipeline. Key pieces:
 
 • Two article styles: standalone (1 .org → 1 HTML) vs. multiple (#+article_style: multiple container where each top-level heading is its own article).
 • blog-publish-all ---the top-level CI entry point; dispatches per-file on article style.
-• blog--publish-single-subtree ---core of the multiple-style path: synthesizes a temp .org file, injects the right #+keyword: lines (including #+history_url: and #+htmlized_source_url: overrides), runs org-html-export-to-html on it.
+• blog--publish-single-subtree ---core of the multiple-style path: synthesizes a temp .org file, injects the right #+keyword: lines (including #+history_url: and #+htmlized_source_url: overrides), exports it with the =blog= backend.
 • Index, tags, RSS ---auto-generated index.html, tag-*.html, and rss.xml rebuilt on every CI run.
 • blog--bump-modified-stamp ---after-save-hook that keeps #+modified: (standalone) or :MODIFIED: (multiple) fresh.
 • Deployment via CI (line 3032) ---two-branch model: master holds only .org sources; every push triggers a GitHub Actions run that calls blog-publish-all, writes into public/, and force-pushes that to gh-pages. Always a full rebuild, no incrementalism.
@@ -2807,7 +2818,7 @@ For a given article =blog-publish-all= dispatches on =#+article_style:=:
 # the unchanged =blog--style-setup= pipeline.
 The short version: we build a
 temp =.org= file with the right =#+keyword:= lines, paste the promoted subtree
-body into it, and run =org-html-export-to-html= exactly as for a standalone post.
+body into it, and export it with the =blog= backend exactly as for a standalone post.
 
 Two extra synthetic keywords injected into the temp file are worth knowing about:
 - =#+history_url:= — overrides the auto-derived GitHub history link so the badge
@@ -3022,11 +3033,7 @@ file-level keywords so that blog--style-setup runs unchanged."
           ;;    `blog-publish-all'; nothing else copies it there, so CI would never deploy it.
           (let* ((html-out (expand-file-name (concat slug ".html") blog-publish-directory)))
             (with-current-buffer tmp-buf
-              ;; Let-bound, not add/remove-hook: removing it globally would strip the hook
-              ;; `blog-publish-all' installed for every standalone file exported after us.
-              (let ((org-export-before-processing-hook
-                     (cl-adjoin #'blog--style-setup org-export-before-processing-hook)))
-                (org-export-to-file 'html html-out))))
+              (org-export-to-file 'blog html-out)))
 
           ;; 4. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
@@ -3122,7 +3129,7 @@ We use a two-branch model to keep =master= clean and let CI own all HTML generat
 
 *CI rebuilds everything, from scratch, every run.*  The runner checks out
 =master= fresh (no =public/=), =blog-publish-all= starts with an empty
-=public/= and calls =org-html-export-to-html= on every publishable =.org= —
+=public/= and exports every publishable =.org= with the =blog= backend —
 no mtime comparisons, no diffing against prior output.  =peaceiris/actions-
 gh-pages= then force-pushes =public/= to =gh-pages=, overwriting whatever
 was there.  So every deploy regenerates every HTML file.
@@ -3262,7 +3269,6 @@ alhassy.com/foo not alhassy.com/public/foo.
 Dispatches on #+article_style: per file —
   standalone (default) → one .org → one HTML file,
   multiple            → one subtree → one HTML file (via `blog--publish-multiple-articles')."
-  (add-hook 'org-export-before-processing-hook #'blog--style-setup)
   (make-directory blog-publish-directory t)
   (blog--refresh-posts)
   (dolist (f (f-entries blog-posts-directory
@@ -3281,9 +3287,8 @@ Dispatches on #+article_style: per file —
         (let ((target (expand-file-name (concat (f-base f) ".html") blog-publish-directory)))
           ;; Export directly to public/<base>.html so that #+export_file_name:
           ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
-          ;; become the output destination.  blog--style-setup is already on
-          ;; org-export-before-processing-hook, so the full pipeline still runs.
-          (org-export-to-file 'html target)))))
+          ;; become the output destination.
+          (org-export-to-file 'blog target)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
