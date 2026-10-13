@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>making-vscode-itself-a-java-repl.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+#+title: <span style="font-weight: bold;">&#128144; Making VSCode itself a Java REPL &#128257;
+</span>#+author: Musa Al-hassy
+#+email: alhassy@gmail.com
+<span style="color: #a0a1a7;">#+modified: 2022-09-05 Mon</span>
+<span style="color: #a0a1a7;">#+filetags: repl-driven-development vscode emacs javascript java python ruby clojure typescript haskell lisp</span>
+<span style="color: #a0a1a7;">#+fileimage: <a href="https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true">https://github.com/alhassy/easy-extensibility/blob/main/graphics/repl-java.gif?raw=true</a> 90% 90%</span>
+<span style="color: #a0a1a7;">#+description: VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a friendly way!</span>
+
+<span style="color: #0184bc; font-weight: bold;">* Abstract </span><span style="color: #0184bc; font-weight: bold;">:ignore:</span>
+
+VSCode evaluates Java code wherever it sees it, by sending it to a JShell in the background, and echos the results in a
+friendly way!
+
+This is achieved with a <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility">meta-extension for VSCode</a></span> that makes VSCode into a living, breathing, JS interpreter: It can
+execute arbitrary JS that alters VSCode on-the-fly.  <span style="font-style: italic;">/(Inspired by using Emacs and Lisp!)/</span>
+
+The relevant docs show how to make a similar REPL for <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1417-L1420">Python</a></span>, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1459-L1462">Ruby</a></span>, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1475-L1479">Clojure</a></span>, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1490-L1494">Common Lisp</a></span>, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1509-L1515">JavaScript</a></span>, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1527-L1536">Typescript</a></span>,
+<span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1553-L1557">Haskell</a></span>, and of-course <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/65572a283e4864d9bef157b438c33f4e47276e3a/vscodejs/index.js#L1575-L1585">Java</a></span>.
+
+<span style="color: #0184bc; font-weight: bold;">* How do people usually code?</span>
+
+Either you,
+
+1. Use a code editor and edit multiple lines, then jump into a console to try
+   out what you wrote&#9203;, or
+
+2. You use an interactive command line, and work with one line at a time
+   ---continuously editing &amp; evaluating &#128260;
+
+The first approach sucks because your code and its resulting behaviour occur in different places &#128546; The second is only
+realistic for small experimentation ---after all, you're in a constrained environment and don't generally have the same
+features that your code editor provides &#129503;&#8205;
+
+<span style="color: #0184bc; font-weight: bold;">* If only we could have our cake, and eat it too! &#127856;</span>
+
+With a few lines of JavaScript, to alter VSCode, we can get both approaches! No need to switch between the two anymore!
+Just select some code and press =Ctrl+X Ctrl+E= ---<span style="font-style: italic;">/E for Evaluate!/</span> &#128521;
+
+1. Install the meta-extension <span style="text-decoration: underline;"><a href="https://marketplace.visualstudio.com/items?itemName=alhassy.easy-extensibility">Easy-Extensibility</a></span>.
+
+   - Easy-Extensibility makes VSCode into a living JavaScript interpreter; that can execute arbitrary JS to alter VSCode
+     on-the-fly: Just press &#8220;&#8984;+E&#8221; to &#8220;E&#8221;valuate code! &#128562;
+
+   - You can save and reuse your code by placing it in an ~/init.js file.
+
+   - Video Intro to Easy-Extensibility: <span style="text-decoration: underline;"><a href="https://youtu.be/HO2dFgisriQ">https://youtu.be/HO2dFgisriQ</a></span>
+
+2. Make a =~/init.js= file ---or just invoke =Cmd+h Find user's init.js file, or provide a template=.
+
+3. Stick the following code in there; this code will be run every time you open VSCode.
+
+   - Restart or run =Cmd+h Reload ~/init.js file=.
+
+<span style="color: #a0a1a7;">   #+begin_src javascript
+</span>commands[<span style="color: #50a14f;">'Evaluate: Java'</span>] = {
+ <span style="color: #50a14f;">'ctrl+x ctrl+e'</span>: E.REPL({
+   command: <span style="color: #50a14f;">'/usr/bin/jshell'</span>,     <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Ensure this points to wherever you have JShell
+</span>   prompt: <span style="color: #50a14f;">'jshell&gt;'</span>,
+   errorMarkers: [<span style="color: #50a14f;">/Error:/</span>, <span style="color: #50a14f;">/\|\s*\^-*/</span>, <span style="color: #50a14f;">/\|\s+Exception/</span>, <span style="color: #50a14f;">/\|\s+at/</span>, <span style="color: #50a14f;">/cannot find symbol/</span>, <span style="color: #50a14f;">/symbol:/</span>],
+   echo: E.overlay,   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">For notification-style output, change this to:  E.message
+</span>   stdout: result =&gt; result.includes(<span style="color: #50a14f;">' ==&gt; '</span>) ? result.replace(<span style="color: #50a14f;">'==&gt;'</span>, <span style="color: #50a14f;">'&#11157;'</span>) : <span style="color: #50a14f;">`&#11157; ${result} `</span>
+ })}
+<span style="color: #a0a1a7;">#+end_src
+</span>
+4. Now you can select any Java code and press Ctrl+X Ctrl+E to evaluate it! &#129395;
+
+   &#128064; Take another look at the above gif for what's possible &#128316;
+
+<span style="color: #0184bc; font-weight: bold;">* Wait, how does the above JavaScript work?</span>
+
+Look at <span style="text-decoration: underline;"><a href="https://github.com/alhassy/easy-extensibility/blob/main/vscodejs/index.js#L1404-L1438">the docs</a></span>!
+
+<a href="image:https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg|700|600|center">image:https://raw.githubusercontent.com/alhassy/easy-extensibility/main/graphics/repl-docs.jpeg|700|600|center</a>
+
+| &#129327; The docs are longer than the code itself &#128572; |
+
+<span style="color: #a0a1a7;"># Alternatively:</span>
+<span style="color: #a0a1a7;"># +html: &lt;script src="<a href="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Falhassy%2Feasy-extensibility%2Fblob%2Fmain%2Fvscodejs%2Findex.js%23L1404-L1438&amp;style=base16%2Fsolarized-light&amp;showBorder=off&amp;showLineNumbers=off&amp;showFileMeta=on&amp;showFullPath=on&amp;showCopy=on">https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Falhassy%2Feasy-extensibility%2Fblob%2Fmain%2Fvscodejs%2Findex.js%23L1404-L1438&amp;style=base16%2Fsolarized-light&amp;showBorder=off&amp;showLineNumbers=off&amp;showFileMeta=on&amp;showFullPath=on&amp;showCopy=on</a>"&gt;&lt;/script&gt;</span>
+
+<span style="color: #0184bc; font-weight: bold;">* Technically speaking, how is VSCode </span><span style="color: #0184bc; font-weight: bold; font-style: italic;">/itself/</span><span style="color: #0184bc; font-weight: bold;"> the REPL?</span>
+
+Let's do what math-nerds call <span style="font-style: italic;">/proof by definition-chasing:/</span>
+
+1. Definition: REPL, an alias for <span style="font-style: italic;">/command line/</span>, stands for Read-Evaluate-Print-Loop
+
+2. =Ctrl+X Ctrl+E= will echo the results in an overlay at the end of the selection ---or at the end of the line, when no explicit selection is made
+
+3. So it retains each of the read, eval, and print parts of the Read-Evaluate-Print-Loop
+
+4. Moreover, since the program doesn't terminate, you're still in the <span style="font-style: italic;">/loop part/</span> until you close VSCode
+
+Bye! &#128075; &#129395;
+</pre>
+  </body>
+</html>
