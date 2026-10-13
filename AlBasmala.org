@@ -48,11 +48,14 @@
 ;; Force the MELPA-installed copy; init.el may have loaded a local dev
 ;; version with a different (buggy) API.
 (ignore-errors (unload-feature 'org-special-block-extras t))
-(when-let* ((elpa-ospe (car (directory-files
-                              (expand-file-name "elpa" user-emacs-directory)
-                              t "^org-special-block-extras-[0-9]"))))
+(when-let* ((elpa-ospe (car (last (directory-files ;; Newest: MELPA versions are dates, so they sort.
+                                    package-user-dir
+                                    t "^org-special-block-extras-[0-9]")))))
   (load (expand-file-name "org-special-block-extras" elpa-ospe) nil :nomessage))
 (use-package org-special-block-extras :ensure t :demand t)
+;; The `blog' backend derives from `html'; ospe ≥ 20261013 renders its blocks for derived backends.
+(unless (fboundp 'org--base-backend)
+  (user-error "AlBasmala needs org-special-block-extras ≥ 20261013; M-x package-upgrade it"))
 (require 'xml)  ;; xml-escape-string for blog--make-one-rss-feed
 (require 'ox-extra)
 (ox-extras-activate '(ignore-headlines))
@@ -95,7 +98,7 @@ Here are some notable features of my blog.
   .org file
      │
      ▼  (C-x C-s, after-save-hook)
-  blog--export-to-file 'blog  ← header/footer/image/tags via the blog backend;
+  org-export-to-file 'blog    ← header/footer/image/tags via the blog backend;
      │                           blog--style-setup wraps the abstract
      ▼
      │
@@ -106,7 +109,7 @@ Here are some notable features of my blog.
      │
      ▼
   CI: blog-publish-all        ← iterates all .org files
-        ├── standalone  → blog--export-to-file 'blog
+        ├── standalone  → org-export-to-file 'blog
         └── multiple    → blog--publish-single-subtree × N headings
                               ├── synthesize temp .org
                               ├── run export
@@ -312,27 +315,12 @@ refuse to publish: its URL would change on every export."
   (let ((blog--current-headline headline))
     (org-html-headline headline contents info)))
 
-(defvar blog--exporting nil
-  "The backend `blog--export-to-file' is exporting with, else nil.")
-
-(defun blog--export-to-file (backend file)
-  "Export the current buffer to FILE with BACKEND (=blog= or =blog-page=), presented to Org as `html'.
-
-org-special-block-extras ≤ 20250715 renders its blocks only when (equal backend
-'html), so under the name =blog= every box and details block would vanish.  An
-empty backend /named/ `html' whose parent is BACKEND inherits all of BACKEND's
-transcoders, options, and filters, yet ospe sees `html'.  Axe the masquerade,
-in favour of plain (org-export-to-file BACKEND FILE), once ospe's switch to
-`org-export-derived-backend-p' reaches MELPA."
-  (let ((blog--exporting backend))
-    (org-export-to-file (org-export-create-backend :name 'html :parent backend) file)))
-
-(defun blog--style-setup (_backend)
+(defun blog--style-setup (backend)
   "Wrap the “* Abstract” section in an abstract block, for =blog= exports only.
 
 (The abstract is an ordinary section in the source, so this is the one thing that
 must happen before parsing; everything else lives in the =blog= backend.)"
-  (when (eq blog--exporting 'blog)
+  (when (org-export-derived-backend-p backend 'blog)
     (goto-char (point-min))
     ;; Previewing a narrowed subtree: links to the rest of the file are expected to dangle.
     (when (buffer-narrowed-p) (insert "#+options: broken-links:t\n"))
@@ -417,7 +405,7 @@ Called from the buffer-local after-save-hook installed by blog-preview.
 Mirrors blog-preview-subtree but for files without #+article_style: multiple."
   (let* ((html (concat (file-name-sans-extension buffer-file-name) ".html")))
     (message "=> Previewing standalone %s..." (buffer-name))
-    (blog--export-to-file 'blog html)
+    (org-export-to-file 'blog html)
     (when (file-exists-p html)
       (blog--show-preview (concat "file://" html)))))
 
@@ -1897,7 +1885,7 @@ the relevant subset of blog-posts — no copy-then-delete."
   (cl-flet ((export-page (posts greeting dest rss)
                (let ((buf (blog--make-page-buffer posts greeting dest rss)))
                  (unwind-protect
-                     (with-current-buffer buf (blog--export-to-file 'blog-page (org-export-output-file-name ".html")))
+                     (with-current-buffer buf (org-export-to-file 'blog-page (org-export-output-file-name ".html")))
                    (with-current-buffer buf (set-buffer-modified-p nil))
                    (kill-buffer buf)))))
     (export-page blog-posts
@@ -3061,7 +3049,7 @@ file-level keywords so that blog--style-setup runs unchanged."
           ;;    `blog-publish-all'; nothing else copies it there, so CI would never deploy it.
           (let* ((html-out (expand-file-name (concat slug ".html") blog-publish-directory)))
             (with-current-buffer tmp-buf
-              (blog--export-to-file 'blog html-out)))
+              (org-export-to-file 'blog html-out)))
 
           ;; 4. Per-article colourised source: htmlize the subtree narrowed copy.
           (blog--htmlize-subtree heading-point slug))
@@ -3324,7 +3312,7 @@ Dispatches on #+article_style: per file —
           ;; Export directly to public/<base>.html so that #+export_file_name:
           ;; entries pointing at ~/blog/ (valid locally, absent on CI) never
           ;; become the output destination.
-          (blog--export-to-file 'blog target)))))
+          (org-export-to-file 'blog target)))))
   (blog-make-index-page)
   (blog--make-rss-feed)
   (blog--sync-assets))
@@ -3473,7 +3461,9 @@ Reports orphans as a hard error in CI (noninteractive) and a warning interactive
 
 This block /is/ the workflow: it tangles to =.github/workflows/ci.yml=, so a CI
 workaround cannot land without its explanation sitting right here.  One =build=
-job checks out =master=, installs the few packages we need, tangles this file
+job checks out =master=, installs the few packages we need ---upgrading a cached
+org-special-block-extras older than 20261013.211, whose blocks the derived =blog=
+backend relies on--- tangles this file
 ---=AlBasmala.el= plus the generated =resources/*.css=--- loads the result, and runs
 =blog-publish-all=, which validates slugs before writing a single page.  On pushes
 to =master=, =public/= is then force-pushed to =gh-pages=.
@@ -3525,7 +3515,8 @@ jobs:
             --eval "(setq package-archives '((\"melpa\" . \"https://melpa.org/packages/\")))" \
             --eval "(package-initialize)" \
             --eval "(unless (file-exists-p (expand-file-name \"archives/melpa\" package-user-dir)) (package-refresh-contents))" \
-            --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))"
+            --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))" \
+            --eval "(unless (package-installed-p 'org-special-block-extras '(20261013 211)) (package-refresh-contents) (package-upgrade 'org-special-block-extras))"
 
       - name: Build all articles
         run: |
