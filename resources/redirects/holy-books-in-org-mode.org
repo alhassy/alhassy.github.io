@@ -1,0 +1,1749 @@
+#+PROPERTY: header-args:emacs-lisp :tangle holy-books.el :exports code
+#+PROPERTY: header-args :eval never-export
+
+# MA: To reuse this setup for other projects: M-% holy-books ⟪new-pacakge-name⟫
+# For tests, update the variable “needed-libraries”
+
+# (progn (org-babel-tangle-file "holy-books.org") (load-file "holy-books.el") (holy-books-mode) )
+
+# (load-file "~/blog/AlBasmala.el")
+# (require 'org-static-blog)
+
+
+* Lisp Package Preamble                                            :noexport:
+  :PROPERTIES:
+  :CUSTOM_ID: Preamble
+  :END:
+#+BEGIN_SRC emacs-lisp  :noweb yes
+;;; holy-books.el --- Org-mode links/tooltips/lookups for Quran & Bible  -*- lexical-binding: t; -*-
+
+;; Copyright (c) 2021-2026 Musa Al-hassy
+
+;; Author: Musa Al-hassy <alhassy@gmail.com>
+;; Version: 26.10.14
+;; Package-Requires: ((s "1.12.0") (dash "2.16.0") (emacs "27.1") (org "9.1"))
+;; Keywords: quran, bible, links, tooltips, convenience, comm, hypermedia
+;; Repo: https://github.com/alhassy/holy-books
+;; Homepage: https://alhassy.github.io/holy-books/
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This library provides common desirable features using the Org interface for
+;; when writing about the Quran and the Bible:
+;;
+;; 0. Links “quran:chapter:verse|colour|size|no-info-p”, or just “quran:chapter:verse”
+;;    for retrieving a verse from the Quran. Use “Quran:chapter:verse” to HTML export
+;;    as a tooltip. The particular translation can be selected by altering the
+;;    HOLY-BOOKS-QURAN-TRANSLAITON variable.
+;;
+;; 1. Likewise, “bible:book:chapter:verse”.
+;;    The particular version can be selected by altering the
+;;    HOLY-BOOKS-BIBLE-VERSION variable.
+;;
+;; 2. Two functions, HOLY-BOOKS-QURAN and HOLY-BOOKS-BIBLE that do the heavy
+;;    work of the link types.
+;;
+;; 3. A link type to produce the Arabic basmallah; e.g., “basmala:darkgreen|20px|span”.
+;;
+;; Minimal Working Example:
+;;
+;; Sometimes I want to remember the words of the God of Abraham. In English Bibles,
+;; His name is “Elohim”, whereas in Arabic Bibles and the Quran, His name is
+;; “Allah”. We can use links to quickly access them, such as Quran:7:157|darkgreen
+;; and bible:Deuteronomy:18:18-22|darkblue.  Arab-speaking Christians and Muslims
+;; use the Unicode symbol [[green:ﷲ]] to refer to Him ---e.g., they would write ﷲ ﷳ ,
+;; “Allah akbar”, to declare the greatness of God-- and, as the previous passage
+;; says “in the name of the Lord”, there is a nice calligraphic form that is used
+;; by Arabic speakers when starting a task, namely [[basmala:darkgreen|20px|span]]
+;; ---this is known as the ‘basmalallah’, which is Arabic for “name of God”.
+;; (Using capitalised ‘Quran:⋯’ and ‘Bible:⋯’ results in tooltips.)
+;;
+;; This file has been tangled from a literate, org-mode, file.
+
+;;; Code:
+
+;; String and list manipulation libraries
+;; https://github.com/magnars/dash.el
+;; https://github.com/magnars/s.el
+
+(require 's)               ;; “The long lost Emacs string manipulation library”
+(require 'dash)            ;; “A modern list library for Emacs”
+(require 'cl-lib)          ;; New Common Lisp library; ‘cl-???’ forms.
+(require 'org)
+(require 'url)
+
+(defvar url-http-end-of-headers)
+(defun holy-books--fetch (url)
+  "URL ↦ the body of its response, decoded as UTF-8."
+  (with-current-buffer (url-retrieve-synchronously url t t 30)
+    (prog1 (decode-coding-string (buffer-substring (1+ url-http-end-of-headers) (point-max)) 'utf-8)
+      (kill-buffer))))
+
+(defconst holy-books-version (package-get-version))
+(defun holy-books-version ()
+  "Print the current holy-books version in the minibuffer."
+  (interactive)
+  (message holy-books-version))
+
+<<forward-decls>>
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :noweb yes
+;;;###autoload
+(define-minor-mode holy-books-mode
+    "Org-mode links, tooltips, and Lisp look-ups for the Quran & Bible."
+  nil nil nil)
+#+END_SRC
+
+The following more elaborate version is for when the package has stuff
+to enable/disable when being toggled.
+#+BEGIN_SRC emacs-lisp :noweb yes :tangle no
+;;;###autoload
+(define-minor-mode holy-books-mode
+    "Org-mode links, tooltips, and Lisp look-ups for the Quran & Bible."
+  nil nil nil
+  (if holy-books-mode
+      (progn
+        <<enable-mode>>
+      ) ;; Must be on a new line; I'm using noweb-refs
+    <<disable-mode>>
+    )) ;; Must be on a new line; I'm using noweb-refs
+#+END_SRC
+
+#+RESULTS:
+
+# With noweb, we need those new lines; otherwise in “x <<y>> z” results in every
+# line of <<y>> being prefixed by x and postfixed by z.
+# #
+# See https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like
+
+* Testing :noexport:
+  :PROPERTIES:
+  :CUSTOM_ID: Testing
+  :END:
+#+begin_src emacs-lisp :tangle tests.el
+;; Dependencies ---`s', `dash', and `snap' (with its `fancy-C-x-C-e')--- are installed by the CI workflow below;
+;; snap is not yet on MELPA, so we expect clones of it in ~/snap and ~/fancy-C-x-C-e.
+(package-initialize)
+(add-to-list 'load-path (expand-file-name "~/snap"))
+(add-to-list 'load-path (expand-file-name "~/fancy-C-x-C-e"))
+(require 'snap)
+(snap-define-fixture deftest) ;; The identity fixture: plain ERT tests with natural-language names
+(require 's)
+
+(load-file "holy-books.el")
+
+;; Run all with M-x ert RET (tag html-export) RET; refresh a stale :html with C-u C-x C-e on its test.
+(snap-define-relation html-export (org html)
+  "Exporting the ORG snippet, body-only, yields HTML."
+  (let ((actual (org-export-string-as org 'html :body-only)))
+    (should (equal html actual))
+    (list :html actual)))
+
+(require 'ox-md)
+(snap-define-relation md-export (org md)
+  "Exporting the ORG snippet, body-only and without a table of contents, yields Markdown MD."
+  (let ((actual (org-export-string-as org 'md :body-only '(:with-toc nil))))
+    (should (equal md actual))
+    (list :md actual)))
+#+end_src
+
+--------------------------------------------------------------------------------
+
+The following creates the “Github Actions Workflow” file;
+this way, Github will run your tests every time you commit ^_^
+
+Below I'm using =main= as the /name/ of the main branch;
+if you use =master= as the name, then change that
+or otherwise the tests will not trigger automatically
+after push!
+
+This file is the single source: =holy-books.el=, =tests.el=, and the workflow itself are
+tangled from it.  So CI first re-tangles and fails if =git diff --exit-code= finds the
+committed files differ ---say, a pull request that patched =holy-books.el= directly.  The
+fix is always the same: make the change here, tangle, and commit both.
+
+#+begin_src shell :tangle .github/workflows/main.yml :mkdirp yes
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: purcell/setup-emacs@v8.0
+        with:
+          version: 30.1
+
+      # holy-books.org is the source; fail if the committed tangled files have drifted from it.
+      - name: Check the tangle is a fixpoint
+        run: |
+          emacs -Q --batch --eval "(progn (require 'ob-tangle) (org-babel-tangle-file \"holy-books.org\"))"
+          git diff --exit-code
+
+      # snap is not yet on MELPA; tests.el expects it, and its fancy-C-x-C-e dependency, in ~
+      - name: Fetch snap
+        run: |
+          git clone --depth 1 https://github.com/alhassy/snap ~/snap
+          git clone --depth 1 https://github.com/alhassy/fancy-C-x-C-e ~/fancy-C-x-C-e
+
+      - name: Install MELPA dependencies
+        run: |
+          emacs --batch --eval "(progn
+            (require 'package)
+            (add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)
+            (package-initialize) (package-refresh-contents)
+            (dolist (p '(s dash)) (package-install p)))"
+
+      - name: Run tests
+        run: emacs --batch -l ert -l tests.el -f ert-run-tests-batch-and-exit
+#+end_src
+
+      # Upload coverage
+      - uses: codecov/codecov-action@v1
+
+* Abstract :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: Abstract
+  :END:
+
+#+begin_center
+
+badge:Emacs|27|green|https://www.gnu.org/software/emacs|gnu-emacs
+badge:Org|9.4|blue|https://orgmode.org|gnu
+
+#+html: <span>
+badge:holy-books|1.4|informational|https://github.com/alhassy/holy-books|Gnu-Emacs
+
+# #+html: <a href="https://melpa.org/#/holy-books"><img alt="MELPA" src="https://melpa.org/packages/holy-books-badge.svg"/></a>
+# #+html: </span>
+
+[[badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs][gnu 3 license badge]]
+[[badge:docs|literate|success|https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like|read-the-docs][read-the-docs badge]]
+tweet:https://github.com/alhassy/holy-books
+badge:contributions|welcome|green|https://github.com/alhassy/holy-books/issues
+
+badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
+badge:|buy_me_a coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+
+badge:Exports|HTML&Markdown
+
+#+begin_export html
+<a href="https://github.com/alhassy/holy-books/blob/main/tests.el"><img src="https://github.com/alhassy/holy-books/actions/workflows/main.yml/badge.svg"></a>
+#+end_export
+
+#+end_center
+
+#+begin_center
+*Abstract*
+#+end_center
+#+begin_quote
+
+Let's use Org-mode links to look-up Quranic and Biblical verses!
+
+Links such as ~quran:chapter:verse~ will, upon export, retrieve
+the requested verse and inline it in the resulting text.
+
+For now, only the Quran and the Bible are supported.
+#+end_quote
+
+* Short Example :ignore:
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-Short-Example
+  :END:
+/Super short example.../
+
+#+begin_org-demo :source-color green :result-color white :style sequential :sep ""
+  Sometimes I start a task with the Lord's name--- basmala:darkgreen|20px|span
+  ---which means quran:1:1|darkgreen.
+  My friends like to say bible:Genesis:1:3|darkblue.
+#+end_org-demo
+#+begin_box Tooltips: Using Capitalisation ‘Quran:⋯’ and ‘Bible:⋯’ :background-color custard
+   Sometimes I start a task with the Lord's name--- basmala:darkgreen|20px|span
+  ---which means Quran:1:1|darkgreen.
+  My friends like to say Bible:Genesis:1:3|darkblue.
+#+end_box
+* Longer Example
+  :PROPERTIES:
+  :CUSTOM_ID: Longer-Example
+  :END:
+#+begin_org-demo :style sequential :source-color green :result-color white :sep ""
+ Sometimes I want to remember the words of the God of Abraham. In English Bibles,
+ His name is “Elohim”, whereas in Arabic Bibles and the Quran, His name is
+ “Allah”. We can use links to quickly access them, such as quran:7:157|darkgreen
+ and bible:Deuteronomy:18:18-22|darkblue.  Arab-speaking Christians and Muslims
+ use the Unicode symbol [[green:ﷲ]] to refer to Him ---e.g., they would write ﷲ ﷳ ,
+ “Allah akbar”, to declare the greatness of God-- and, as the previous passage
+ says “in the name of the Lord”, there is a nice calligraphic form that is used
+ by Arabic speakers when starting a task, namely [[basmala:darkgreen|20px|span]]
+ ---this is known as the ‘basmalallah’, which is Arabic for “name of God”.
+ (Using capitalised ‘Quran:⋯’ and ‘Bible:⋯’ results in tooltips.)
+#+end_org-demo
+#+begin_box Tooltips: Using Capitalisation ‘Quran:⋯’ and ‘Bible:⋯’ :background-color custard
+ Sometimes I want to remember the words of the God of Abraham. In English Bibles,
+ His name is “Elohim”, whereas in Arabic Bibles and the Quran, His name is
+ “Allah”. We can use links to quickly access them, such as Quran:7:157|darkgreen
+ and Bible:Deuteronomy:18:18-22|darkblue.  Arab-speaking Christians and Muslims
+ use the Unicode symbol [[green:ﷲ]] to refer to Him ---e.g., they would write ﷲ ﷳ ,
+ “Allah akbar”, to declare the greatness of God-- and, as the previous passage
+ says “in the name of the Lord”, there is a nice calligraphic form that is used
+ by Arabic speakers when starting a task, namely [[basmala:darkgreen|20px|span]]
+ ---this is known as the ‘basmalallah’, which is Arabic for “name of God”.
+ (Using capitalised ‘Quran:⋯’ and ‘Bible:⋯’ results in tooltips.)
+#+end_box
+
+* Yet Another Example
+  :PROPERTIES:
+  :CUSTOM_ID: Yet-Another-Example
+  :END:
+
+quran:12:1
+quran:12:2
+quran:12:3
+quran:12:4
+quran:12:5
+
+--------------------------------------------------------------------------------
+
+
+Quran:12:1
+Quran:12:2
+Quran:12:3
+Quran:12:4
+Quran:12:5
+
+* basmala ﷽
+  :PROPERTIES:
+  :CUSTOM_ID:
+  :END:
+
+The [[https://en.wikipedia.org/wiki/Basmala][basmala]] is Arabic for “in the name of God”, and the Unicode symbol ﷽ says
+“In the name of Allah, the most gracious, the most merciful”.
+
+One could wrap this up in HTML tags to get the desired style, as in
+#+begin_src org :tangle no
+,#+html: <center style="color:darkgreen;font-size:60px;padding:25px">
+﷽
+,#+html: </center>
+#+end_src
+
+Much better would be ~basmala:darkgreen|20px|span~, resulting in the inline
+basmala:darkgreen|20px|span; whereas just ~basmala:darkgreen~ results in the
+centred form: basmala:darkgreen.
+
+ #+begin_src emacs-lisp
+(org-link-set-parameters
+  "basmala"
+  :follow (lambda (label) nil)
+  :export (lambda (label description backend)
+            (-let [(color size html-tag) (s-split "|" label)]
+              (format
+               "<%s style=\"color:%s;font-size:%s;padding:25px\">
+                     ﷽
+                </%s>"
+               (or html-tag "center")
+               (or color 'darkgreen)
+               (or size '60px)
+               (or html-tag "center"))))
+  :face '(:foreground "green" :weight bold))
+ #+end_src
+
+#+begin_details Tests
+#+begin_src emacs-lisp :tangle tests.el
+(define-html-export-test "basmala with no arguments has an empty colour"
+  :org "[[basmala:]]"
+  :html "<p>
+<center style=\"color:;font-size:60px;padding:25px\">
+                     ﷽
+                </center></p>
+")
+
+(define-html-export-test "basmala with a colour argument uses it"
+  :org "basmala:green"
+  :html "<p>
+<center style=\"color:green;font-size:60px;padding:25px\">
+                     ﷽
+                </center></p>
+")
+#+end_src
+#+end_details
+
+* holy-books-quran
+  :PROPERTIES:
+  :CUSTOM_ID: holy-books-quran
+  :END:
+
+#+begin_details Test: The third verse of each chapter of the Quran
+link-here:Example-The-third-verse-of-each-chapter-of-the-Quran
+
+ #+begin_src emacs-lisp :wrap export html :tangle no :exports both
+(s-join "\n\n<hr>" (--map (format "%s ∷ %s"
+                                  (cl-getf (cl-getf holy-books-quran-cache it) :name)
+                                  (holy-books-quran it 3)) (number-sequence 1 114)))
+ #+end_src
+
+ #+RESULTS:
+ #+begin_export html
+ Al-fatihah The Opener ∷   the Most Compassionate, Most Merciful,
+
+ <hr>Al-baqarah The Cow ∷   who believe in the unseen, establish prayer, and donate from what We have provided for them,
+
+ <hr>Ali &#39;imran Family Of Imran آل ∷   He has revealed to you ˹O Prophet˺ the Book in truth, confirming what came before it, as He revealed the Torah and the Gospel
+
+ <hr>An-nisa The Women ∷   If you fear you might fail to give orphan women their ˹due˺ rights ˹if you were to marry them˺, then marry other women of your choice—two, three, or four. But if you are afraid you will fail to maintain justice, then ˹content yourselves with˺ one This way you are less likely to commit injustice.
+
+ <hr>Al-ma&#39;idah The Table Spread ∷   Forbidden to you are carrion, blood, and swine; what is slaughtered in the name of any other than Allah; what is killed by strangling, beating, a fall, or by being gored to death; what is partly eaten by a predator unless you slaughter it; and what is sacrificed on altars. You are also forbidden to draw lots for decisions. This is all evil. Today the disbelievers have given up all hope of ˹undermining˺ your faith. So do not fear them; fear Me! Today I have perfected your faith for you, completed My favour upon you, and chosen Islam as your way. But whoever is compelled by extreme hunger—not intending to sin—then surely Allah is All-Forgiving, Most Merciful.
+
+ <hr>Al-an&#39;am The Cattle ∷   He is the Only True God in the heavens and the earth. He knows whatever you conceal and whatever you reveal, and knows whatever you do.
+
+ <hr>Al-a&#39;raf The Heights ∷   Follow what has been sent down to you from your Lord, and do not take others as guardians besides Him. How seldom are you mindful!
+
+ <hr>Al-anfal The Spoils Of War ∷   ˹They are˺ those who establish prayer and donate from what We have provided for them.
+
+ <hr>At-tawbah The Repentance ∷   A declaration from Allah and His Messenger ˹is made˺ to all people on the day of the greater pilgrimage that Allah and His Messenger are free of the polytheists. So if you ˹pagans˺ repent, it will be better for you. But if you turn away, then know that you will have no escape from Allah. And give good news ˹O Prophet˺ to the disbelievers of a painful punishment.
+
+ <hr>Yunus Jonah ∷   Surely your Lord is Allah Who created the heavens and the earth in six Days, then established Himself on the Throne, conducting every affair. None can intercede except by His permission. That is Allah—your Lord, so worship Him ˹alone˺. Will you not then be mindful?
+
+ <hr>Hud Hud ∷   And seek your Lord’s forgiveness and turn to Him in repentance. He will grant you a good provision for an appointed term and graciously reward the doers of good. But if you turn away, then I truly fear for you the torment of a formidable Day.
+
+ <hr>Yusuf Joseph ∷   We relate to you ˹O Prophet˺ the best of stories through Our revelation of this Quran, though before this you were totally unaware ˹of them˺.
+
+ <hr>Ar-ra&#39;d The Thunder ∷   And He is the One Who spread out the earth and placed firm mountains and rivers upon it, and created fruits of every kind in pairs. He covers the day with night. Surely in this are signs for those who reflect.
+
+ <hr>Ibrahim Abraham ∷   ˹They are˺ the ones who favour the life of this world over the Hereafter and hinder ˹others˺ from the Way of Allah, striving to make it ˹appear˺ crooked. It is they who have gone far astray.
+
+ <hr>Al-hijr The Rocky Tract ∷   ˹So˺ let them eat and enjoy themselves and be diverted by ˹false˺ hope, for they will soon know.
+
+ <hr>An-nahl The Bee ∷   He created the heavens and the earth for a purpose. Exalted is He above what they associate with Him ˹in worship˺!
+
+ <hr>Al-isra The Night Journey ∷   ˹O˺ descendants of those We carried with Noah ˹in the Ark˺! He was indeed a grateful servant.”
+
+ <hr>Al-kahf The Cave ∷   in which they will remain forever;
+
+ <hr>Maryam Mary ∷   when he cried out to his Lord privately,
+
+ <hr>Taha Ta-ha ∷   but as a reminder to those in awe ˹of Allah˺.
+
+ <hr>Al-anbya The Prophets ∷   with their hearts ˹totally˺ distracted. The evildoers would converse secretly, ˹saying,˺ “Is this ˹one˺ not human like yourselves? Would you fall for ˹this˺ witchcraft, even though you can ˹clearly˺ see?”
+
+ <hr>Al-hajj The Pilgrimage ∷   ˹Still˺ there are some who dispute about Allah without knowledge, and follow every rebellious devil.
+
+ <hr>Al-mu&#39;minun The Believers ∷   those who avoid idle talk;
+
+ <hr>An-nur The Light ∷   A male fornicator would only marry a female fornicator or idolatress. And a female fornicator would only be married to a fornicator or idolater. This is ˹all˺ forbidden to the believers.
+
+ <hr>Al-furqan The Criterion ∷   Yet they have taken besides Him gods who cannot create anything but are themselves created. Nor can they protect or benefit themselves. Nor can they control life, death, or resurrection.
+
+ <hr>Ash-shu&#39;ara The Poets ∷   Perhaps you ˹O Prophet˺ will grieve yourself to death over their disbelief.
+
+ <hr>An-naml The Ant ∷   ˹those˺ who establish prayer, pay alms-tax, and have sure faith in the Hereafter.
+
+ <hr>Al-qasas The Stories ∷   We narrate to you ˹O Prophet˺ part of the story of Moses and Pharaoh in truth for people who believe.
+
+ <hr>Al-&#39;ankabut The Spider ∷   We certainly tested those before them. And ˹in this way˺ Allah will clearly distinguish between those who are truthful and those who are liars.
+
+ <hr> ∷   in a nearby land. Yet following their defeat, they will triumph
+
+ <hr>Luqman Luqman ∷   ˹It is˺ a guide and mercy for the good-doers—
+
+ <hr>As-sajdah The Prostration ∷   Or do they say, “He has fabricated it!”? No! It is the truth from your Lord in order for you to warn a people to whom no warner has come before you, so they may be ˹rightly˺ guided.
+
+ <hr>Al-ahzab The Combined Forces ∷   And put your trust in Allah, for Allah is sufficient as a Trustee of Affairs.
+
+ <hr>Saba Sheba ∷   The disbelievers say, “The Hour will never come to us.” Say, ˹O Prophet,˺ “Yes—by my Lord, the Knower of the unseen—it will certainly come to you!” Not ˹even˺ an atom’s weight is hidden from Him in the heavens or the earth; nor anything smaller or larger than that, but is ˹written˺ in a perfect Record.
+
+ <hr>Fatir Originator ∷   O humanity! Remember Allah’s favours upon you. Is there any creator other than Allah who provides for you from the heavens and the earth? There is no god ˹worthy of worship˺ except Him. How can you then be deluded ˹from the truth˺?
+
+ <hr>Ya-sin Ya Sin ∷   You ˹O Prophet˺ are truly one of the messengers
+
+ <hr>As-saffat Those Who Set The Ranks ∷   and those who recite the Reminder!
+
+ <hr>Sad The Letter &quot;saad&quot; ∷   ˹Imagine˺ how many peoples We destroyed before them, and they cried out when it was too late to escape.
+
+ <hr>Az-zumar The Troops ∷   Indeed, sincere devotion is due ˹only˺ to Allah. As for those who take other lords besides Him, ˹saying,˺ “We worship them only so they may bring us closer to Allah,” surely Allah will judge between all regarding what they differed about. Allah certainly does not guide whoever persists in lying and disbelief.
+
+ <hr>Ghafir The Forgiver ∷   the Forgiver of sin and Accepter of repentance, the Severe in punishment, and Infinite in bounty. There is no god ˹worthy of worship˺ except Him. To Him ˹alone˺  is the final return.
+
+ <hr>Fussilat Explained In Detail ∷   ˹It is˺ a Book whose verses are perfectly explained—a Quran in Arabic for people who know,
+
+ <hr>Ash-shuraa The Consultation ∷   And so you ˹O Prophet˺ are sent revelation, just like those before you, by Allah—the Almighty, All-Wise.
+
+ <hr>Az-zukhruf The Ornaments Of Gold ∷   Certainly, We have made it a Quran in Arabic so perhaps you will understand.
+
+ <hr>Ad-dukhan The Smoke ∷   Indeed, We sent it down on a blessed night, for We always warn ˹against evil˺.
+
+ <hr>Al-jathiyah The Crouching ∷   Surely in ˹the creation of˺ the heavens and the earth are signs for the believers.
+
+ <hr>Al-ahqaf The Wind-curved Sandhills ∷   We only created the heavens and the earth and everything in between for a purpose and an appointed term. Yet the disbelievers are turning away from what they have been warned about.
+
+ <hr>Muhammad Muhammad ∷   This is because the disbelievers follow falsehood, while the believers follow the truth from their Lord. This is how Allah shows people their true state ˹of faith˺.
+
+ <hr>Al-fath The Victory ∷   and so that Allah will help you tremendously.
+
+ <hr>Al-hujurat The Rooms ∷   Indeed, those who lower their voices in the presence of Allah’s Messenger are the ones whose hearts Allah has refined for righteousness. They will have forgiveness and a great reward.
+
+ <hr>Qaf The Letter &quot;qaf&quot; ∷   ˹Will we be returned to life,˺ when we are dead and reduced to dust? Such a return is impossible.”
+
+ <hr>Adh-dhariyat The Winnowing Winds ∷   and ˹the ships˺ gliding with ease,
+
+ <hr>At-tur The Mount ∷   on open pages ˹for all to read˺!
+
+ <hr>An-najm The Star ∷   Nor does he speak of his own whims.
+
+ <hr>Al-qamar The Moon ∷   They rejected ˹the truth˺ and followed their own desires—and every matter will be settled—
+
+ <hr>Ar-rahman The Beneficent ∷   created humanity,
+
+ <hr>Al-waqi&#39;ah The Inevitable ∷   It will debase ˹some˺ and elevate ˹others˺.
+
+ <hr>Al-hadid The Iron ∷   He is the First and the Last, the Most High and Most Near, and He has ˹perfect˺ knowledge of all things.
+
+ <hr>Al-mujadila The Pleading Woman ∷   Those who divorce their wives in this manner, then ˹wish to˺ retract what they said, must free a slave before they touch each other. This ˹penalty˺ is meant to deter you. And Allah is All-Aware of what you do.
+
+ <hr>Al-hashr The Exile ∷   Had Allah not decreed exile for them, He would have certainly punished them in this world. And in the Hereafter they will suffer the punishment of the Fire.
+
+ <hr>Al-mumtahanah She That Is To Be Examined ∷   Neither your relatives nor children will benefit you on Judgment Day—He will decide between you ˹all˺. For Allah is All-Seeing of what you do.
+
+ <hr>As-saf The Ranks ∷   How despicable it is in the sight of Allah that you say what you do not do!
+
+ <hr>Al-jumu&#39;ah The Congregation, Friday ∷   along with others of them who have not yet joined them ˹in faith˺. For He is the Almighty, All-Wise.
+
+ <hr>Al-munafiqun The Hypocrites ∷   This is because they believed and then abandoned faith. Therefore, their hearts have been sealed, so they do not comprehend.
+
+ <hr>At-taghabun The Mutual Disillusion ∷   He created the heavens and the earth for a purpose. He shaped you ˹in the womb˺, perfecting your form. And to Him is the final return.
+
+ <hr>At-talaq The Divorce ∷   and provide for them from sources they could never imagine. And whoever puts their trust in Allah, then He ˹alone˺ is sufficient for them. Certainly Allah achieves His Will. Allah has already set a destiny for everything.
+
+ <hr>At-tahrim The Prohibition ∷   ˹Remember˺ when the Prophet had ˹once˺ confided something to one of his wives, then when she disclosed it ˹to another wife˺ and Allah made it known to him, he presented ˹to her˺ part of what was disclosed and overlooked a part. So when he informed her of it, she exclaimed, “Who told you this?” He replied, “I was informed by the All-Knowing, All-Aware.”
+
+ <hr>Al-mulk The Sovereignty ∷   ˹He is the One˺ Who created seven heavens, one above the other. You will never see any imperfection in the creation of the Most Compassionate. So look again: do you see any flaws?
+
+ <hr>Al-qalam The Pen ∷   You will certainly have a never-ending reward.
+
+ <hr>Al-haqqah The Reality ∷   And what will make you realize what the Inevitable Hour is?
+
+ <hr>Al-ma&#39;arij The Ascending Stairways ∷   from Allah, Lord of pathways of ˹heavenly˺ ascent,
+
+ <hr>Nuh Noah ∷   worship Allah ˹alone˺, fear Him, and obey me.
+
+ <hr>Al-jinn The Jinn ∷   ˹Now, we believe that˺ our Lord—Exalted is His Majesty—has neither taken a mate nor offspring,
+
+ <hr>Al-muzzammil The Enshrouded One ∷   ˹pray˺ half the night, or a little less,
+
+ <hr>Al-muddaththir The Cloaked One ∷   Revere your Lord ˹alone˺.
+
+ <hr>Al-qiyamah The Resurrection ∷   Do people think We cannot reassemble their bones?
+
+ <hr>Al-insan The Man ∷   We already showed them the Way, whether they ˹choose to˺ be grateful or ungrateful.
+
+ <hr>Al-mursalat The Emissaries ∷   and those scattering ˹rainclouds˺ widely!
+
+ <hr>An-naba The Tidings ∷   over which they disagree.
+
+ <hr>An-nazi&#39;at Those Who Drag Forth ∷   and those gliding ˹through heavens˺ swiftly,
+
+ <hr>&#39;abasa He Frowned ∷   You never know ˹O Prophet˺, perhaps he may be purified,
+
+ <hr>At-takwir The Overthrowing ∷   and when the mountains are blown away,
+
+ <hr>Al-infitar The Cleaving ∷   and when the seas burst forth,
+
+ <hr>Al-mutaffifin The Defrauding ∷   but give less when they measure or weigh for buyers.
+
+ <hr>Al-inshiqaq The Sundering ∷   and when the earth is flattened out,
+
+ <hr>Al-buruj The Mansions Of The Stars ∷   and the witness and what is witnessed!
+
+ <hr>At-tariq The Nightcommer ∷   ˹It is˺ the star of piercing brightness.
+
+ <hr>Al-a&#39;la The Most High ∷   and Who ordained precisely and inspired accordingly,
+
+ <hr>Al-ghashiyah The Overwhelming ∷   ˹totally˺ overburdened, exhausted,
+
+ <hr>Al-fajr The Dawn ∷   and the even and the odd,
+
+ <hr>Al-balad The City ∷   and by every parent and ˹their˺ child!
+
+ <hr>Ash-shams The Sun ∷   and the day as it unveils it,
+
+ <hr>Al-layl The Night ∷   And by ˹the One˺ Who created male and female!
+
+ <hr>Ad-duhaa The Morning Hours ∷   Your Lord ˹O Prophet˺ has not abandoned you, nor has He become hateful ˹of you˺.
+
+ <hr>Ash-sharh The Relief ∷   which weighed so heavily on your back,
+
+ <hr>At-tin The Fig ∷   and this secure city ˹of Mecca˺!
+
+ <hr>Al-&#39;alaq The Clot ∷   Read! And your Lord is the Most Generous,
+
+ <hr>Al-qadr The Power ∷   The Night of Glory is better than a thousand months.
+
+ <hr>Al-bayyinah The Clear Proof ∷   containing upright commandments.
+
+ <hr>Az-zalzalah The Earthquake ∷   and humanity cries, “What is wrong with it?”—
+
+ <hr>Al-&#39;adiyat The Courser ∷   launching raids at dawn,
+
+ <hr>Al-qari&#39;ah The Calamity ∷   And what will make you realize what the Striking Disaster is?
+
+ <hr>At-takathur The Rivalry In World Increase ∷   But no! You will soon come to know.
+
+ <hr>Al-&#39;asr The Declining Day ∷   except those who have faith, do good, and urge each other to the truth, and urge each other to perseverance.
+
+ <hr>Al-humazah The Traducer ∷   thinking that their wealth will make them immortal!
+
+ <hr>Al-fil The Elephant ∷   For He sent against them flocks of birds,
+
+ <hr>Quraysh Quraysh ∷   let them worship the Lord of this ˹Sacred˺ House,
+
+ <hr>Al-ma&#39;un The Small Kindnesses ∷   and does not encourage the feeding of the poor.
+
+ <hr>Al-kawthar The Abundance ∷   Only the one who hates you is truly cut off ˹from any goodness˺.
+
+ <hr>Al-kafirun The Disbelievers ∷   nor do you worship what I worship.
+
+ <hr>An-nasr The Divine Support ∷   then glorify the praises of your Lord and seek His forgiveness, for certainly He is ever Accepting of Repentance.
+
+ <hr>Al-masad The Palm Fiber ∷   He will burn in a flaming Fire,
+
+ <hr>Al-ikhlas The Sincerity ∷   He has never had offspring, nor was He born.
+
+ <hr>Al-falaq The Daybreak ∷   and from the evil of the night when it grows dark,
+
+ <hr>An-nas The Mankind ∷   the God of humankind,
+ #+end_export
+#+end_details
+
+#+begin_details Tests
+#+begin_src emacs-lisp :tangle tests.el
+(deftest "quran looks up a verse in the default translation, The Clear Quran"
+  (should (equal (holy-books-quran 1 1) "In the Name of Allah—the Most Compassionate, Most Merciful.")))
+
+(deftest "quran falls back to the public API, and Saheeh International, when the page JSON fails"
+  (cl-letf (((symbol-function 'holy-books--quran-from-page) #'ignore))
+    (let (holy-books-quran-cache)
+      (should (equal (holy-books-quran 1 1)
+                     "In the name of Allāh, the Entirely Merciful, the Especially Merciful.")))))
+
+(deftest "quran drops footnote markers"
+  (should-not (s-contains? "<sup" (holy-books-quran 7 157))))
+
+(deftest "quran caches the chapter name alongside the verse"
+  (holy-books-quran 112 3)
+  (should (equal (cl-getf (cl-getf holy-books-quran-cache 112) :name) "Al-Ikhlas The Sincerity")))
+
+(define-html-export-test "quran link with |colour|size|no-info-p styles the verse and omits its reference"
+  :org "quran:1:1|darkgreen|30px|t"
+  :html "<p>
+<span style=\"color:darkgreen;font-size:30px;\">
+                             ﴾<em> In the Name of Allah—the Most Compassionate, Most Merciful.</em>﴿ 
+                       </span></p>
+")
+
+(define-html-export-test "Quran link is a tooltip carrying the verse and chapter name"
+  :org "Quran:1:1"
+  :html "<p>
+<abbr class=\"tooltip\"
+                             title=\"﴾<em> In the Name of Allah—the Most Compassionate, Most Merciful.</em>﴿ <br><br> Al-Fatihah The Opener <br><br> https://quran.com/1\">
+                          Quran 1:1
+                       </abbr>&emsp13;</p>
+")
+
+(define-md-export-test "quran link is a blockquote followed by its reference"
+  :org "quran:1:1"
+  :md "
+> In the Name of Allah—the Most Compassionate, Most Merciful.
+>
+> [Quran 1:1 Al-Fatihah The Opener](https://quran.com/chapter_info/1)
+
+")
+
+(define-md-export-test "Quran link is a Markdown link whose title is the verse and chapter name"
+  :org "Quran:1:1"
+  :md "[Quran 1:1](https://quran.com/1 \"In the Name of Allah—the Most Compassionate, Most Merciful. - Al-Fatihah The Opener\")
+
+")
+
+(define-html-export-test "quran link shows the verse and its chapter name"
+  :org "quran:1:1"
+  :html "<p>
+<span style=\"color:nil;font-size:nil;\">
+                             ﴾<em> In the Name of Allah—the Most Compassionate, Most Merciful.</em>﴿ <small><a href=\"https://quran.com/chapter_info/1?local=en\">Quran 1:1, Al-Fatihah The Opener</a></small>
+                       </span></p>
+")
+
+#+end_src
+#+end_details
+
+# Test all quran/* tests
+# (ert "quran/*")
+
+** holy-books-quran-cache
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-quran-cache
+   :END:
+#+begin_src emacs-lisp
+(defvar holy-books-quran-cache nil
+  "A plist storing the verses looked up by ‘holy-books-quran’ for faster reuse.
+
+Each key in the plist refers to a chapter, and the values are plists:
+Keys are verses numbers and values are the actual verses ---but there is
+a special key ‘:name’ whose value is the Arabic-English name of the chapter.")
+#+end_src
+
+** holy-books-quran-translation
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-quran-translation
+   :END:
+#+begin_src emacs-lisp
+(defvar holy-books-quran-translation "131"
+  "The translation code of the Quran; a string.
+
+Possible codes include
+
+Code  Translation
+--------------------
+131   Dr. Mustafa Khattab, The Clear Quran (Default)
+20    Saheeh International
+85    M.A.S. Abdel Haleem
+19    M. Pickthall
+22    A. Yusuf Ali
+95    A. Maududi (Tafhim commentary)
+84    T. Usmani
+203   Al-Hilali & Khan
+57    Transliteration
+
+Any translation in quran.com's “Translations” menu works; most codes are listed here:
+https://api.quran.com/api/v4/resources/translations")
+#+end_src
+
+** holy-books-quran
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-quran
+   :END:
+#+begin_src emacs-lisp
+(defun holy-books-quran (chapter verse)
+  "Lookup a verse, as a string, from the Quran.
+
+CHAPTER and VERSE are both numbers, referring to a chapter in the Quran
+and a verse it contains.
+In the associated Org link, both are treated as strings.
+
++ Lookups are stored in the variable `holy-books-quran-cache' for faster reuse.
++ Quran lookup is based on https://quran.com .
++ Examples:
+
+    ;; Get verse 2 of chapter 7 of the Quran
+    (holy-books-quran 7 2)
+
+    ;; Get English-Arabic name of 7th chapter
+    (cl-getf (cl-getf holy-books-quran 7) :name)
+
+The particular translation can be selected by altering the
+HOLY-BOOKS-QURAN-TRANSLAITON variable.
+
+--------------------------------------------------------------------------------
+
+There is an Org link form: “quran:chapter:verse|color|size|no-info-p”
+Only ‘chapter’ and ‘verse’ are mandatory; when ‘no-info-p’ is given,
+the chapter and verse numbers are not mentioned in the resulting output.
+
+Examples:
+           quran:7:157|darkgreen|30px|t
+
+           quran:7:157
+
+For now, only Org HTML export is supported.
+
+--------------------------------------------------------------------------------
+
+Finally, there is also an HTML tooltip version with a captial ‘Q’;
+it takes the same arguments but only the chapter and verse are actually used.
+E.g. Quran:7:157 results in text “Quran 7:157” with a tooltip showing the verse."
+  (unless (cl-getf (cl-getf holy-books-quran-cache chapter) verse)
+    (-let [(name . text) (or (ignore-errors (holy-books--quran-from-page chapter verse))
+                             (holy-books--quran-from-api chapter verse))]
+      (setf (cl-getf (cl-getf holy-books-quran-cache chapter) :name) name)
+      (setf (cl-getf (cl-getf holy-books-quran-cache chapter) verse)
+            (s-replace-regexp "<sup[^>]*>[^<]*</sup>" "" text)))) ;; Footnote markers
+  (cl-getf (cl-getf holy-books-quran-cache chapter) verse))
+
+;; quran.com's public API lacks some translations, such as 131, so we first read the JSON its pages embed;
+;; that is the site's internal Next.js state, not a published API, hence the fallback.
+(defun holy-books--quran-from-page (chapter verse)
+  "(chapter, verse) ↦ (chapter-name . verse-text), from the JSON embedded in quran.com's page for the verse."
+  (let-alist (let* ((page (holy-books--fetch (format "https://quran.com/%s:%s?translations=%s"
+                                                     chapter verse holy-books-quran-translation)))
+                    (json (cadr (s-match "<script id=\"__NEXT_DATA__\"[^>]*>\\(\\(?:.\\|\n\\)*?\\)</script>" page))))
+               (alist-get 'pageProps (alist-get 'props (json-parse-string json :object-type 'alist))))
+    (-when-let (text (alist-get 'text (seq-find #'always (alist-get 'translations (seq-first .versesResponse.verses)))))
+      (cons (format "%s %s" .chapterResponse.chapter.transliteratedName .chapterResponse.chapter.translatedName)
+            text))))
+
+(defun holy-books--quran-from-api (chapter verse)
+  "(chapter, verse) ↦ (chapter-name . verse-text), from quran.com's public API; if it lacks our translation, use 20."
+  (cl-labels ((api (path) (json-parse-string (holy-books--fetch (concat "https://api.quran.com/api/v4/" path))
+                                             :object-type 'alist))
+            (verse-in (translation) (thread-last (format "quran/translations/%s?verse_key=%s:%s" translation chapter verse)
+                                      (api) (alist-get 'translations) (seq-find #'always) (alist-get 'text))))
+    (let-alist (alist-get 'chapter (api (format "chapters/%s" chapter)))
+      (cons (format "%s %s" .name_simple .translated_name.name)
+            (or (verse-in holy-books-quran-translation) (verse-in "20"))))))
+#+end_src
+
+#+RESULTS:
+: holy-books-quran
+** Links: ~quran:⋯~ and ~Quran:⋯~
+   :PROPERTIES:
+   :CUSTOM_ID: Links-quran-and-Quran
+   :END:
+#+begin_src emacs-lisp
+;; quran:chapter:verse|color|size|no-info-p
+(org-link-set-parameters
+ "quran"
+ :follow (lambda (_) nil)
+ :export (lambda (label _ backend)
+           (-let* (((chapter:verse color size no-info-p) (s-split "|" label))
+                   ((chapter verse) (mapcar #'string-to-number (s-split ":" chapter:verse))))
+             (cond ((eq 'html backend)
+                    (format "<span style=\"color:%s;font-size:%s;\">
+                             ﴾<em> %s</em>﴿ %s
+                       </span>"
+                            color size
+                            (holy-books-quran chapter verse)
+                            (if no-info-p
+                                ""
+                              (format
+                               (concat
+                                "<small>"
+                                "<a href="
+                                "\"https://quran.com/chapter_info/%s?local=en\">"
+                                "Quran %s:%s, %s"
+                                "</a>"
+                                "</small>")
+                               chapter
+                               chapter
+                               verse
+                               (cl-getf (cl-getf holy-books-quran-cache chapter)
+                                        :name)))))
+                   ((eq 'md backend)
+                    (format "\n> %s\n>\n> %s\n"
+                            (holy-books-quran chapter verse)
+                            (if no-info-p
+                                ""
+                              (format "[Quran %s:%s %s](https://quran.com/chapter_info/%s)"
+                                      chapter verse (cl-getf (cl-getf holy-books-quran-cache chapter) :name)
+                                      chapter)))))))
+ :face '(:foreground "green" :weight bold))
+
+
+;; Quran:chapter:verse|color|size|no-info-p
+(org-link-set-parameters
+ "Quran"
+ :follow (lambda (_) nil)
+ :export (lambda (label _ backend)
+           (-let* (((chapter:verse _ __ ___) (s-split "|" label))
+                   ((chapter verse) (mapcar #'string-to-number (s-split ":" chapter:verse))))
+             (cond ((eq 'html backend)
+                    (format "<abbr class=\"tooltip\"
+                             title=\"﴾<em> %s</em>﴿ <br><br> %s <br><br> %s\">
+                          Quran %s:%s
+                       </abbr>&emsp13;"
+                            (holy-books-quran chapter verse)
+                            (cl-getf (cl-getf holy-books-quran-cache chapter) :name)
+                            (format "https://quran.com/%s" chapter)
+                            chapter verse))
+                   ((eq 'md backend)
+                    (format "[Quran %s:%s](%s \"%s - %s\")" chapter verse
+                            (format "https://quran.com/%s" chapter)
+                            (s-replace "\"" "″" (holy-books-quran chapter verse))
+                            (cl-getf (cl-getf holy-books-quran-cache chapter)
+                                     :name))))))
+ :face '(:foreground "green" :weight bold))
+#+end_src
+
+#+RESULTS:
+
+** holy-books-insert-quran
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-insert-quran
+   :END:
+
+#+begin_src emacs-lisp
+(defun holy-books--remove-html-markup (html)
+  (s-replace-regexp "&nbsp;" ""
+                    (s-replace-regexp "<.*?>"  "" html)))
+
+(defun holy-books-insert-quran ()
+ "Insert a Quranic verse at point; prompt user for details."
+ (interactive)
+ (let ((chapter (string-to-number (read-string "Quran Chapter: ")))
+       (verse   (string-to-number (read-string "Quran Verse: "))))
+   (if (member 0 (list chapter verse))
+       (error (concat "holy-books ∷ There seems to be a typo;"
+                      "please enter appropriate numbers."))
+     (insert (holy-books--remove-html-markup (holy-books-quran chapter verse)))
+     (fill-paragraph))))
+#+end_src
+
+* holy-books-bible
+  :PROPERTIES:
+  :CUSTOM_ID: holy-books-bible
+  :END:
+
+#+begin_details Test: The first verse of the first chapter of each book of the Bible
+link-here:Example-The-first-verse-of-the-first-chapter-of-each-book-of-the-Bible
+ #+begin_src emacs-lisp :wrap export html :tangle no :exports both
+; (holy-books-bible "Genesis" 1 "2-5")
+; (holy-books-bible "Exodus" 1 "2-5") ;; Joseph!
+
+(setq books '(
+ ;; Old Testament
+ Genesis Exodus Leviticus Numbers Joshua Judges Ruth
+ 1+Samuel 2+Samuel 1+Kings 2+Kings 1+Chronicles 2+Chronicles Ezra
+ Nehemiah Esther Job Psalms Proverbs Ecclesiastes Song+of+Solomon
+ Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos
+ Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah
+ Malachi
+ ;; New Testament
+ Matthew Mark Luke John Acts Romans 1+Corinthians 2+Corinthians
+ Galatians Ephesians Philippians Colossians 1+Thessalonians
+ 2+Thessalonians 1+Timothy 2+Timothy Titus Philemon Hebrews James
+ 1+Peter 2+Peter 1+John 2+John 3+John Jude Revelation))
+
+(s-join "\n\n<hr>" (--map (format "%s ∷ %s" it (holy-books-bible it 1 1)) books))
+ #+end_src
+
+ #+RESULTS:
+ #+begin_export html
+ Genesis ∷
+                             In the beginning God created the heavens and the earth.
+
+ <hr>Exodus ∷
+                             These are the names of the sons of Israel who went to Egypt with Jacob, each with his family:
+
+ <hr>Leviticus ∷
+                             The <span class="small-caps">Lord called to Moses and spoke to him from the tent of meeting. He said,
+
+ <hr>Numbers ∷
+                             The <span class="small-caps">Lord spoke to Moses in the tent of meeting in the Desert of Sinai on the first day of the second month of the second year after the Israelites came out of Egypt. He said:
+
+ <hr>Joshua ∷
+                             After the death of Moses the servant of the <span class="small-caps">Lord, the <span class="small-caps">Lord said to Joshua son of Nun, Moses&#039; aide:
+
+ <hr>Judges ∷
+                             After the death of Joshua, the Israelites asked the <span class="small-caps">Lord, "Who of us is to go up first to fight against the Canaanites?"
+
+ <hr>Ruth ∷
+                             In the days when the judges ruled,<span class="footnote"><a name="p1"></a> there was a famine in the land. So a man from Bethlehem in Judah, together with his wife and two sons, went to live for a while in the country of Moab.
+
+ <hr>1+Samuel ∷
+                             There was a certain man from Ramathaim, a Zuphite<span class="footnote"><a name="p1"></a> from the hill country of Ephraim, whose name was Elkanah son of Jeroham, the son of Elihu, the son of Tohu, the son of Zuph, an Ephraimite.
+
+ <hr>2+Samuel ∷
+                             After the death of Saul, David returned from striking down the Amalekites and stayed in Ziklag two days.
+
+ <hr>1+Kings ∷
+                             When King David was very old, he could not keep warm even when they put covers over him.
+
+ <hr>2+Kings ∷
+                             After Ahab&#039;s death, Moab rebelled against Israel.
+
+ <hr>1+Chronicles ∷
+                             Adam, Seth, Enosh,
+
+ <hr>2+Chronicles ∷
+                             Solomon son of David established himself firmly over his kingdom, for the <span class="small-caps">Lord his God was with him and made him exceedingly great.
+
+ <hr>Ezra ∷
+                             In the first year of Cyrus king of Persia, in order to fulfill the word of the <span class="small-caps">Lord spoken by Jeremiah, the <span class="small-caps">Lord moved the heart of Cyrus king of Persia to make a proclamation throughout his realm and also to put it in writing:
+
+ <hr>Nehemiah ∷
+                             The words of Nehemiah son of Hakaliah: In the month of Kislev in the twentieth year, while I was in the citadel of Susa,
+
+ <hr>Esther ∷
+                             This is what happened during the time of Xerxes,<span class="footnote"><a name="p1"></a> the Xerxes who ruled over 127 provinces stretching from India to Cush<span class="footnote"><a name="p2"></a> :
+
+ <hr>Job ∷
+                             In the land of Uz there lived a man whose name was Job. This man was blameless and upright; he feared God and shunned evil.
+
+ <hr>Psalms ∷
+                             Blessed is the one who does not walk in step with the wicked or stand in the way that sinners take or sit in the company of mockers,
+
+ <hr>Proverbs ∷
+                             The proverbs of Solomon son of David, king of Israel:
+
+ <hr>Ecclesiastes ∷
+                             The words of the Teacher,<span class="footnote"><a name="p1"></a> son of David, king in Jerusalem:
+
+ <hr>Song+of+Solomon ∷
+                             Solomon&#039;s Song of Songs.
+
+ <hr>Isaiah ∷
+                             The vision concerning Judah and Jerusalem that Isaiah son of Amoz saw during the reigns of Uzziah, Jotham, Ahaz and Hezekiah, kings of Judah.
+
+ <hr>Jeremiah ∷
+                             The words of Jeremiah son of Hilkiah, one of the priests at Anathoth in the territory of Benjamin.
+
+ <hr>Lamentations ∷
+                             How deserted lies the city, once so full of people! How like a widow is she, who once was great among the nations! She who was queen among the provinces has now become a slave.
+
+ <hr>Ezekiel ∷
+                             In my thirtieth year, in the fourth month on the fifth day, while I was among the exiles by the Kebar River, the heavens were opened and I saw visions of God.
+
+ <hr>Daniel ∷
+                             In the third year of the reign of Jehoiakim king of Judah, Nebuchadnezzar king of Babylon came to Jerusalem and besieged it.
+
+ <hr>Hosea ∷
+                             The word of the <span class="small-caps">Lord that came to Hosea son of Beeri during the reigns of Uzziah, Jotham, Ahaz and Hezekiah, kings of Judah, and during the reign of Jeroboam son of Jehoash<span class="footnote"><a name="p1"></a> king of Israel:
+
+ <hr>Joel ∷
+                             The word of the <span class="small-caps">Lord that came to Joel son of Pethuel.
+
+ <hr>Amos ∷
+                             The words of Amos, one of the shepherds of Tekoa-the vision he saw concerning Israel two years before the earthquake, when Uzziah was king of Judah and Jeroboam son of Jehoash<span class="footnote"><a name="p1"></a> was king of Israel.
+
+ <hr>Obadiah ∷
+                             The vision of Obadiah. This is what the Sovereign <span class="small-caps">Lord says about Edom- We have heard a message from the <span class="small-caps">Lord: An envoy was sent to the nations to say, "Rise, let us go against her for battle"-
+
+ <hr>Jonah ∷
+                             The word of the <span class="small-caps">Lord came to Jonah son of Amittai:
+
+ <hr>Micah ∷
+                             The word of the <span class="small-caps">Lord that came to Micah of Moresheth during the reigns of Jotham, Ahaz and Hezekiah, kings of Judah-the vision he saw concerning Samaria and Jerusalem.
+
+ <hr>Nahum ∷
+                             A prophecy concerning Nineveh. The book of the vision of Nahum the Elkoshite.
+
+ <hr>Habakkuk ∷
+                             The prophecy that Habakkuk the prophet received.
+
+ <hr>Zephaniah ∷
+                             The word of the <span class="small-caps">Lord that came to Zephaniah son of Cushi, the son of Gedaliah, the son of Amariah, the son of Hezekiah, during the reign of Josiah son of Amon king of Judah:
+
+ <hr>Haggai ∷
+                             In the second year of King Darius, on the first day of the sixth month, the word of the <span class="small-caps">Lord came through the prophet Haggai to Zerubbabel son of Shealtiel, governor of Judah, and to Joshua son of Jozadak,<span class="footnote"><a name="p1"></a> the high priest:
+
+ <hr>Zechariah ∷
+                             In the eighth month of the second year of Darius, the word of the <span class="small-caps">Lord came to the prophet Zechariah son of Berekiah, the son of Iddo:
+
+ <hr>Malachi ∷
+                             A prophecy: The word of the <span class="small-caps">Lord to Israel through Malachi.<span class="footnote"><a name="p1"></a>
+
+ <hr>Matthew ∷
+                             This is the genealogy<span class="footnote"><a name="p1"></a> of Jesus the Messiah<span class="footnote"><a name="p2"></a> the son of David, the son of Abraham:
+
+ <hr>Mark ∷
+                             The beginning of the good news about Jesus the Messiah,<span class="footnote"><a name="p1"></a> the Son of God,<span class="footnote"><a name="p2"></a>
+
+ <hr>Luke ∷
+                             Many have undertaken to draw up an account of the things that have been fulfilled<span class="footnote"><a name="p1"></a> among us,
+
+ <hr>John ∷
+                             In the beginning was the Word, and the Word was with God, and the Word was God.
+
+ <hr>Acts ∷
+                             In my former book, Theophilus, I wrote about all that Jesus began to do and to teach
+
+ <hr>Romans ∷
+                             Paul, a servant of Christ Jesus, called to be an apostle and set apart for the gospel of God-
+
+ <hr>1+Corinthians ∷
+                             Paul, called to be an apostle of Christ Jesus by the will of God, and our brother Sosthenes,
+
+ <hr>2+Corinthians ∷
+                             Paul, an apostle of Christ Jesus by the will of God, and Timothy our brother, To the church of God in Corinth, together with all his holy people throughout Achaia:
+
+ <hr>Galatians ∷
+                             Paul, an apostle-sent not from men nor by a man, but by Jesus Christ and God the Father, who raised him from the dead-
+
+ <hr>Ephesians ∷
+                             Paul, an apostle of Christ Jesus by the will of God, To God&#039;s holy people in Ephesus,<span class="footnote"><a name="p1"></a> the faithful in Christ Jesus:
+
+ <hr>Philippians ∷
+                             Paul and Timothy, servants of Christ Jesus, To all God&#039;s holy people in Christ Jesus at Philippi, together with the overseers and deacons<span class="footnote"><a name="p1"></a> :
+
+ <hr>Colossians ∷
+                             Paul, an apostle of Christ Jesus by the will of God, and Timothy our brother,
+
+ <hr>1+Thessalonians ∷
+                             Paul, Silas<span class="footnote"><a name="p1"></a> and Timothy, To the church of the Thessalonians in God the Father and the Lord Jesus Christ: Grace and peace to you.
+
+ <hr>2+Thessalonians ∷
+                             Paul, Silas<span class="footnote"><a name="p1"></a> and Timothy, To the church of the Thessalonians in God our Father and the Lord Jesus Christ:
+
+ <hr>1+Timothy ∷
+                             Paul, an apostle of Christ Jesus by the command of God our Savior and of Christ Jesus our hope,
+
+ <hr>2+Timothy ∷
+                             Paul, an apostle of Christ Jesus by the will of God, in keeping with the promise of life that is in Christ Jesus,
+
+ <hr>Titus ∷
+                             Paul, a servant of God and an apostle of Jesus Christ to further the faith of God&#039;s elect and their knowledge of the truth that leads to godliness-
+
+ <hr>Philemon ∷
+                             Paul, a prisoner of Christ Jesus, and Timothy our brother, To Philemon our dear friend and fellow worker-
+
+ <hr>Hebrews ∷
+                             In the past God spoke to our ancestors through the prophets at many times and in various ways,
+
+ <hr>James ∷
+                             James, a servant of God and of the Lord Jesus Christ, To the twelve tribes scattered among the nations: Greetings.
+
+ <hr>1+Peter ∷
+                             Peter, an apostle of Jesus Christ, To God&#039;s elect, exiles scattered throughout the provinces of Pontus, Galatia, Cappadocia, Asia and Bithynia,
+
+ <hr>2+Peter ∷
+                             Simon Peter, a servant and apostle of Jesus Christ, To those who through the righteousness of our God and Savior Jesus Christ have received a faith as precious as ours:
+
+ <hr>1+John ∷
+                             That which was from the beginning, which we have heard, which we have seen with our eyes, which we have looked at and our hands have touched-this we proclaim concerning the Word of life.
+
+ <hr>2+John ∷
+                             The elder, To the lady chosen by God and to her children, whom I love in the truth-and not I only, but also all who know the truth-
+
+ <hr>3+John ∷
+                             The elder, To my dear friend Gaius, whom I love in the truth.
+
+ <hr>Jude ∷
+                             Jude, a servant of Jesus Christ and a brother of James, To those who have been called, who are loved in God the Father and kept for<span class="footnote"><a name="p1"></a> Jesus Christ:
+
+ <hr>Revelation ∷
+                             The revelation from Jesus Christ, which God gave him to show his servants what must soon take place. He made it known by sending his angel to his servant John,
+ #+end_export
+#+end_details
+
+#+begin_details Tests
+#+begin_src emacs-lisp :tangle tests.el
+(deftest "bible looks up a verse"
+  (should (equal (holy-books-bible "Genesis" 1 "1")
+                 "In the beginning God created the heavens and the earth.")))
+
+(deftest "bible looks up a verse range, dropping the verse numbers"
+  (should (equal (holy-books-bible "Deuteronomy" 18 "18-19")
+                 "I will raise up for them a prophet like you from among their fellow Israelites, and I will put my words in his mouth. He will tell them everything I command him. I myself will call to account anyone who does not listen to my words that the prophet speaks in my name.")))
+
+(define-html-export-test "Bible link is a tooltip carrying the verse"
+  :org "Bible:Genesis:1:1"
+  :html "<p>
+<abbr class=\"tooltip\"
+                             title=\"﴾<em> In the beginning God created the heavens and the earth.</em>﴿ <br><br> https://www.christianity.com/bible/bible.php?q=Genesis+1\">
+                         Genesis 1:1
+                       </abbr>&emsp13;</p>
+")
+
+(define-md-export-test "bible link is a blockquote followed by its reference"
+  :org "bible:Genesis:1:1"
+  :md "
+> In the beginning God created the heavens and the earth.
+>
+>[Genesis 1:1](https://www.christianity.com/bible/bible.php?q=Genesis+1&ver=niv)
+
+")
+
+(define-md-export-test "Bible link is a Markdown link whose title is the verse"
+  :org "Bible:Genesis:1:1"
+  :md "[Genesis 1:1](https://www.christianity.com/bible/bible.php?q=Genesis+1 \"In the beginning God created the heavens and the earth.\")
+
+")
+
+(define-html-export-test "bible link shows the verse and its reference"
+  :org "bible:Genesis:1:2"
+  :html "<p>
+<span style=\"color:nil;font-size:nil;\">﴾<em> Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.</em>﴿<small><a href=\"https://www.christianity.com/bible/bible.php?q=Genesis+1&ver=niv\">Genesis 1:2</a></small> </span></p>
+")
+
+#+end_src
+#+end_details
+
+# Check all the bible/* tests
+# (ert "bible/*")
+
+** holy-books-bible-version
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-bible-version
+   :END:
+  #+begin_src emacs-lisp
+(defvar holy-books-bible-version 'niv
+  "The version code of the Holy Bible; a symbol or string.
+
+Possible version codes include:
+
+Code   Version
+---------------------------------------
+niv    New International Version, DEFAULT
+asv    American Standard Version
+bbe    Bible in Basic English
+drb    Darby's Translation
+esv    English Standard Version
+kjv    King James Version
+nas    New American Standard
+nkjv   New King James Version
+nlt    New Living Translation
+nrs    New Revised Standard Version
+rsv    Revised Standard Version
+msg    The Message Bible
+web    World English Bible
+ylt    Young's Literal")
+#+end_src
+
+** holy-books-bible
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-bible
+   :END:
+#+begin_src emacs-lisp
+(defun holy-books-bible (book chapter verses)
+  "Retrive a verse from the Christian Bible.
+
+CHAPTER is a number.
+VERSES is either a number or a string “x-y” of numbers.
+BOOK is any of the books of the Bible, with ‘+’ instead of spaces!
+
+Examples:
+
+        (holy-books-bible \"Deuteronomy\" 18 \"18-22\")  ;; Lisp
+
+        bible:Deuteronomy:18:18-22|darkblue   ;; Org-mode
+
+        Bible:Deuteronomy:18:18-22            ;; Tooltip
+
+There is also an Org HTML export link, “bible:book:chapter:verse”
+sharing the same optional arguments and variations as the “quran:” link;
+see the documentation of the method HOLY-BOOKS-QURAN for details.
+
+The particular version can be selected by altering the
+HOLY-BOOKS-BIBLE-VERSION variable.
+
+Currently, Bible lookups are not cached and Quran lookups do not support the
+“x-y” verse lookup style.
+
+Possible books include:
+
+ ;; Old Testament
+ Genesis Exodus Leviticus Numbers Joshua Judges Ruth
+ 1+Samuel 2+Samuel 1+Kings 2+Kings 1+Chronicles 2+Chronicles Ezra
+ Nehemiah Esther Job Psalms Proverbs Ecclesiastes Song+of+Solomon
+ Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos
+ Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah
+ Malachi
+ ;; New Testament
+ Matthew Mark Luke John Acts Romans 1+Corinthians 2+Corinthians
+ Galatians Ephesians Philippians Colossians 1+Thessalonians
+ 2+Thessalonians 1+Timothy 2+Timothy Titus Philemon Hebrews James
+ 1+Peter 2+Peter 1+John 2+John 3+John Jude Revelation
+
+For example, the following incantation yields the first verse of
+the first chapter of each book.
+
+   (s-join \"\n\n<hr>\" (--map (holy-books-bible it 1 1) '(...above list...)))"
+  (thread-last (holy-books--fetch
+                (format "https://www.christianity.com/bible/bible.php?q=%s+%s%%3A%s&ver=%s"
+                        book chapter verses holy-books-bible-version))
+    (s-match "passage-text\">\\(?:.\\|\n\\)*?<p[^>]*>\\(\\(?:.\\|\n\\)*?\\)</p>")
+    (cadr)
+    (s-replace-regexp "<span[^>]*class=\"\\(big-chapter\\|verse-num\\)[^>]*>.*?</span>\\(&nbsp;\\)?" "")
+    (s-replace-regexp "<footnote>.*?</footnote>" "")
+    (s-replace-regexp "<.*?>" "") ;; Small-caps, etc.
+    (s-trim)))
+#+end_src
+
+** Links: ~bible:⋯~ and ~Bible:⋯~
+   :PROPERTIES:
+   :CUSTOM_ID: Links-bible-and-Bible
+   :END:
+#+begin_src emacs-lisp
+(defvar holy-books-bible-format-for-verses
+  "﴾<em> %s</em>﴿"
+  "How should verses be styled?")
+
+;; bible:book:chapter:verses|color|size|no-info-p
+;; Ex. bible:Deuteronomy:18:18-22|darkblue|40px
+(org-link-set-parameters
+ "bible"
+ :follow (lambda (_) nil)
+ :export (lambda (label _ backend)
+           (-let* (((book:chapter:verse color size no-info-p)
+                    (s-split "|" label))
+                   ((book chapter verse) (s-split ":" book:chapter:verse)))
+             (cond ((eq 'html backend)
+                    (format (concat "<span style=\"color:%s;font-size:%s;\">"
+                                    holy-books-bible-format-for-verses ;; ≈ ﴾<em> %s</em>﴿
+                                    "%s </span>")
+                            color size
+                            (holy-books-bible book chapter verse)
+                            (if no-info-p
+                                ""
+                              (format
+                               (concat "<small>"
+                                       "<a href=\"https://www.christianity.com"
+                                       "/bible/bible.php?q=%s+%s&ver=niv\">"
+                                       "%s %s:%s"
+                                       "</a>"
+                                       "</small>")
+                               book chapter book chapter verse))))
+                   ((eq 'md backend)
+                    (format "\n> %s\n>\n>%s\n"
+                            (holy-books-bible book chapter verse)
+                            (if no-info-p
+                                ""
+                              (format "[%s %s:%s](https://www.christianity.com/bible/bible.php?q=%s+%s&ver=niv)"
+                                      book chapter verse
+                                      book chapter verse))))
+                   (t (format "﴾%s﴿ [%s %s:%s]"
+                    (s-replace-regexp "&nbsp;" ""
+                      (s-replace-regexp "<.*?>"  ""
+                                        (s-collapse-whitespace (holy-books-bible book chapter verse))))
+                    book chapter verse)))))
+ :face '(:foreground "green" :weight bold))
+
+;; Bible:book:chapter:verses|color|size|no-info-p
+;; Ex. Bible:Deuteronomy:18:18-22|darkblue|40px
+(org-link-set-parameters
+ "Bible"
+ :follow (lambda (_) nil)
+ :export (lambda (label _ backend)
+           (-let* (((book:chapter:verse _ __ ___) (s-split "|" label))
+                   ((book chapter verse) (s-split ":" book:chapter:verse)))
+             (cond ((eq 'html backend)
+
+                    (format "<abbr class=\"tooltip\"
+                             title=\"﴾<em> %s</em>﴿ <br><br> %s\">
+                         %s %s:%s
+                       </abbr>&emsp13;"
+                            (s-replace "\"" "″" (holy-books-bible book chapter verse))
+                            (format (concat "https://www.christianity.com/"
+                                            "bible/bible.php?q=%s+%s")
+                                    book chapter)
+                            book chapter verse))
+                   ((eq 'md backend)
+                    (format "[%s %s:%s](%s \"%s\")" book chapter verse
+                            (format (concat "https://www.christianity.com/"
+                                            "bible/bible.php?q=%s+%s") book chapter)
+                            (s-replace "\"" "″" (holy-books-bible book chapter verse))
+                            ))
+                                      (t (format "﴾%s﴿ [%s %s:%s]"
+                    (s-replace-regexp "&nbsp;" ""
+                      (s-replace-regexp "<.*?>"  ""
+                                        (s-collapse-whitespace (holy-books-bible book chapter verse))))
+                    book chapter verse)))))
+ :face '(:foreground "green" :weight bold))
+#+end_src
+
+** holy-books-insert-bible
+   :PROPERTIES:
+   :CUSTOM_ID: holy-books-insert-bible
+   :END:
+
+#+begin_src emacs-lisp
+(defun holy-books-insert-bible ()
+ "Insert a Biblical verse at point; prompt user for details.
+
+See the documentation of HOLY-BOOKS-BIBLE for the appropriate
+names of books."
+ (interactive)
+ (let ((book    (read-string "Bible Book: "))
+       (chapter (string-to-number (read-string "Bible Chapter: ")))
+       (verse   (read-string "Bible Verse: "))) ;; Can be a range; e.g., "18-22"
+   (if (member 0 (list chapter verse))
+       (error (concat "holy-books ∷ There seems to be a typo;"
+                      "please enter appropriate numbers."))
+     (insert (holy-books--remove-html-markup (s-trim (holy-books-bible book chapter verse))))
+     (fill-paragraph))))
+#+end_src
+* Summary
+  :PROPERTIES:
+  :CUSTOM_ID: Summary
+  :END:
+
+#+begin_quote
+The full article may be read as
+badge:|HTML|informational|https://alhassy.github.io/holy-books/|ghost ---or visit the
+repo github-stars:alhassy/holy-books .
+#+end_quote
+
+link-here:summary
+
+| Link                     | Action                         |
+|--------------------------+--------------------------------|
+| ~quran:chapter:verse~      | Retrive a verse from the Quran |
+| ~bible:book:chapter:verse~ | Retrive a verse from the Bible |
+| ~[[basmala:]]~             | Produce the Basmala ligature   |
+
+These each take optional arguments separated by ‘|’; see doc:holy-books-quran
+and doc:holy-books-bible or see the full documentation online at
+badge:|HTML|informational|https://alhassy.github.io/holy-books/|ghost.
+
+There are also doc:holy-books-insert-quran and doc:holy-books-insert-bible to
+inject verses in the current Emacs buffer ;-)
+
+# Following ‘details’ blocks are more for the resulting README than for the HTML.
+Moreover, the Quran's translation and the Bible's version can both be selected...
+#+begin_details ‘holy-books-quran’ details
+#+begin_src emacs-lisp :tangle no :exports results
+(documentation #'holy-books-quran)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Lookup a verse, as a string, from the Quran.
+
+CHAPTER and VERSE are both numbers, referring to a chapter in the Quran
+and a verse it contains.
+In the associated Org link, both are treated as strings.
+
++ Lookups are stored in the variable ‘holy-books-quran-cache’ for faster reuse.
++ Quran lookup is based on https://quran.com .
++ Examples:
+
+    ;; Get verse 2 of chapter 7 of the Quran
+    (holy-books-quran 7 2)
+
+    ;; Get English-Arabic name of 7th chapter
+    (cl-getf (cl-getf holy-books-quran 7) :name)
+
+The particular translation can be selected by altering the
+HOLY-BOOKS-QURAN-TRANSLAITON variable.
+
+--------------------------------------------------------------------------------
+
+There is an Org link form: “quran:chapter:verse|color|size|no-info-p”
+Only ‘chapter’ and ‘verse’ are mandatory; when ‘no-info-p’ is given,
+the chapter and verse numbers are not mentioned in the resulting output.
+
+Examples:
+           quran:7:157|darkgreen|30px|t
+
+           quran:7:157
+
+For now, only Org HTML export is supported.
+
+--------------------------------------------------------------------------------
+
+Finally, there is also an HTML tooltip version with a captial ‘Q’;
+it takes the same arguments but only the chapter and verse are actually used.
+E.g. Quran:7:157 results in text “Quran 7:157” with a tooltip showing the verse.
+#+end_example
+
+#+end_details
+#+begin_details ‘holy-books-bible’ details
+#+begin_src emacs-lisp :tangle no :exports results
+(documentation #'holy-books-bible)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Retrive a verse from the Christian Bible.
+
+CHAPTER is a number.
+VERSES is either a number or a string “x-y” of numbers.
+BOOK is any of the books of the Bible, with ‘+’ instead of spaces!
+
+Examples:
+
+        (holy-books-bible "Deuteronomy" 18 "18-22")  ;; Lisp
+
+        bible:Deuteronomy:18:18-22|darkblue   ;; Org-mode
+
+        Bible:Deuteronomy:18:18-22            ;; Tooltip
+
+There is also an Org HTML export link, “bible:book:chapter:verse”
+sharing the same optional arguments and variations as the “quran:” link;
+see the documentation of the method HOLY-BOOKS-QURAN for details.
+
+The particular version can be selected by altering the
+HOLY-BOOKS-BIBLE-VERSION variable.
+
+Currently, Bible lookups are not cached and Quran lookups do not support the
+“x-y” verse lookup style.
+
+Possible books include:
+
+ ;; Old Testament
+ Genesis Exodus Leviticus Numbers Joshua Judges Ruth
+ 1+Samuel 2+Samuel 1+Kings 2+Kings 1+Chronicles 2+Chronicles Ezra
+ Nehemiah Esther Job Psalms Proverbs Ecclesiastes Song+of+Solomon
+ Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos
+ Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah
+ Malachi
+ ;; New Testament
+ Matthew Mark Luke John Acts Romans 1+Corinthians 2+Corinthians
+ Galatians Ephesians Philippians Colossians 1+Thessalonians
+ 2+Thessalonians 1+Timothy 2+Timothy Titus Philemon Hebrews James
+ 1+Peter 2+Peter 1+John 2+John 3+John Jude Revelation
+
+For example, the following incantation yields the first verse of
+the first chapter of each book.
+
+   (s-join "
+
+<hr>" (--map (holy-books-bible it 1 1) ’(...above list...)))
+#+end_example
+
+#+end_details
+
+** Installation Instructions
+   :PROPERTIES:
+   :CUSTOM_ID: Installation-Instructions
+   :END:
+
+Manually or using [[https://github.com/alhassy/emacs.d#installing-emacs-packages-directly-from-source][quelpa]]:
+#+BEGIN_SRC emacs-lisp :tangle no
+;; ⟨0⟩ Download the holy-books.el file manually or using quelpa
+(quelpa '(holy-books :fetcher github :repo
+"alhassy/holy-books"))
+
+;; ⟨1⟩ Have this always active in Org buffers
+(add-hook #'org-mode-hook #'holy-books-mode)
+
+;; ⟨1′⟩ Or use: “M-x holy-books-mode” to turn it on/off
+
+;; ⟨2⟩ Configure the Quranic translation and Bible version
+;;     Press ‘C-h o’ to get more info on each variable.
+(setq holy-books-quran-translation "131"  ;; The Clear Quran
+      holy-books-bible-version     "niv") ;; New International Version
+
+#+END_SRC
+
+
+** COMMENT *Or* with [[https://github.com/alhassy/emacs.d#use-package-the-start-of-initel][use-package]]:
+   :PROPERTIES:
+   :CUSTOM_ID: COMMENT-Or-with-https-github-com-alhassy-emacs-d-use-package-the-start-of-initel-use-package
+   :END:
+ #+BEGIN_SRC emacs-lisp :tangle no
+(use-package holy-books
+  :ensure t
+  :hook (org-mode . holy-books-mode)
+  :custom
+    ;; The places where I keep my ‘#+documentation’
+    (holy-books--docs-libraries
+     '("~/holy-books/documentation.org"))
+    ;; Disable the in-Emacs fancy-links feature?
+    ;; (holy-books-fancy-links nil)
+    ;; Details heading “flash pink” whenever the user hovers over them?
+    (org-html-head-extra (concat org-html-head-extra "<style>  summary:hover {background:pink;} </style>"))
+    ;; The message prefixing a ‘tweet:url’ badge
+    (holy-books-link-twitter-excitement
+     "This looks super neat (•̀ᴗ•́)و:")
+  :config
+  ;; Use short names like ‘defblock’ instead of the fully qualified name
+  ;; ‘holy-books--defblock’
+    (holy-books-short-names))
+ #+END_SRC
+
+** Bye!
+   :PROPERTIES:
+   :CUSTOM_ID: Bye
+   :END:
+
+badge:thanks|for_reading
+tweet:https://github.com/alhassy/holy-books
+badge:|buy_me_a coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+
+* Lisp Postamble  :noexport:
+  :PROPERTIES:
+  :CUSTOM_ID: Postamble
+  :END:
+#+BEGIN_SRC emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(provide 'holy-books)
+
+;;; holy-books.el ends here
+#+END_SRC
+* COMMENT MELPA Checks
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-MELPA-Checks
+  :END:
+https://github.com/riscy/melpazoid
+
+1. In Github repo: Add file ⇒ Create new file ⇒ License.txt ⇒ Select template ⇒ GNU 3
+2. Ensure first line ends with: -*- lexical-binding: t; -*-
+3. Include appropriate standard keywords;
+   #+begin_src emacs-lisp :tangle no
+(pp finder-known-keywords)
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   ((abbrev . "abbreviation handling, typing shortcuts, and macros")
+    (bib . "bibliography processors")
+    (c . "C and related programming languages")
+    (calendar . "calendar and time management tools")
+    (comm . "communications, networking, and remote file access")
+    (convenience . "convenience features for faster editing")
+    (data . "editing data (non-text) files")
+    (docs . "Emacs documentation facilities")
+    (emulations . "emulations of other editors")
+    (extensions . "Emacs Lisp language extensions")
+    (faces . "fonts and colors for text")
+    (files . "file editing and manipulation")
+    (frames . "Emacs frames and window systems")
+    (games . "games, jokes and amusements")
+    (hardware . "interfacing with system hardware")
+    (help . "Emacs help systems")
+    (hypermedia . "links between text or other media types")
+    (i18n . "internationalization and character-set support")
+    (internal . "code for Emacs internals, build process, defaults")
+    (languages . "specialized modes for editing programming languages")
+    (lisp . "Lisp support, including Emacs Lisp")
+    (local . "code local to your site")
+    (maint . "Emacs development tools and aids")
+    (mail . "email reading and posting")
+    (matching . "searching, matching, and sorting")
+    (mouse . "mouse support")
+    (multimedia . "images and sound")
+    (news . "USENET news reading and posting")
+    (outlines . "hierarchical outlining and note taking")
+    (processes . "processes, subshells, and compilation")
+    (terminals . "text terminals (ttys)")
+    (tex . "the TeX document formatter")
+    (tools . "programming tools")
+    (unix . "UNIX feature interfaces and emulators")
+    (vc . "version control")
+    (wp . "word processing"))
+   #+end_example
+4. Use #' instead of ' for function symbols
+5. Use ‘-’ as a separator, not ‘/’.
+6. Consider reading:
+   https://github.com/bbatsov/emacs-lisp-style-guide#the-emacs-lisp-style-guide
+7. Use cl-loop, cl-first, cl-second, cl-third instead of loop, first, second, third
+8. byte-compile and address any concerns
+9. =M-x checkdoc= on the lisp file to ensure it passes expected style issues.
+   - Symbols =nil, t= should not appear in single quotes.
+   - (progn (setq fill-column 80) (display-fill-column-indicator-mode))
+10. Ensure it byte-compiles without any problems.
+11. Ensure that package-linter raises no issues; i.e., the following has no result.
+     #+BEGIN_SRC emacs-lisp :tangle no
+ (use-package package-lint)
+ (-let [it "holy-books.el"]
+  (ignore-errors (kill-buffer it))
+  (find-file-other-window it)
+  (package-lint-buffer it)
+  (switch-to-buffer "*Package-Lint*")) ;; Should say: “No issues found.”
+ #+END_SRC
+12. Commit and push everything in your project's repo!
+13. Create a recipe file by invoking: M-x package-build-create-recipe
+    ---first: (use-package package-build)
+    - Place it in: melpa/recipes/
+    - The name of the file should be the name of the package, no extension.
+
+    *Or:* Uncomment this section & just tangle the following.
+           #+BEGIN_SRC emacs-lisp :tangle ~/melpa/recipes/holy-books
+    (holy-books :fetcher github :repo "alhassy/holy-books")
+        #+END_SRC
+14. Ensure the recipe builds successfully:
+    #+BEGIN_SRC shell :tangle no
+    cd ~/melpa; rm ~/melpa/packages/holy-books-*; make recipes/holy-books
+    #+END_SRC
+
+    If you have trouble, make a file "~/bin/emacs" with
+    the following which ensures “emacs” can be run
+    from the command line within macos.
+    #+begin_src shell :tangle "~/bin/emacs"
+#!/bin/sh
+/Applications/Emacs.app/Contents/MacOS/Emacs "$@"
+#+end_src
+
+15. Ensure the package installs properly from within Emacs:
+
+      #+BEGIN_SRC emacs-lisp :tangle no
+(package-install-file "~/melpa/packages/holy-books-")
+#+END_SRC
+
+16. Produce a dedicated pull request branch
+
+    #+begin_src emacs-lisp :tangle no
+    (magit-status "~/melpa")
+    #+end_src
+
+    + ~F p~ to update the repo.
+    + Now =b c= to checkout a new branch: Select ~master~ then name the branch by
+      the name of the package, e.g., ~holy-books~.
+    + Commit your recipe.
+    + Push this branch on your melpa fork: ~P p~.
+    + Go to the https://github.com/melpa/melpa repo and
+      there'll be a big green PR button ^_^
+* COMMENT Making ~README.org~
+  :PROPERTIES:
+  :CUSTOM_ID: COMMENT-Making-README-org
+  :END:
+
+  Evaluate the following source block with ~C-c C-c~ to produce a ~README~ file.
+
+#+NAME: make-readme
+#+BEGIN_SRC emacs-lisp
+(with-temp-buffer
+    (insert "
+,#+EXPORT_FILE_NAME: README.md
+,#+HTML: <h1> An Emacs interface to the Quran and the Bible: Interactive lookup, Org-mode links, tooltips, and Lisp look-ups </h1>
+# +HTML: <h2>  ¯\\_(ツ)_/¯  </h2>
+,#+OPTIONS: toc:nil d:nil broken-links:t
+,#+html: <div align=\"center\">
+#   +INCLUDE: ~/holy-books/holy-books.org::#Abstract :only-contents t
+,#+html: </div>
+
+,#+html: <div align=\"center\">
+Let's use Org-mode links to look-up Quranic and Biblical verses!
+
+“Live” examples & documentation: https://alhassy.github.io/holy-books/
+
+badge:holy-books|1.3|informational|https://github.com/alhassy/holy-books|Gnu-Emacs
+
+# #+html: <a href=\"https://melpa.org/#/holy-books\"><img alt=\"MELPA\" src=\"https://melpa.org/packages/holy-books-badge.svg\"/></a>
+# #+html: </span>
+
+tweet:https://github.com/alhassy/holy-books
+badge:contributions|welcome|green|https://github.com/alhassy/holy-books/issues
+
+badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds
+badge:|buy_me_a coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee
+
+badge:Hire|me|success|https://alhassy.github.io/about
+
+,#+html: </div>
+
+,#+TOC: headlines 2
+
+,* Short Example
+,#+attr_html: :width 600px
+file:images/short_example.png
+
+,* Long Example
+,#+attr_html: :width 600px
+file:images/long_example.png
+
+,* Summary
+,#+INCLUDE: ~/holy-books/holy-books.org::#Summary :only-contents t
+#  ,* Minimal working example
+#  #+INCLUDE: ~/holy-books/holy-books.org::#Minimal-working-example :only-contents t
+")
+    (let ((org-export-use-babel nil) (org-export-with-broken-links t))
+      (org-mode)
+      (org-md-export-to-markdown)))
+#+END_SRC
+
+#+RESULTS: make-readme
+: README.md
+
+*Then* use =grip= to see that this looks reasonable.

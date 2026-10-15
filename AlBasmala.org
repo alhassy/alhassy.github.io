@@ -293,10 +293,11 @@ of that file, and Org does the rest.
 :REDIRECT:    ~/.emacs.d/init.org
 :END:
 
-,* Remote README :docs:
+,* Holy Books: Quran & Bible look-ups in Org-mode :emacs:
 :PROPERTIES:
-:DATE:        <2024-02-01>
-:REDIRECT:    https://raw.githubusercontent.com/alhassy/example/master/README.org
+:DATE:        <2021-10-25>
+:CUSTOM_ID:   holy-books-in-org-mode
+:REDIRECT:    https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org
 :END:
 #+end_src
 
@@ -310,19 +311,136 @@ followed by
 =blog--info-subtree= carries the ="redirect"= key along, so the index, tag pages, and RSS
 treat these articles like any other.
 
-*** Vendoring redirects so CI can resolve them                     :details:
+*** The repo owns the =.org=; the blog points at it
+:PROPERTIES:
+:CUSTOM_ID: the-repo-owns-the-org-the-blog-points-at-it
+:END:
+
+By way of example, [[https://github.com/alhassy/holy-books][holy-books]] is a literate Emacs package: =holy-books.org= tangles to
+=holy-books.el=, which MELPA ships.  Its write-up belongs on the blog, where friends who'd
+never browse GitHub find it via the index, tag pages, and RSS; its code belongs in its own
+repo, where people star it, fork it, and file issues.
+
+#+begin_example
+github.com/alhassy/holy-books          blog (alhassy.github.io)
+├── holy-books.org   ← single source   ├── projects.org
+├── holy-books.el    ← tangled, committed     * Holy Books  :emacs:
+├── tests.el                                   :REDIRECT: https://raw…/holy-books.org
+├── README.md        ← tiny, hand-written      * Repl-Driven Dev  :emacs:
+└── images/                                    :REDIRECT: …
+#+end_example
+
+Why not the other way round, with the blog owning the =.org= and tangling into
+=~/holy-books/=?  Then the =:tangle= paths are absolute, the repo's CI can't re-tangle, and
+every pull request against the =.el= is silently clobbered by our next tangle.  Contributors
+fork one repo, and should find the literate source beside the code.
+
+- *=projects.org=* is a container with one heading per repo, each a =:REDIRECT:=.  Its
+  first heading carries =:SITE_NAV: Projects=, so one URL ---linked from every page--- lists
+  everything; it's the link we send friends.  Adding a repo is a five-line heading.
+- *=README.md=* in each repo is hand-written and tiny: a badge row, one GIF, a
+  =use-package= snippet, a short table of the main commands, and "Full write-up →".  It
+  changes rarely, so generating it from the =.org= (=ox-md= on a =:readme:= subtree) is a
+  pipeline we don't need; in due time, if the command table starts drifting, we revisit.
+- *=;; URL:=* in the package header points at the GitHub repo, not the blog, so bug reports
+  land where the code lives.
+- *Per-repo GitHub Pages*, like =alhassy.com/holy-books/=, are forthcoming retirees: each
+  write-up should live at one canonical URL.  Until then, a redirected article's slug must
+  differ from its repo's name, else the project site shadows it ---hence
+  =:CUSTOM_ID: holy-books-in-org-mode=, not =holy-books=.
+
+*Migrating a repo* is then a checklist:
+1. Un-=COMMENT= its heading in =projects.org=, with a =:CUSTOM_ID:= unlike the repo's name.
+2. Tag repo-only plumbing ---the package preamble, the test suite, the CI YAML---
+   =:noexport:=: it still tangles, but never reaches readers.
+3. Make the tangle a CI-checked fixpoint, lest someone patch the =.el= directly: CI
+   re-tangles the =.org= and fails if =git diff --exit-code= finds the committed
+   =.el= differs; see =holy-books.org='s "Testing" heading.
+4. kbd:C-x_C-s in =projects.org= and eyeball the preview.
+
+*** A REDIRECT tracks =master=: vendoring, freshness, and staleness
 :PROPERTIES:
 :CUSTOM_ID: vendoring-redirects-so-ci-can-resolve-them
 :END:
 
 A =:REDIRECT:= of =~/.emacs.d/init.org= works on our laptop and fails on CI, which has no
-=~/.emacs.d/=.  So we /vendor/ each source ---copied or fetched--- into the git-tracked
-=resources/redirects/<slug>.org=:
+=~/.emacs.d/=; a URL fails whenever the network does.  So every publish /vendors/ the
+source ---copied or fetched--- into the git-tracked =resources/redirects/<slug>.org=, and
+includes that.
 
-- On preview, =blog--publish-single-subtree= vendors into its temp file, leaving the
-  source's =:REDIRECT:= alone.
-- On =blog-publish-all=, =blog--vendor-redirects= vendors first and rewrites the property
-  to the in-repo path; e.g., =:REDIRECT: resources/redirects/my-literate-emacs-config.org=.
+- *The property is never rewritten.* =:REDIRECT: https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org=
+  stays as written, so every publish re-fetches the tip of the repo's default branch
+  ---=master=, or =main= for younger repos; the URL names whichever the repo uses.
+- *The vendored copy is a fallback, not a source.* When the source is unreachable we reuse
+  last time's copy, with a message; only a source that is unreachable /and/ never vendored
+  is an error.  An HTTP error counts as unreachable ---=url-copy-file= would happily vendor
+  GitHub's =404: Not Found= page as our article!  So we fetch with =curl --fail=, which
+  also sidesteps url.el's cache and its bodiless =304 Not Modified= replies.
+
+Hence how far an article can lag its source:
+
+| Source     | Laptop preview      | CI                         |
+|------------+---------------------+----------------------------|
+| URL        | fresh fetch         | fresh fetch                |
+| local path | fresh copy          | the last committed copy    |
+
+- *A URL article* lags its repo until the next blog build.  Pushes to the blog trigger
+  builds, but pushes to =holy-books= don't; so CI also rebuilds daily ---see =schedule:= in
+  §[[#ci-workflow-githubworkflowsciyml][the CI workflow]]--- bounding the lag at a day.  =workflow_dispatch= is there for the
+  impatient.
+- *A local-path article* lags until we publish from the laptop and commit the refreshed
+  copy; the diff of =resources/redirects/<slug>.org= is then a terse "what changed
+  upstream" view.
+- *A renamed branch or file* makes the fetch 404: we keep publishing the stale copy, and the
+  message tells us to fix the =:REDIRECT:=.
+
+*** Making a source include-ready
+:PROPERTIES:
+:CUSTOM_ID: making-a-source-include-ready
+:END:
+
+Three things that are right in the repo are wrong in the blog, so =blog--prepare-redirect=
+fixes them in the vendored copy:
+
+1. *Relative links.* =[[file:images/short_example.png]]= is relative to the repo, but once
+   vendored it'd resolve against =resources/redirects/=.  For a URL source we re-root it at
+   the URL's directory, ↦
+   =[[https://raw.githubusercontent.com/alhassy/holy-books/main/images/short_example.png]]=,
+   which Org still inlines as an image.  A local-path source keeps its links; in due time,
+   we may resolve them against the source's git remote.
+2. *File-level keywords.* The temp file already opens with the heading's =#+title:= and
+   friends; an included =#+title: holy-books= would be concatenated onto ours, and
+   =#+options: toc:nil= would hide our Ξ table of contents.  So we axe =#+title:=,
+   =#+subtitle:=, =#+author:=, =#+date:=, =#+options:=, and =#+export_file_name:=; and
+   =#+toc:=, since Ξ already is one.
+3. *=blog:header= and =blog:footer=.*  A repo's own =index.html= uses them for our styling;
+   inside an article they'd print a second header.
+
+Lookalikes inside source blocks are left alone, since =org-element= only reports real
+keywords and links.
+
+A package's write-up is demonstrative of the package: =holy-books.org= is full of
+=quran:1:1= and =basmala:= links, which only export once =holy-books.el= has registered them.
+So a heading's =:LOAD:= names the package's =.el= ---a URL or a path, alongside its
+=:REDIRECT:=--- which we vendor verbatim to =resources/redirects/<slug>.el=, with the same
+fallback, and =load= before exporting.  CI thus needs no per-package install step, though
+the package's own dependencies must already be among CI's packages.  (Loading fetched
+code is trust: whoever can push to that repo can run code in our CI.  It's our repo.)
+
+#+begin_src org :tangle no
+,* Holy Books: Quran & Bible look-ups in Org-mode :emacs:
+:PROPERTIES:
+:CUSTOM_ID:   holy-books-in-org-mode
+:REDIRECT:    https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org
+:LOAD:        https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.el
+:END:
+#+end_src
+
+Finally, a redirected article on GitHub opens with a banner inviting readers to star the
+repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
+read, where it's missed.  Its History badge points at the repo's log for the file, not at
+=projects.org='s, and its Source badge colourises the vendored file, not the five-line
+heading.
 
 #+begin_src emacs-lisp
 (defvar blog-redirects-subdir "resources/redirects/"
@@ -333,29 +451,94 @@ vendored for CI.  Relative path; must end with a trailing slash.")
   "Return non-nil if PATH is an HTTP(S) URL."
   (string-match-p "\\`https?://" path))
 
-(defun blog--already-vendored-p (path)
-  "Return non-nil if PATH is already rooted at `blog-redirects-subdir'."
-  (string-prefix-p blog-redirects-subdir path))
+(defun blog--github-raw-parts (redirect)
+  "REDIRECT ↦ (OWNER REPO BRANCH PATH) when it's a raw.githubusercontent.com URL, else nil."
+  (when (string-match "\\`https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)\\'"
+                      redirect)
+    (mapcar (lambda (i) (match-string i redirect)) '(1 2 3 4))))
 
-(defun blog--vendor-one-redirect (slug redirect)
-  "Fetch REDIRECT (a local path or http(s) URL) into
-`blog-redirects-subdir'/SLUG.org and return the vendored relative path.
-A no-op if REDIRECT already points into `blog-redirects-subdir'."
-  (if (blog--already-vendored-p redirect)
-      redirect
-    (let* ((dest-dir (expand-file-name blog-redirects-subdir blog-posts-directory))
-           (dest     (expand-file-name (concat slug ".org") dest-dir)))
-      (make-directory dest-dir t)
-      (cond
-       ((blog--url-p redirect)
-        (url-copy-file redirect dest t))
-       (t
-        (let ((src (expand-file-name redirect)))
-          (unless (file-exists-p src)
-            (user-error "REDIRECT source does not exist: %s" src))
-          (copy-file src dest t))))
-      (call-process "git" nil nil nil "add" dest)
-      (concat blog-redirects-subdir slug ".org"))))
+(defun blog--redirect-history-url (redirect)
+  "REDIRECT ↦ the GitHub commit history of its file, or nil when it isn't on GitHub."
+  (pcase (blog--github-raw-parts redirect)
+    (`(,owner ,repo ,branch ,path) (format "https://github.com/%s/%s/commits/%s/%s" owner repo branch path))))
+
+(defun blog--redirect-banner (redirect)
+  "REDIRECT ↦ Org text inviting readers to star or discuss its GitHub repo; \"\" when it isn't on GitHub."
+  (pcase (blog--github-raw-parts redirect)
+    (`(,owner ,repo ,_ ,_)
+     (format (concat "#+begin_center\n"
+                     "⭐ The code lives at [[https://github.com/%1$s/%2$s][github.com/%1$s/%2$s]]"
+                     " ---star it, or [[https://github.com/%1$s/%2$s/issues][discuss it there]]!"
+                     " github-stars:%1$s/%2$s\n"
+                     "#+end_center\n\n")
+             owner repo))
+    (_ "")))
+
+(defun blog--fetch-url (url file)
+  "Write URL's body to FILE; an HTTP error is an error, lest we vendor a “404: Not Found” page."
+  ;; Not url.el: its cache sends If-Modified-Since, and a bodiless 304 isn't an article.
+  (unless (zerop (call-process "curl" nil nil nil "--fail" "--silent" "--show-error" "--location"
+                               "--max-time" "30" "--output" file url))
+    (error "curl couldn't fetch %s" url)))
+
+(defconst blog--redirect-axed-keywords '("TITLE" "SUBTITLE" "AUTHOR" "DATE" "OPTIONS" "EXPORT_FILE_NAME" "TOC")
+  "A :REDIRECT: source's file-level keywords that would clash with its article's synthetic ones.")
+
+(defun blog--prepare-redirect (file redirect)
+  "Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, file:images/x.png ↦ URL-dir/images/x.png.
+
+Axes `blog--redirect-axed-keywords' and blog:header/footer links, and re-roots relative file links
+at REDIRECT's directory when it's a URL; see §“Making a source include-ready”."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (delay-mode-hooks (org-mode))
+    (let ((base (and (blog--url-p redirect) (file-name-directory redirect))))
+      ;; Edit back to front, so the positions of earlier elements stay valid.
+      (dolist (el (nreverse (org-element-map (org-element-parse-buffer) '(keyword link) #'identity)))
+        (let ((beg  (org-element-property :begin el))
+              (end  (org-element-property :end el))
+              (type (org-element-property :type el))
+              (path (org-element-property :path el)))
+          (cond
+           ((member (org-element-property :key el) blog--redirect-axed-keywords)
+            (delete-region beg end))
+           ((equal type "blog")
+            (delete-region beg end))
+           ((and base (equal type "file") (not (file-name-absolute-p path)))
+            ;; Expand before searching: `url-expand-file-name' clobbers the match data.
+            (let ((url (url-expand-file-name path base)))
+              (goto-char beg)
+              (search-forward (org-element-property :raw-link el) end)
+              (replace-match url t t)))))))
+    (write-region nil nil file nil 'silent)))
+
+(defun blog--vendor-one-redirect (slug redirect &optional ext)
+  "(SLUG, REDIRECT, EXT) ↦ `blog-redirects-subdir'/SLUG.EXT, freshly copied or fetched from REDIRECT.
+
+EXT defaults to \".org\", and only then is the copy made include-ready; a :LOAD:'s \".el\" is
+vendored verbatim.  When REDIRECT is unreachable ---no network, or CI lacking ~/.emacs.d/--- we
+keep last time's copy, and only signal an error when there is none."
+  (let* ((vendored (concat blog-redirects-subdir slug (or ext ".org")))
+         (dest     (expand-file-name vendored blog-posts-directory))
+         (tmp      (make-temp-file "albasmala-redirect-" nil ".org")))
+    (make-directory (file-name-directory dest) t)
+    (condition-case err
+        (progn
+          (if (blog--url-p redirect)
+              (blog--fetch-url redirect tmp)
+            (copy-file (expand-file-name redirect) tmp t))
+          (unless ext (blog--prepare-redirect tmp redirect))
+          (rename-file tmp dest t)
+          ;; From the blog's root: our caller may be a temp buffer, outside the repo.
+          (let ((default-directory (expand-file-name blog-posts-directory)))
+            (call-process "git" nil nil nil "add" dest)))
+      (error
+       (when (file-exists-p tmp) (delete-file tmp))
+       (unless (file-exists-p dest)
+         (user-error "REDIRECT %s is unreachable and was never vendored: %s" redirect (error-message-string err)))
+       (message "=> REDIRECT %s is unreachable (%s); reusing the vendored %s"
+                redirect (error-message-string err) vendored)))
+    vendored))
 
 (defun blog--map-publishable-top-headings (fn)
   "Walk top-level headings in the current buffer and call FN with point on each.
@@ -389,27 +572,6 @@ one and writing back to a throwaway checkout."
                         (or (org-entry-get (point) "TITLE") title))))
            (org-entry-put (point) "CUSTOM_ID" slug)
            (message "=> Assigned :CUSTOM_ID: %s to %s" slug title)))))))
-
-(defun blog--vendor-redirects ()
-  "Walk the current buffer's top-level headings; for each with a :REDIRECT:
-property, vendor the source into `blog-redirects-subdir' and rewrite the
-property to the vendored in-repo path.  Only touches multiple-style containers.
-
-Called by `blog-publish-all' (CI) so the rewritten path lands in git and CI
-can resolve it on a clean checkout.  NOT called on preview/C-x C-s ---preview
-vendors on-the-fly inside `blog--publish-single-subtree' without touching the
-source buffer.
-
-Relies on `blog--assign-slugs' having run first so every heading carries
-a :CUSTOM_ID: property we can build the vendored filename from."
-  (blog--map-publishable-top-headings
-   (lambda ()
-     (let ((redirect (org-entry-get (point) "REDIRECT"))
-           (slug     (org-entry-get (point) "CUSTOM_ID")))
-       (when (and redirect slug (not (blog--already-vendored-p redirect)))
-         (let ((vendored (blog--vendor-one-redirect slug redirect)))
-           (org-entry-put (point) "REDIRECT" vendored)
-           (message "=> Vendored redirect for %s ← %s" slug redirect)))))))
 #+end_src
 
 ** SITE_NAV: data-driven site navigation from container subtrees   :details:
@@ -1315,8 +1477,11 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              (abstract (blog--info-subtree-abstract headline-node))
              ;; urls
              (container-base (f-base container-file))
-             (url     (blog--url slug))
-             (history (blog--history-url container-file)))
+             (url      (blog--url slug))
+             (redirect (org-element-property :REDIRECT headline-node))
+             ;; A redirected article's history is its source's, when that's on GitHub.
+             (history  (or (and redirect (blog--redirect-history-url redirect))
+                           (blog--history-url container-file))))
         (list (cons "file"        container-base)
               (cons "slug"        slug)
               (cons "container"   container-base)
@@ -1329,7 +1494,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons "history"     history)
               (cons "abstract"    abstract)
               (cons "draft"       (if draft? "t" nil))
-              (cons "redirect"    (org-element-property :REDIRECT headline-node))
+              (cons "redirect"    redirect)
+              (cons "load"        (org-element-property :LOAD headline-node))
               (cons "modified"    (org-element-property :MODIFIED headline-node))
               (cons "site_nav"    (org-element-property :SITE_NAV headline-node)))))))
 
@@ -2925,7 +3091,6 @@ Dispatches on #+article_style: per file:
         (if (blog--multiple-style-p)
             (progn
               (message "=> Exporting all articles from %s..." (f-base f))
-              (blog--vendor-redirects)
               (blog--publish-multiple-articles f))
           (let ((target (expand-file-name (concat (f-base f) ".html") blog-publish-directory)))
             ;; Export directly to public/<base>.html so that #+export_file_name:
@@ -3024,9 +3189,13 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
             (if redirect
                 (with-current-buffer tmp-buf
                   (goto-char (point-max))
-                  ;; Vendor on-the-fly so the #+include: resolves on this machine
-                  ;; and on CI without mutating the source :REDIRECT: property.
-                  (insert (format "#+include: \"%s\"\n"
+                  ;; Vendor afresh, so the #+include: resolves on this machine and on
+                  ;; CI, and tracks the source's tip; the banner sits atop the article.
+                  ;; A package's write-up uses the package's own link types; load it first.
+                  (when-let ((lib (cdr (assoc "load" info))))
+                    (load (expand-file-name (blog--vendor-one-redirect slug lib ".el") blog-posts-directory) nil t))
+                  (insert (blog--redirect-banner redirect)
+                          (format "#+include: \"%s\"\n"
                                   (expand-file-name
                                    (blog--vendor-one-redirect slug redirect)
                                    blog-posts-directory)))
@@ -3051,8 +3220,10 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
               (let ((blog--link-base-directory (file-name-directory (expand-file-name container-file))))
                 (org-export-to-file 'blog html-out))))
 
-          ;; 4. Per-article colourised source: htmlize the subtree narrowed copy.
-          (blog--htmlize-subtree heading-point slug))
+          ;; 4. Per-article colourised source: the vendored file for a redirect, else the subtree.
+          (if (cdr (assoc "redirect" info))
+              (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir slug ".org") blog-posts-directory))
+            (blog--htmlize-subtree heading-point slug)))
 
       ;; Cleanup temp files regardless of errors.
       ;; Mark the buffer unmodified before killing ---this is the only reliable way
@@ -3186,7 +3357,10 @@ CI workaround sits beside its explanation. One =build= job
    only spares us re-downloading what hasn't changed---, then saves them as a fresh cache;
 2. tangles this file and loads =AlBasmala.el=;
 3. runs =blog-publish-all=; and
-4. on pushes to =master=, force-pushes =public/= to =gh-pages=.
+4. on pushes to =master=, and on the daily schedule, force-pushes =public/= to =gh-pages=.
+
+The daily run is for =:REDIRECT:= articles: they track their repos' tips, but pushes there
+don't trigger us; see §[[#vendoring-redirects-so-ci-can-resolve-them][staleness]].
 
 #+begin_src yaml :tangle .github/workflows/ci.yml
 name: blog CI
@@ -3197,6 +3371,9 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+  # :REDIRECT: articles track their repos' tips, which don't trigger us; so rebuild daily too.
+  schedule:
+    - cron: "17 6 * * *"
 
 # Serialise deploys so two quick master pushes don't race on the
 # gh-pages force-push.  Queue rather than cancel ---every deploy lands.
@@ -3262,7 +3439,7 @@ jobs:
             --eval "(blog-publish-all)"
 
       - name: Deploy public/ to gh-pages
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'schedule')
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
