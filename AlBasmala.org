@@ -255,6 +255,9 @@ and RSS; =blog-posts= keeps drafts, so =blog--validate-slugs= still catches a dr
 with a published article.  A draft's page also opens with a banner saying so, and carries
 =<meta name="robots" content="noindex">= lest a stray link let search engines list it.
 
+To see every draft at once, visit =alhassy.com/drafts=: =blog-make-index-page= builds it from =@draft?=
+posts, as cards like the index's.  It is itself unlisted ---no nav link, no feed, and =noindex=.
+
 Publishing is then just axing the marker ---or moving the file out of =draft/=--- and saving; the
 bumped =:MODIFIED:= makes it new on the index and in RSS that day.  Mind that unlisted isn't secret:
 the =.org= source is on GitHub, and its colourised copy is deployed beside the article.
@@ -667,14 +670,16 @@ kbd:C-c_i_i / kbd:C-c_i_s insert images.
                   (interactive)
                   ;; Container slugs first, so :TITLE: overrides win over raw heading text.
                   (blog--assign-slugs)
-                  (blog--ensure-useful-section-anchors)
+                  (blog--ensure-useful-section-anchors current-prefix-arg)
                   (blog--bump-modified-stamp)
                   ;; Blog-wide checks are for blog files; a slug clash in ~/blog mustn't block saving another repo's .org.
                   (when (file-in-directory-p buffer-file-name blog-posts-directory)
                     (blog--refresh-posts)
                     (blog--validate-slugs))
                   (save-buffer)
-                  (if (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))))
+                  (if (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))
+                  ;; Last, so the preview's own messages don't bury the reminder.
+                  (blog--warn-placeholder-ids)))
     (define-key m (kbd "C-RET")
                 (lambda ()
                   (interactive)
@@ -692,6 +697,8 @@ Binds:
              section anchors, vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
+  C-u C-x C-s ---likewise, but repeated section ids become <slug>--placeholder-N;
+             every later save reminds us of them until we rename them
   C-RET    ---new article / new post (dispatches on article style)
   C-c i i ---insert image from file (C-u to rename before committing)
   C-c i s ---take a screenshot and insert it
@@ -2580,31 +2587,54 @@ Re-export will produce a different id. Hence, on every save, we give each headin
 lacking a =CUSTOM_ID= its kebab-case slug; files not re-saved since get the same slug
 at export time, via =blog--stable-headline-ids=, so CI never emits random ids.
 
+Two headings named, say, =Notes= would share the slug =notes=; plain kbd:C-x_C-s refuses, while
+kbd:C-u_C-x_C-s stamps =notes--placeholder-2=, … so we can preview a rough draft right away.  Since
+=blog--make-slug= collapses dash runs, no real slug contains =--=, so the marker is unambiguous:
+every later save logs each placeholder to =*Messages*= ---kbd:C-h_e--- until we name it properly.
+
 #+begin_details "blog--ensure-useful-section-anchors: Run on every C-x C-s"
 #+BEGIN_SRC emacs-lisp
-(defun blog--ensure-useful-section-anchors (&rest _)
+(defconst blog--placeholder-id-regexp "--placeholder-[0-9]+\\'"
+  "Matches a placeholder CUSTOM_ID; `blog--make-slug' collapses dash runs, so no real slug contains “--”.")
+
+(defun blog--ensure-useful-section-anchors (&optional placeholders)
   "Org sections without a CUSTOM_ID are given one derived from the heading title.
 
 Uses `blog--make-slug' so the result is lowercase kebab-case, consistent with
-URL slugs.  If a collision is detected, pops a message-box and undoes.
+URL slugs.  On a collision, pops a message-box and undoes ---unless PLACEHOLDERS
+(C-u C-x C-s), whence the id becomes a unique placeholder to tidy up in due time.
 
 E.g., ↯ We'll go on a ∀∃⇅ adventure
    ↦  well-go-on-a-adventure
-"
-  (interactive)
-  (let ((ids))
+   ↦  well-go-on-a-adventure--placeholder-2, when repeated with PLACEHOLDERS"
+  (interactive "P")
+  ;; Existing ids count too, else a fresh slug could silently clash with a hand-written one.
+  (let ((ids (org-map-entries (lambda () (org-entry-get nil "CUSTOM_ID")) "CUSTOM_ID={.}")))
     (org-map-entries
      (lambda ()
        (org-with-point-at (point)
-         (let ((id (org-entry-get nil "CUSTOM_ID")))
-           (unless id
-             (setq id (blog--make-slug (nth 4 (org-heading-components))))
-             (if (not (member id ids))
-                 (push id ids)
-               (message-box "Oh no, a repeated id!\n\n\t%s" id)
-               (undo)
-               (setq quit-flag t))
+         (unless (org-entry-get nil "CUSTOM_ID")
+           (let* ((slug (blog--make-slug (nth 4 (org-heading-components))))
+                  (id slug)
+                  (n 1))
+             (when (member id ids)
+               (unless placeholders
+                 (message-box "Oh no, a repeated id!\n\n\t%s\n\nC-u C-x C-s makes every repeated id unique, e.g., %s--placeholder-2, so we can preview now and name them in due time."
+                              id id)
+                 (undo)
+                 (setq quit-flag t))
+               (while (member id ids)
+                 (setq id (format "%s--placeholder-%d" slug (cl-incf n)))))
+             (push id ids)
              (org-entry-put nil "CUSTOM_ID" id))))))))
+
+(defun blog--warn-placeholder-ids ()
+  "Log each placeholder CUSTOM_ID, with its heading, to *Messages*; then say how many there are."
+  (when-let ((hits (org-map-entries
+                    (lambda () (format "  %s  ←  %s" (org-entry-get nil "CUSTOM_ID") (org-get-heading t t t t)))
+                    "CUSTOM_ID={--placeholder-[0-9]+$}")))
+    (dolist (h hits) (message "%s" h))
+    (message "⚠ %d placeholder id(s) in this article; C-h e to see them all" (length hits))))
 
 ;; Anchor assignment is an interactive-authoring concern ---it should only
 ;; happen while you can still edit the generated id, i.e. during C-x C-s
@@ -2844,10 +2874,11 @@ Typed links, such as [[file:x.png]] or doc:thread-first, and paths such as [[./x
   "Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
 RSS-FILE is the filename of the associated feed (\"rss.xml\" for the index,
 \"<tag>-rss.xml\" for a tag page).  It is surfaced as a prominent link right
-under the greeting so readers see it without scrolling.
+under the greeting so readers see it without scrolling; nil omits it, as
+drafts have no feed.
 Caller is responsible for killing the buffer when done."
   (let ((buf (generate-new-buffer " *blog-page*"))
-        (rss (or rss-file "rss.xml")))
+        (rss rss-file))
     (with-current-buffer buf
       (insert
        (format "#+EXPORT_FILE_NAME: %s\n" export-file-name)
@@ -2858,7 +2889,7 @@ Caller is responsible for killing the buffer when done."
        "#+end_export\n"
        "#+html: <br>\n"
        greeting "\n"
-       (format "#+html: <p style=\"text-align:center;\"><a href=\"%s\">📡 Subscribe via RSS</a></p>\n" rss)
+       (if rss (format "#+html: <p style=\"text-align:center;\"><a href=\"%s\">📡 Subscribe via RSS</a></p>\n" rss) "")
        "#+html: <br>\n"
        (blog--toc-block posts)
        "#+html: <br>\n"
@@ -2877,7 +2908,7 @@ Caller is responsible for killing the buffer when done."
     buf))
 
 (defun blog-make-index-page ()
-  "Assemble index.html and every tag page.
+  "Assemble index.html, the unlisted drafts.html, and every tag page.
 
 Builds one Org buffer per output file, each populated directly from
 the relevant subset of blog-posts ---no copy-then-delete."
@@ -2891,6 +2922,12 @@ the relevant subset of blog-posts ---no copy-then-delete."
                  (blog--greeting)
                  (concat blog-publish-directory "index.html")
                  "rss.xml")
+    ;; Unlisted like the drafts it lists: linked from nowhere, noindex, and no feed.
+    (export-page (seq-filter #'@draft? blog-posts)
+                 (concat "#+html_head_extra: <meta name=\"robots\" content=\"noindex\">\n"
+                         "Here are my drafts: published, yet unlisted ---still mulling them over. @@html:<br><br>@@")
+                 (concat blog-publish-directory "drafts.html")
+                 nil)
     (let ((by-tag (blog--posts-by-tag)))
       (dolist (tag blog-tags)
         (message "=> Generating tag page: %s..." tag)
@@ -3067,7 +3104,7 @@ pushing.
 (defun blog--publishable-p (file)
   "Return non-nil if FILE is an article that should be published.
 A file is publishable when it has any of:
-  - #+date:                     ---standalone post
+  - #+modified:                 ---standalone post
   - #+article_style: multiple   ---container of subtree articles
   - #+site_nav:                 ---top-level nav page (e.g. about.org)
 
@@ -3077,8 +3114,9 @@ their own (e.g. MathJaxPreamble.org) must opt out explicitly with
   #+exclude_from_publish: t
 
 Any other .org file missing /both/ a publish marker and the opt-out
-signals a (user-error) ---we do not silently skip files that just
-forgot their #+date:."
+is stamped with #+modified: <today>, below its leading #-lines, and
+published ---a stray scratch file becomes a fresh article, not a
+failed build."
   (with-temp-buffer
     (insert-file-contents file)
     (cl-flet ((kw (k) (blog--file-keyword nil k)))
@@ -3087,9 +3125,17 @@ forgot their #+date:."
        ((kw "modified") t)
        ((equal (kw "article_style") "multiple") t)
        ((kw "site_nav") t)
-       (t (user-error
-           "%s has no #+modified:, #+article_style: multiple, or #+site_nav: ---add one, or #+exclude_from_publish: t if this is an include-only fragment"
-           (f-filename file)))))))
+       (t (let ((today (format-time-string "%Y-%m-%d")))
+            ;; Below the keyword block, so a leading “-*- … -*-” line stays first.
+            (goto-char (point-min))
+            (while (looking-at "#") (forward-line))
+            (insert (format "#+modified: %s\n" today))
+            (write-region nil nil file)
+            (when-let ((buf (get-file-buffer file)))
+              (with-current-buffer buf
+                (unless (buffer-modified-p) (revert-buffer t t t))))
+            (message "%s had no #+modified:; stamped it %s" (f-filename file) today)
+            t))))))
 
 (defun blog-publish-all ()
   "Batch-publish every article and regenerate the index.  The sole CI entry point.
