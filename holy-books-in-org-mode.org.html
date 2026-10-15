@@ -1,0 +1,1760 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>holy-books-in-org-mode.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #a0a1a7;">#+PROPERTY: header-args:emacs-lisp :tangle holy-books.el :exports code</span>
+<span style="color: #a0a1a7;">#+PROPERTY: header-args :eval never-export</span>
+
+<span style="color: #a0a1a7;"># MA: To reuse this setup for other projects: M-% holy-books &#10218;new-pacakge-name&#10219;</span>
+<span style="color: #a0a1a7;"># For tests, update the variable &#8220;needed-libraries&#8221;</span>
+
+<span style="color: #a0a1a7;"># (progn (org-babel-tangle-file "holy-books.org") (load-file "holy-books.el") (holy-books-mode) )</span>
+
+<span style="color: #a0a1a7;"># (load-file "~/blog/AlBasmala.el")</span>
+<span style="color: #a0a1a7;"># (require 'org-static-blog)</span>
+
+
+<span style="color: #0184bc; font-weight: bold;">* Lisp Package Preamble                                            </span><span style="color: #0184bc; font-weight: bold;">:noexport:</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Preamble</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp  :noweb yes
+</span><span style="color: #a0a1a7; font-weight: bold;">;;; </span><span style="color: #a0a1a7;">holy-books.el --- Org-mode links/tooltips/lookups for Quran &amp; Bible  -*- lexical-binding: t; -*-
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Copyright (c) 2021-2026 Musa Al-hassy
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Author: Musa Al-hassy <a href="mailto:alhassy%40gmail.com">&lt;alhassy@gmail.com&gt;</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Version: 26.10.14
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Package-Requires: ((s "1.12.0") (dash "2.16.0") (emacs "27.1") (org "9.1"))
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Keywords: quran, bible, links, tooltips, convenience, comm, hypermedia
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Repo: <a href="https://github.com/alhassy/holy-books">https://github.com/alhassy/holy-books</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Homepage: <a href="https://alhassy.github.io/holy-books/">https://alhassy.github.io/holy-books/</a>
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">This program is free software; you can redistribute it and/or modify
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">it under the terms of the GNU General Public License as published by
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">the Free Software Foundation, either version 3 of the License, or
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(at your option) any later version.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">This program is distributed in the hope that it will be useful,
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">but WITHOUT ANY WARRANTY; without even the implied warranty of
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">GNU General Public License for more details.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">You should have received a copy of the GNU General Public License
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">along with this program.  If not, see <a href="https://www.gnu.org/licenses/">&lt;https://www.gnu.org/licenses/&gt;</a>.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;;; </span><span style="color: #a0a1a7;">Commentary:
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">This library provides common desirable features using the Org interface for
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">when writing about the Quran and the Bible:
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. Links &#8220;<a href="quran:chapter:verse|colour|size|no-info-p">quran:chapter:verse|colour|size|no-info-p</a>&#8221;, or just &#8220;<a href="quran:chapter:verse">quran:chapter:verse</a>&#8221;
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">for retrieving a verse from the Quran. Use &#8220;<a href="Quran:chapter:verse">Quran:chapter:verse</a>&#8221; to HTML export
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">as a tooltip. The particular translation can be selected by altering the
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">HOLY-BOOKS-QURAN-TRANSLAITON variable.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">1. Likewise, &#8220;<a href="bible:book:chapter:verse">bible:book:chapter:verse</a>&#8221;.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">The particular version can be selected by altering the
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">HOLY-BOOKS-BIBLE-VERSION variable.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">2. Two functions, HOLY-BOOKS-QURAN and HOLY-BOOKS-BIBLE that do the heavy
+</span><span style="color: #a0a1a7; font-weight: bold;">;;    </span><span style="color: #a0a1a7;">work of the link types.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">3. A link type to produce the Arabic basmallah; e.g., &#8220;<a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a>&#8221;.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Minimal Working Example:
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Sometimes I want to remember the words of the God of Abraham. In English Bibles,
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">His name is &#8220;Elohim&#8221;, whereas in Arabic Bibles and the Quran, His name is
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;Allah&#8221;. We can use links to quickly access them, such as <a href="Quran:7:157|darkgreen">Quran:7:157|darkgreen</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">and <a href="bible:Deuteronomy:18:18-22|darkblue">bible:Deuteronomy:18:18-22|darkblue</a>.  Arab-speaking Christians and Muslims
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">use the Unicode symbol <a href="green:&#65010;">[[green:&#65010;]]</a> to refer to Him ---e.g., they would write &#65010; &#65011; ,
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;Allah akbar&#8221;, to declare the greatness of God-- and, as the previous passage
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">says &#8220;in the name of the Lord&#8221;, there is a nice calligraphic form that is used
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">by Arabic speakers when starting a task, namely <a href="basmala:darkgreen|20px|span">[[basmala:darkgreen|20px|span]]</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">---this is known as the &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">basmalallah</span><span style="color: #a0a1a7;">&#8217;, which is Arabic for &#8220;name of God&#8221;.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(Using capitalised &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">Quran:&#8943;</span><span style="color: #a0a1a7;">&#8217; and &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">Bible:&#8943;</span><span style="color: #a0a1a7;">&#8217; results in tooltips.)
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">This file has been tangled from a literate, org-mode, file.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;;; </span><span style="color: #a0a1a7;">Code:
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">String and list manipulation libraries
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;"><a href="https://github.com/magnars/dash.el">https://github.com/magnars/dash.el</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;"><a href="https://github.com/magnars/s.el">https://github.com/magnars/s.el</a>
+</span>
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">s</span>)               <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;The long lost Emacs string manipulation library&#8221;
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">dash</span>)            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8220;A modern list library for Emacs&#8221;
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">cl-lib</span>)          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">New Common Lisp library; &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">cl-???</span><span style="color: #a0a1a7;">&#8217; forms.
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org</span>)
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">url</span>)
+
+(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">url-http-end-of-headers</span>)
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books--fetch</span> (url)
+  <span style="color: #50a14f; font-style: italic;">"URL &#8614; the body of its response, decoded as UTF-8."</span>
+  (<span style="color: #a626a4;">with-current-buffer</span> (url-retrieve-synchronously url t t 30)
+    (<span style="color: #a626a4;">prog1</span> (decode-coding-string (buffer-substring (1+ url-http-end-of-headers) (point-max)) 'utf-8)
+      (kill-buffer))))
+
+(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">holy-books-version</span> (package-get-version))
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books-version</span> ()
+  <span style="color: #50a14f; font-style: italic;">"Print the current holy-books version in the minibuffer."</span>
+  (<span style="color: #a626a4;">interactive</span>)
+  (message holy-books-version))
+
+&lt;&lt;forward-decls&gt;&gt;
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp :noweb yes
+</span><span style="color: #a0a1a7; font-weight: bold;">;;;</span><span style="color: #a0a1a7;">###</span><span style="color: #a0a1a7; font-weight: bold;">autoload</span><span style="color: #a0a1a7;">
+</span>(<span style="color: #a626a4;">define-minor-mode</span> <span style="color: #0184bc;">holy-books-mode</span>
+    <span style="color: #50a14f; font-style: italic;">"Org-mode links, tooltips, and Lisp look-ups for the Quran &amp; Bible."</span>
+  nil nil nil)
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+The following more elaborate version is for when the package has stuff
+to enable/disable when being toggled.
+<span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp :noweb yes :tangle no
+</span><span style="color: #a0a1a7; font-weight: bold;">;;;</span><span style="color: #a0a1a7;">###</span><span style="color: #a0a1a7; font-weight: bold;">autoload</span><span style="color: #a0a1a7;">
+</span>(<span style="color: #a626a4;">define-minor-mode</span> <span style="color: #0184bc;">holy-books-mode</span>
+    <span style="color: #50a14f; font-style: italic;">"Org-mode links, tooltips, and Lisp look-ups for the Quran &amp; Bible."</span>
+  nil nil nil
+  (<span style="color: #a626a4;">if</span> holy-books-mode
+      (<span style="color: #a626a4;">progn</span>
+        &lt;&lt;enable-mode&gt;&gt;
+      ) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Must be on a new line; I'm using noweb-refs
+</span>    &lt;&lt;disable-mode&gt;&gt;
+    )) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Must be on a new line; I'm using noweb-refs
+</span><span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #a0a1a7;">#+RESULTS:</span>
+
+<span style="color: #a0a1a7;"># With noweb, we need those new lines; otherwise in &#8220;x &lt;&lt;y&gt;&gt; z&#8221; results in every</span>
+<span style="color: #a0a1a7;"># line of &lt;&lt;y&gt;&gt; being prefixed by x and postfixed by z.</span>
+<span style="color: #a0a1a7;"># #</span>
+<span style="color: #a0a1a7;"># See <a href="https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like">https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like</a></span>
+
+<span style="color: #0184bc; font-weight: bold;">* Testing </span><span style="color: #0184bc; font-weight: bold;">:noexport:</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Testing</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp :tangle tests.el
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Dependencies ---`</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">s</span><span style="color: #a0a1a7;">', `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">dash</span><span style="color: #a0a1a7;">', and `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">snap</span><span style="color: #a0a1a7;">' (with its `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">fancy-C-x-C-e</span><span style="color: #a0a1a7;">')--- are installed by the CI workflow below;
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">snap is not yet on MELPA, so we expect clones of it in ~/snap and ~/fancy-C-x-C-e.
+</span>(package-initialize)
+(add-to-list 'load-path (expand-file-name <span style="color: #50a14f;">"~/snap"</span>))
+(add-to-list 'load-path (expand-file-name <span style="color: #50a14f;">"~/fancy-C-x-C-e"</span>))
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">snap</span>)
+(snap-define-fixture deftest) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The identity fixture: plain ERT tests with natural-language names
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">s</span>)
+
+(load-file <span style="color: #50a14f;">"holy-books.el"</span>)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Run all with M-x ert RET (tag html-export) RET; refresh a stale :html with C-u C-x C-e on its test.
+</span>(snap-define-relation html-export (org html)
+  <span style="color: #50a14f;">"Exporting the ORG snippet, body-only, yields HTML."</span>
+  (<span style="color: #a626a4;">let</span> ((actual (org-export-string-as org 'html <span style="color: #e44649;">:body-only</span>)))
+    (should (equal html actual))
+    (list <span style="color: #e44649;">:html</span> actual)))
+
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">ox-md</span>)
+(snap-define-relation md-export (org md)
+  <span style="color: #50a14f;">"Exporting the ORG snippet, body-only and without a table of contents, yields Markdown MD."</span>
+  (<span style="color: #a626a4;">let</span> ((actual (org-export-string-as org 'md <span style="color: #e44649;">:body-only</span> '(<span style="color: #e44649;">:with-toc</span> nil))))
+    (should (equal md actual))
+    (list <span style="color: #e44649;">:md</span> actual)))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+--------------------------------------------------------------------------------
+
+The following creates the &#8220;Github Actions Workflow&#8221; file;
+this way, Github will run your tests every time you commit ^_^
+
+Below I'm using =main= as the <span style="font-style: italic;">/name/</span> of the main branch;
+if you use =master= as the name, then change that
+or otherwise the tests will not trigger automatically
+after push!
+
+This file is the single source: =holy-books.el=, =tests.el=, and the workflow itself are
+tangled from it.  So CI first re-tangles and fails if =git diff --exit-code= finds the
+committed files differ ---say, a pull request that patched =holy-books.el= directly.  The
+fix is always the same: make the change here, tangle, and commit both.
+
+<span style="color: #a0a1a7;">#+begin_src shell :tangle .github/workflows/main.yml :mkdirp yes
+</span>name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+<span style="color: #e44649;">jobs</span>:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: purcell/setup-emacs@v8.0
+        with:
+          version: 30.1
+
+      <span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">holy-books.org is the source; fail if the committed tangled files have drifted from it.
+</span>      - name: Check the tangle is a fixpoint
+        run: |
+          emacs -Q --batch --eval <span style="color: #50a14f;">"(progn (require 'ob-tangle) (org-babel-tangle-file \"holy-books.org\"))"</span>
+          git diff --exit-code
+
+      <span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">snap is not yet on MELPA; tests.el expects it, and its fancy-C-x-C-e dependency, in ~
+</span>      - name: Fetch snap
+        run: |
+          git clone --depth 1 <a href="https://github.com/alhassy/snap">https://github.com/alhassy/snap</a> ~/snap
+          git clone --depth 1 <a href="https://github.com/alhassy/fancy-C-x-C-e">https://github.com/alhassy/fancy-C-x-C-e</a> ~/fancy-C-x-C-e
+
+      - name: Install MELPA dependencies
+        run: |
+          emacs --batch --eval <span style="color: #50a14f;">"(progn
+            (require 'package)
+            (add-to-list 'package-archives '(\"melpa\" . \"<a href="https://melpa.org/packages/">https://melpa.org/packages/</a>\") t)
+            (package-initialize) (package-refresh-contents)
+            (dolist (p '(s dash)) (package-install p)))"</span>
+
+      - name: Run tests
+        run: emacs --batch -l ert -l tests.el -f ert-run-tests-batch-and-exit
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">      # Upload coverage</span>
+      - uses: codecov/codecov-action@v1
+
+<span style="color: #0184bc; font-weight: bold;">* Abstract </span><span style="color: #0184bc; font-weight: bold;">:ignore:</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Abstract</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_center
+</span>
+<a href="badge:Emacs|27|green|https://www.gnu.org/software/emacs|gnu-emacs">badge:Emacs|27|green|https://www.gnu.org/software/emacs|gnu-emacs</a>
+<a href="badge:Org|9.4|blue|https://orgmode.org|gnu">badge:Org|9.4|blue|https://orgmode.org|gnu</a>
+
+#+html: &lt;span&gt;
+<a href="badge:holy-books|1.4|informational|https://github.com/alhassy/holy-books|Gnu-Emacs">badge:holy-books|1.4|informational|https://github.com/alhassy/holy-books|Gnu-Emacs</a>
+
+# #+html: &lt;a href="<span style="text-decoration: underline;"><a href="https://melpa.org/#/holy-books">https://melpa.org/#/holy-books</a></span>"&gt;&lt;img alt="MELPA" src="<span style="text-decoration: underline;"><a href="https://melpa.org/packages/holy-books-badge.svg&quot;/">https://melpa.org/packages/holy-books-badge.svg"/</a></span>&gt;&lt;/a&gt;
+# #+html: &lt;/span&gt;
+
+<a href="badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs">[[badge:license|GNU_3|informational|https://www.gnu.org/licenses/gpl-3.0.en.html|read-the-docs][gnu 3 license badge]]</a>
+<a href="badge:docs|literate|success|https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like|read-the-docs">[[badge:docs|literate|success|https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like|read-the-docs][read-the-docs badge]]</a>
+<a href="tweet:https://github.com/alhassy/holy-books">tweet:https://github.com/alhassy/holy-books</a>
+<a href="badge:contributions|welcome|green|https://github.com/alhassy/holy-books/issues">badge:contributions|welcome|green|https://github.com/alhassy/holy-books/issues</a>
+
+<a href="badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds">badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds</a>
+<a href="badge:|buy_me_a&#160;coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee">badge:|buy_me_a&#160;coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee</a>
+
+<a href="badge:Exports|HTML&amp;Markdown">badge:Exports|HTML&amp;Markdown</a>
+
+#+begin_export html
+&lt;a href="<span style="text-decoration: underline;"><a href="https://github.com/alhassy/holy-books/blob/main/tests.el">https://github.com/alhassy/holy-books/blob/main/tests.el</a></span>"&gt;&lt;img src="<span style="text-decoration: underline;"><a href="https://github.com/alhassy/holy-books/actions/workflows/main.yml/badge.svg">https://github.com/alhassy/holy-books/actions/workflows/main.yml/badge.svg</a></span>"&gt;&lt;/a&gt;
+#+end_export
+
+<span style="color: #a0a1a7;">#+end_center
+</span>
+<span style="color: #a0a1a7;">#+begin_center
+</span><span style="font-weight: bold;">*Abstract*</span>
+<span style="color: #a0a1a7;">#+end_center
+</span><span style="color: #a0a1a7;">#+begin_quote
+</span>
+Let's use Org-mode links to look-up Quranic and Biblical verses!
+
+Links such as ~<span style="color: #00ff00; font-weight: bold;"><a href="quran:chapter:verse">quran:chapter:verse</a></span>~ will, upon export, retrieve
+the requested verse and inline it in the resulting text.
+
+For now, only the Quran and the Bible are supported.
+<span style="color: #a0a1a7;">#+end_quote
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Short Example </span><span style="color: #0184bc; font-weight: bold;">:ignore:</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">COMMENT-Short-Example</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="font-style: italic;">/Super short example.../</span>
+
+<span style="color: #a0a1a7;">#+begin_org-demo :source-color green :result-color white :style sequential :sep ""
+</span>  Sometimes I start a task with the Lord's name--- <span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a></span>
+  ---which means <span style="color: #00ff00; font-weight: bold;"><a href="quran:1:1|darkgreen">quran:1:1|darkgreen</a></span>.
+  My friends like to say <span style="color: #00ff00; font-weight: bold;"><a href="bible:Genesis:1:3|darkblue">bible:Genesis:1:3|darkblue</a></span>.
+<span style="color: #a0a1a7;">#+end_org-demo
+</span><span style="color: #a0a1a7;">#+begin_box Tooltips: Using Capitalisation &#8216;Quran:&#8943;&#8217; and &#8216;Bible:&#8943;&#8217; :background-color custard
+</span>   Sometimes I start a task with the Lord's name--- <span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a></span>
+  ---which means <span style="color: #00ff00; font-weight: bold;"><a href="Quran:1:1|darkgreen">Quran:1:1|darkgreen</a></span>.
+  My friends like to say <span style="color: #00ff00; font-weight: bold;"><a href="Bible:Genesis:1:3|darkblue">Bible:Genesis:1:3|darkblue</a></span>.
+<span style="color: #a0a1a7;">#+end_box
+</span><span style="color: #0184bc; font-weight: bold;">* Longer Example</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Longer-Example</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_org-demo :style sequential :source-color green :result-color white :sep ""
+</span> Sometimes I want to remember the words of the God of Abraham. In English Bibles,
+ His name is &#8220;Elohim&#8221;, whereas in Arabic Bibles and the Quran, His name is
+ &#8220;Allah&#8221;. We can use links to quickly access them, such as <span style="color: #00ff00; font-weight: bold;"><a href="quran:7:157|darkgreen">quran:7:157|darkgreen</a></span>
+ and <span style="color: #00ff00; font-weight: bold;"><a href="bible:Deuteronomy:18:18-22|darkblue">bible:Deuteronomy:18:18-22|darkblue</a></span>.  Arab-speaking Christians and Muslims
+ use the Unicode symbol <a href="green:&#65010;">green:&#65010;</a> to refer to Him ---e.g., they would write &#65010; &#65011; ,
+ &#8220;Allah akbar&#8221;, to declare the greatness of God-- and, as the previous passage
+ says &#8220;in the name of the Lord&#8221;, there is a nice calligraphic form that is used
+ by Arabic speakers when starting a task, namely <span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a></span>
+ ---this is known as the &#8216;basmalallah&#8217;, which is Arabic for &#8220;name of God&#8221;.
+ (Using capitalised &#8216;Quran:&#8943;&#8217; and &#8216;Bible:&#8943;&#8217; results in tooltips.)
+<span style="color: #a0a1a7;">#+end_org-demo
+</span><span style="color: #a0a1a7;">#+begin_box Tooltips: Using Capitalisation &#8216;Quran:&#8943;&#8217; and &#8216;Bible:&#8943;&#8217; :background-color custard
+</span> Sometimes I want to remember the words of the God of Abraham. In English Bibles,
+ His name is &#8220;Elohim&#8221;, whereas in Arabic Bibles and the Quran, His name is
+ &#8220;Allah&#8221;. We can use links to quickly access them, such as <span style="color: #00ff00; font-weight: bold;"><a href="Quran:7:157|darkgreen">Quran:7:157|darkgreen</a></span>
+ and <span style="color: #00ff00; font-weight: bold;"><a href="Bible:Deuteronomy:18:18-22|darkblue">Bible:Deuteronomy:18:18-22|darkblue</a></span>.  Arab-speaking Christians and Muslims
+ use the Unicode symbol <a href="green:&#65010;">green:&#65010;</a> to refer to Him ---e.g., they would write &#65010; &#65011; ,
+ &#8220;Allah akbar&#8221;, to declare the greatness of God-- and, as the previous passage
+ says &#8220;in the name of the Lord&#8221;, there is a nice calligraphic form that is used
+ by Arabic speakers when starting a task, namely <span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a></span>
+ ---this is known as the &#8216;basmalallah&#8217;, which is Arabic for &#8220;name of God&#8221;.
+ (Using capitalised &#8216;Quran:&#8943;&#8217; and &#8216;Bible:&#8943;&#8217; results in tooltips.)
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Yet Another Example</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Yet-Another-Example</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #00ff00; font-weight: bold;"><a href="quran:12:1">quran:12:1</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="quran:12:2">quran:12:2</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="quran:12:3">quran:12:3</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="quran:12:4">quran:12:4</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="quran:12:5">quran:12:5</a></span>
+
+--------------------------------------------------------------------------------
+
+
+<span style="color: #00ff00; font-weight: bold;"><a href="Quran:12:1">Quran:12:1</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="Quran:12:2">Quran:12:2</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="Quran:12:3">Quran:12:3</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="Quran:12:4">Quran:12:4</a></span>
+<span style="color: #00ff00; font-weight: bold;"><a href="Quran:12:5">Quran:12:5</a></span>
+
+<span style="color: #0184bc; font-weight: bold;">* basmala &#65021;</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="font-weight: bold;">:CUSTOM_ID:</span>
+  <span style="font-weight: bold;">:END:</span>
+
+The <span style="text-decoration: underline;"><a href="https://en.wikipedia.org/wiki/Basmala">basmala</a></span> is Arabic for &#8220;in the name of God&#8221;, and the Unicode symbol &#65021; says
+&#8220;In the name of Allah, the most gracious, the most merciful&#8221;.
+
+One could wrap this up in HTML tags to get the desired style, as in
+<span style="color: #a0a1a7;">#+begin_src org :tangle no
+</span>,#+html: &lt;center style="<a href="color:darkgreen;font-size:60px;padding:25px">color:darkgreen;font-size:60px;padding:25px</a>"&gt;
+&#65021;
+,#+html: &lt;/center&gt;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Much better would be ~<span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a></span>~, resulting in the inline
+<span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen|20px|span">basmala:darkgreen|20px|span</a></span>; whereas just ~<span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen">basmala:darkgreen</a></span>~ results in the
+centred form: <span style="color: #00ff00; font-weight: bold;"><a href="basmala:darkgreen">basmala:darkgreen</a></span>.
+
+<span style="color: #a0a1a7;"> #+begin_src emacs-lisp
+</span>(org-link-set-parameters
+  <span style="color: #50a14f;">"basmala"</span>
+  <span style="color: #e44649;">:follow</span> (<span style="color: #a626a4;">lambda</span> (label) nil)
+  <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">lambda</span> (label description backend)
+            (<span style="color: #a626a4;">-let</span> [(color size html-tag) (s-split <span style="color: #50a14f;">"|"</span> label)]
+              (format
+               <span style="color: #50a14f;">"&lt;%s style=\"<a href="color:%s;font-size:%s;padding:25px">color:%s;font-size:%s;padding:25px</a>\"&gt;
+                     &#65021;
+                &lt;/%s&gt;"</span>
+               (<span style="color: #a626a4;">or</span> html-tag <span style="color: #50a14f;">"center"</span>)
+               (<span style="color: #a626a4;">or</span> color 'darkgreen)
+               (<span style="color: #a626a4;">or</span> size '60px)
+               (<span style="color: #a626a4;">or</span> html-tag <span style="color: #50a14f;">"center"</span>))))
+  <span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"green"</span> <span style="color: #e44649;">:weight</span> bold))
+<span style="color: #a0a1a7;"> #+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_details Tests
+</span>#+begin_src emacs-lisp :tangle tests.el
+(define-html-export-test "basmala with no arguments has an empty colour"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="basmala:">basmala:</a></span>"
+  :html "&lt;p&gt;
+&lt;center style=\"<a href="color:;font-size:60px;padding:25px">color:;font-size:60px;padding:25px</a>\"&gt;
+                     &#65021;
+                &lt;/center&gt;&lt;/p&gt;
+")
+
+(define-html-export-test "basmala with a colour argument uses it"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="basmala:green">basmala:green</a></span>"
+  :html "&lt;p&gt;
+&lt;center style=\"<a href="color:green;font-size:60px;padding:25px">color:green;font-size:60px;padding:25px</a>\"&gt;
+                     &#65021;
+                &lt;/center&gt;&lt;/p&gt;
+")
+#+end_src
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #0184bc; font-weight: bold;">* holy-books-quran</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-quran</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_details Test: The third verse of each chapter of the Quran
+</span><a href="link-here:Example-The-third-verse-of-each-chapter-of-the-Quran">link-here:Example-The-third-verse-of-each-chapter-of-the-Quran</a>
+
+ #+begin_src emacs-lisp :wrap export html :tangle no :exports both
+(s-join "\n\n&lt;hr&gt;" (--map (format "%s &#8759; %s"
+                                  (cl-getf (cl-getf holy-books-quran-cache it) :name)
+                                  (holy-books-quran it 3)) (number-sequence 1 114)))
+ #+end_src
+
+ #+RESULTS:
+ #+begin_export html
+ Al-fatihah The Opener &#8759;   the Most Compassionate, Most Merciful,
+
+ &lt;hr&gt;Al-baqarah The Cow &#8759;   who believe in the unseen,&#160;establish prayer, and donate from what We have provided for them,
+
+ &lt;hr&gt;Ali &amp;#39;imran Family Of Imran &#1570;&#1604; &#8759;   He has revealed to you &#761;O Prophet&#762; the Book in truth, confirming what came before it, as He revealed the Torah and the Gospel
+
+ &lt;hr&gt;An-nisa The Women &#8759;   If you fear you might fail to give orphan women their &#761;due&#762; rights &#761;if you were to marry them&#762;, then marry other women of your choice&#8212;two, three, or four. But if you are afraid you will fail to maintain justice, then &#761;content yourselves with&#762; one&#160;This way you are less likely to commit injustice.
+
+ &lt;hr&gt;Al-ma&amp;#39;idah The Table Spread &#8759;   Forbidden to you are carrion, blood, and swine; what is slaughtered in the name of any other than Allah; what is killed by strangling, beating, a fall, or by being gored to death; what is partly eaten by a predator unless you slaughter it; and what is sacrificed on altars. You are also forbidden to draw lots for decisions.&#160;This is all evil. Today the disbelievers have given up all hope of &#761;undermining&#762; your faith. So do not fear them; fear Me! Today I have perfected your faith for you, completed My favour upon you, and chosen Islam as your way. But whoever is compelled by extreme hunger&#8212;not intending to sin&#8212;then surely Allah is All-Forgiving, Most Merciful.
+
+ &lt;hr&gt;Al-an&amp;#39;am The Cattle &#8759;   He is the Only True God in the heavens and the earth. He knows whatever you conceal and whatever you reveal, and knows whatever you do.
+
+ &lt;hr&gt;Al-a&amp;#39;raf The Heights &#8759;   Follow what has been sent down to you from your Lord, and do not take others as guardians besides Him. How seldom are you mindful!
+
+ &lt;hr&gt;Al-anfal The Spoils Of War &#8759;   &#761;They are&#762; those who establish prayer and donate from what We have provided for them.
+
+ &lt;hr&gt;At-tawbah The Repentance &#8759;   A declaration from Allah and His Messenger &#761;is made&#762; to all people on the day of the greater pilgrimage&#160;that Allah and His Messenger are free of the polytheists. So if you &#761;pagans&#762; repent, it will be better for you. But if you turn away, then know that you will have no escape from Allah. And give good news &#761;O Prophet&#762; to the disbelievers of a painful punishment.
+
+ &lt;hr&gt;Yunus Jonah &#8759;   Surely your Lord is Allah Who created the heavens and the earth in six Days,&#160;then established Himself on the Throne, conducting every affair. None can intercede except by His permission. That is Allah&#8212;your Lord, so worship Him &#761;alone&#762;. Will you not then be mindful?
+
+ &lt;hr&gt;Hud Hud &#8759;   And seek your Lord&#8217;s forgiveness and turn to Him in repentance. He will grant you a good provision for an appointed term and graciously reward the doers of good. But if you turn away, then I truly fear for you the torment of a formidable Day.
+
+ &lt;hr&gt;Yusuf Joseph &#8759;   We relate to you &#761;O Prophet&#762; the best of stories through Our revelation of this Quran, though before this you were totally unaware &#761;of them&#762;.
+
+ &lt;hr&gt;Ar-ra&amp;#39;d The Thunder &#8759;   And He is the One Who spread out the earth and placed firm mountains and rivers upon it, and created fruits of every kind in pairs.&#160;He covers the day with night. Surely in this are signs for those who reflect.
+
+ &lt;hr&gt;Ibrahim Abraham &#8759;   &#761;They are&#762; the ones who favour the life of this world over the Hereafter and hinder &#761;others&#762; from the Way of Allah, striving to make it &#761;appear&#762; crooked. It is they who have gone far astray.
+
+ &lt;hr&gt;Al-hijr The Rocky Tract &#8759;   &#761;So&#762; let them eat and enjoy themselves and be diverted by &#761;false&#762; hope, for they will soon know.
+
+ &lt;hr&gt;An-nahl The Bee &#8759;   He created the heavens and the earth for a purpose. Exalted is He above what they associate with Him &#761;in worship&#762;!
+
+ &lt;hr&gt;Al-isra The Night Journey &#8759;   &#761;O&#762; descendants of those We carried with Noah &#761;in the Ark&#762;! He was indeed a grateful servant.&#8221;
+
+ &lt;hr&gt;Al-kahf The Cave &#8759;   in which they will remain forever;
+
+ &lt;hr&gt;Maryam Mary &#8759;   when he cried out to his Lord privately,
+
+ &lt;hr&gt;Taha Ta-ha &#8759;   but as a reminder to those in awe &#761;of Allah&#762;.
+
+ &lt;hr&gt;Al-anbya The Prophets &#8759;   with their hearts &#761;totally&#762; distracted. The evildoers would converse secretly, &#761;saying,&#762; &#8220;Is this &#761;one&#762; not human like yourselves? Would you fall for &#761;this&#762; witchcraft, even though you can &#761;clearly&#762; see?&#8221;
+
+ &lt;hr&gt;Al-hajj The Pilgrimage &#8759;   &#761;Still&#762; there are some who dispute about Allah without knowledge, and follow every rebellious devil.
+
+ &lt;hr&gt;Al-mu&amp;#39;minun The Believers &#8759;   those who avoid idle talk;
+
+ &lt;hr&gt;An-nur The Light &#8759;   A male fornicator would only marry a female fornicator or idolatress. And a female fornicator would only be married to a fornicator or idolater. This is &#761;all&#762; forbidden to the believers.
+
+ &lt;hr&gt;Al-furqan The Criterion &#8759;   Yet they have taken besides Him gods who cannot create anything but are themselves created. Nor can they protect or benefit themselves. Nor can they control life, death, or resurrection.
+
+ &lt;hr&gt;Ash-shu&amp;#39;ara The Poets &#8759;   Perhaps you &#761;O Prophet&#762; will grieve yourself to death over their disbelief.
+
+ &lt;hr&gt;An-naml The Ant &#8759;   &#761;those&#762; who establish prayer, pay alms-tax, and have sure faith in the Hereafter.
+
+ &lt;hr&gt;Al-qasas The Stories &#8759;   We narrate to you &#761;O Prophet&#762; part of the story of Moses and Pharaoh in truth for people who believe.
+
+ &lt;hr&gt;Al-&amp;#39;ankabut The Spider &#8759;   We certainly tested those before them. And &#761;in this way&#762; Allah will clearly distinguish between those who are truthful and those who are liars.
+
+ &lt;hr&gt; &#8759;   in a nearby land.&#160;Yet following their defeat, they will triumph
+
+ &lt;hr&gt;Luqman Luqman &#8759;   &#761;It is&#762; a guide and mercy for the good-doers&#8212;
+
+ &lt;hr&gt;As-sajdah The Prostration &#8759;   Or do they say, &#8220;He has fabricated it!&#8221;? No! It is the truth from your Lord in order for you to warn a people to whom no warner has come before you, so they may be &#761;rightly&#762; guided.
+
+ &lt;hr&gt;Al-ahzab The Combined Forces &#8759;   And put your trust in Allah, for Allah is sufficient as a Trustee of Affairs.
+
+ &lt;hr&gt;Saba Sheba &#8759;   The disbelievers say, &#8220;The Hour will never come to us.&#8221; Say, &#761;O Prophet,&#762; &#8220;Yes&#8212;by my Lord, the Knower of the unseen&#8212;it will certainly come to you!&#8221; Not &#761;even&#762; an atom&#8217;s weight is hidden from Him in the heavens or the earth; nor anything smaller or larger than that, but is &#761;written&#762; in a perfect Record.
+
+ &lt;hr&gt;Fatir Originator &#8759;   O humanity! Remember Allah&#8217;s favours upon you. Is there any creator other than Allah who provides for you from the heavens and the earth? There is no god &#761;worthy of worship&#762; except Him. How can you then be deluded &#761;from the truth&#762;?
+
+ &lt;hr&gt;Ya-sin Ya Sin &#8759;   You &#761;O Prophet&#762; are truly one of the messengers
+
+ &lt;hr&gt;As-saffat Those Who Set The Ranks &#8759;   and those who recite the Reminder!
+
+ &lt;hr&gt;Sad The Letter &amp;quot;saad&amp;quot; &#8759;   &#761;Imagine&#762; how many peoples We destroyed before them, and they cried out when it was too late to escape.
+
+ &lt;hr&gt;Az-zumar The Troops &#8759;   Indeed, sincere devotion is due &#761;only&#762; to Allah. As for those who take other lords besides Him, &#761;saying,&#762; &#8220;We worship them only so they may bring us closer to Allah,&#8221; surely Allah will judge between all&#160;regarding what they differed about. Allah certainly does not guide whoever persists in lying and disbelief.
+
+ &lt;hr&gt;Ghafir The Forgiver &#8759;   the Forgiver of sin and Accepter of repentance, the Severe in punishment, and Infinite in bounty. There is no god &#761;worthy of worship&#762; except Him. To Him &#761;alone&#762; &#160;is the final return.
+
+ &lt;hr&gt;Fussilat Explained In Detail &#8759;   &#761;It is&#762; a Book whose verses are perfectly explained&#8212;a Quran in Arabic for people who know,
+
+ &lt;hr&gt;Ash-shuraa The Consultation &#8759;   And so you &#761;O Prophet&#762; are sent revelation, just like those before you, by Allah&#8212;the Almighty, All-Wise.
+
+ &lt;hr&gt;Az-zukhruf The Ornaments Of Gold &#8759;   Certainly, We have made it a Quran in Arabic so perhaps you will understand.
+
+ &lt;hr&gt;Ad-dukhan The Smoke &#8759;   Indeed, We sent it down on a blessed night,&#160;for We always warn &#761;against evil&#762;.
+
+ &lt;hr&gt;Al-jathiyah The Crouching &#8759;   Surely in &#761;the creation of&#762; the heavens and the earth are signs for the believers.
+
+ &lt;hr&gt;Al-ahqaf The Wind-curved Sandhills &#8759;   We only created the heavens and the earth and everything in between for a purpose and an appointed term. Yet the disbelievers are turning away from what they have been warned about.
+
+ &lt;hr&gt;Muhammad Muhammad &#8759;   This is because the disbelievers follow falsehood, while the believers follow the truth from their Lord. This is how Allah shows people their true state &#761;of faith&#762;.
+
+ &lt;hr&gt;Al-fath The Victory &#8759;   and so that Allah will help you tremendously.
+
+ &lt;hr&gt;Al-hujurat The Rooms &#8759;   Indeed, those who lower their voices in the presence of Allah&#8217;s Messenger are the ones whose hearts Allah has refined for righteousness. They will have forgiveness and a great reward.
+
+ &lt;hr&gt;Qaf The Letter &amp;quot;qaf&amp;quot; &#8759;   &#761;Will we be returned to life,&#762; when we are dead and reduced to dust? Such a return is impossible.&#8221;
+
+ &lt;hr&gt;Adh-dhariyat The Winnowing Winds &#8759;   and &#761;the ships&#762; gliding with ease,
+
+ &lt;hr&gt;At-tur The Mount &#8759;   on open pages &#761;for all to read&#762;!
+
+ &lt;hr&gt;An-najm The Star &#8759;   Nor does he speak of his own whims.
+
+ &lt;hr&gt;Al-qamar The Moon &#8759;   They rejected &#761;the truth&#762; and followed their own desires&#8212;and every matter will be settled&#8212;
+
+ &lt;hr&gt;Ar-rahman The Beneficent &#8759;   created humanity,
+
+ &lt;hr&gt;Al-waqi&amp;#39;ah The Inevitable &#8759;   It will debase &#761;some&#762; and elevate &#761;others&#762;.
+
+ &lt;hr&gt;Al-hadid The Iron &#8759;   He is the First and the Last, the Most High and Most Near,&#160;and He has &#761;perfect&#762; knowledge of all things.
+
+ &lt;hr&gt;Al-mujadila The Pleading Woman &#8759;   Those who divorce their wives in this manner, then &#761;wish to&#762; retract what they said, must free a slave before they touch each other. This &#761;penalty&#762; is meant to deter you. And Allah is All-Aware of what you do.
+
+ &lt;hr&gt;Al-hashr The Exile &#8759;   Had Allah not decreed exile for them, He would have certainly punished them in this world. And in the Hereafter they will suffer the punishment of the Fire.
+
+ &lt;hr&gt;Al-mumtahanah She That Is To Be Examined &#8759;   Neither your relatives nor children will benefit you on Judgment Day&#8212;He will decide between you &#761;all&#762;. For Allah is All-Seeing of what you do.
+
+ &lt;hr&gt;As-saf The Ranks &#8759;   How despicable it is in the sight of Allah that you say what you do not do!
+
+ &lt;hr&gt;Al-jumu&amp;#39;ah The Congregation, Friday &#8759;   along with others of them who have not yet joined them &#761;in faith&#762;. For He is the Almighty, All-Wise.
+
+ &lt;hr&gt;Al-munafiqun The Hypocrites &#8759;   This is because they believed and then abandoned faith. Therefore, their hearts have been sealed, so they do not comprehend.
+
+ &lt;hr&gt;At-taghabun The Mutual Disillusion &#8759;   He created the heavens and the earth for a purpose. He shaped you &#761;in the womb&#762;, perfecting your form. And to Him is the final return.
+
+ &lt;hr&gt;At-talaq The Divorce &#8759;   and provide for them from sources they could never imagine. And whoever puts their trust in Allah, then He &#761;alone&#762; is sufficient for them. Certainly Allah achieves His Will. Allah has already set a destiny for everything.
+
+ &lt;hr&gt;At-tahrim The Prohibition &#8759;   &#761;Remember&#762; when the Prophet had &#761;once&#762; confided something to one of his wives, then when she disclosed it &#761;to another wife&#762; and Allah made it known to him, he presented &#761;to her&#762; part of what was disclosed and overlooked a part. So when he informed her of it, she exclaimed, &#8220;Who told you this?&#8221; He replied, &#8220;I was informed by the All-Knowing, All-Aware.&#8221;
+
+ &lt;hr&gt;Al-mulk The Sovereignty &#8759;   &#761;He is the One&#762; Who created seven heavens, one above the other. You will never see any imperfection in the creation of the Most Compassionate.&#160;So look again: do you see any flaws?
+
+ &lt;hr&gt;Al-qalam The Pen &#8759;   You will certainly have a never-ending reward.
+
+ &lt;hr&gt;Al-haqqah The Reality &#8759;   And what will make you realize what the Inevitable Hour is?
+
+ &lt;hr&gt;Al-ma&amp;#39;arij The Ascending Stairways &#8759;   from Allah, Lord of pathways of &#761;heavenly&#762; ascent,
+
+ &lt;hr&gt;Nuh Noah &#8759;   worship Allah &#761;alone&#762;, fear Him, and obey me.
+
+ &lt;hr&gt;Al-jinn The Jinn &#8759;   &#761;Now, we believe that&#762; our Lord&#8212;Exalted is His Majesty&#8212;has neither taken a mate nor offspring,
+
+ &lt;hr&gt;Al-muzzammil The Enshrouded One &#8759;   &#761;pray&#762; half the night, or a little less,
+
+ &lt;hr&gt;Al-muddaththir The Cloaked One &#8759;   Revere your Lord &#761;alone&#762;.
+
+ &lt;hr&gt;Al-qiyamah The Resurrection &#8759;   Do people think We cannot reassemble their bones?
+
+ &lt;hr&gt;Al-insan The Man &#8759;   We already showed them the Way, whether they &#761;choose to&#762; be grateful or ungrateful.
+
+ &lt;hr&gt;Al-mursalat The Emissaries &#8759;   and those scattering &#761;rainclouds&#762; widely!
+
+ &lt;hr&gt;An-naba The Tidings &#8759;   over which they disagree.
+
+ &lt;hr&gt;An-nazi&amp;#39;at Those Who Drag Forth &#8759;   and those gliding &#761;through heavens&#762; swiftly,
+
+ &lt;hr&gt;&amp;#39;abasa He Frowned &#8759;   You never know &#761;O Prophet&#762;, perhaps he may be purified,
+
+ &lt;hr&gt;At-takwir The Overthrowing &#8759;   and when the mountains are blown away,
+
+ &lt;hr&gt;Al-infitar The Cleaving &#8759;   and when the seas burst forth,
+
+ &lt;hr&gt;Al-mutaffifin The Defrauding &#8759;   but give less when they measure or weigh for buyers.
+
+ &lt;hr&gt;Al-inshiqaq The Sundering &#8759;   and when the earth is flattened out,
+
+ &lt;hr&gt;Al-buruj The Mansions Of The Stars &#8759;   and the witness and what is witnessed!
+
+ &lt;hr&gt;At-tariq The Nightcommer &#8759;   &#761;It is&#762; the star of piercing brightness.
+
+ &lt;hr&gt;Al-a&amp;#39;la The Most High &#8759;   and Who ordained precisely and inspired accordingly,
+
+ &lt;hr&gt;Al-ghashiyah The Overwhelming &#8759;   &#761;totally&#762; overburdened, exhausted,
+
+ &lt;hr&gt;Al-fajr The Dawn &#8759;   and the even and the odd,
+
+ &lt;hr&gt;Al-balad The City &#8759;   and by every parent and &#761;their&#762; child!
+
+ &lt;hr&gt;Ash-shams The Sun &#8759;   and the day as it unveils it,
+
+ &lt;hr&gt;Al-layl The Night &#8759;   And by &#761;the One&#762; Who created male and female!
+
+ &lt;hr&gt;Ad-duhaa The Morning Hours &#8759;   Your Lord &#761;O Prophet&#762; has not abandoned you, nor has He become hateful &#761;of you&#762;.
+
+ &lt;hr&gt;Ash-sharh The Relief &#8759;   which weighed so heavily on your back,
+
+ &lt;hr&gt;At-tin The Fig &#8759;   and this secure city &#761;of Mecca&#762;!
+
+ &lt;hr&gt;Al-&amp;#39;alaq The Clot &#8759;   Read! And your Lord is the Most Generous,
+
+ &lt;hr&gt;Al-qadr The Power &#8759;   The Night of Glory is better than a thousand months.
+
+ &lt;hr&gt;Al-bayyinah The Clear Proof &#8759;   containing upright commandments.
+
+ &lt;hr&gt;Az-zalzalah The Earthquake &#8759;   and humanity cries, &#8220;What is wrong with it?&#8221;&#8212;
+
+ &lt;hr&gt;Al-&amp;#39;adiyat The Courser &#8759;   launching raids at dawn,
+
+ &lt;hr&gt;Al-qari&amp;#39;ah The Calamity &#8759;   And what will make you realize what the Striking Disaster is?
+
+ &lt;hr&gt;At-takathur The Rivalry In World Increase &#8759;   But no! You will soon come to know.
+
+ &lt;hr&gt;Al-&amp;#39;asr The Declining Day &#8759;   except those who have faith, do good, and urge each other to the truth, and urge each other to perseverance.
+
+ &lt;hr&gt;Al-humazah The Traducer &#8759;   thinking that their wealth will make them immortal!
+
+ &lt;hr&gt;Al-fil The Elephant &#8759;   For He sent against them flocks of birds,
+
+ &lt;hr&gt;Quraysh Quraysh &#8759;   let them worship the Lord of this &#761;Sacred&#762; House,
+
+ &lt;hr&gt;Al-ma&amp;#39;un The Small Kindnesses &#8759;   and does not encourage the feeding of the poor.
+
+ &lt;hr&gt;Al-kawthar The Abundance &#8759;   Only the one who hates you is truly cut off &#761;from any goodness&#762;.
+
+ &lt;hr&gt;Al-kafirun The Disbelievers &#8759;   nor do you worship what I worship.
+
+ &lt;hr&gt;An-nasr The Divine Support &#8759;   then glorify the praises of your Lord and seek His forgiveness, for certainly He is ever Accepting of Repentance.
+
+ &lt;hr&gt;Al-masad The Palm Fiber &#8759;   He will burn in a flaming Fire,
+
+ &lt;hr&gt;Al-ikhlas The Sincerity &#8759;   He has never had offspring, nor was He born.
+
+ &lt;hr&gt;Al-falaq The Daybreak &#8759;   and from the evil of the night when it grows dark,
+
+ &lt;hr&gt;An-nas The Mankind &#8759;   the God of humankind,
+ #+end_export
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a0a1a7;">#+begin_details Tests
+</span>#+begin_src emacs-lisp :tangle tests.el
+(deftest "quran looks up a verse in the default translation, The Clear Quran"
+  (should (equal (holy-books-quran 1 1) "In the Name of Allah&#8212;the Most Compassionate, Most Merciful.")))
+
+(deftest "quran falls back to the public API, and Saheeh International, when the page JSON fails"
+  (cl-letf (((symbol-function 'holy-books--quran-from-page) #'ignore))
+    (let (holy-books-quran-cache)
+      (should (equal (holy-books-quran 1 1)
+                     "In the name of All&#257;h, the Entirely Merciful, the Especially Merciful.")))))
+
+(deftest "quran drops footnote markers"
+  (should-not (s-contains? "&lt;sup" (holy-books-quran 7 157))))
+
+(deftest "quran caches the chapter name alongside the verse"
+  (holy-books-quran 112 3)
+  (should (equal (cl-getf (cl-getf holy-books-quran-cache 112) :name) "Al-Ikhlas The Sincerity")))
+
+(define-html-export-test "quran link with |colour|size|no-info-p styles the verse and omits its reference"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="quran:1:1|darkgreen|30px|t">quran:1:1|darkgreen|30px|t</a></span>"
+  :html "&lt;p&gt;
+&lt;span style=\"<a href="color:darkgreen;font-size:30px">color:darkgreen;font-size:30px</a>;\"&gt;
+                             &#64830;&lt;em&gt; In the Name of Allah&#8212;the Most Compassionate, Most Merciful.&lt;/em&gt;&#64831; 
+                       &lt;/span&gt;&lt;/p&gt;
+")
+
+(define-html-export-test "Quran link is a tooltip carrying the verse and chapter name"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="Quran:1:1">Quran:1:1</a></span>"
+  :html "&lt;p&gt;
+&lt;abbr class=\"tooltip\"
+                             title=\"&#64830;&lt;em&gt; In the Name of Allah&#8212;the Most Compassionate, Most Merciful.&lt;/em&gt;&#64831; &lt;br&gt;&lt;br&gt; Al-Fatihah The Opener &lt;br&gt;&lt;br&gt; <span style="text-decoration: underline;"><a href="https://quran.com/1">https://quran.com/1</a></span>\"&gt;
+                          Quran 1:1
+                       &lt;/abbr&gt;&amp;emsp13;&lt;/p&gt;
+")
+
+(define-md-export-test "quran link is a blockquote followed by its reference"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="quran:1:1">quran:1:1</a></span>"
+  :md "
+&gt; In the Name of Allah&#8212;the Most Compassionate, Most Merciful.
+&gt;
+&gt; [Quran 1:1 Al-Fatihah The Opener](<span style="text-decoration: underline;"><a href="https://quran.com/chapter_info/1">https://quran.com/chapter_info/1</a></span>)
+
+")
+
+(define-md-export-test "Quran link is a Markdown link whose title is the verse and chapter name"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="Quran:1:1">Quran:1:1</a></span>"
+  :md "[Quran 1:1](<span style="text-decoration: underline;"><a href="https://quran.com/1">https://quran.com/1</a></span> \"In the Name of Allah&#8212;the Most Compassionate, Most Merciful. - Al-Fatihah The Opener\")
+
+")
+
+(define-html-export-test "quran link shows the verse and its chapter name"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="quran:1:1">quran:1:1</a></span>"
+  :html "&lt;p&gt;
+&lt;span style=\"<a href="color:nil;font-size:nil">color:nil;font-size:nil</a>;\"&gt;
+                             &#64830;&lt;em&gt; In the Name of Allah&#8212;the Most Compassionate, Most Merciful.&lt;/em&gt;&#64831; &lt;small&gt;&lt;a href=\"<span style="text-decoration: underline;"><a href="https://quran.com/chapter_info/1?local=en">https://quran.com/chapter_info/1?local=en</a></span>\"&gt;Quran 1:1, Al-Fatihah The Opener&lt;/a&gt;&lt;/small&gt;
+                       &lt;/span&gt;&lt;/p&gt;
+")
+
+#+end_src
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a0a1a7;"># Test all quran/* tests</span>
+<span style="color: #a0a1a7;"># (ert "quran/*")</span>
+
+<span style="color: #8b4513; font-weight: bold;">** holy-books-quran-cache</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-quran-cache</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">holy-books-quran-cache</span> nil
+  <span style="color: #50a14f; font-style: italic;">"A plist storing the verses looked up by &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">holy-books-quran</span><span style="color: #50a14f; font-style: italic;">&#8217; for faster reuse.
+
+Each key in the plist refers to a chapter, and the values are plists:
+Keys are verses numbers and values are the actual verses ---but there is
+a special key &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">:name</span><span style="color: #50a14f; font-style: italic;">&#8217; whose value is the Arabic-English name of the chapter."</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #8b4513; font-weight: bold;">** holy-books-quran-translation</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-quran-translation</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">holy-books-quran-translation</span> <span style="color: #50a14f;">"131"</span>
+  <span style="color: #50a14f; font-style: italic;">"The translation code of the Quran; a string.
+
+Possible codes include
+
+Code  Translation
+--------------------
+131   Dr. Mustafa Khattab, The Clear Quran (Default)
+20    Saheeh International
+85    M.A.S. Abdel Haleem
+19    M. Pickthall
+22    A. Yusuf Ali
+95    A. Maududi (Tafhim commentary)
+84    T. Usmani
+203   Al-Hilali &amp; Khan
+57    Transliteration
+
+Any translation in quran.com's &#8220;Translations&#8221; menu works; most codes are listed here:
+<a href="https://api.quran.com/api/v4/resources/translations">https://api.quran.com/api/v4/resources/translations</a>"</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #8b4513; font-weight: bold;">** holy-books-quran</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-quran</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books-quran</span> (chapter verse)
+  <span style="color: #50a14f; font-style: italic;">"Lookup a verse, as a string, from the Quran.
+
+CHAPTER and VERSE are both numbers, referring to a chapter in the Quran
+and a verse it contains.
+In the associated Org link, both are treated as strings.
+
++ Lookups are stored in the variable `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">holy-books-quran-cache</span><span style="color: #50a14f; font-style: italic;">' for faster reuse.
++ Quran lookup is based on <a href="https://quran.com">https://quran.com</a> .
++ Examples:
+
+    ;; Get verse 2 of chapter 7 of the Quran
+    (holy-books-quran 7 2)
+
+    ;; Get English-Arabic name of 7th chapter
+    (cl-getf (cl-getf holy-books-quran 7) :name)
+
+The particular translation can be selected by altering the
+HOLY-BOOKS-QURAN-TRANSLAITON variable.
+
+--------------------------------------------------------------------------------
+
+There is an Org link form: &#8220;<a href="quran:chapter:verse|color|size|no-info-p">quran:chapter:verse|color|size|no-info-p</a>&#8221;
+Only &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">chapter</span><span style="color: #50a14f; font-style: italic;">&#8217; and &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">verse</span><span style="color: #50a14f; font-style: italic;">&#8217; are mandatory; when &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">no-info-p</span><span style="color: #50a14f; font-style: italic;">&#8217; is given,
+the chapter and verse numbers are not mentioned in the resulting output.
+
+Examples:
+           <a href="quran:7:157|darkgreen|30px|t">quran:7:157|darkgreen|30px|t</a>
+
+           <a href="quran:7:157">quran:7:157</a>
+
+For now, only Org HTML export is supported.
+
+--------------------------------------------------------------------------------
+
+Finally, there is also an HTML tooltip version with a captial &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">Q</span><span style="color: #50a14f; font-style: italic;">&#8217;;
+it takes the same arguments but only the chapter and verse are actually used.
+E.g. <a href="Quran:7:157">Quran:7:157</a> results in text &#8220;Quran 7:157&#8221; with a tooltip showing the verse."</span>
+  (<span style="color: #a626a4;">unless</span> (cl-getf (cl-getf holy-books-quran-cache chapter) verse)
+    (<span style="color: #a626a4;">-let</span> [(name . text) (<span style="color: #a626a4;">or</span> (<span style="color: #a626a4;">ignore-errors</span> (holy-books--quran-from-page chapter verse))
+                             (holy-books--quran-from-api chapter verse))]
+      (<span style="color: #a626a4;">setf</span> (cl-getf (cl-getf holy-books-quran-cache chapter) <span style="color: #e44649;">:name</span>) name)
+      (<span style="color: #a626a4;">setf</span> (cl-getf (cl-getf holy-books-quran-cache chapter) verse)
+            (s-replace-regexp <span style="color: #50a14f;">"&lt;sup[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">&gt;]*&gt;[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">&lt;]*&lt;/sup&gt;"</span> <span style="color: #50a14f;">""</span> text)))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Footnote markers
+</span>  (cl-getf (cl-getf holy-books-quran-cache chapter) verse))
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">quran.com's public API lacks some translations, such as 131, so we first read the JSON its pages embed;
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">that is the site's internal Next.js state, not a published API, hence the fallback.
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books--quran-from-page</span> (chapter verse)
+  <span style="color: #50a14f; font-style: italic;">"(chapter, verse) &#8614; (chapter-name . verse-text), from the JSON embedded in quran.com's page for the verse."</span>
+  (<span style="color: #a626a4;">let-alist</span> (<span style="color: #a626a4;">let*</span> ((page (holy-books--fetch (format <span style="color: #50a14f;">"<a href="https://quran.com/%s:%s?translations=%s">https://quran.com/%s:%s?translations=%s</a>"</span>
+                                                     chapter verse holy-books-quran-translation)))
+                    (json (cadr (s-match <span style="color: #50a14f;">"&lt;script id=\"__NEXT_DATA__\"[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">&gt;]*&gt;</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(?:</span><span style="color: #50a14f;">.</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">\n</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">*?</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">&lt;/script&gt;"</span> page))))
+               (alist-get 'pageProps (alist-get 'props (json-parse-string json <span style="color: #e44649;">:object-type</span> 'alist))))
+    (<span style="color: #a626a4;">-when-let</span> (text (alist-get 'text (seq-find #'always (alist-get 'translations (seq-first .versesResponse.verses)))))
+      (cons (format <span style="color: #50a14f;">"%s %s"</span> .chapterResponse.chapter.transliteratedName .chapterResponse.chapter.translatedName)
+            text))))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books--quran-from-api</span> (chapter verse)
+  <span style="color: #50a14f; font-style: italic;">"(chapter, verse) &#8614; (chapter-name . verse-text), from quran.com's public API; if it lacks our translation, use 20."</span>
+  (<span style="color: #a626a4;">cl-labels</span> ((api (path) (json-parse-string (holy-books--fetch (concat <span style="color: #50a14f;">"<a href="https://api.quran.com/api/v4/">https://api.quran.com/api/v4/</a>"</span> path))
+                                             <span style="color: #e44649;">:object-type</span> 'alist))
+            (verse-in (translation) (<span style="color: #a626a4;">thread-last</span> (format <span style="color: #50a14f;">"quran/translations/%s?verse_key=%s:%s"</span> translation chapter verse)
+                                      (api) (alist-get 'translations) (seq-find #'always) (alist-get 'text))))
+    (<span style="color: #a626a4;">let-alist</span> (alist-get 'chapter (api (format <span style="color: #50a14f;">"chapters/%s"</span> chapter)))
+      (cons (format <span style="color: #50a14f;">"%s %s"</span> .name_simple .translated_name.name)
+            (<span style="color: #a626a4;">or</span> (verse-in holy-books-quran-translation) (verse-in <span style="color: #50a14f;">"20"</span>))))))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+RESULTS:</span>
+: holy-books-quran
+<span style="color: #8b4513; font-weight: bold;">** Links: </span><span style="color: #8b4513; font-weight: bold;">~quran:&#8943;~</span><span style="color: #8b4513; font-weight: bold;"> and </span><span style="color: #8b4513; font-weight: bold;">~Quran:&#8943;~</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Links-quran-and-Quran</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;"><a href="quran:chapter:verse|color|size|no-info-p">quran:chapter:verse|color|size|no-info-p</a>
+</span>(org-link-set-parameters
+ <span style="color: #50a14f;">"quran"</span>
+ <span style="color: #e44649;">:follow</span> (<span style="color: #a626a4;">lambda</span> (_) nil)
+ <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">lambda</span> (label _ backend)
+           (<span style="color: #a626a4;">-let*</span> (((chapter:verse color size no-info-p) (s-split <span style="color: #50a14f;">"|"</span> label))
+                   ((chapter verse) (mapcar #'string-to-number (s-split <span style="color: #50a14f;">":"</span> chapter:verse))))
+             (<span style="color: #a626a4;">cond</span> ((eq 'html backend)
+                    (format <span style="color: #50a14f;">"&lt;span style=\"<a href="color:%s;font-size:%s">color:%s;font-size:%s</a>;\"&gt;
+                             &#64830;&lt;em&gt; %s&lt;/em&gt;&#64831; %s
+                       &lt;/span&gt;"</span>
+                            color size
+                            (holy-books-quran chapter verse)
+                            (<span style="color: #a626a4;">if</span> no-info-p
+                                <span style="color: #50a14f;">""</span>
+                              (format
+                               (concat
+                                <span style="color: #50a14f;">"&lt;small&gt;"</span>
+                                <span style="color: #50a14f;">"&lt;a href="</span>
+                                <span style="color: #50a14f;">"\"<a href="https://quran.com/chapter_info/%s?local=en">https://quran.com/chapter_info/%s?local=en</a>\"&gt;"</span>
+                                <span style="color: #50a14f;">"Quran %s:%s, %s"</span>
+                                <span style="color: #50a14f;">"&lt;/a&gt;"</span>
+                                <span style="color: #50a14f;">"&lt;/small&gt;"</span>)
+                               chapter
+                               chapter
+                               verse
+                               (cl-getf (cl-getf holy-books-quran-cache chapter)
+                                        <span style="color: #e44649;">:name</span>)))))
+                   ((eq 'md backend)
+                    (format <span style="color: #50a14f;">"\n&gt; %s\n&gt;\n&gt; %s\n"</span>
+                            (holy-books-quran chapter verse)
+                            (<span style="color: #a626a4;">if</span> no-info-p
+                                <span style="color: #50a14f;">""</span>
+                              (format <span style="color: #50a14f;">"[Quran %s:%s %s](<a href="https://quran.com/chapter_info/%s">https://quran.com/chapter_info/%s</a>)"</span>
+                                      chapter verse (cl-getf (cl-getf holy-books-quran-cache chapter) <span style="color: #e44649;">:name</span>)
+                                      chapter)))))))
+ <span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"green"</span> <span style="color: #e44649;">:weight</span> bold))
+
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;"><a href="Quran:chapter:verse|color|size|no-info-p">Quran:chapter:verse|color|size|no-info-p</a>
+</span>(org-link-set-parameters
+ <span style="color: #50a14f;">"Quran"</span>
+ <span style="color: #e44649;">:follow</span> (<span style="color: #a626a4;">lambda</span> (_) nil)
+ <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">lambda</span> (label _ backend)
+           (<span style="color: #a626a4;">-let*</span> (((chapter:verse _ __ ___) (s-split <span style="color: #50a14f;">"|"</span> label))
+                   ((chapter verse) (mapcar #'string-to-number (s-split <span style="color: #50a14f;">":"</span> chapter:verse))))
+             (<span style="color: #a626a4;">cond</span> ((eq 'html backend)
+                    (format <span style="color: #50a14f;">"&lt;abbr class=\"tooltip\"
+                             title=\"&#64830;&lt;em&gt; %s&lt;/em&gt;&#64831; &lt;br&gt;&lt;br&gt; %s &lt;br&gt;&lt;br&gt; %s\"&gt;
+                          Quran %s:%s
+                       &lt;/abbr&gt;&amp;emsp13;"</span>
+                            (holy-books-quran chapter verse)
+                            (cl-getf (cl-getf holy-books-quran-cache chapter) <span style="color: #e44649;">:name</span>)
+                            (format <span style="color: #50a14f;">"<a href="https://quran.com/%s">https://quran.com/%s</a>"</span> chapter)
+                            chapter verse))
+                   ((eq 'md backend)
+                    (format <span style="color: #50a14f;">"[Quran %s:%s](%s \"%s - %s\")"</span> chapter verse
+                            (format <span style="color: #50a14f;">"<a href="https://quran.com/%s">https://quran.com/%s</a>"</span> chapter)
+                            (s-replace <span style="color: #50a14f;">"\""</span> <span style="color: #50a14f;">"&#8243;"</span> (holy-books-quran chapter verse))
+                            (cl-getf (cl-getf holy-books-quran-cache chapter)
+                                     <span style="color: #e44649;">:name</span>))))))
+ <span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"green"</span> <span style="color: #e44649;">:weight</span> bold))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+RESULTS:</span>
+
+<span style="color: #8b4513; font-weight: bold;">** holy-books-insert-quran</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-insert-quran</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books--remove-html-markup</span> (html)
+  (s-replace-regexp <span style="color: #50a14f;">"&amp;nbsp;"</span> <span style="color: #50a14f;">""</span>
+                    (s-replace-regexp <span style="color: #50a14f;">"&lt;.*?&gt;"</span>  <span style="color: #50a14f;">""</span> html)))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books-insert-quran</span> ()
+ <span style="color: #50a14f; font-style: italic;">"Insert a Quranic verse at point; prompt user for details."</span>
+ (<span style="color: #a626a4;">interactive</span>)
+ (<span style="color: #a626a4;">let</span> ((chapter (string-to-number (read-string <span style="color: #50a14f;">"Quran Chapter: "</span>)))
+       (verse   (string-to-number (read-string <span style="color: #50a14f;">"Quran Verse: "</span>))))
+   (<span style="color: #a626a4;">if</span> (member 0 (list chapter verse))
+       (<span style="font-weight: bold;">error</span> (concat <span style="color: #50a14f;">"holy-books &#8759; There seems to be a typo;"</span>
+                      <span style="color: #50a14f;">"please enter appropriate numbers."</span>))
+     (insert (holy-books--remove-html-markup (holy-books-quran chapter verse)))
+     (fill-paragraph))))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #0184bc; font-weight: bold;">* holy-books-bible</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-bible</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_details Test: The first verse of the first chapter of each book of the Bible
+</span><a href="link-here:Example-The-first-verse-of-the-first-chapter-of-each-book-of-the-Bible">link-here:Example-The-first-verse-of-the-first-chapter-of-each-book-of-the-Bible</a>
+ #+begin_src emacs-lisp :wrap export html :tangle no :exports both
+; (holy-books-bible "Genesis" 1 "2-5")
+; (holy-books-bible "Exodus" 1 "2-5") ;; Joseph!
+
+(setq books '(
+ ;; Old Testament
+ Genesis Exodus Leviticus Numbers Joshua Judges Ruth
+ 1+Samuel 2+Samuel 1+Kings 2+Kings 1+Chronicles 2+Chronicles Ezra
+ Nehemiah Esther Job Psalms Proverbs Ecclesiastes Song+of+Solomon
+ Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos
+ Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah
+ Malachi
+ ;; New Testament
+ Matthew Mark Luke John Acts Romans 1+Corinthians 2+Corinthians
+ Galatians Ephesians Philippians Colossians 1+Thessalonians
+ 2+Thessalonians 1+Timothy 2+Timothy Titus Philemon Hebrews James
+ 1+Peter 2+Peter 1+John 2+John 3+John Jude Revelation))
+
+(s-join "\n\n&lt;hr&gt;" (--map (format "%s &#8759; %s" it (holy-books-bible it 1 1)) books))
+ #+end_src
+
+ #+RESULTS:
+ #+begin_export html
+ Genesis &#8759;
+                             In the beginning God created the heavens and the earth.
+
+ &lt;hr&gt;Exodus &#8759;
+                             These are the names of the sons of Israel who went to Egypt with Jacob, each with his family:
+
+ &lt;hr&gt;Leviticus &#8759;
+                             The &lt;span class="small-caps"&gt;Lord called to Moses and spoke to him from the tent of meeting. He said,
+
+ &lt;hr&gt;Numbers &#8759;
+                             The &lt;span class="small-caps"&gt;Lord spoke to Moses in the tent of meeting in the Desert of Sinai on the first day of the second month of the second year after the Israelites came out of Egypt. He said:
+
+ &lt;hr&gt;Joshua &#8759;
+                             After the death of Moses the servant of the &lt;span class="small-caps"&gt;Lord, the &lt;span class="small-caps"&gt;Lord said to Joshua son of Nun, Moses&amp;#039; aide:
+
+ &lt;hr&gt;Judges &#8759;
+                             After the death of Joshua, the Israelites asked the &lt;span class="small-caps"&gt;Lord, "Who of us is to go up first to fight against the Canaanites?"
+
+ &lt;hr&gt;Ruth &#8759;
+                             In the days when the judges ruled,&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; there was a famine in the land. So a man from Bethlehem in Judah, together with his wife and two sons, went to live for a while in the country of Moab.
+
+ &lt;hr&gt;1+Samuel &#8759;
+                             There was a certain man from Ramathaim, a Zuphite&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; from the hill country of Ephraim, whose name was Elkanah son of Jeroham, the son of Elihu, the son of Tohu, the son of Zuph, an Ephraimite.
+
+ &lt;hr&gt;2+Samuel &#8759;
+                             After the death of Saul, David returned from striking down the Amalekites and stayed in Ziklag two days.
+
+ &lt;hr&gt;1+Kings &#8759;
+                             When King David was very old, he could not keep warm even when they put covers over him.
+
+ &lt;hr&gt;2+Kings &#8759;
+                             After Ahab&amp;#039;s death, Moab rebelled against Israel.
+
+ &lt;hr&gt;1+Chronicles &#8759;
+                             Adam, Seth, Enosh,
+
+ &lt;hr&gt;2+Chronicles &#8759;
+                             Solomon son of David established himself firmly over his kingdom, for the &lt;span class="small-caps"&gt;Lord his God was with him and made him exceedingly great.
+
+ &lt;hr&gt;Ezra &#8759;
+                             In the first year of Cyrus king of Persia, in order to fulfill the word of the &lt;span class="small-caps"&gt;Lord spoken by Jeremiah, the &lt;span class="small-caps"&gt;Lord moved the heart of Cyrus king of Persia to make a proclamation throughout his realm and also to put it in writing:
+
+ &lt;hr&gt;Nehemiah &#8759;
+                             The words of Nehemiah son of Hakaliah: In the month of Kislev in the twentieth year, while I was in the citadel of Susa,
+
+ &lt;hr&gt;Esther &#8759;
+                             This is what happened during the time of Xerxes,&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; the Xerxes who ruled over 127 provinces stretching from India to Cush&lt;span class="footnote"&gt;&lt;a name="p2"&gt;&lt;/a&gt; :
+
+ &lt;hr&gt;Job &#8759;
+                             In the land of Uz there lived a man whose name was Job. This man was blameless and upright; he feared God and shunned evil.
+
+ &lt;hr&gt;Psalms &#8759;
+                             Blessed is the one who does not walk in step with the wicked or stand in the way that sinners take or sit in the company of mockers,
+
+ &lt;hr&gt;Proverbs &#8759;
+                             The proverbs of Solomon son of David, king of Israel:
+
+ &lt;hr&gt;Ecclesiastes &#8759;
+                             The words of the Teacher,&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; son of David, king in Jerusalem:
+
+ &lt;hr&gt;Song+of+Solomon &#8759;
+                             Solomon&amp;#039;s Song of Songs.
+
+ &lt;hr&gt;Isaiah &#8759;
+                             The vision concerning Judah and Jerusalem that Isaiah son of Amoz saw during the reigns of Uzziah, Jotham, Ahaz and Hezekiah, kings of Judah.
+
+ &lt;hr&gt;Jeremiah &#8759;
+                             The words of Jeremiah son of Hilkiah, one of the priests at Anathoth in the territory of Benjamin.
+
+ &lt;hr&gt;Lamentations &#8759;
+                             How deserted lies the city, once so full of people! How like a widow is she, who once was great among the nations! She who was queen among the provinces has now become a slave.
+
+ &lt;hr&gt;Ezekiel &#8759;
+                             In my thirtieth year, in the fourth month on the fifth day, while I was among the exiles by the Kebar River, the heavens were opened and I saw visions of God.
+
+ &lt;hr&gt;Daniel &#8759;
+                             In the third year of the reign of Jehoiakim king of Judah, Nebuchadnezzar king of Babylon came to Jerusalem and besieged it.
+
+ &lt;hr&gt;Hosea &#8759;
+                             The word of the &lt;span class="small-caps"&gt;Lord that came to Hosea son of Beeri during the reigns of Uzziah, Jotham, Ahaz and Hezekiah, kings of Judah, and during the reign of Jeroboam son of Jehoash&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; king of Israel:
+
+ &lt;hr&gt;Joel &#8759;
+                             The word of the &lt;span class="small-caps"&gt;Lord that came to Joel son of Pethuel.
+
+ &lt;hr&gt;Amos &#8759;
+                             The words of Amos, one of the shepherds of Tekoa-the vision he saw concerning Israel two years before the earthquake, when Uzziah was king of Judah and Jeroboam son of Jehoash&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; was king of Israel.
+
+ &lt;hr&gt;Obadiah &#8759;
+                             The vision of Obadiah. This is what the Sovereign &lt;span class="small-caps"&gt;Lord says about Edom- We have heard a message from the &lt;span class="small-caps"&gt;Lord: An envoy was sent to the nations to say, "Rise, let us go against her for battle"-
+
+ &lt;hr&gt;Jonah &#8759;
+                             The word of the &lt;span class="small-caps"&gt;Lord came to Jonah son of Amittai:
+
+ &lt;hr&gt;Micah &#8759;
+                             The word of the &lt;span class="small-caps"&gt;Lord that came to Micah of Moresheth during the reigns of Jotham, Ahaz and Hezekiah, kings of Judah-the vision he saw concerning Samaria and Jerusalem.
+
+ &lt;hr&gt;Nahum &#8759;
+                             A prophecy concerning Nineveh. The book of the vision of Nahum the Elkoshite.
+
+ &lt;hr&gt;Habakkuk &#8759;
+                             The prophecy that Habakkuk the prophet received.
+
+ &lt;hr&gt;Zephaniah &#8759;
+                             The word of the &lt;span class="small-caps"&gt;Lord that came to Zephaniah son of Cushi, the son of Gedaliah, the son of Amariah, the son of Hezekiah, during the reign of Josiah son of Amon king of Judah:
+
+ &lt;hr&gt;Haggai &#8759;
+                             In the second year of King Darius, on the first day of the sixth month, the word of the &lt;span class="small-caps"&gt;Lord came through the prophet Haggai to Zerubbabel son of Shealtiel, governor of Judah, and to Joshua son of Jozadak,&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; the high priest:
+
+ &lt;hr&gt;Zechariah &#8759;
+                             In the eighth month of the second year of Darius, the word of the &lt;span class="small-caps"&gt;Lord came to the prophet Zechariah son of Berekiah, the son of Iddo:
+
+ &lt;hr&gt;Malachi &#8759;
+                             A prophecy: The word of the &lt;span class="small-caps"&gt;Lord to Israel through Malachi.&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt;
+
+ &lt;hr&gt;Matthew &#8759;
+                             This is the genealogy&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; of Jesus the Messiah&lt;span class="footnote"&gt;&lt;a name="p2"&gt;&lt;/a&gt; the son of David, the son of Abraham:
+
+ &lt;hr&gt;Mark &#8759;
+                             The beginning of the good news about Jesus the Messiah,&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; the Son of God,&lt;span class="footnote"&gt;&lt;a name="p2"&gt;&lt;/a&gt;
+
+ &lt;hr&gt;Luke &#8759;
+                             Many have undertaken to draw up an account of the things that have been fulfilled&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; among us,
+
+ &lt;hr&gt;John &#8759;
+                             In the beginning was the Word, and the Word was with God, and the Word was God.
+
+ &lt;hr&gt;Acts &#8759;
+                             In my former book, Theophilus, I wrote about all that Jesus began to do and to teach
+
+ &lt;hr&gt;Romans &#8759;
+                             Paul, a servant of Christ Jesus, called to be an apostle and set apart for the gospel of God-
+
+ &lt;hr&gt;1+Corinthians &#8759;
+                             Paul, called to be an apostle of Christ Jesus by the will of God, and our brother Sosthenes,
+
+ &lt;hr&gt;2+Corinthians &#8759;
+                             Paul, an apostle of Christ Jesus by the will of God, and Timothy our brother, To the church of God in Corinth, together with all his holy people throughout Achaia:
+
+ &lt;hr&gt;Galatians &#8759;
+                             Paul, an apostle-sent not from men nor by a man, but by Jesus Christ and God the Father, who raised him from the dead-
+
+ &lt;hr&gt;Ephesians &#8759;
+                             Paul, an apostle of Christ Jesus by the will of God, To God&amp;#039;s holy people in Ephesus,&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; the faithful in Christ Jesus:
+
+ &lt;hr&gt;Philippians &#8759;
+                             Paul and Timothy, servants of Christ Jesus, To all God&amp;#039;s holy people in Christ Jesus at Philippi, together with the overseers and deacons&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; :
+
+ &lt;hr&gt;Colossians &#8759;
+                             Paul, an apostle of Christ Jesus by the will of God, and Timothy our brother,
+
+ &lt;hr&gt;1+Thessalonians &#8759;
+                             Paul, Silas&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; and Timothy, To the church of the Thessalonians in God the Father and the Lord Jesus Christ: Grace and peace to you.
+
+ &lt;hr&gt;2+Thessalonians &#8759;
+                             Paul, Silas&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; and Timothy, To the church of the Thessalonians in God our Father and the Lord Jesus Christ:
+
+ &lt;hr&gt;1+Timothy &#8759;
+                             Paul, an apostle of Christ Jesus by the command of God our Savior and of Christ Jesus our hope,
+
+ &lt;hr&gt;2+Timothy &#8759;
+                             Paul, an apostle of Christ Jesus by the will of God, in keeping with the promise of life that is in Christ Jesus,
+
+ &lt;hr&gt;Titus &#8759;
+                             Paul, a servant of God and an apostle of Jesus Christ to further the faith of God&amp;#039;s elect and their knowledge of the truth that leads to godliness-
+
+ &lt;hr&gt;Philemon &#8759;
+                             Paul, a prisoner of Christ Jesus, and Timothy our brother, To Philemon our dear friend and fellow worker-
+
+ &lt;hr&gt;Hebrews &#8759;
+                             In the past God spoke to our ancestors through the prophets at many times and in various ways,
+
+ &lt;hr&gt;James &#8759;
+                             James, a servant of God and of the Lord Jesus Christ, To the twelve tribes scattered among the nations: Greetings.
+
+ &lt;hr&gt;1+Peter &#8759;
+                             Peter, an apostle of Jesus Christ, To God&amp;#039;s elect, exiles scattered throughout the provinces of Pontus, Galatia, Cappadocia, Asia and Bithynia,
+
+ &lt;hr&gt;2+Peter &#8759;
+                             Simon Peter, a servant and apostle of Jesus Christ, To those who through the righteousness of our God and Savior Jesus Christ have received a faith as precious as ours:
+
+ &lt;hr&gt;1+John &#8759;
+                             That which was from the beginning, which we have heard, which we have seen with our eyes, which we have looked at and our hands have touched-this we proclaim concerning the Word of life.
+
+ &lt;hr&gt;2+John &#8759;
+                             The elder, To the lady chosen by God and to her children, whom I love in the truth-and not I only, but also all who know the truth-
+
+ &lt;hr&gt;3+John &#8759;
+                             The elder, To my dear friend Gaius, whom I love in the truth.
+
+ &lt;hr&gt;Jude &#8759;
+                             Jude, a servant of Jesus Christ and a brother of James, To those who have been called, who are loved in God the Father and kept for&lt;span class="footnote"&gt;&lt;a name="p1"&gt;&lt;/a&gt; Jesus Christ:
+
+ &lt;hr&gt;Revelation &#8759;
+                             The revelation from Jesus Christ, which God gave him to show his servants what must soon take place. He made it known by sending his angel to his servant John,
+ #+end_export
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a0a1a7;">#+begin_details Tests
+</span>#+begin_src emacs-lisp :tangle tests.el
+(deftest "bible looks up a verse"
+  (should (equal (holy-books-bible "Genesis" 1 "1")
+                 "In the beginning God created the heavens and the earth.")))
+
+(deftest "bible looks up a verse range, dropping the verse numbers"
+  (should (equal (holy-books-bible "Deuteronomy" 18 "18-19")
+                 "I will raise up for them a prophet like you from among their fellow Israelites, and I will put my words in his mouth. He will tell them everything I command him. I myself will call to account anyone who does not listen to my words that the prophet speaks in my name.")))
+
+(define-html-export-test "Bible link is a tooltip carrying the verse"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="Bible:Genesis:1:1">Bible:Genesis:1:1</a></span>"
+  :html "&lt;p&gt;
+&lt;abbr class=\"tooltip\"
+                             title=\"&#64830;&lt;em&gt; In the beginning God created the heavens and the earth.&lt;/em&gt;&#64831; &lt;br&gt;&lt;br&gt; <span style="text-decoration: underline;"><a href="https://www.christianity.com/bible/bible.php?q=Genesis+1">https://www.christianity.com/bible/bible.php?q=Genesis+1</a></span>\"&gt;
+                         Genesis 1:1
+                       &lt;/abbr&gt;&amp;emsp13;&lt;/p&gt;
+")
+
+(define-md-export-test "bible link is a blockquote followed by its reference"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="bible:Genesis:1:1">bible:Genesis:1:1</a></span>"
+  :md "
+&gt; In the beginning God created the heavens and the earth.
+&gt;
+&gt;[Genesis 1:1](<span style="text-decoration: underline;"><a href="https://www.christianity.com/bible/bible.php?q=Genesis+1&amp;ver=niv">https://www.christianity.com/bible/bible.php?q=Genesis+1&amp;ver=niv</a></span>)
+
+")
+
+(define-md-export-test "Bible link is a Markdown link whose title is the verse"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="Bible:Genesis:1:1">Bible:Genesis:1:1</a></span>"
+  :md "[Genesis 1:1](<span style="text-decoration: underline;"><a href="https://www.christianity.com/bible/bible.php?q=Genesis+1">https://www.christianity.com/bible/bible.php?q=Genesis+1</a></span> \"In the beginning God created the heavens and the earth.\")
+
+")
+
+(define-html-export-test "bible link shows the verse and its reference"
+  :org "<span style="color: #00ff00; font-weight: bold;"><a href="bible:Genesis:1:2">bible:Genesis:1:2</a></span>"
+  :html "&lt;p&gt;
+&lt;span style=\"<a href="color:nil;font-size:nil">color:nil;font-size:nil</a>;\"&gt;&#64830;&lt;em&gt; Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.&lt;/em&gt;&#64831;&lt;small&gt;&lt;a href=\"<span style="text-decoration: underline;"><a href="https://www.christianity.com/bible/bible.php?q=Genesis+1&amp;ver=niv">https://www.christianity.com/bible/bible.php?q=Genesis+1&amp;ver=niv</a></span>\"&gt;Genesis 1:2&lt;/a&gt;&lt;/small&gt; &lt;/span&gt;&lt;/p&gt;
+")
+
+#+end_src
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #a0a1a7;"># Check all the bible/* tests</span>
+<span style="color: #a0a1a7;"># (ert "bible/*")</span>
+
+<span style="color: #8b4513; font-weight: bold;">** holy-books-bible-version</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-bible-version</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">  #+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">holy-books-bible-version</span> 'niv
+  <span style="color: #50a14f; font-style: italic;">"The version code of the Holy Bible; a symbol or string.
+
+Possible version codes include:
+
+Code   Version
+---------------------------------------
+niv    New International Version, DEFAULT
+asv    American Standard Version
+bbe    Bible in Basic English
+drb    Darby's Translation
+esv    English Standard Version
+kjv    King James Version
+nas    New American Standard
+nkjv   New King James Version
+nlt    New Living Translation
+nrs    New Revised Standard Version
+rsv    Revised Standard Version
+msg    The Message Bible
+web    World English Bible
+ylt    Young's Literal"</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #8b4513; font-weight: bold;">** holy-books-bible</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-bible</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books-bible</span> (book chapter verses)
+  <span style="color: #50a14f; font-style: italic;">"Retrive a verse from the Christian Bible.
+
+CHAPTER is a number.
+VERSES is either a number or a string &#8220;x-y&#8221; of numbers.
+BOOK is any of the books of the Bible, with &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">+</span><span style="color: #50a14f; font-style: italic;">&#8217; instead of spaces!
+
+Examples:
+
+        (holy-books-bible \"Deuteronomy\" 18 \"18-22\")  ;; Lisp
+
+        <a href="bible:Deuteronomy:18:18-22|darkblue">bible:Deuteronomy:18:18-22|darkblue</a>   ;; Org-mode
+
+        <a href="Bible:Deuteronomy:18:18-22">Bible:Deuteronomy:18:18-22</a>            ;; Tooltip
+
+There is also an Org HTML export link, &#8220;<a href="bible:book:chapter:verse">bible:book:chapter:verse</a>&#8221;
+sharing the same optional arguments and variations as the &#8220;quran:&#8221; link;
+see the documentation of the method HOLY-BOOKS-QURAN for details.
+
+The particular version can be selected by altering the
+HOLY-BOOKS-BIBLE-VERSION variable.
+
+Currently, Bible lookups are not cached and Quran lookups do not support the
+&#8220;x-y&#8221; verse lookup style.
+
+Possible books include:
+
+ ;; Old Testament
+ Genesis Exodus Leviticus Numbers Joshua Judges Ruth
+ 1+Samuel 2+Samuel 1+Kings 2+Kings 1+Chronicles 2+Chronicles Ezra
+ Nehemiah Esther Job Psalms Proverbs Ecclesiastes Song+of+Solomon
+ Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos
+ Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah
+ Malachi
+ ;; New Testament
+ Matthew Mark Luke John Acts Romans 1+Corinthians 2+Corinthians
+ Galatians Ephesians Philippians Colossians 1+Thessalonians
+ 2+Thessalonians 1+Timothy 2+Timothy Titus Philemon Hebrews James
+ 1+Peter 2+Peter 1+John 2+John 3+John Jude Revelation
+
+For example, the following incantation yields the first verse of
+the first chapter of each book.
+
+   (s-join \"\n\n&lt;hr&gt;\" (--map (holy-books-bible it 1 1) '(...above list...)))"</span>
+  (<span style="color: #a626a4;">thread-last</span> (holy-books--fetch
+                (format <span style="color: #50a14f;">"<a href="https://www.christianity.com/bible/bible.php?q=%s+%s%%3A%s&amp;ver=%s">https://www.christianity.com/bible/bible.php?q=%s+%s%%3A%s&amp;ver=%s</a>"</span>
+                        book chapter verses holy-books-bible-version))
+    (s-match <span style="color: #50a14f;">"passage-text\"&gt;</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(?:</span><span style="color: #50a14f;">.</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">\n</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">*?&lt;p[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">&gt;]*&gt;</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(?:</span><span style="color: #50a14f;">.</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">\n</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">*?</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">&lt;/p&gt;"</span>)
+    (cadr)
+    (s-replace-regexp <span style="color: #50a14f;">"&lt;span[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">&gt;]*class=\"</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">big-chapter</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">verse-num</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">&gt;]*&gt;.*?&lt;/span&gt;</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">&amp;nbsp;</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">?"</span> <span style="color: #50a14f;">""</span>)
+    (s-replace-regexp <span style="color: #50a14f;">"&lt;footnote&gt;.*?&lt;/footnote&gt;"</span> <span style="color: #50a14f;">""</span>)
+    (s-replace-regexp <span style="color: #50a14f;">"&lt;.*?&gt;"</span> <span style="color: #50a14f;">""</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Small-caps, etc.
+</span>    (s-trim)))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Links: </span><span style="color: #8b4513; font-weight: bold;">~bible:&#8943;~</span><span style="color: #8b4513; font-weight: bold;"> and </span><span style="color: #8b4513; font-weight: bold;">~Bible:&#8943;~</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Links-bible-and-Bible</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">holy-books-bible-format-for-verses</span>
+  <span style="color: #50a14f;">"&#64830;&lt;em&gt; %s&lt;/em&gt;&#64831;"</span>
+  <span style="color: #50a14f; font-style: italic;">"How should verses be styled?"</span>)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;"><a href="bible:book:chapter:verses|color|size|no-info-p">bible:book:chapter:verses|color|size|no-info-p</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Ex. <a href="bible:Deuteronomy:18:18-22|darkblue|40px">bible:Deuteronomy:18:18-22|darkblue|40px</a>
+</span>(org-link-set-parameters
+ <span style="color: #50a14f;">"bible"</span>
+ <span style="color: #e44649;">:follow</span> (<span style="color: #a626a4;">lambda</span> (_) nil)
+ <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">lambda</span> (label _ backend)
+           (<span style="color: #a626a4;">-let*</span> (((book:chapter:verse color size no-info-p)
+                    (s-split <span style="color: #50a14f;">"|"</span> label))
+                   ((book chapter verse) (s-split <span style="color: #50a14f;">":"</span> book:chapter:verse)))
+             (<span style="color: #a626a4;">cond</span> ((eq 'html backend)
+                    (format (concat <span style="color: #50a14f;">"&lt;span style=\"<a href="color:%s;font-size:%s">color:%s;font-size:%s</a>;\"&gt;"</span>
+                                    holy-books-bible-format-for-verses <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8776; &#64830;&lt;em&gt; %s&lt;/em&gt;&#64831;
+</span>                                    <span style="color: #50a14f;">"%s &lt;/span&gt;"</span>)
+                            color size
+                            (holy-books-bible book chapter verse)
+                            (<span style="color: #a626a4;">if</span> no-info-p
+                                <span style="color: #50a14f;">""</span>
+                              (format
+                               (concat <span style="color: #50a14f;">"&lt;small&gt;"</span>
+                                       <span style="color: #50a14f;">"&lt;a href=\"<a href="https://www.christianity.com">https://www.christianity.com</a>"</span>
+                                       <span style="color: #50a14f;">"/bible/bible.php?q=%s+%s&amp;ver=niv\"&gt;"</span>
+                                       <span style="color: #50a14f;">"%s %s:%s"</span>
+                                       <span style="color: #50a14f;">"&lt;/a&gt;"</span>
+                                       <span style="color: #50a14f;">"&lt;/small&gt;"</span>)
+                               book chapter book chapter verse))))
+                   ((eq 'md backend)
+                    (format <span style="color: #50a14f;">"\n&gt; %s\n&gt;\n&gt;%s\n"</span>
+                            (holy-books-bible book chapter verse)
+                            (<span style="color: #a626a4;">if</span> no-info-p
+                                <span style="color: #50a14f;">""</span>
+                              (format <span style="color: #50a14f;">"[%s %s:%s](<a href="https://www.christianity.com/bible/bible.php?q=%s+%s&amp;ver=niv">https://www.christianity.com/bible/bible.php?q=%s+%s&amp;ver=niv</a>)"</span>
+                                      book chapter verse
+                                      book chapter verse))))
+                   (t (format <span style="color: #50a14f;">"&#64830;%s&#64831; [%s %s:%s]"</span>
+                    (s-replace-regexp <span style="color: #50a14f;">"&amp;nbsp;"</span> <span style="color: #50a14f;">""</span>
+                      (s-replace-regexp <span style="color: #50a14f;">"&lt;.*?&gt;"</span>  <span style="color: #50a14f;">""</span>
+                                        (s-collapse-whitespace (holy-books-bible book chapter verse))))
+                    book chapter verse)))))
+ <span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"green"</span> <span style="color: #e44649;">:weight</span> bold))
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;"><a href="Bible:book:chapter:verses|color|size|no-info-p">Bible:book:chapter:verses|color|size|no-info-p</a>
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Ex. <a href="Bible:Deuteronomy:18:18-22|darkblue|40px">Bible:Deuteronomy:18:18-22|darkblue|40px</a>
+</span>(org-link-set-parameters
+ <span style="color: #50a14f;">"Bible"</span>
+ <span style="color: #e44649;">:follow</span> (<span style="color: #a626a4;">lambda</span> (_) nil)
+ <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">lambda</span> (label _ backend)
+           (<span style="color: #a626a4;">-let*</span> (((book:chapter:verse _ __ ___) (s-split <span style="color: #50a14f;">"|"</span> label))
+                   ((book chapter verse) (s-split <span style="color: #50a14f;">":"</span> book:chapter:verse)))
+             (<span style="color: #a626a4;">cond</span> ((eq 'html backend)
+
+                    (format <span style="color: #50a14f;">"&lt;abbr class=\"tooltip\"
+                             title=\"&#64830;&lt;em&gt; %s&lt;/em&gt;&#64831; &lt;br&gt;&lt;br&gt; %s\"&gt;
+                         %s %s:%s
+                       &lt;/abbr&gt;&amp;emsp13;"</span>
+                            (s-replace <span style="color: #50a14f;">"\""</span> <span style="color: #50a14f;">"&#8243;"</span> (holy-books-bible book chapter verse))
+                            (format (concat <span style="color: #50a14f;">"<a href="https://www.christianity.com/">https://www.christianity.com/</a>"</span>
+                                            <span style="color: #50a14f;">"bible/bible.php?q=%s+%s"</span>)
+                                    book chapter)
+                            book chapter verse))
+                   ((eq 'md backend)
+                    (format <span style="color: #50a14f;">"[%s %s:%s](%s \"%s\")"</span> book chapter verse
+                            (format (concat <span style="color: #50a14f;">"<a href="https://www.christianity.com/">https://www.christianity.com/</a>"</span>
+                                            <span style="color: #50a14f;">"bible/bible.php?q=%s+%s"</span>) <span style="font-weight: bold;">book chapter)</span>
+                            (s-replace <span style="color: #50a14f;">"\""</span> <span style="color: #50a14f;">"&#8243;"</span> (holy-books-bible book chapter verse))
+                            ))
+                                      (t (format <span style="color: #50a14f;">"&#64830;%s&#64831; [%s %s:%s]"</span>
+                    (s-replace-regexp <span style="color: #50a14f;">"&amp;nbsp;"</span> <span style="color: #50a14f;">""</span>
+                      (s-replace-regexp <span style="color: #50a14f;">"&lt;.*?&gt;"</span>  <span style="color: #50a14f;">""</span>
+                                        (s-collapse-whitespace (holy-books-bible book chapter verse))))
+                    book chapter verse)))))
+ <span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"green"</span> <span style="color: #e44649;">:weight</span> bold))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #8b4513; font-weight: bold;">** holy-books-insert-bible</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">holy-books-insert-bible</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">holy-books-insert-bible</span> ()
+ <span style="color: #50a14f; font-style: italic;">"Insert a Biblical verse at point; prompt user for details.
+
+See the documentation of HOLY-BOOKS-BIBLE for the appropriate
+names of books."</span>
+ (<span style="color: #a626a4;">interactive</span>)
+ (<span style="color: #a626a4;">let</span> ((book    (read-string <span style="color: #50a14f;">"Bible Book: "</span>))
+       (chapter (string-to-number (read-string <span style="color: #50a14f;">"Bible Chapter: "</span>)))
+       (verse   (read-string <span style="color: #50a14f;">"Bible Verse: "</span>))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Can be a range; e.g., "18-22"
+</span>   (<span style="color: #a626a4;">if</span> (member 0 (list chapter verse))
+       (<span style="font-weight: bold;">error</span> (concat <span style="color: #50a14f;">"holy-books &#8759; There seems to be a typo;"</span>
+                      <span style="color: #50a14f;">"please enter appropriate numbers."</span>))
+     (insert (holy-books--remove-html-markup (s-trim (holy-books-bible book chapter verse))))
+     (fill-paragraph))))
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #0184bc; font-weight: bold;">* Summary</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Summary</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_quote
+</span>The full article may be read as
+<a href="badge:|HTML|informational|https://alhassy.github.io/holy-books/|ghost">badge:|HTML|informational|https://alhassy.github.io/holy-books/|ghost</a> ---or visit the
+repo <a href="github-stars:alhassy/holy-books">github-stars:alhassy/holy-books</a> .
+<span style="color: #a0a1a7;">#+end_quote
+</span>
+<a href="link-here:summary">link-here:summary</a>
+
+| Link                     | Action                         |
+|--------------------------+--------------------------------|
+| ~<span style="color: #00ff00; font-weight: bold;"><a href="quran:chapter:verse">quran:chapter:vers</a><a href="quran:chapter:verse">e</a></span>~      | Retrive a verse from the Quran |
+| ~<span style="color: #00ff00; font-weight: bold;"><a href="bible:book:chapter:verse">bible:book:chapter:vers</a><a href="bible:book:chapter:verse">e</a></span>~ | Retrive a verse from the Bible |
+| ~<span style="color: #00ff00; font-weight: bold;"><a href="basmala:">[[</a><a href="basmala:">basmala:]</a><a href="basmala:">]</a></span>~             | Produce the Basmala ligature   |
+
+These each take optional arguments separated by &#8216;|&#8217;; see <a href="doc:holy-books-quran">doc:holy-books-quran</a>
+and <a href="doc:holy-books-bible">doc:holy-books-bible</a> or see the full documentation online at
+<a href="badge:|HTML|informational|https://alhassy.github.io/holy-books/|ghost">badge:|HTML|informational|https://alhassy.github.io/holy-books/|ghost</a>.
+
+There are also <a href="doc:holy-books-insert-quran">doc:holy-books-insert-quran</a> and <a href="doc:holy-books-insert-bible">doc:holy-books-insert-bible</a> to
+inject verses in the current Emacs buffer ;-)
+
+<span style="color: #a0a1a7;"># Following &#8216;details&#8217; blocks are more for the resulting README than for the HTML.</span>
+Moreover, the Quran's translation and the Bible's version can both be selected...
+<span style="color: #a0a1a7;">#+begin_details &#8216;holy-books-quran&#8217; details
+</span>#+begin_src emacs-lisp :tangle no :exports results
+(documentation #'holy-books-quran)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Lookup a verse, as a string, from the Quran.
+
+CHAPTER and VERSE are both numbers, referring to a chapter in the Quran
+and a verse it contains.
+In the associated Org link, both are treated as strings.
+
++ Lookups are stored in the variable &#8216;holy-books-quran-cache&#8217; for faster reuse.
++ Quran lookup is based on <span style="text-decoration: underline;"><a href="https://quran.com">https://quran.com</a></span> .
++ Examples:
+
+    ;; Get verse 2 of chapter 7 of the Quran
+    (holy-books-quran 7 2)
+
+    ;; Get English-Arabic name of 7th chapter
+    (cl-getf (cl-getf holy-books-quran 7) :name)
+
+The particular translation can be selected by altering the
+HOLY-BOOKS-QURAN-TRANSLAITON variable.
+
+--------------------------------------------------------------------------------
+
+There is an Org link form: &#8220;<span style="color: #00ff00; font-weight: bold;"><a href="quran:chapter:verse|color|size|no-info-p">quran:chapter:verse|color|size|no-info-p</a></span>&#8221;
+Only &#8216;chapter&#8217; and &#8216;verse&#8217; are mandatory; when &#8216;no-info-p&#8217; is given,
+the chapter and verse numbers are not mentioned in the resulting output.
+
+Examples:
+           <span style="color: #00ff00; font-weight: bold;"><a href="quran:7:157|darkgreen|30px|t">quran:7:157|darkgreen|30px|t</a></span>
+
+           <span style="color: #00ff00; font-weight: bold;"><a href="quran:7:157">quran:7:157</a></span>
+
+For now, only Org HTML export is supported.
+
+--------------------------------------------------------------------------------
+
+Finally, there is also an HTML tooltip version with a captial &#8216;Q&#8217;;
+it takes the same arguments but only the chapter and verse are actually used.
+E.g. <span style="color: #00ff00; font-weight: bold;"><a href="Quran:7:157">Quran:7:157</a></span> results in text &#8220;Quran 7:157&#8221; with a tooltip showing the verse.
+#+end_example
+
+<span style="color: #a0a1a7;">#+end_details
+</span><span style="color: #a0a1a7;">#+begin_details &#8216;holy-books-bible&#8217; details
+</span>#+begin_src emacs-lisp :tangle no :exports results
+(documentation #'holy-books-bible)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Retrive a verse from the Christian Bible.
+
+CHAPTER is a number.
+VERSES is either a number or a string &#8220;x-y&#8221; of numbers.
+BOOK is any of the books of the Bible, with &#8216;+&#8217; instead of spaces!
+
+Examples:
+
+        (holy-books-bible "Deuteronomy" 18 "18-22")  ;; Lisp
+
+        <span style="color: #00ff00; font-weight: bold;"><a href="bible:Deuteronomy:18:18-22|darkblue">bible:Deuteronomy:18:18-22|darkblue</a></span>   ;; Org-mode
+
+        <span style="color: #00ff00; font-weight: bold;"><a href="Bible:Deuteronomy:18:18-22">Bible:Deuteronomy:18:18-22</a></span>            ;; Tooltip
+
+There is also an Org HTML export link, &#8220;<span style="color: #00ff00; font-weight: bold;"><a href="bible:book:chapter:verse">bible:book:chapter:verse</a></span>&#8221;
+sharing the same optional arguments and variations as the &#8220;quran:&#8221; link;
+see the documentation of the method HOLY-BOOKS-QURAN for details.
+
+The particular version can be selected by altering the
+HOLY-BOOKS-BIBLE-VERSION variable.
+
+Currently, Bible lookups are not cached and Quran lookups do not support the
+&#8220;x-y&#8221; verse lookup style.
+
+Possible books include:
+
+ ;; Old Testament
+ Genesis Exodus Leviticus Numbers Joshua Judges Ruth
+ 1+Samuel 2+Samuel 1+Kings 2+Kings 1+Chronicles 2+Chronicles Ezra
+ Nehemiah Esther Job Psalms Proverbs Ecclesiastes Song+of+Solomon
+ Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos
+ Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah
+ Malachi
+ ;; New Testament
+ Matthew Mark Luke John Acts Romans 1+Corinthians 2+Corinthians
+ Galatians Ephesians Philippians Colossians 1+Thessalonians
+ 2+Thessalonians 1+Timothy 2+Timothy Titus Philemon Hebrews James
+ 1+Peter 2+Peter 1+John 2+John 3+John Jude Revelation
+
+For example, the following incantation yields the first verse of
+the first chapter of each book.
+
+   (s-join "
+
+&lt;hr&gt;" (--map (holy-books-bible it 1 1) &#8217;(...above list...)))
+#+end_example
+
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Installation Instructions</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Installation-Instructions</span>
+   <span style="font-weight: bold;">:END:</span>
+
+Manually or using <span style="text-decoration: underline;"><a href="https://github.com/alhassy/emacs.d#installing-emacs-packages-directly-from-source">quelpa</a></span>:
+<span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp :tangle no
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#10216;0&#10217; Download the holy-books.el file manually or using quelpa
+</span>(quelpa '(holy-books <span style="color: #e44649;">:fetcher</span> github <span style="color: #e44649;">:repo</span>
+<span style="color: #50a14f;">"alhassy/holy-books"</span>))
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#10216;1&#10217; Have this always active in Org buffers
+</span>(add-hook #'org-mode-hook #'holy-books-mode)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#10216;1&#8242;&#10217; Or use: &#8220;M-x holy-books-mode&#8221; to turn it on/off
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#10216;2&#10217; Configure the Quranic translation and Bible version
+</span><span style="color: #a0a1a7; font-weight: bold;">;;     </span><span style="color: #a0a1a7;">Press &#8216;C-h o&#8217; to get more info on each variable.
+</span>(<span style="color: #a626a4;">setq</span> holy-books-quran-translation <span style="color: #50a14f;">"131"</span>  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The Clear Quran
+</span>      holy-books-bible-version     <span style="color: #50a14f;">"niv"</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">New International Version
+</span>
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #8b4513; font-weight: bold;"> </span><span style="color: #8b4513; font-weight: bold;">*Or*</span><span style="color: #8b4513; font-weight: bold;"> with </span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;"><a href="https://github.com/alhassy/emacs.d#use-package-the-start-of-initel">use-package</a></span><span style="color: #8b4513; font-weight: bold;">:</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">COMMENT-Or-with-https-github-com-alhassy-emacs-d-use-package-the-start-of-initel-use-package</span>
+   <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;"> #+BEGIN_SRC emacs-lisp :tangle no
+</span>(<span style="color: #a626a4;">use-package</span> holy-books
+  <span style="color: #e44649;">:ensure</span> t
+  <span style="color: #e44649;">:hook</span> (org-mode . holy-books-mode)
+  <span style="color: #e44649;">:custom</span>
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The places where I keep my &#8216;#+documentation&#8217;
+</span>    (holy-books--docs-libraries
+     '(<span style="color: #50a14f;">"~/holy-books/documentation.org"</span>))
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Disable the in-Emacs fancy-links feature?
+</span>    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(holy-books-fancy-links nil)
+</span>    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Details heading &#8220;flash pink&#8221; whenever the user hovers over them?
+</span>    (org-html-head-extra (concat org-html-head-extra <span style="color: #50a14f;">"&lt;style&gt;  summary:hover {background:pink;} &lt;/style&gt;"</span>))
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The message prefixing a &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;"><a href="tweet:url">tweet:url</a></span><span style="color: #a0a1a7;">&#8217; badge
+</span>    (holy-books-link-twitter-excitement
+     <span style="color: #50a14f;">"This looks super neat (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;:"</span>)
+  <span style="color: #e44649;">:config</span>
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Use short names like &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">defblock</span><span style="color: #a0a1a7;">&#8217; instead of the fully qualified name
+</span>  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">holy-books--defblock</span><span style="color: #a0a1a7;">&#8217;
+</span>    (holy-books-short-names))
+<span style="color: #a0a1a7;"> #+END_SRC
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Bye!</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Bye</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<a href="badge:thanks|for_reading">badge:thanks|for_reading</a>
+<a href="tweet:https://github.com/alhassy/holy-books">tweet:https://github.com/alhassy/holy-books</a>
+<a href="badge:|buy_me_a&#160;coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee">badge:|buy_me_a&#160;coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee</a>
+
+<span style="color: #0184bc; font-weight: bold;">* Lisp Postamble  </span><span style="color: #0184bc; font-weight: bold;">:noexport:</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Postamble</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp
+</span><span style="color: #a0a1a7; font-weight: bold;">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span><span style="color: #a0a1a7;">
+</span>
+(<span style="color: #a626a4;">provide</span> '<span style="font-weight: bold; text-decoration: underline;">holy-books</span>)
+
+<span style="color: #a0a1a7; font-weight: bold;">;;; </span><span style="color: #a0a1a7;">holy-books.el ends here
+</span><span style="color: #a0a1a7;">#+END_SRC
+</span><span style="color: #0184bc; font-weight: bold;">* </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #0184bc; font-weight: bold;"> MELPA Checks</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">COMMENT-MELPA-Checks</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="text-decoration: underline;"><a href="https://github.com/riscy/melpazoid">https://github.com/riscy/melpazoid</a></span>
+
+1. In Github repo: Add file &#8658; Create new file &#8658; License.txt &#8658; Select template &#8658; GNU 3
+2. Ensure first line ends with: -<span style="font-weight: bold;">*- lexical-binding: t; -*</span>-
+3. Include appropriate standard keywords;
+<span style="color: #a0a1a7;">   #+begin_src emacs-lisp :tangle no
+</span>(pp finder-known-keywords)
+<span style="color: #a0a1a7;">   #+end_src
+</span>
+<span style="color: #a0a1a7;">   #+RESULTS:</span>
+<span style="color: #a0a1a7;">   #+begin_example
+</span>   ((abbrev . "abbreviation handling, typing shortcuts, and macros")
+    (bib . "bibliography processors")
+    (c . "C and related programming languages")
+    (calendar . "calendar and time management tools")
+    (comm . "communications, networking, and remote file access")
+    (convenience . "convenience features for faster editing")
+    (data . "editing data (non-text) files")
+    (docs . "Emacs documentation facilities")
+    (emulations . "emulations of other editors")
+    (extensions . "Emacs Lisp language extensions")
+    (faces . "fonts and colors for text")
+    (files . "file editing and manipulation")
+    (frames . "Emacs frames and window systems")
+    (games . "games, jokes and amusements")
+    (hardware . "interfacing with system hardware")
+    (help . "Emacs help systems")
+    (hypermedia . "links between text or other media types")
+    (i18n . "internationalization and character-set support")
+    (internal . "code for Emacs internals, build process, defaults")
+    (languages . "specialized modes for editing programming languages")
+    (lisp . "Lisp support, including Emacs Lisp")
+    (local . "code local to your site")
+    (maint . "Emacs development tools and aids")
+    (mail . "email reading and posting")
+    (matching . "searching, matching, and sorting")
+    (mouse . "mouse support")
+    (multimedia . "images and sound")
+    (news . "USENET news reading and posting")
+    (outlines . "hierarchical outlining and note taking")
+    (processes . "processes, subshells, and compilation")
+    (terminals . "text terminals (ttys)")
+    (tex . "the TeX document formatter")
+    (tools . "programming tools")
+    (unix . "UNIX feature interfaces and emulators")
+    (vc . "version control")
+    (wp . "word processing"))
+<span style="color: #a0a1a7;">   #+end_example
+</span>4. Use #' instead of ' for function symbols
+5. Use &#8216;-&#8217; as a separator, not &#8216;/&#8217;.
+6. Consider reading:
+   <span style="text-decoration: underline;"><a href="https://github.com/bbatsov/emacs-lisp-style-guide#the-emacs-lisp-style-guide">https://github.com/bbatsov/emacs-lisp-style-guide#the-emacs-lisp-style-guide</a></span>
+7. Use cl-loop, cl-first, cl-second, cl-third instead of loop, first, second, third
+8. byte-compile and address any concerns
+9. =M-x checkdoc= on the lisp file to ensure it passes expected style issues.
+   - Symbols =nil, t= should not appear in single quotes.
+   - (progn (setq fill-column 80) (display-fill-column-indicator-mode))
+10. Ensure it byte-compiles without any problems.
+11. Ensure that package-linter raises no issues; i.e., the following has no result.
+<span style="color: #a0a1a7;">     #+BEGIN_SRC emacs-lisp :tangle no
+</span> (<span style="color: #a626a4;">use-package</span> package-lint)
+ (<span style="color: #a626a4;">-let</span> [it <span style="color: #50a14f;">"holy-books.el"</span>]
+  (<span style="color: #a626a4;">ignore-errors</span> (kill-buffer it))
+  (find-file-other-window it)
+  (package-lint-buffer it)
+  (switch-to-buffer <span style="color: #50a14f;">"*Package-Lint*"</span>)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Should say: &#8220;No issues found.&#8221;
+</span><span style="color: #a0a1a7;"> #+END_SRC
+</span>12. Commit and push everything in your project's repo!
+13. Create a recipe file by invoking: M-x package-build-create-recipe
+    ---first: (use-package package-build)
+    - Place it in: melpa/recipes/
+    - The name of the file should be the name of the package, no extension.
+
+    <span style="font-weight: bold;">*Or:*</span> Uncomment this section &amp; just tangle the following.
+<span style="color: #a0a1a7;">           #+BEGIN_SRC emacs-lisp :tangle ~/melpa/recipes/holy-books
+</span>    (holy-books <span style="color: #e44649;">:fetcher</span> github <span style="color: #e44649;">:repo</span> <span style="color: #50a14f;">"alhassy/holy-books"</span>)
+<span style="color: #a0a1a7;">        #+END_SRC
+</span>14. Ensure the recipe builds successfully:
+<span style="color: #a0a1a7;">    #+BEGIN_SRC shell :tangle no
+</span>    <span style="color: #e44649;">cd</span> ~/melpa; rm ~/melpa/packages/holy-books-*; make recipes/holy-books
+<span style="color: #a0a1a7;">    #+END_SRC
+</span>
+    If you have trouble, make a file "~/bin/emacs" with
+    the following which ensures &#8220;emacs&#8221; can be run
+    from the command line within macos.
+<span style="color: #a0a1a7;">    #+begin_src shell :tangle "~/bin/emacs"
+</span><span style="color: #a0a1a7; font-weight: bold;">#</span><span style="color: #a0a1a7;">!/bin/sh
+</span>/Applications/Emacs.app/Contents/MacOS/Emacs <span style="color: #50a14f;">"$@"</span>
+<span style="color: #a0a1a7;">#+end_src
+</span>
+15. Ensure the package installs properly from within Emacs:
+
+<span style="color: #a0a1a7;">      #+BEGIN_SRC emacs-lisp :tangle no
+</span>(package-install-file <span style="color: #50a14f;">"~/melpa/packages/holy-books-"</span>)
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+16. Produce a dedicated pull request branch
+
+<span style="color: #a0a1a7;">    #+begin_src emacs-lisp :tangle no
+</span>    (magit-status <span style="color: #50a14f;">"~/melpa"</span>)
+<span style="color: #a0a1a7;">    #+end_src
+</span>
+    + ~F p~ to update the repo.
+    + Now =b c= to checkout a new branch: Select ~master~ then name the branch by
+      the name of the package, e.g., ~holy-books~.
+    + Commit your recipe.
+    + Push this branch on your melpa fork: ~P p~.
+    + Go to the <span style="text-decoration: underline;"><a href="https://github.com/melpa/melpa">https://github.com/melpa/melpa</a></span> repo and
+      there'll be a big green PR button ^_^
+<span style="color: #0184bc; font-weight: bold;">* </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #0184bc; font-weight: bold;"> Making </span><span style="color: #0184bc; font-weight: bold;">~README.org~</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">COMMENT-Making-README-org</span>
+  <span style="font-weight: bold;">:END:</span>
+
+  Evaluate the following source block with ~C-c C-c~ to produce a ~README~ file.
+
+<span style="color: #a0a1a7;">#+NAME: make-readme</span>
+<span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp
+</span>(<span style="color: #a626a4;">with-temp-buffer</span>
+    (insert <span style="color: #50a14f;">"
+,#+EXPORT_FILE_NAME: README.md
+,#+HTML: &lt;h1&gt; An Emacs interface to the Quran and the Bible: Interactive lookup, Org-mode links, tooltips, and Lisp look-ups &lt;/h1&gt;
+# +HTML: &lt;h2&gt;  &#175;\\_(&#12484;)_/&#175;  &lt;/h2&gt;
+,#+OPTIONS: toc:nil d:nil broken-links:t
+,#+html: &lt;div align=\"center\"&gt;
+#   +INCLUDE: ~/holy-books/holy-books.org::#Abstract :only-contents t
+,#+html: &lt;/div&gt;
+
+,#+html: &lt;div align=\"center\"&gt;
+Let's use Org-mode links to look-up Quranic and Biblical verses!
+
+&#8220;Live&#8221; examples &amp; documentation: <a href="https://alhassy.github.io/holy-books/">https://alhassy.github.io/holy-books/</a>
+
+<a href="badge:holy-books|1.3|informational|https://github.com/alhassy/holy-books|Gnu-Emacs">badge:holy-books|1.3|informational|https://github.com/alhassy/holy-books|Gnu-Emacs</a>
+
+# #+html: &lt;a href=\"<a href="https://melpa.org/#/holy-books">https://melpa.org/#/holy-books</a>\"&gt;&lt;img alt=\"MELPA\" src=\"<a href="https://melpa.org/packages/holy-books-badge.svg\&quot;/">https://melpa.org/packages/holy-books-badge.svg\"/</a>&gt;&lt;/a&gt;
+# #+html: &lt;/span&gt;
+
+<a href="tweet:https://github.com/alhassy/holy-books">tweet:https://github.com/alhassy/holy-books</a>
+<a href="badge:contributions|welcome|green|https://github.com/alhassy/holy-books/issues">badge:contributions|welcome|green|https://github.com/alhassy/holy-books/issues</a>
+
+<a href="badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds">badge:author|musa_al-hassy|purple|https://alhassy.github.io/|nintendo-3ds</a>
+<a href="badge:|buy_me_a&#160;coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee">badge:|buy_me_a&#160;coffee|gray|https://www.buymeacoffee.com/alhassy|buy-me-a-coffee</a>
+
+<a href="badge:Hire|me|success|https://alhassy.github.io/about">badge:Hire|me|success|https://alhassy.github.io/about</a>
+
+,#+html: &lt;/div&gt;
+
+,#+TOC: headlines 2
+
+,* Short Example
+,#+attr_html: :width 600px
+<a href="file:images/short_example.png">file:images/short_example.png</a>
+
+,* Long Example
+,#+attr_html: :width 600px
+<a href="file:images/long_example.png">file:images/long_example.png</a>
+
+,* Summary
+,#+INCLUDE: ~/holy-books/holy-books.org::#Summary :only-contents t
+#  ,* Minimal working example
+#  #+INCLUDE: ~/holy-books/holy-books.org::#Minimal-working-example :only-contents t
+"</span>)
+    (<span style="color: #a626a4;">let</span> ((org-export-use-babel nil) (org-export-with-broken-links t))
+      (org-mode)
+      (org-md-export-to-markdown)))
+<span style="color: #a0a1a7;">#+END_SRC
+</span>
+<span style="color: #a0a1a7;">#+RESULTS: make-readme</span>
+: README.md
+
+<span style="font-weight: bold;">*Then*</span> use =grip= to see that this looks reasonable.
+</pre>
+  </body>
+</html>

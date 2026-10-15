@@ -301,10 +301,11 @@ of that file, and Org does the rest.
 <span style="color: #a626a4;">:REDIRECT:</span>    <span style="color: #383a42; background-color: #fafafa;">~/.emacs.d/init.org</span>
 <span style="font-weight: bold;">:END:</span>
 
-,* Remote README :docs:
+,* Holy Books: Quran &amp; Bible look-ups in Org-mode :emacs:
 <span style="font-weight: bold;">:PROPERTIES:</span>
-<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2024-02-01&gt;</span>
-<span style="color: #a626a4;">:REDIRECT:</span>    <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/example/master/README.org">https://raw.githubusercontent.com/alhassy/example/master/README.or</a><a href="https://raw.githubusercontent.com/alhassy/example/master/README.org">g</a></span>
+<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2021-10-25&gt;</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span>   <span style="color: #383a42; background-color: #fafafa;">holy-books-in-org-mode</span>
+<span style="color: #a626a4;">:REDIRECT:</span>    <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org">https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.or</a><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org">g</a></span>
 <span style="font-weight: bold;">:END:</span>
 <span style="color: #a0a1a7;">#+end_src
 </span>
@@ -318,19 +319,136 @@ followed by
 =blog--info-subtree= carries the ="redirect"= key along, so the index, tag pages, and RSS
 treat these articles like any other.
 
-<span style="color: #a626a4; font-weight: bold;">*** Vendoring redirects so CI can resolve them                     </span><span style="color: #a626a4; font-weight: bold;">:details:</span>
+<span style="color: #a626a4; font-weight: bold;">*** The repo owns the </span><span style="color: #a626a4; font-weight: bold;">=.org=</span><span style="color: #a626a4; font-weight: bold;">; the blog points at it</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">the-repo-owns-the-org-the-blog-points-at-it</span>
+<span style="font-weight: bold;">:END:</span>
+
+By way of example, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/holy-books">holy-books</a></span> is a literate Emacs package: =holy-books.org= tangles to
+=holy-books.el=, which MELPA ships.  Its write-up belongs on the blog, where friends who'd
+never browse GitHub find it via the index, tag pages, and RSS; its code belongs in its own
+repo, where people star it, fork it, and file issues.
+
+<span style="color: #a0a1a7;">#+begin_example
+</span>github.com/alhassy/holy-books          blog (alhassy.github.io)
+&#9500;&#9472;&#9472; holy-books.org   &#8592; single source   &#9500;&#9472;&#9472; projects.org
+&#9500;&#9472;&#9472; holy-books.el    &#8592; tangled, committed     * Holy Books  :emacs:
+&#9500;&#9472;&#9472; tests.el                                   :REDIRECT: <a href="https://raw&#8230;/holy-books.org">https://raw&#8230;/holy-books.org</a>
+&#9500;&#9472;&#9472; README.md        &#8592; tiny, hand-written      * Repl-Driven Dev  :emacs:
+&#9492;&#9472;&#9472; images/                                    :REDIRECT: &#8230;
+<span style="color: #a0a1a7;">#+end_example
+</span>
+Why not the other way round, with the blog owning the =.org= and tangling into
+=~/holy-books/=?  Then the =:tangle= paths are absolute, the repo's CI can't re-tangle, and
+every pull request against the =.el= is silently clobbered by our next tangle.  Contributors
+fork one repo, and should find the literate source beside the code.
+
+- <span style="font-weight: bold;">*=projects.org=*</span> is a container with one heading per repo, each a =:REDIRECT:=.  Its
+  first heading carries =:SITE_NAV: Projects=, so one URL ---linked from every page--- lists
+  everything; it's the link we send friends.  Adding a repo is a five-line heading.
+- <span style="font-weight: bold;">*=README.md=*</span> in each repo is hand-written and tiny: a badge row, one GIF, a
+  =use-package= snippet, a short table of the main commands, and "Full write-up &#8594;".  It
+  changes rarely, so generating it from the =.org= (=ox-md= on a =:readme:= subtree) is a
+  pipeline we don't need; in due time, if the command table starts drifting, we revisit.
+- <span style="font-weight: bold;">*=;; URL:=*</span> in the package header points at the GitHub repo, not the blog, so bug reports
+  land where the code lives.
+- <span style="font-weight: bold;">*Per-repo GitHub Pages*</span>, like =alhassy.com/holy-books/=, are forthcoming retirees: each
+  write-up should live at one canonical URL.  Until then, a redirected article's slug must
+  differ from its repo's name, else the project site shadows it ---hence
+  =:CUSTOM_ID: holy-books-in-org-mode=, not =holy-books=.
+
+<span style="font-weight: bold;">*Migrating a repo*</span> is then a checklist:
+1. Un-=COMMENT= its heading in =projects.org=, with a =:CUSTOM_ID:= unlike the repo's name.
+2. Tag repo-only plumbing ---the package preamble, the test suite, the CI YAML---
+   =:noexport:=: it still tangles, but never reaches readers.
+3. Make the tangle a CI-checked fixpoint, lest someone patch the =.el= directly: CI
+   re-tangles the =.org= and fails if =git diff --exit-code= finds the committed
+   =.el= differs; see =holy-books.org='s "Testing" heading.
+4. <a href="kbd:C-x_C-s">kbd:C-x_C-s</a> in =projects.org= and eyeball the preview.
+
+<span style="color: #a626a4; font-weight: bold;">*** A REDIRECT tracks </span><span style="color: #a626a4; font-weight: bold;">=master=</span><span style="color: #a626a4; font-weight: bold;">: vendoring, freshness, and staleness</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">vendoring-redirects-so-ci-can-resolve-them</span>
 <span style="font-weight: bold;">:END:</span>
 
 A =:REDIRECT:= of =~/.emacs.d/init.org= works on our laptop and fails on CI, which has no
-=~/.emacs.d/=.  So we <span style="font-style: italic;">/vendor/</span> each source ---copied or fetched--- into the git-tracked
-=resources/redirects/&lt;slug&gt;.org=:
+=~/.emacs.d/=; a URL fails whenever the network does.  So every publish <span style="font-style: italic;">/vendors/</span> the
+source ---copied or fetched--- into the git-tracked =resources/redirects/&lt;slug&gt;.org=, and
+includes that.
 
-- On preview, =blog--publish-single-subtree= vendors into its temp file, leaving the
-  source's =:REDIRECT:= alone.
-- On =blog-publish-all=, =blog--vendor-redirects= vendors first and rewrites the property
-  to the in-repo path; e.g., =:REDIRECT: resources/redirects/my-literate-emacs-config.org=.
+- <span style="font-weight: bold;">*The property is never rewritten.*</span> =:REDIRECT: <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org">https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org</a></span>=
+  stays as written, so every publish re-fetches the tip of the repo's default branch
+  ---=master=, or =main= for younger repos; the URL names whichever the repo uses.
+- <span style="font-weight: bold;">*The vendored copy is a fallback, not a source.*</span> When the source is unreachable we reuse
+  last time's copy, with a message; only a source that is unreachable <span style="font-style: italic;">/and/</span> never vendored
+  is an error.  An HTTP error counts as unreachable ---=url-copy-file= would happily vendor
+  GitHub's =404: Not Found= page as our article!  So we fetch with =curl --fail=, which
+  also sidesteps url.el's cache and its bodiless =304 Not Modified= replies.
+
+Hence how far an article can lag its source:
+
+| Source     | Laptop preview      | CI                         |
+|------------+---------------------+----------------------------|
+| URL        | fresh fetch         | fresh fetch                |
+| local path | fresh copy          | the last committed copy    |
+
+- <span style="font-weight: bold;">*A URL article*</span> lags its repo until the next blog build.  Pushes to the blog trigger
+  builds, but pushes to =holy-books= don't; so CI also rebuilds daily ---see =schedule:= in
+  &#167;<span style="text-decoration: underline;"><a href="#ci-workflow-githubworkflowsciyml">the CI workflow</a></span>--- bounding the lag at a day.  =workflow_dispatch= is there for the
+  impatient.
+- <span style="font-weight: bold;">*A local-path article*</span> lags until we publish from the laptop and commit the refreshed
+  copy; the diff of =resources/redirects/&lt;slug&gt;.org= is then a terse "what changed
+  upstream" view.
+- <span style="font-weight: bold;">*A renamed branch or file*</span> makes the fetch 404: we keep publishing the stale copy, and the
+  message tells us to fix the =:REDIRECT:=.
+
+<span style="color: #a626a4; font-weight: bold;">*** Making a source include-ready</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">making-a-source-include-ready</span>
+<span style="font-weight: bold;">:END:</span>
+
+Three things that are right in the repo are wrong in the blog, so =blog--prepare-redirect=
+fixes them in the vendored copy:
+
+1. <span style="font-weight: bold;">*Relative links.*</span> =<span style="text-decoration: underline;"><a href="file:images/short_example.png">[[file:images/short_example.png]]</a></span>= is relative to the repo, but once
+   vendored it'd resolve against =resources/redirects/=.  For a URL source we re-root it at
+   the URL's directory, &#8614;
+   =<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/images/short_example.png">[[https://raw.githubusercontent.com/alhassy/holy-books/main/images/short_example.png]]</a></span>=,
+   which Org still inlines as an image.  A local-path source keeps its links; in due time,
+   we may resolve them against the source's git remote.
+2. <span style="font-weight: bold;">*File-level keywords.*</span> The temp file already opens with the heading's =#+title:= and
+   friends; an included =#+title: holy-books= would be concatenated onto ours, and
+   =#+options: toc:nil= would hide our &#926; table of contents.  So we axe =#+title:=,
+   =#+subtitle:=, =#+author:=, =#+date:=, =#+options:=, and =#+export_file_name:=; and
+   =#+toc:=, since &#926; already is one.
+3. <span style="font-weight: bold;">*=<a href="blog:header">blog:header</a>= and </span><span style="font-weight: bold;">=<a href="blog:footer">blog:footer</a>=</span><span style="font-weight: bold;">.*</span>  A repo's own =index.html= uses them for our styling;
+   inside an article they'd print a second header.
+
+Lookalikes inside source blocks are left alone, since =org-element= only reports real
+keywords and links.
+
+A package's write-up is demonstrative of the package: =holy-books.org= is full of
+=quran:1:1= and =basmala:= links, which only export once =holy-books.el= has registered them.
+So a heading's =:LOAD:= names the package's =.el= ---a URL or a path, alongside its
+=:REDIRECT:=--- which we vendor verbatim to =resources/redirects/&lt;slug&gt;.el=, with the same
+fallback, and =load= before exporting.  CI thus needs no per-package install step, though
+the package's own dependencies must already be among CI's packages.  (Loading fetched
+code is trust: whoever can push to that repo can run code in our CI.  It's our repo.)
+
+<span style="color: #a0a1a7;">#+begin_src org :tangle no
+</span>,* Holy Books: Quran &amp; Bible look-ups in Org-mode :emacs:
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span>   <span style="color: #383a42; background-color: #fafafa;">holy-books-in-org-mode</span>
+<span style="color: #a626a4;">:REDIRECT:</span>    <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org">https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.or</a><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.org">g</a></span>
+<span style="color: #a626a4;">:LOAD:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.el">https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.e</a><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/holy-books.el">l</a></span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Finally, a redirected article on GitHub opens with a banner inviting readers to star the
+repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
+read, where it's missed.  Its History badge points at the repo's log for the file, not at
+=projects.org='s, and its Source badge colourises the vendored file, not the five-line
+heading.
 
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-redirects-subdir</span> <span style="color: #50a14f;">"resources/redirects/"</span>
@@ -341,29 +459,94 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
   <span style="color: #50a14f; font-style: italic;">"Return non-nil if PATH is an HTTP(S) URL."</span>
   (string-match-p <span style="color: #50a14f;">"\\`https?://"</span> path))
 
-(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--already-vendored-p</span> (path)
-  <span style="color: #50a14f; font-style: italic;">"Return non-nil if PATH is already rooted at `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'."</span>
-  (string-prefix-p blog-redirects-subdir path))
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--github-raw-parts</span> (redirect)
+  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; (OWNER REPO BRANCH PATH) when it's a raw.githubusercontent.com URL, else nil."</span>
+  (<span style="color: #a626a4;">when</span> (string-match <span style="color: #50a14f;">"\\`<a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">https://raw\\.githubusercontent\\.com/</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">(</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">[</a></span><span style="color: #50a14f; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">^</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">/]+</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">)</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">/</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">(</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">[</a></span><span style="color: #50a14f; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">^</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">/]+</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">)</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">/</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">(</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">[</a></span><span style="color: #50a14f; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">^</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">/]+</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">)</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">/</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">(</a></span><span style="color: #50a14f;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">.+</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">\\</a></span><span style="color: #000000; font-weight: bold;"><a href="https://raw\\.githubusercontent\\.com/\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/\\(.+\\)">)</a></span><span style="color: #50a14f;">\\'"</span>
+                      redirect)
+    (mapcar (<span style="color: #a626a4;">lambda</span> (i) (match-string i redirect)) '(1 2 3 4))))
 
-(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--vendor-one-redirect</span> (slug redirect)
-  <span style="color: #50a14f; font-style: italic;">"Fetch REDIRECT (a local path or http(s) URL) into
-`</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'/SLUG.org and return the vendored relative path.
-A no-op if REDIRECT already points into `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'."</span>
-  (<span style="color: #a626a4;">if</span> (blog--already-vendored-p redirect)
-      redirect
-    (<span style="color: #a626a4;">let*</span> ((dest-dir (expand-file-name blog-redirects-subdir blog-posts-directory))
-           (dest     (expand-file-name (concat slug <span style="color: #50a14f;">".org"</span>) dest-dir)))
-      (make-directory dest-dir t)
-      (<span style="color: #a626a4;">cond</span>
-       ((blog--url-p redirect)
-        (url-copy-file redirect dest t))
-       (t
-        (<span style="color: #a626a4;">let</span> ((src (expand-file-name redirect)))
-          (<span style="color: #a626a4;">unless</span> (file-exists-p src)
-            (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"REDIRECT source does not exist: %s"</span> src))
-          (copy-file src dest t))))
-      (call-process <span style="color: #50a14f;">"git"</span> nil nil nil <span style="color: #50a14f;">"add"</span> dest)
-      (concat blog-redirects-subdir slug <span style="color: #50a14f;">".org"</span>))))
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--redirect-history-url</span> (redirect)
+  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; the GitHub commit history of its file, or nil when it isn't on GitHub."</span>
+  (<span style="color: #a626a4;">pcase</span> (blog--github-raw-parts redirect)
+    (`(,owner ,repo ,branch ,path) (format <span style="color: #50a14f;">"<a href="https://github.com/%s/%s/commits/%s/%s">https://github.com/%s/%s/commits/%s/%s</a>"</span> owner repo branch path))))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--redirect-banner</span> (redirect)
+  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; Org text inviting readers to star or discuss its GitHub repo; \"\" when it isn't on GitHub."</span>
+  (<span style="color: #a626a4;">pcase</span> (blog--github-raw-parts redirect)
+    (`(,owner ,repo ,_ ,_)
+     (format (concat <span style="color: #50a14f;">"#+begin_center\n"</span>
+                     <span style="color: #50a14f;">"&#11088; The code lives at <a href="https://github.com/%1$s/%2$s">[[https://github.com/%1$s/%2$s][github.com/%1$s/%2$s]]</a>"</span>
+                     <span style="color: #50a14f;">" ---star it, or <a href="https://github.com/%1$s/%2$s/issues">[[https://github.com/%1$s/%2$s/issues][discuss it there]]</a>!"</span>
+                     <span style="color: #50a14f;">" <a href="github-stars:%1$s/%2$s\n">github-stars:%1$s/%2$s\n</a>"</span>
+                     <span style="color: #50a14f;">"#+end_center\n\n"</span>)
+             owner repo))
+    (_ <span style="color: #50a14f;">""</span>)))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--fetch-url</span> (url file)
+  <span style="color: #50a14f; font-style: italic;">"Write URL's body to FILE; an HTTP error is an error, lest we vendor a &#8220;404: Not Found&#8221; page."</span>
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Not url.el: its cache sends If-Modified-Since, and a bodiless 304 isn't an article.
+</span>  (<span style="color: #a626a4;">unless</span> (zerop (call-process <span style="color: #50a14f;">"curl"</span> nil nil nil <span style="color: #50a14f;">"--fail"</span> <span style="color: #50a14f;">"--silent"</span> <span style="color: #50a14f;">"--show-error"</span> <span style="color: #50a14f;">"--location"</span>
+                               <span style="color: #50a14f;">"--max-time"</span> <span style="color: #50a14f;">"30"</span> <span style="color: #50a14f;">"--output"</span> file url))
+    (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"curl couldn't fetch %s"</span> url)))
+
+(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--redirect-axed-keywords</span> '(<span style="color: #50a14f;">"TITLE"</span> <span style="color: #50a14f;">"SUBTITLE"</span> <span style="color: #50a14f;">"AUTHOR"</span> <span style="color: #50a14f;">"DATE"</span> <span style="color: #50a14f;">"OPTIONS"</span> <span style="color: #50a14f;">"EXPORT_FILE_NAME"</span> <span style="color: #50a14f;">"TOC"</span>)
+  <span style="color: #50a14f; font-style: italic;">"A :REDIRECT: source's file-level keywords that would clash with its article's synthetic ones."</span>)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--prepare-redirect</span> (file redirect)
+  <span style="color: #50a14f; font-style: italic;">"Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, <a href="file:images/x.png">file:images/x.png</a> &#8614; URL-dir/images/x.png.
+
+Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">' and <a href="blog:header/footer">blog:header/footer</a> links, and re-roots relative file links
+at REDIRECT's directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;."</span>
+  (<span style="color: #a626a4;">with-temp-buffer</span>
+    (insert-file-contents file)
+    (<span style="color: #a626a4;">delay-mode-hooks</span> (org-mode))
+    (<span style="color: #a626a4;">let</span> ((base (<span style="color: #a626a4;">and</span> (blog--url-p redirect) (file-name-directory redirect))))
+      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Edit back to front, so the positions of earlier elements stay valid.
+</span>      (<span style="color: #a626a4;">dolist</span> (el (nreverse (org-element-map (org-element-parse-buffer) '(keyword link) #'identity)))
+        (<span style="color: #a626a4;">let</span> ((beg  (org-element-property <span style="color: #e44649;">:begin</span> el))
+              (end  (org-element-property <span style="color: #e44649;">:end</span> el))
+              (type (org-element-property <span style="color: #e44649;">:type</span> el))
+              (path (org-element-property <span style="color: #e44649;">:path</span> el)))
+          (<span style="color: #a626a4;">cond</span>
+           ((member (org-element-property <span style="color: #e44649;">:key</span> el) blog--redirect-axed-keywords)
+            (delete-region beg end))
+           ((equal type <span style="color: #50a14f;">"blog"</span>)
+            (delete-region beg end))
+           ((<span style="color: #a626a4;">and</span> base (equal type <span style="color: #50a14f;">"file"</span>) (not (file-name-absolute-p path)))
+            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
+</span>            (<span style="color: #a626a4;">let</span> ((url (url-expand-file-name path base)))
+              (goto-char beg)
+              (search-forward (org-element-property <span style="color: #e44649;">:raw-link</span> el) end)
+              (replace-match url t t)))))))
+    (write-region nil nil file nil 'silent)))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--vendor-one-redirect</span> (slug redirect <span style="color: #c18401;">&amp;optional</span> ext)
+  <span style="color: #50a14f; font-style: italic;">"(SLUG, REDIRECT, EXT) &#8614; `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'/SLUG.EXT, freshly copied or fetched from REDIRECT.
+
+EXT defaults to \".org\", and only then is the copy made include-ready; a :LOAD:'s \".el\" is
+vendored verbatim.  When REDIRECT is unreachable ---no network, or CI lacking ~/.emacs.d/--- we
+keep last time's copy, and only signal an error when there is none."</span>
+  (<span style="color: #a626a4;">let*</span> ((vendored (concat blog-redirects-subdir slug (<span style="color: #a626a4;">or</span> ext <span style="color: #50a14f;">".org"</span>)))
+         (dest     (expand-file-name vendored blog-posts-directory))
+         (tmp      (make-temp-file <span style="color: #50a14f;">"albasmala-redirect-"</span> nil <span style="color: #50a14f;">".org"</span>)))
+    (make-directory (file-name-directory dest) t)
+    (<span style="color: #a626a4;">condition-case</span> err
+        (<span style="color: #a626a4;">progn</span>
+          (<span style="color: #a626a4;">if</span> (blog--url-p redirect)
+              (blog--fetch-url redirect tmp)
+            (copy-file (expand-file-name redirect) tmp t))
+          (<span style="color: #a626a4;">unless</span> ext (blog--prepare-redirect tmp redirect))
+          (rename-file tmp dest t)
+          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">From the blog's root: our caller may be a temp buffer, outside the repo.
+</span>          (<span style="color: #a626a4;">let</span> ((default-directory (expand-file-name blog-posts-directory)))
+            (call-process <span style="color: #50a14f;">"git"</span> nil nil nil <span style="color: #50a14f;">"add"</span> dest)))
+      (<span style="font-weight: bold;">error</span>
+       (<span style="color: #a626a4;">when</span> (file-exists-p tmp) (delete-file tmp))
+       (<span style="color: #a626a4;">unless</span> (file-exists-p dest)
+         (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"REDIRECT %s is unreachable and was never vendored: %s"</span> redirect (error-message-string err)))
+       (message <span style="color: #50a14f;">"=&gt; REDIRECT %s is unreachable (%s); reusing the vendored %s"</span>
+                redirect (error-message-string err) vendored)))
+    vendored))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--map-publishable-top-headings</span> (fn)
   <span style="color: #50a14f; font-style: italic;">"Walk top-level headings in the current buffer and call FN with point on each.
@@ -397,27 +580,6 @@ one and writing back to a throwaway checkout."</span>
                         (<span style="color: #a626a4;">or</span> (org-entry-get (point) <span style="color: #50a14f;">"TITLE"</span>) title))))
            (org-entry-put (point) <span style="color: #50a14f;">"CUSTOM_ID"</span> slug)
            (message <span style="color: #50a14f;">"=&gt; Assigned :CUSTOM_ID: %s to %s"</span> slug title)))))))
-
-(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--vendor-redirects</span> ()
-  <span style="color: #50a14f; font-style: italic;">"Walk the current buffer's top-level headings; for each with a :REDIRECT:
-property, vendor the source into `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">' and rewrite the
-property to the vendored in-repo path.  Only touches multiple-style containers.
-
-Called by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">' (CI) so the rewritten path lands in git and CI
-can resolve it on a clean checkout.  NOT called on preview/C-x C-s ---preview
-vendors on-the-fly inside `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--publish-single-subtree</span><span style="color: #50a14f; font-style: italic;">' without touching the
-source buffer.
-
-Relies on `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--assign-slugs</span><span style="color: #50a14f; font-style: italic;">' having run first so every heading carries
-a :CUSTOM_ID: property we can build the vendored filename from."</span>
-  (blog--map-publishable-top-headings
-   (<span style="color: #a626a4;">lambda</span> ()
-     (<span style="color: #a626a4;">let</span> ((redirect (org-entry-get (point) <span style="color: #50a14f;">"REDIRECT"</span>))
-           (slug     (org-entry-get (point) <span style="color: #50a14f;">"CUSTOM_ID"</span>)))
-       (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">and</span> redirect slug (not (blog--already-vendored-p redirect)))
-         (<span style="color: #a626a4;">let</span> ((vendored (blog--vendor-one-redirect slug redirect)))
-           (org-entry-put (point) <span style="color: #50a14f;">"REDIRECT"</span> vendored)
-           (message <span style="color: #50a14f;">"=&gt; Vendored redirect for %s &#8592; %s"</span> slug redirect)))))))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 <span style="color: #8b4513; font-weight: bold;">** SITE_NAV: data-driven site navigation from container subtrees   </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
@@ -1323,8 +1485,11 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
 </span>             (abstract (blog--info-subtree-abstract headline-node))
              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">urls
 </span>             (container-base (f-base container-file))
-             (url     (blog--url slug))
-             (history (blog--history-url container-file)))
+             (url      (blog--url slug))
+             (redirect (org-element-property <span style="color: #e44649;">:REDIRECT</span> headline-node))
+             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A redirected article's history is its source's, when that's on GitHub.
+</span>             (history  (<span style="color: #a626a4;">or</span> (<span style="color: #a626a4;">and</span> redirect (blog--redirect-history-url redirect))
+                           (blog--history-url container-file))))
         (list (cons <span style="color: #50a14f;">"file"</span>        container-base)
               (cons <span style="color: #50a14f;">"slug"</span>        slug)
               (cons <span style="color: #50a14f;">"container"</span>   container-base)
@@ -1337,7 +1502,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
               (cons <span style="color: #50a14f;">"history"</span>     history)
               (cons <span style="color: #50a14f;">"abstract"</span>    abstract)
               (cons <span style="color: #50a14f;">"draft"</span>       (<span style="color: #a626a4;">if</span> draft? <span style="color: #50a14f;">"t"</span> nil))
-              (cons <span style="color: #50a14f;">"redirect"</span>    (org-element-property <span style="color: #e44649;">:REDIRECT</span> headline-node))
+              (cons <span style="color: #50a14f;">"redirect"</span>    redirect)
+              (cons <span style="color: #50a14f;">"load"</span>        (org-element-property <span style="color: #e44649;">:LOAD</span> headline-node))
               (cons <span style="color: #50a14f;">"modified"</span>    (org-element-property <span style="color: #e44649;">:MODIFIED</span> headline-node))
               (cons <span style="color: #50a14f;">"site_nav"</span>    (org-element-property <span style="color: #e44649;">:SITE_NAV</span> headline-node)))))))
 
@@ -2933,7 +3099,6 @@ Dispatches on #+article_style: per file:
         (<span style="color: #a626a4;">if</span> (blog--multiple-style-p)
             (<span style="color: #a626a4;">progn</span>
               (message <span style="color: #50a14f;">"=&gt; Exporting all articles from %s..."</span> (f-base f))
-              (blog--vendor-redirects)
               (blog--publish-multiple-articles f))
           (<span style="color: #a626a4;">let</span> ((target (expand-file-name (concat (f-base f) <span style="color: #50a14f;">".html"</span>) blog-publish-directory)))
             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Export directly to public/&lt;base&gt;.html so that #+export_file_name:
@@ -3032,9 +3197,13 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
             (<span style="color: #a626a4;">if</span> redirect
                 (<span style="color: #a626a4;">with-current-buffer</span> tmp-buf
                   (goto-char (point-max))
-                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Vendor on-the-fly so the #+include: resolves on this machine
-</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">and on CI without mutating the source :REDIRECT: property.
-</span>                  (insert (format <span style="color: #50a14f;">"#+include: \"%s\"\n"</span>
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Vendor afresh, so the #+include: resolves on this machine and on
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">CI, and tracks the source's tip; the banner sits atop the article.
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A package's write-up uses the package's own link types; load it first.
+</span>                  (<span style="color: #a626a4;">when-let</span> ((lib (cdr (assoc <span style="color: #50a14f;">"load"</span> info))))
+                    (load (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory) nil t))
+                  (insert (blog--redirect-banner redirect)
+                          (format <span style="color: #50a14f;">"#+include: \"%s\"\n"</span>
                                   (expand-file-name
                                    (blog--vendor-one-redirect slug redirect)
                                    blog-posts-directory)))
@@ -3059,8 +3228,10 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
               (<span style="color: #a626a4;">let</span> ((blog--link-base-directory (file-name-directory (expand-file-name container-file))))
                 (org-export-to-file 'blog html-out))))
 
-          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">4. Per-article colourised source: htmlize the subtree narrowed copy.
-</span>          (blog--htmlize-subtree heading-point slug))
+          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">4. Per-article colourised source: the vendored file for a redirect, else the subtree.
+</span>          (<span style="color: #a626a4;">if</span> (cdr (assoc <span style="color: #50a14f;">"redirect"</span> info))
+              (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir slug <span style="color: #50a14f;">".org"</span>) blog-posts-directory))
+            (blog--htmlize-subtree heading-point slug)))
 
       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Cleanup temp files regardless of errors.
 </span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Mark the buffer unmodified before killing ---this is the only reliable way
@@ -3194,7 +3365,10 @@ CI workaround sits beside its explanation. One =build= job
    only spares us re-downloading what hasn't changed---, then saves them as a fresh cache;
 2. tangles this file and loads =AlBasmala.el=;
 3. runs =blog-publish-all=; and
-4. on pushes to =master=, force-pushes =public/= to =gh-pages=.
+4. on pushes to =master=, and on the daily schedule, force-pushes =public/= to =gh-pages=.
+
+The daily run is for =:REDIRECT:= articles: they track their repos' tips, but pushes there
+don't trigger us; see &#167;<span style="text-decoration: underline;"><a href="#vendoring-redirects-so-ci-can-resolve-them">staleness</a></span>.
 
 <span style="color: #a0a1a7;">#+begin_src yaml :tangle .github/workflows/ci.yml
 </span>name: blog CI
@@ -3205,6 +3379,9 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+  # :REDIRECT: articles track their repos' tips, which don't trigger us; so rebuild daily too.
+  schedule:
+    - cron: "17 6 * * *"
 
 # Serialise deploys so two quick master pushes don't race on the
 # gh-pages force-push.  Queue rather than cancel ---every deploy lands.
@@ -3270,7 +3447,7 @@ jobs:
             --eval "(blog-publish-all)"
 
       - name: Deploy public/ to gh-pages
-        if: github.ref == 'refs/heads/master' &amp;&amp; github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' &amp;&amp; (github.event_name == 'push' || github.event_name == 'schedule')
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
