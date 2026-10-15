@@ -1,0 +1,870 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>unlisted-elisp-packages-and-cheat-sheets.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #0184bc; font-weight: bold;">* My Elisp packages &amp; Lisp cheat-sheet scraps</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">unlisted-elisp-packages-and-cheat-sheets</span>
+<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2026-10-15&gt;</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">Issues, ideas, and snippets for org-special-block-extras, lf.el, and my Lisp cheat sheets.</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://alhassy.com/unlisted-notes-table-of-contents">&#8593; All unlisted notes</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** org-special-block-extras</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">org-special-block-extras</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://sachachua.com/blog/2023/01/adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export/">https://sachachua.com/blog/2023/01/adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export</a><a href="https://sachachua.com/blog/2023/01/adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export/">/</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpssachachuacomblog202301adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** [alhassy/org-special-block-extras] Wrong type argument on `margin`, `kbd` links (Issue #40)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyorg-special-block-extras-wrong-type-argument-on-margin-kbd-links-issue-40</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/issues/40#issuecomment-1610373948">https://github.com/alhassy/org-special-block-extras/issues/40#issuecomment-1610373948</a></span>
+
+<span style="color: #a626a4; font-weight: bold;">*** [alhassy/org-special-block-extras] Any interest in proposing this package for inclusion in either GNU or NonGNU ELPA? (Issue #46)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyorg-special-block-extras-any-interest-in-proposing-this-package-for-inclusion-in-either-gnu-or-nongnu-elpa-issue-46</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/issues/46">https://github.com/alhassy/org-special-block-extras/issues/46</a></span>
+<span style="color: #a626a4; font-weight: bold;">*** defmethod</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">defmethod</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src lisp
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">undefining a cl-defgeneric, you can use the fmakunbound function to remove the function binding.
+</span>
+
+(cl-defgeneric greet (name)
+  <span style="color: #50a14f; font-style: italic;">"A generic function to greet someone."</span>)
+
+(cl-defmethod greet ((name string))
+  <span style="color: #50a14f; font-style: italic;">"A method to greet someone by their name."</span>
+  (message <span style="color: #50a14f;">"Hello, %s!"</span> name))
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">works
+</span>(greet <span style="color: #50a14f;">"Musa"</span>)
+
+(fmakunbound 'greet)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">crashes
+</span>(greet <span style="color: #50a14f;">"Musa"</span>)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Please note that fmakunbound completely removes the function binding, so if you intend to re-define the generic
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">function later, you would need to redefine it from scratch.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Keep in mind that undefining a cl-defgeneric should be done with caution, as it may impact other parts of your
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">codebase that rely on the generic function. Make sure to consider the broader implications and structure your code
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">accordingly.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">With the &#8220;:method&#8221; keyword, it's easier to see defgeneric as a normal function that has a dictionary from
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">types/specializers to implementations. Then a function call is essentially a instanceof / type-of based look-up.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span>(cl-defgeneric greet (name)
+  <span style="color: #50a14f; font-style: italic;">"A generic function to greet someone."</span>
+   (<span style="color: #e44649;">:method</span> ((name string)) (message <span style="color: #50a14f;">"&#10216;1&#10217; Hello, %s!"</span> name))
+   (<span style="color: #e44649;">:method</span> ((name symbol)) (message <span style="color: #50a14f;">"&#10216;2&#10217; Greetings, %s!"</span> name)))
+
+(greet <span style="color: #50a14f;">"Musa"</span>)
+(greet 'Chad)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Incorporate ob-latex-to-png pkg smart diagrams into org-graph.el</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">incorporate-ob-latex-to-png-pkg-smart-diagrams-into-org-graphel</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a626a4; font-weight: bold;">*** Org-special-block extras: Example of how the tag :ignore: modifies a section</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">org-special-block-extras-example-of-how-the-tag-ignore-modifies-a-section</span>
+<span style="font-weight: bold;">:END:</span>
+Headings
+Use the :ignore: tag on headlines to omit the headline when exporting, but keep its contents.
+
+(ox-extras-activate '(ignore-headlines))
+Alternatively, use the :noexport: tag to omit the headline and its contents.
+
+;;;; noexport is in the list by default
+;; (add-to-list 'org-export-exclude-tags "noexport")
+Drawers
+Ignore all drawers when exporting, by default.
+
+(setq org-export-with-drawers nil)
+<span style="color: #a626a4; font-weight: bold;">*** Adding org-eldoc support for special blocks, works!  (org-get-title-or-body)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">adding-org-eldoc-support-for-special-blocks-works-org-get-title-or-body</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">my-org-eldoc-show-special-block</span> (orig-fun <span style="color: #c18401;">&amp;rest</span> args)
+  <span style="color: #50a14f; font-style: italic;">"Enhance `org-eldoc-documentation-function` to show info about `org-special-block`."</span>
+  (<span style="color: #a626a4;">let</span> ((result (apply orig-fun args))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Call the original function
+</span>    (<span style="color: #a626a4;">or</span>
+     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Check if the point is inside an org-special-block
+</span>     (<span style="color: #a626a4;">when</span> (org-at-block-p)
+       (<span style="color: #a626a4;">let*</span> ((element (org-element-at-point))
+              (block-name (org-element-property <span style="color: #e44649;">:type</span> element)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Get block name
+</span>              (header-args (org-element-property <span style="color: #e44649;">:parameters</span> element))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Get header arguments
+</span>         (concat <span style="color: #50a14f;">"Block: "</span> block-name
+                 (<span style="color: #a626a4;">if</span> header-args
+                     (concat <span style="color: #50a14f;">" | Header args: "</span> header-args)))))
+     result))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Fallback to the original result if not in a special block
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Add the advice to enhance the documentation function
+</span>(advice-add 'org-eldoc-documentation-function <span style="color: #e44649;">:around</span> #'my-org-eldoc-show-special-block)
+
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Let's try it out:
+<span style="color: #a0a1a7;">#+begin_box "This is the tile" :color blue :slant who-knows
+</span>This is boxed text!
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a626a4; font-weight: bold;">*** Mention </span><span style="color: #a626a4; font-weight: bold;">~git:~</span><span style="color: #a626a4; font-weight: bold;"> link-type in my org-special-block extras .org file</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">mention-git-link-type-in-my-org-special-block-extras-org-file</span>
+<span style="font-weight: bold;">:END:</span>
+
+
+<span style="text-decoration: underline;"><a href="https://git.sr.ht/~bzg/org-contrib/tree/master/item/lisp/ol-git-link.el">https://git.sr.ht/~bzg/org-contrib/tree/master/item/lisp/ol-git-link.el</a></span>
+
+
+- <span style="font-weight: bold;">*org-git-link.el:*</span> Provide org links to specific file version
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://pank.eu/blog/pretty-babel-src-blocks.html">https://pank.eu/blog/pretty-babel-src-blocks.htm</a><a href="https://pank.eu/blog/pretty-babel-src-blocks.html">l</a></span><span style="color: #a626a4; font-weight: bold;"> -- ship with my package ;-)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpspankeublogpretty-babel-src-blockshtml-ship-with-my-package</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #8b4513; font-weight: bold;">** Repl driven development blog article</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">repl-driven-development-blog-article</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** Functions Explained Through Patterns - repl driven development</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">functions-explained-through-patterns-repl-driven-development</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="http://blog.josephwilk.net/clojure/functions-explained-through-patterns.html">http://blog.josephwilk.net/clojure/functions-explained-through-patterns.html</a></span>
+REPL driven development. If you don&#8217;t understand a function use an interactive
+REPL to explore examples.
+
+<span style="color: #a626a4; font-weight: bold;">*** jshell eager eval</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">jshell-eager-eval</span>
+<span style="font-weight: bold;">:END:</span>
+Inbox
+
+To keep things simple, JShell also doesn&#8217;t need semicolons to end statements, so using them is entirely optional. This can make it difficult to write complex statements across multiple lines, as it will automatically execute the statement eagerly, as soon as it makes sense to do so:
+
+==&gt; "Hello, World"
+$3 ==&gt; "Hello, World"
+
+==&gt; "Hello, World".substring(
+   ...&gt; 3, 5)
+$4 ==&gt; "lo"
+
+==&gt;
+
+<span style="color: #a626a4; font-weight: bold;">*** F#, bash (convert any command to a repl),  Osascript</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">f-bash-convert-any-command-to-a-repl-osascript</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">**** F#</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">f</span>
+<span style="font-weight: bold;">:END:</span>
+First:
+
+brew install mono
+
+run f# console/repl: fsharpi
+
+compile files: fsharpc file.fs
+
+Then:
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The trailing &#8220;-&#8221; turns readline off, so process doesn't wait.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Turned off readline when running as background non-console process.
+</span>(repl-driven-development [C-x e f] <span style="color: #50a14f;">"fsharpi --readline-"</span>
+   <span style="color: #e44649;">:name</span> 'fsharp-repl
+   <span style="color: #e44649;">:blink</span> 'pulsar-blue
+   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Add command terminator, so submissions don't need it.
+</span>   <span style="color: #e44649;">:input-rewrite-fn</span> (<span style="color: #a626a4;">lambda</span> (in) (concat in <span style="color: #50a14f;">";;"</span>)))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Except the last line, these are all valid OCaml as well as valid F#:
+<span style="color: #a0a1a7;">#+begin_src ocaml
+</span>1 + 2             (* &#8658; - : int = 3 *)
+"fsharp"          (* &#8658; - : string = "ocaml" **)
+true              (* &#8658; - : bool = true *)
+fun x y -&gt; x + y  (* &#8658; - : int -&gt; int -&gt; int = &lt;fun&gt; *)
+(fun x y -&gt; x + y) 3 4 (* &#8658; - : int = 7 *)
+System.Environment.GetEnvironmentVariable("TERM")
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="font-weight: bold; text-decoration: underline;">****** Convert any command into a REPL</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">convert-any-command-into-a-repl</span>
+<span style="font-weight: bold;">:END:</span>
+Open a terminal and enter:
+<span style="color: #a0a1a7;">#+begin_src shell
+</span><span style="color: #a626a4;">while </span><span style="color: #e44649;">read</span> line ; <span style="color: #a626a4;">do </span><span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"$line"</span> | tr <span style="color: #50a14f;">'[a-z]'</span> <span style="color: #50a14f;">'[A-Z]'</span> ; <span style="color: #a626a4;">done</span>
+<span style="color: #a0a1a7;">#+end_src
+</span>You know have an &#8220;upcase REPL&#8221;.
+
+Between &#8220;do &#8943; done&#8221; you can run whatever command tool you like, thereby converting it into
+a simple REPL.
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(repl-driven-development
+ [C-x e u] <span style="color: #50a14f;">"bash"</span>
+ <span style="color: #e44649;">:name</span> 'upcase-repl
+ <span style="color: #e44649;">:blink</span> 'pulsar-blue
+ <span style="color: #e44649;">:init</span> <span style="color: #50a14f;">"   echo \"Screaming fun with Emacs (&#65377;&#9685;&#8255;&#9685;&#65377;))\"
+        \n while read line ; do echo -n \"&#4314;(&#3232;&#30410;&#3232;)&#4314; says \"; echo \"$line\" | tr '[a-z]' '[A-Z]' ; done"</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Example usage:
+<span style="color: #a0a1a7;">#+begin_src text
+</span>hello there my friends
+
+why so mad
+
+bye
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #c18401; font-weight: bold;">***** Emacs as an AppleScript editor</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">emacs-as-an-applescript-editor</span>
+<span style="font-weight: bold;">:END:</span>
+- AppleScript is a high-level, English-like scripting language developed by Apple for automating tasks on macOS.
+It allows you to create complex scripts and automate various operations within the macOS environment, including interacting with applications, system settings, and more.
+- The interpreter for AppleScript is called =osascript=.
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(repl-driven-development
+ [C-x e a] <span style="color: #50a14f;">"bash"</span>
+ <span style="color: #e44649;">:name</span> 'applescript-repl
+ <span style="color: #e44649;">:blink</span> 'pulsar-blue
+ <span style="color: #e44649;">:init</span> <span style="color: #50a14f;">"while true; do
+    read input
+    osa_script=\"\"
+    while [ \"$input\" != \";;\" ]; do
+        osa_script=\"$osa_script$input\"$'</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">\n</span><span style="color: #50a14f;">'
+        read input
+    done
+    echo $(osascript -e \"$osa_script\") &amp;&amp; echo \"Done (&#9685;&#8255;&#9685;)\"
+    done"</span>
+ <span style="color: #e44649;">:input-rewrite-fn</span> (<span style="color: #a626a4;">lambda</span> (in) (format <span style="color: #50a14f;">"%s\n;;"</span> in)))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Example usage:
+<span style="color: #a0a1a7;">#+begin_src osascript
+</span>-- See a pretty box!
+display dialog "Hello World"
+
+-- Hear a motivation message
+say "You can do it, buddy!"
+
+-- Toggle light/dark OS themes
+tell application "System Events"
+  tell appearance preferences
+  set dark mode to not dark mode
+  end tell
+end tell
+
+-- Open TextEdit and enter &#8220;hello world&#8221;
+tell application "TextEdit"
+    activate
+    make new document
+    set text of front document to "hello world"
+end tell
+
+-- Change the desktop wallpaper
+tell application "System Events"
+    tell current desktop
+        set picture to file "Path:To:Your:Image.jpg"
+    end tell
+end tell
+
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_src osascript
+</span>set imageUrl to "some image api"
+
+
+-- Define the API URL
+set apiUrl to "some image api / search?height%3C=300"
+
+-- Use `curl` to retrieve the JSON data from the API
+set jsonPayload to do shell script "curl -s " &amp; quoted form of apiUrl
+
+-- Use `jq` to extract the URL from the JSON
+set imageUrl to do shell script "echo " &amp; quoted form of jsonPayload &amp; " | jq -r '.images[0].url'"
+
+-- Define the path to save the image locally
+set imagePath to (path to desktop as text) &amp; "my-image.jpg"
+
+-- Download the image
+do shell script "curl -f -s -o " &amp; quoted form of POSIX path of imagePath &amp; " " &amp; quoted form of imageUrl
+
+-- Set the downloaded image as the desktop wallpaper
+tell application "System Events"
+  set picture of every desktop to POSIX file  "/Users/musa/Desktop/my-image.jpg"
+end tell
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Notice that this gives us a &#8220;applescript-eval&#8221; command, which we can use from within Emacs Lisp code
+to reach into the MacOS ecosystem ---e.g., to run actions in other tools or alter system-wide settings.
+
+<span style="color: #a626a4; font-weight: bold;">*** RDD.el for smalltalk</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">rddel-for-smalltalk</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="http://stephane.ducasse.free.fr/FreeBooks/Gnu/ProgrammingUsingGnuSmalltalk.pdf">http://stephane.ducasse.free.fr/FreeBooks/Gnu/ProgrammingUsingGnuSmalltalk.pdf</a></span>
+
+<span style="color: #a626a4; font-weight: bold;">*** elisp dev tools</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">elisp-dev-tools</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="text-decoration: underline;"><a href="https://www.reddit.com/r/emacs/comments/1051bfu/what_packages_do_i_need_to_for_the_best_elisp/">https://www.reddit.com/r/emacs/comments/1051bfu/what_packages_do_i_need_to_for_the_best_elisp/</a></span>
+
+<span style="text-decoration: underline;"><a href="https://github.com/p3r7/awesome-elisp#development-tools">https://github.com/p3r7/awesome-elisp#development-tools</a></span>
+
+<span style="color: #a626a4; font-weight: bold;">*** [alhassy/repl-driven-development] Project website in header comment yields a 404 (Issue #2)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyrepl-driven-development-project-website-in-header-comment-yields-a-404-issue-2</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="text-decoration: underline;"><a href="https://github.com/alhassy/repl-driven-development/issues/2">https://github.com/alhassy/repl-driven-development/issues/2</a></span>
+
+<span style="color: #a626a4; font-weight: bold;">*** Add to RDD sources for clojure</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">add-to-rdd-sources-for-clojure</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://www.classcentral.com/report/best-clojure-courses/#anchor-1">https://www.classcentral.com/report/best-clojure-courses/#anchor-1</a></span>
+
+<span style="color: #a626a4; font-weight: bold;">*** Managing code with Outlines | Modern Emacs</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">managing-code-with-outlines-modern-emacs</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="http://www.modernemacs.com/post/outline-ivy/">http://www.modernemacs.com/post/outline-ivy/</a></span>
+
+<span style="color: #a626a4; font-weight: bold;">*** Re: [alhassy/repl-driven-development] problems with output being overwritten while using scala (Issue #7)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">re-alhassyrepl-driven-development-problems-with-output-being-overwritten-while-using-scala-issue-7</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://github.com/alhassy/repl-driven-development/issues/7#event-11190092678">https://github.com/alhassy/repl-driven-development/issues/7#event-11190092678</a></span>
+
+Fed Reggiardo <a href="mailto:notifications%40github.com">&lt;notifications@github.com&gt;</a>
+Fri, Dec 8, 2023, 2:00&#8239;AM
+to alhassy/repl-driven-development, Subscribed
+
+Closed #7 as completed.
+
+&#8212;
+Reply to this email directly, view it on GitHub, or unsubscribe.
+
+<span style="color: #a626a4; font-weight: bold;">*** rdd.el expand-region remarks</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">rddel-expand-region-remarks</span>
+<span style="font-weight: bold;">:END:</span>
+
+(bind-key "s-r" #'er/expand-region)
+;; er uses regular expressions
+;; To use concrete syntax tree aware expansions (via &#8220;tree-sitter&#8221;),
+;; both ts-movement and combomulate.el seem to provide this feature and more.
+;; See comments of <span style="text-decoration: underline;"><a href="https://www.reddit.com/r/emacs/comments/10d33sr/tsmovement_a_package_to_navigate_the_treesitter/">https://www.reddit.com/r/emacs/comments/10d33sr/tsmovement_a_package_to_navigate_the_treesitter/</a></span>
+;; See <span style="text-decoration: underline;"><a href="https://www.masteringemacs.org/article/combobulate-structured-movement-editing-treesitter">https://www.masteringemacs.org/article/combobulate-structured-movement-editing-treesitter</a></span>
+;;
+;; Or just integrate tree-sitter into er directly: <span style="text-decoration: underline;"><a href="https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/20#issuecomment-1352675350">https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/20#issuecomment-1352675350</a></span>
+<span style="color: #8b4513; font-weight: bold;">** [alhassy/ob-latex-as-png] Files should not clutter user-emacs-directory (Issue #3)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyob-latex-as-png-files-should-not-clutter-user-emacs-directory-issue-3</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png/issues/3">https://github.com/alhassy/ob-latex-as-png/issues/3</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** [alhassy/ob-latex-as-png] Report error and abort upon latex compile error (PR #4)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyob-latex-as-png-report-error-and-abort-upon-latex-compile-error-pr-4</span>
+<span style="font-weight: bold;">:END:</span>
+  <span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png/pull/4">https://github.com/alhassy/ob-latex-as-png/pull/4</a></span>
+Mine this for useful info
+
+<span style="color: #8b4513; font-weight: bold;">** [alhassy/ob-latex-as-png] Use dedicated subdirectory for output data (PR #5)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyob-latex-as-png-use-dedicated-subdirectory-for-output-data-pr-5</span>
+<span style="font-weight: bold;">:END:</span>
++ <span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png/pull/5">https://github.com/alhassy/ob-latex-as-png/pull/5</a></span>
++ Mine this for useful info
+
+<span style="color: #8b4513; font-weight: bold;">** Re: [Artawower/blamer.el] Clickable Annotations (Issue #7)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">re-artawowerblamerel-clickable-annotations-issue-7</span>
+<span style="font-weight: bold;">:END:</span>
+Inbox
+
+Art <a href="mailto:notifications%40github.com">&lt;notifications@github.com&gt;</a>
+Sat, Jan 20, 9:10&#8239;AM
+to Artawower/blamer.el, me, Author
+
+Closed #7 as completed.
+
+<span style="text-decoration: underline;"><a href="https://github.com/Artawower/blamer.el/issues/7#event-11546112088">https://github.com/Artawower/blamer.el/issues/7#event-11546112088</a></span>
+<span style="color: #8b4513; font-weight: bold;">** Refactor osbe.el using my knowledge of Martin Fowler refactoring :+) ---reward, not goal.</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">refactor-osbeel-using-my-knowledge-of-martin-fowler-refactoring-reward-not-goal</span>
+<span style="font-weight: bold;">:END:</span>
+Make a top level heading 'Rewards'
+<span style="color: #8b4513; font-weight: bold;">** Literate Programming Writ Large</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">literate-programming-writ-large</span>
+<span style="font-weight: bold;">:END:</span>
+very useful for LP for org-special-block-extras
+<span style="text-decoration: underline;"><a href="https://howardism.org/Technical/Emacs/literate-writ-large.html#fnr.1">https://howardism.org/Technical/Emacs/literate-writ-large.html#fnr.1</a></span>
+<span style="color: #8b4513; font-weight: bold;">** Re: [alhassy/org-special-block-extras] Doesn't work with RevealJS</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">re-alhassyorg-special-block-extras-doesnt-work-with-revealjs</span>
+<span style="font-weight: bold;">:END:</span>
+
+From: suhail-singh <a href="mailto:notifications%40github.com">&lt;notifications@github.com&gt;</a>
+Subject: Re: [alhassy/org-special-block-extras] Doesn't work with RevealJS
+ HTML Backend (Issue #44)
+
+Date: Tue, 30 Apr 2024 18:02:49 -0700 (13 weeks, 6 days, 10 hours ago)
+Reply-To: alhassy/org-special-block-extras
+ <a href="mailto:reply+AG2IR5H3Y7ISE3DVP3F6NE6EHV23TEVBNHHG2FRPYY%40reply.github.com">&lt;reply+AG2IR5H3Y7ISE3DVP3F6NE6EHV23TEVBNHHG2FRPYY@reply.github.com&gt;</a>
+Attachment: [2. text/plain]...
+
+This is because org-special-block-extras hardcodes backend checks based on
+strict equality (e.g. using (equal backend 'html) or (equal backend 'latex))
+instead of using org-export-derived-backend-p from 'ox.
+
+Perhaps @alhassy will have time to either fix it or review a patch that fixes
+it.
+
+&#8212;
+Reply to this email directly, view it on GitHub, or unsubscribe.
+You are receiving this because you were mentioned.
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;"><a href="https://eli5.gg/what%20is%20org-special-block-extras">ELI5: what is org-special-block-extras</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpseli5ggwhat20is20org-special-block-extraseli5-what-is-org-special-block-extras</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #8b4513; font-weight: bold;">** Casting SPELs in Lisp &#1563;&#1563; Lisp cheat sheet ;; also in init</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">casting-spels-in-lisp-lisp-cheat-sheet-also-in-init</span>
+<span style="font-weight: bold;">:END:</span>
+ <span style="text-decoration: underline;"><a href="http://www.lisperati.com/casting-spels-emacs/html/casting-spels-emacs-1.html">http://www.lisperati.com/casting-spels-emacs/html/casting-spels-emacs-1.html</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Lisp cheat sheet and init ;; re: Lisp</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">lisp-cheat-sheet-and-init-re-lisp</span>
+<span style="font-weight: bold;">:END:</span>
+ - The best thing about Lisp is that it has no concrete syntax ---with macros you can make whatever syntax you want!
+ - With macros...
+    + A hundred-year language should, however, be succinct. First &#8220;write down the program you&#8217;d like to be able to write, regardless of whether there is a compiler that can translate it or hardware that can run it.&#8221; And of course the program you&#8217;d really like to write is the shortest one possible:
+    + [T]he algorithm for language design becomes: look at a program and ask, is there any way to write this that&#8217;s shorter?
+<span style="color: #8b4513; font-weight: bold;">** Elisp cheat sheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">elisp-cheat-sheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+ Mention that emacs is a lisp interpreter at the start of the cheatsheet...
+
+ A list in LISP looks like this:
+
+ (Knife Fork Spoon)
+
+ or like these two examples
+ (set-background-color "yellow")    &lt;- C-x C-e
+ (set-background-color "white")    &lt;- C-x C-e
+
+ If the first item in the list is a function you can evaluate the list by placing the cursor just after the bracket at the end of the list and pressing C-x C-e. Try it with the two lists above. Copy them into Emacs and then C-x C-e where indicated to turn the Emacs background yellow and then to set it white again.
+
+ If you try to evaluate the (Knife Fork Spoon) list you&#8217;ll get an error telling you that Knife is a void function.
+
+ Try evaluating the following lists in Emacs by typing C-x C-e after the closing bracket:
+ (linum-mode)
+ (message "This is the echo area")
+ (* 2 3)
+ (+ 4 5)
+
+ The last three will output their results in the echo area, the area at the bottom of Emacs.
+
+
+ C-u C-x C-e will insert any output directly in the text area, rather than in the echo area.
+
+ Use doc&#8759;xxx links for html and change how they behave for latex. Mention in latex that the htmk has tooltip documentation, but C-h o ....!
+
+ <span style="text-decoration: underline;"><a href="https://tech.tonyballantyne.com/emacs/2-functions-in-elisp/">https://tech.tonyballantyne.com/emacs/2-functions-in-elisp/</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Structure and Interpretation of Computer Programs, 2e: Top add to lisp cheatsheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">structure-and-interpretation-of-computer-programs-2e-top-add-to-lisp-cheatsheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="http://sarabander.github.io/sicp/html/">http://sarabander.github.io/sicp/html/</a></span>
+<span style="color: #8b4513; font-weight: bold;">** Debugging Elisp</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">debugging-elisp</span>
+<span style="font-weight: bold;">:END:</span>
+ "From Debugging Elisp Part 1: Earn your independence:
+ Go to where the function is defined.
+ Press C-u C-M-x. Edebug breakpoint for function.
+ Invoke function in question.
+ n/c will get you around.
+ q when done."
+ <span style="text-decoration: underline;"><a href="https://xenodium.com/learning-emacs-lisp/#:~:text=From%20Debugging%20Elisp,q%20when%20done">https://xenodium.com/learning-emacs-lisp/#:~:text=From%20Debugging%20Elisp,q%20when%20done</a></span>.
+<span style="color: #8b4513; font-weight: bold;">** CLHS: Function WRITE-TO-STRING, PRIN1-TO-STRING...</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">clhs-function-write-to-string-prin1-to-string</span>
+<span style="font-weight: bold;">:END:</span>
+ <span style="text-decoration: underline;"><a href="http://www.lispworks.com/documentation/lw50/CLHS/Body/f_wr_to_.htm#write-to-string">http://www.lispworks.com/documentation/lw50/CLHS/Body/f_wr_to_.htm#write-to-string</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Sequence Functions</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">sequence-functions</span>
+<span style="font-weight: bold;">:END:</span>
+ <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_mono/cl.html#Sequence-Functions">https://www.gnu.org/software/emacs/manual/html_mono/cl.html#Sequence-Functions</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** [alhassy/ob-latex-as-png] File paths containing "." cause export errors (#2)</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">alhassyob-latex-as-png-file-paths-containing-cause-export-errors-2</span>
+<span style="font-weight: bold;">:END:</span>
+Inbox
+
+Joe Osborn <a href="mailto:notifications%40github.com">&lt;notifications@github.com&gt;</a>
+Thu, Jul 30, 2020, 1:29 PM
+to alhassy/ob-latex-as-png, Subscribed
+
+I'm not sure that string splitting on "." here is the right move to get the file path without extension: <span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png/blob/d21d436814e9605cf2a942b709f957695298dc70/ob-latex-as-png.el#L107">https://github.com/alhassy/ob-latex-as-png/blob/d21d436814e9605cf2a942b709f957695298dc70/ob-latex-as-png.el#L107</a></span>
+
+If I use a path like ../img/whatever.png the filename is just the empty string, which is not ideal. Locally I replaced this binding with (file-name-sans-extension file.ext) and it seems to work much better.
+<span style="color: #8b4513; font-weight: bold;">** lf.el</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">lfel</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://www.creativeapplications.net/tutorials/introduction-to-clojure-part-1/">Introduction to Clojure &#8211; Modern dialect of Lisp (Part 1) &#8211; CreativeApplications.Net</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpswwwcreativeapplicationsnettutorialsintroduction-to-clojure-part-1introduction-to-clojure-modern-dialect-of-lisp-part-1-creativeapplicationsnet</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="http://swannodette.github.io/2015/01/12/lazy-contracts/">Lazy Contracts in 30 lines</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpswannodettegithubio20150112lazy-contractslazy-contracts-in-30-lines</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="http://swannodette.github.io/2015/01/10/faster-validation-through-immutability/">Faster Validation Through Immutability</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpswannodettegithubio20150110faster-validation-through-immutabilityfaster-validation-through-immutability</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://dzone.com/articles/refactoring-and-type-errors-in-clojure">Refactoring and Type Errors in Clojure - DZone Java</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpsdzonecomarticlesrefactoring-and-type-errors-in-clojurerefactoring-and-type-errors-in-clojure-dzone-java</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://pragprog.com/titles/roclojure/getting-clojure/">Getting Clojure: Build Your Functional Skills One Idea at a Time by Russ Olsen</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpspragprogcomtitlesroclojuregetting-clojuregetting-clojure-build-your-functional-skills-one-idea-at-a-time-by-russ-olsen</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://blog.frankel.ch/learning-clojure/4/">Learning Clojure: dependent types and contract-based programming</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpsblogfrankelchlearning-clojure4learning-clojure-dependent-types-and-contract-based-programming</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://ostash.dev/posts/2021-07-01-pre-post-conditions/?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+clojure+%28Planet+Clojure%29">Pre and post conditions in Clojure - Ostash.Dev</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpsostashdevposts2021-07-01-pre-post-conditionsutmsourcefeedburnerutmmediumfeedutmcampaignfeed3aclojure28planetclojure29pre-and-post-conditions-in-clojure-ostashdev</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://www.youtube.com/watch?v=w6xkxiYXBBo&amp;ab_channel=onthecodeagain">Clojure: Pre and Post conditions - YouTube</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpswwwyoutubecomwatchvw6xkxiyxbboabchannelonthecodeagainclojure-pre-and-post-conditions-youtube</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://clojure.org/guides/spec">Clojure - spec Guide</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpsclojureorgguidesspecclojure-spec-guide</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://purelyfunctional.tv/mini-guide/clojure-spec-vs-schema/">5 Differences between clojure.spec and Schema - PurelyFunctional.tv</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpspurelyfunctionaltvmini-guideclojure-spec-vs-schema5-differences-between-clojurespec-and-schema-purelyfunctionaltv</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold; text-decoration: underline;"><a href="https://docs.racket-lang.org/guide/contracts-general-functions.html">7.3&#160;Contracts on Functions in General</a></span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">httpsdocsracket-langorgguidecontracts-general-functionshtml73-contracts-on-functions-in-general</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #8b4513; font-weight: bold;">** org-exp-blocks.el &#8211; pre-process blocks when exporting org files</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">org-exp-blocksel-pre-process-blocks-when-exporting-org-files</span>
+<span style="font-weight: bold;">:END:</span>
+ <span style="text-decoration: underline;"><a href="https://orgmode.org/worg/org-contrib/org-exp-blocks.html">https://orgmode.org/worg/org-contrib/org-exp-blocks.html</a></span>
+
+ Org-export-blocks allows for the pre-processing or blocks in org-mode files to create images, or specially formatted HTML or LaTeX output. Written by Eric Schulte.
+ Org-exp-blocks is now part of the Org core as ob-exp.el.
+
+ <span style="text-decoration: underline;"><a href="https://git.savannah.gnu.org/cgit/emacs/org-mode.git/tree/lisp/ob-exp.el">https://git.savannah.gnu.org/cgit/emacs/org-mode.git/tree/lisp/ob-exp.el</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** ProbabilityCheatSheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">probabilitycheatsheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+      Not made with OrgCheatSheet, but in the same spirit.
+      <span style="text-decoration: underline;"><a href="https://static1.squarespace.com/static/54bf3241e4b0f0d81bf7ff36/t/55e9494fe4b011aed10e48e5/1441352015658/probability_cheatsheet.pdf">https://static1.squarespace.com/static/54bf3241e4b0f0d81bf7ff36/t/55e9494fe4b011aed10e48e5/1441352015658/probability_cheatsheet.pdf</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** defacto print method</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">defacto-print-method</span>
+<span style="font-weight: bold;">:END:</span>
+
+
+<span style="color: #a0a1a7;">                             # The de-factor &#8220;to string&#8221; method?</span>
+<span style="color: #a0a1a7;"> # (prin1-to-string item-here t)</span>
+
+<span style="color: #8b4513; font-weight: bold;">** quick adds to cheatsheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">quick-adds-to-cheatsheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">    # comparisons</span>
+<span style="color: #a0a1a7;"> # (&lt; x&#8320; x&#8321; &#8230; x&#8345;)  &#8776;  x&#8320; &lt; x&#8321; &lt; &#8943; &lt; x&#8345;</span>
+<span style="color: #a0a1a7;"> #</span>
+<span style="color: #a0a1a7;"> # &#951;-rule: (lambda (x) (f x))  &#8776;  #'f</span>
+<span style="color: #a0a1a7;"> #</span>
+
+<span style="color: #8b4513; font-weight: bold;">** Cheatsheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">cheatsheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+    look at the ideas and REAdME presented here: <span style="text-decoration: underline;"><a href="https://github.com/dangom/org-thesis">https://github.com/dangom/org-thesis</a></span>
+    adapted similar where possible ^_^
+
+<span style="color: #8b4513; font-weight: bold;">** threading macro</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">threading-macro</span>
+<span style="font-weight: bold;">:END:</span>
+
+    Rewrite `(x h g f)` to `(f (g (h x)))` as as seen in the threading library <span style="text-decoration: underline;"><a href="https://pkgs.racket-lang.org/package/threading">https://pkgs.racket-lang.org/package/threading</a></span>, this is also much used in clojure using `-&gt;`.
+
+    Fun exercise to include in PDF.
+
+    Create your own control structure. (e.g. <span style="text-decoration: underline;"><a href="https://pkgs.racket-lang.org/package/spipe">https://pkgs.racket-lang.org/package/spipe</a></span>)
+
+<span style="color: #8b4513; font-weight: bold;">** edebug :lisp_cheat__sheet: &#9829;&#8255;&#9829; !!</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">edebug-lispcheatsheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+    emacs will show you what's going on, and you will be able to find out exactly
+ which line is causing this error.
+
+ <span style="text-decoration: underline;"><a href="https://endlessparentheses.com/debugging-emacs-lisp-part-1-earn-your-independence.html">https://endlessparentheses.com/debugging-emacs-lisp-part-1-earn-your-independence.html</a></span>
+
+ Another useful command to know is M-x toggle-debug-on-error.
+
+ If you invoke that command, whenever emacs reaches an error it will give you the
+ backtrace of the error. It's not as powerful as edebug, but it can be very
+ informative sometimes.
+
+ Possibly better is to use the (debug) function!!! No more printfs!
+
+ <span style="text-decoration: underline;"><a href="https://endlessparentheses.com/debugging-elisp-part-2-advanced-topics.html">https://endlessparentheses.com/debugging-elisp-part-2-advanced-topics.html</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** agda</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">agda</span>
+<span style="font-weight: bold;">:END:</span>
+
+
+ <span style="text-decoration: underline;"><a href="https://www.reddit.com/r/agda/comments/bwhctx/writing_a_simple_endless_echoing_prompt/?utm_medium=android_app&amp;utm_source=share">https://www.reddit.com/r/agda/comments/bwhctx/writing_a_simple_endless_echoing_prompt/?utm_medium=android_app&amp;utm_source=share</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Mention this alongside cond, lisp cheat sheet, something to be aware of.</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">mention-this-alongside-cond-lisp-cheat-sheet-something-to-be-aware-of</span>
+<span style="font-weight: bold;">:END:</span>
+
+    <span style="text-decoration: underline;"><a href="https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#more-patterns-in-more-places">https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#more-patterns-in-more-places</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** LeMP Home Page &#183; Enhanced C#</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">lemp-home-page-enhanced-c</span>
+<span style="font-weight: bold;">:END:</span>
+
+ <span style="text-decoration: underline;"><a href="http://ecsharp.net/lemp/">http://ecsharp.net/lemp/</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Queensland FP Lab - Functional Programming Cheat Sheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">queensland-fp-lab-functional-programming-cheat-sheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+ <span style="text-decoration: underline;"><a href="https://qfpl.io/posts/fp-cheat-sheet/">https://qfpl.io/posts/fp-cheat-sheet/</a></span>
+
+
+<span style="color: #8b4513; font-weight: bold;">** Surjectivity and injectiity</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">surjectivity-and-injectiity</span>
+<span style="font-weight: bold;">:END:</span>
+
+   There are a number of ways to define surjectivity of a function: Pointwise
+   with &#8704;-&#8707; or by counting where points are set, or pointfree via cancellation or
+   via a pre-inverse.  Indeed, &#8220;id = f &#8728; g&#8221; read left-to-right says
+   &#8220;every element y of the target is obtainable from f, as witnessed by g(y)&#8221;;
+   whence &#8220;f is surjective&#8221;!
+
+   - f surjective &#8776; &#8220;f onto points&#8221;
+     + Every point y is of the form f(x)
+   - f injective &#8776; &#8220;f onto equations&#8221;
+     + Every equality y&#8321; = y&#8322; is really the f-image of the equality x&#8321; = x&#8322;
+       provided y&#7522; = f(x&#7522;).
+
+<span style="color: #8b4513; font-weight: bold;">** elisp cheat sheet, to add</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">elisp-cheat-sheet-to-add</span>
+<span style="font-weight: bold;">:END:</span>
+
+ <span style="text-decoration: underline;"><a href="https://www.emacswiki.org/emacs/ElispCookbook">https://www.emacswiki.org/emacs/ElispCookbook</a></span>
+
+ --
+
+ The Emacs Lisp Reference Manual (also known as the elisp or lispref) manual, is
+ documentation about the language used to extend Emacs, EmacsLisp.
+
+ GnuEmacs has an <span style="text-decoration: underline;"><a href="https://www.emacswiki.org/emacs/EmacsManual">EmacsManual</a></span> ,
+ an <span style="text-decoration: underline;"><a href="https://www.emacswiki.org/emacs/EmacsLispIntro">EmacsLispIntro</a></span> , and an
+ <span style="text-decoration: underline;"><a href="https://www.emacswiki.org/emacs/EmacsLispReference">EmacsLispReference</a></span>
+ . Starting with Emacs 22, all three manuals are included.
+
+ ---
+
+    Elisp meta-turorial
+    + <span style="text-decoration: underline;"><a href="https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3">https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3</a></span>
+
+    ---
+
+
+    + I reference the <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/index.html">manual</a></span> throughout the guide by HTML link, but you can read it inside your Emacs itself. Run: C-h i m Elisp RET
+
+    + Add links in strategic positions:
+      - <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Dynamic-Binding.html#Dynamic-Binding">https://www.gnu.org/software/emacs/manual/html_node/elisp/Dynamic-Binding.html#Dynamic-Binding</a></span>
+      - <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Lexical-Binding.html#Lexical-Binding">https://www.gnu.org/software/emacs/manual/html_node/elisp/Lexical-Binding.html#Lexical-Binding</a></span>
+     - <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Macros.html#Macros">https://www.gnu.org/software/emacs/manual/html_node/elisp/Macros.html#Macros</a></span>
+
+ + <span style="text-decoration: underline;"><a href="http://ergoemacs.org/emacs/elisp.html">http://ergoemacs.org/emacs/elisp.html</a></span>
+
+ + <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_node/eintr/index.html">https://www.gnu.org/software/emacs/manual/html_node/eintr/index.html</a></span>
+   - This' different than the manual;
+     &#8220;This is an Introduction to Programming in Emacs Lisp, for people who are
+     not programmers.&#8221;
+
+     Learn Lisp the easy way: Read the Introduction to Programming in Emacs Lisp,
+     written by Robert J. Chassell. Highly recommended for those without prior
+     Lisp programming experience.
+
+ Until Emacs 21, the EmacsLisp introduction was distributed separately. The
+ introduction comes in Texinfo format, which means that it can be converted to a
+ variety of formats: info, html, and others. So, for example, in Debian, apt-get
+ install emacs-lisp-intro would do the trick.
+
+ The way to read the intro is to type &#8216;C-h i&#8217; to start Info, and then `m Emacs
+ Lisp Intro RET' or evaluate (info "(eintr) Top").
+
+
+ <span style="text-decoration: underline;"><a href="https://github.com/RenWenshan/emacs-lisp-intro-solutions">Solutions to the
+ exercises in the `An Introduction to Programming in Emacs Lisp' </a></span>
+
+
+   --- buffer locals ---
+
+   If you want to set your own buffer-local variable, use this:
+
+ (defvar your-variable-name nil "Your documentation here.")  Then later on in
+ your code that will run in a given buffer, use:
+
+ (set (make-local-variable 'your-variable-name) &lt;the-value&gt;) This is very handy
+ in many scenarios when writing functionality. Note that buffer local variables
+ are reset when you revert the buffer or change modes.
+
+ <span style="text-decoration: underline;"><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Buffer_002dLocal-Variables.html#Buffer_002dLocal-Variables">https://www.gnu.org/software/emacs/manual/html_node/elisp/Buffer_002dLocal-Variables.html#Buffer_002dLocal-Variables</a></span>
+
+ ---- Save excursion Often you want to jump around the buffer to either query or
+ manipulate something, and then go back to where you were originally. To do this,
+ use:
+
+ (save-excursion ...)  For example:
+
+ (save-excursion (beginning-of-line) (looking-at "X")) Will return whether the
+ current line starts with X.
+
+ Similarly there is save-window-excursion.
+
+ ---
+
+ Defining interactive functions To be able to run a function of your own from a
+ keybinding, it needs to be interactive. You need to add (interactive) to your
+ defun
+
+ --- Defining your own major mode You can generally use define-derived-mode. See
+ the manual on this.
+
+ Example:
+
+ (define-derived-mode hypertext-mode text-mode "Hypertext" "Major mode for
+    hypertext.  \\{hypertext-mode-map}" (setq case-fold-search nil))
+
+ (define-key hypertext-mode-map [down-mouse-3] 'do-hyper-link) Defining a minor
+    mode Minor modes act as enhancements to existing modes. See the manual about
+    define-minor-mode.
+
+ A dummy example:
+
+ (defvar elisp-guide-mode-map (make-sparse-keymap)) (define-minor-mode
+ elisp-guide-mode "A simple minor mode example."  :lighter " ELGuide" :keymap
+ elisp-guide-mode-map (if (bound-and-true-p elisp-guide-mode) (message "Elisp
+ guide activated!")  (message "Bye!")))  (define-key elisp-guide-mode-map (kbd
+ "C-c C-a") 'elisp-guide-go) (defun elisp-guide-go () (interactive) (message
+ "Go!"))
+
+ ---
+
+<span style="color: #a626a4; font-weight: bold;">*** elisp, emacs learning sources</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">elisp-emacs-learning-sources</span>
+<span style="font-weight: bold;">:END:</span>
+
+
+    Read any one of these:
+    + <span style="text-decoration: underline;"><a href="https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3">https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3</a></span>
+    + All online (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;
+
+ <span style="text-decoration: underline;"><a href="http://nic.ferrier.me.uk/blog/2012_07/tips-and-tricks-for-emacslisp">http://nic.ferrier.me.uk/blog/2012_07/tips-and-tricks-for-emacslisp</a></span>
+
+ <span style="text-decoration: underline;"><a href="https://cjohansen.no/an-introduction-to-elisp/">https://cjohansen.no/an-introduction-to-elisp/</a></span>
+
+ + Mike Zamansky's <span style="text-decoration: underline;"><a href="https://cestlaz.github.io/stories/emacs/">general Emacs video tutorials</a></span>.
+
+ + Rainer K&#246;nig's <span style="text-decoration: underline;"><a href="https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE">Org-mode video tutorials</a></span> ---roughly 7-minute videos on discovering org-mode.
+
+ + <span style="text-decoration: underline;"><a href="https://www.iro.umontreal.ca/~monnier/hopl-4-emacs-lisp.pdf">https://www.iro.umontreal.ca/~monnier/hopl-4-emacs-lisp.pdf</a></span>
+   Evolution of Emacs Lisp
+
+<span style="color: #8b4513; font-weight: bold;">** add to elisp cheat sheet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">add-to-elisp-cheat-sheet</span>
+<span style="font-weight: bold;">:END:</span>
+
+    The interactive spec says how to read arguments interactively. Type C-h f
+    interactive RET for more details
+
+
+</pre>
+  </body>
+</html>

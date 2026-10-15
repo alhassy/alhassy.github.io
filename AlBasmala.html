@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-15 Thu 14:52 -->
+<!-- 2026-10-15 Thu 18:26 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -361,9 +361,10 @@
 <li><a href="#goal-driven-development">3. Anatomy of an article</a>
 <ul>
 <li><a href="#the-two-article-styles-standalone-vs-multiple">3.1. The Two Article Styles: <code>standalone</code> vs <code>multiple</code></a></li>
-<li><a href="#the-codebeginabstractcode-is-an-org-mode-special-block">3.2. The &lt;code&gt;#+begin<sub>abstract</sub>&lt;/code&gt; is an Org-mode Special Block</a></li>
-<li><a href="#redirect-zero-duplication-bridges-to-external-org-files">3.3. REDIRECT: zero-duplication bridges to external Org files</a></li>
-<li><a href="#site-nav-section">3.4. SITE<sub>NAV</sub>: data-driven site navigation from container subtrees</a></li>
+<li><a href="#drafts-published-yet-unlisted">3.2. Drafts: published, yet unlisted</a></li>
+<li><a href="#the-codebeginabstractcode-is-an-org-mode-special-block">3.3. The &lt;code&gt;#+begin<sub>abstract</sub>&lt;/code&gt; is an Org-mode Special Block</a></li>
+<li><a href="#redirect-zero-duplication-bridges-to-external-org-files">3.4. REDIRECT: zero-duplication bridges to external Org files</a></li>
+<li><a href="#site-nav-section">3.5. SITE<sub>NAV</sub>: data-driven site navigation from container subtrees</a></li>
 </ul>
 </li>
 <li><a href="#writing-articles">4. Writing articles: <code>my/blogging-mode</code></a>
@@ -478,7 +479,7 @@ That is, this is a variation on the traditional <a href="https://en.wikipedia.or
 <ol class="org-ol">
 <li>Open an Org-mode buffer &#x2014;or call <abbr class="tooltip" title="Make a new article for my blog; prompting for the necessary ingredients.<br><br>If the filename entered already exists, we simply write to it.<br>The user notices this and picks a new name.<br><br>This sets up a new article based on existing tags and posts.<br>+ Use C-SPC to select multiple tag items<br><br>Under ‘my/blogging-mode’, every save, C-x C-s, live-previews the article.">blog-new-article</abbr> (or <abbr class="tooltip" title="Insert a new article skeleton at point in a multiple-style container file.<br><br>Prompts for title, description, and (optionally) tags.&emsp;The image is<br>selected automatically from blog-tag-image-alist based on the tags entered<br>-- no image prompt required.&emsp;It can be overridden afterwards by editing the<br>:IMAGE: property in the drawer.<br><br>The :draft: heading tag is added automatically so the article is treated as<br>a draft until you remove it before publishing.">blog-new-post</abbr>).</li>
 
-<li>Invoke <abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function 90F><br><br>C-x C-s		#<interpreted-function 9FA><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr> to get live WYSIWYG in an adjacent buffer after every
+<li>Invoke <abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-u C-x C-s ---likewise, but repeated section ids become <slug>--placeholder-N;<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; every later save reminds us of them until we rename them<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function 0C8><br><br>C-x C-s		#<interpreted-function 099><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr> to get live WYSIWYG in an adjacent buffer after every
 save <abbr class="tooltip" style="border: none; text-decoration: none;" title="C-x C-s ∷ save-buffer<br>Save current buffer in visited file if modified.<br>Variations are described below.<br><br>By default, makes the previous version into a backup file<br> if previously requested or if this is the first save.<br>Prefixed with one C-u, marks this version<br> to become a backup when the next save is done.<br>Prefixed with two C-u’s,<br> makes the previous version into a backup file.<br>Prefixed with three C-u’s, marks this version<br> to become a backup when the next save is done,<br> and makes the previous version into a backup file.<br><br>With a numeric prefix argument of 0, never make the previous version<br>into a backup file.<br><br>Note that the various variables that control backups, such<br>as ‘version-control’, ‘backup-enable-predicate’, ‘vc-make-backup-files’,<br>and ‘backup-inhibited’, to name just the more popular ones, still<br>control whether a backup will actually be produced, even when you<br>invoke this command prefixed with two or three C-u’s.<br><br>If a file’s name is FOO, the names of its numbered backup versions are<br> FOO.<code>i</code> for various integers i.&emsp;A non-numbered backup file is called FOO<code>.<br>Numeric backups (rather than FOO</code>) will be made if value of<br> ‘version-control’ is not the atom ‘never’ and either there are already<br> numeric versions of the file being backed up, or ‘version-control’ is<br> non-nil.<br>We don’t want excessive versions piling up, so there are variables<br> ‘kept-old-versions’, which tells Emacs how many oldest versions to keep,<br> and ‘kept-new-versions’, which tells how many newest versions to keep.<br> Defaults are 2 old versions and 2 new.<br>‘dired-kept-versions’ controls Dired’s clean-directory (.) command.<br>If ‘delete-old-versions’ is nil, system will query user<br> before trimming versions.&emsp;Otherwise it does it silently.<br><br>If ‘vc-make-backup-files’ is nil, which is the default,<br> no backup files are made for files managed by version control.<br> (This is because the version control system itself records previous versions.)<br><br>See the subroutine ‘basic-save-buffer’ for more information.<br><br>(fn &optional ARG)"><kbd style="border-color: red">C-x C-s</kbd></abbr>.
 <ul class="org-ul">
 <li>The mode is auto-enabled in <code>~/blog/</code> via <code>.dir-locals.el</code>.</li>
@@ -681,7 +682,7 @@ Key rules:
 </p>
 <ul class="org-ul">
 <li><b>Heading tags</b> → article tags, sans structural ones (<code>noexport</code>, <code>draft</code>, <code>ignore</code>, <code>details</code>, …).</li>
-<li><b><code>:draft:</code></b> → a draft; <code>blog-new-post</code> adds it, and we axe it when ready.</li>
+<li><b><code>:draft:</code></b> → a draft, unlisted; <code>blog-new-post</code> adds it, and we axe it when ready.  See §<a href="#drafts-published-yet-unlisted">drafts</a>.</li>
 <li><b><code>:noexport:</code> or <code>COMMENT</code></b> → skipped entirely; never exported or indexed.</li>
 <li><b><code>:TITLE:</code></b> → the display title and slug source, overriding a decorated heading.</li>
 <li><b><code>:CUSTOM_ID:</code></b> → the URL slug; see §<a href="#slug-derivation-write-back-and-global-uniqueness">slugs</a>.</li>
@@ -710,14 +711,49 @@ Each heading is then just another post-alist, so <code>blog-make-index-page</cod
 </div>
 </div>
 </div>
+<div id="outline-container-drafts-published-yet-unlisted" class="outline-3">
+<h3 id="drafts-published-yet-unlisted"><span class="section-number-3">3.2.</span> <a href="#drafts-published-yet-unlisted">Drafts: published, yet unlisted</a></h3>
+<div class="outline-text-3" id="text-drafts-published-yet-unlisted">
+<p>
+A draft is an article we're still mulling over: it is published at its URL, so we can read it on
+the go, yet it's unlisted &#x2014;absent from the index, the tag pages, and the RSS feeds.  An article is
+a draft when any of these hold:
+</p>
+
+<ul class="org-ul">
+<li>its container heading is tagged <code>:draft:</code> &#x2014;as <code>blog-new-post</code> does&#x2014; or carries <code>:DRAFT: t</code>;</li>
+<li>its standalone file says <code>#+draft: t</code>; or</li>
+<li>its file lives under <code>~/blog/draft/</code>, by way of example <code>draft/half-baked-idea.org</code>; a container
+there makes every one of its headings a draft.</li>
+</ul>
+
+<p>
+<code>@draft?</code> is the one predicate, and <code>blog--listed-posts</code> the one filter, behind the index, tag pages,
+and RSS; <code>blog-posts</code> keeps drafts, so <code>blog--validate-slugs</code> still catches a draft whose slug clashes
+with a published article.  A draft's page also opens with a banner saying so, and carries
+<code>&lt;meta name</code>"robots" content="noindex"&gt;= lest a stray link let search engines list it.
+</p>
+
+<p>
+To see every draft at once, visit <code>alhassy.com/drafts</code>: <code>blog-make-index-page</code> builds it from <code>@draft?</code>
+posts, as cards like the index's.  It is itself unlisted &#x2014;no nav link, no feed, and <code>noindex</code>.
+</p>
+
+<p>
+Publishing is then just axing the marker &#x2014;or moving the file out of <code>draft/</code>&#x2014; and saving; the
+bumped <code>:MODIFIED:</code> makes it new on the index and in RSS that day.  Mind that unlisted isn't secret:
+the <code>.org</code> source is on GitHub, and its colourised copy is deployed beside the article.
+</p>
+</div>
+</div>
 <div id="outline-container-the-codebeginabstractcode-is-an-org-mode-special-block" class="outline-3">
-<h3 id="the-codebeginabstractcode-is-an-org-mode-special-block"><span class="section-number-3">3.2.</span> <a href="#the-codebeginabstractcode-is-an-org-mode-special-block">The &lt;code&gt;#+begin<sub>abstract</sub>&lt;/code&gt; is an Org-mode Special Block</a></h3>
+<h3 id="the-codebeginabstractcode-is-an-org-mode-special-block"><span class="section-number-3">3.3.</span> <a href="#the-codebeginabstractcode-is-an-org-mode-special-block">The &lt;code&gt;#+begin<sub>abstract</sub>&lt;/code&gt; is an Org-mode Special Block</a></h3>
 <div class="outline-text-3" id="text-the-codebeginabstractcode-is-an-org-mode-special-block">
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">orange</font></strong></summary>
 <p>
 An article's <code>Abstract</code> section previews it on the index page; see §<a href="#new-article">3</a> for a template.
-The block below adapts the docstring examples of <abbr class="tooltip" title="Declare a new special block, and link, in the style of ‘defun’.<br><br>To remove support for a block NAME, simply use ‘org-undefblock’.<br><br>A full featured example is at the end of this documentation string.<br><br>This is an anaphoric macro that provides export support for<br>special blocks <strong>and</strong> links named NAME. Just as an Org-mode<br>src-block consumes as main argument the language for the src<br>block, our special blocks too consume a MAIN-ARG; it may be a<br>symbol or a cons-list consisting of a symbolic name (with which<br>to refer to the main argument in the definition of the block)<br>followed by a default value, then, optionally, any information<br>for a one-time setup of the associated link type.<br><br>The main arg may be a sequence of symbols separated by spaces,<br>and a few punctuation with the exception of comma ‘,’ since it is<br>a special Lisp operator. In doubt, enclose the main arg in<br>quotes.<br><br>Then, just as Org-mode src blocks consume key-value pairs, our<br>special blocks consume a number of keyword arguments.<br><br>Together, the main and keyword arguments form KWDS, written as a<br>‘cl-defun’ arglist; by way of example,<br><br>&emsp; (&optional (title ''Details'') &key (color ''green'') style)<br><br>declares main argument TITLE, defaulting to ''Details'', and<br>keyword arguments COLOR and STYLE.&emsp;As a convenience, KWDS may<br>instead be flattened into (main default key₀ value₀ … keyₙ valueₙ);<br>the above is then (title ''Details'' color ''green'' style nil).<br>As with ‘cl-defun’, a header line’s unknown keywords are an export-time<br>error unless KWDS writes ‘&allow-other-keys’; the flattened form always<br>allows them.<br><br>KWDS may also carry options, which are not arguments:<br>+ ‘:block nil’ declines block support: #+begin_NAME is left to Org, yet the<br>&emsp;link and tag still work, through ‘org-block/NAME’.<br>+ ‘:link nil’ declines the link type NAME:; ‘:link t’ makes it; and ‘:link<br>&emsp;[:face … :display …]’ makes it with that ‘org-deflink’ display; e.g.,<br>&emsp;[:face =’(:foreground ''red'')] shows such links in red.<br>+ ‘:tag nil’ declines the tag: otherwise a section tagged :NAME: exports as a<br>&emsp;NAME block around its text; the tag’s underscore-separated items form the<br>&emsp;main argument, and the section’s properties supply keyword arguments by<br>&emsp;name.&emsp;E.g., ''<strong> Stuck? :details_Hint:'' folds its text away under the<br>&emsp;title Hint.&emsp;See ‘org--defblock-section-to-block’.<br>&emsp;A block cannot hold a heading, so ‘:tag [:subsections MODE]’ says what becomes<br>&emsp;of a tagged section’s subsections: ‘ignore’ leaves them outside the block, as<br>&emsp;‘:tag t’ does; ‘error’ refuses a section that has any; and ‘recurse’ wraps<br>&emsp;each subsection’s text in a block of its own.<br>&emsp;The link and tag default to ‘org-defblock-links-and-tags’; for just one of<br>&emsp;them, see ‘org-deflink’ and ‘org-deftag’.<br>+ ‘:edit-indirect-mode MODE’ makes C-c =’ edit the block in MODE.<br><br>After that is an optional DOCSTRING, a familar feature of DEFUN.<br>The docstring is displayed as part of the tooltip for the<br>produced link type.<br><br>Finally, the BODY is a (sequence of) Lisp forms ---no progn<br>needed--- that may refer to the names BACKEND and CONTENTS which<br>refer to the current export backend and the contents of the<br>special block ---or the description clause of a link.<br><br>CONTENTS refers to an Org-mode parsed string; i.e., Org-markup is<br>acknowledged.<br><br>In, hopefully, rare circumstances, one may refer to RAW-CONTENTS<br>to look at the fully unparsed contents.<br><br>Finally, this macro exposes two functions:<br>+ ORG-EXPORT: Wrap the argument in an export block for the current backend.<br>+ ORG-PARSE: This should ONLY be called within an ORG-EXPORT call,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; to escape text to Org, and out of the export block.<br><br>⇄ We use “@@html:⋯:@@” when altering CONTENTS, but otherwise use raw HTML </strong>around* CONTENTS.<br>⇄ For example: (format ''<div>%s</div>'' (s-replace ''#+columnbreak:'' ''@@html:<hr>@@'' contents))<br><br><hr><br><br>The relationship between links and special blocks:<br><br>&emsp;[ [type:label][description]]<br>≈<br>&emsp; #+begin_type label<br>&emsp;&emsp;description<br>&emsp; #+end_type<br><br><hr><br><br>Example declaration, with all possible features shown:<br><br>&emsp; ;; We can use variable values when defining new blocks<br>&emsp; (setq angry-red ’(:foreground ''red'' :weight bold))<br><br>&emsp; (org-defblock remark<br>&emsp;&emsp; (&optional (editor ''Editor Remark'') &key (color ''red'') (signoff '''')<br>&emsp;&emsp;&emsp;:link [:face angry-red])<br>&emsp;&emsp; ''Top level (HTML & LaTeX) editorial remarks; in Emacs they’re angry red.''<br>&emsp;&emsp; (format (if (equal backend ’html)<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; ''<strong style=\''color: %s;\''>⟦%s:&emsp;%s%s⟧</strong>''<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; ''{\color{%s}\bfseries %s:&emsp;%s%s}'')<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; color editor contents signoff))<br><br>&emsp; ;; I don’t want to change the definition, but I’d like to have<br>&emsp; ;; the following as personalised defaults for the “remark” block.<br>&emsp; ;; OR, I’d like to set this for links, which do not have argument options.<br>&emsp; (org-set-block-header-args remark :main-arg ''Jasim Jameson'' :signoff ''( Aim for success! )'')<br><br>Three example uses:<br><br>&emsp;&emsp;;; ⟨0⟩ As a special blocks with arguments given.<br>&emsp;&emsp;#+begin_remark Bobbert Barakallah :signoff ''Thank-you for pointing this out!'' :color green<br>&emsp;&emsp;I was trying to explain that <em>{large (n × (n + 1) over 2}</em> is always an integer.<br>&emsp;&emsp;#+end_remark<br><br>&emsp;&emsp;;; ⟨1⟩ As a terse link, using default values for the args.<br>&emsp;&emsp;;;&emsp;&emsp; Notice that Org-mode formatting is recoqgnised even in links.<br>&emsp;&emsp;[ [remark:Jasim Jameson][Why are you taking about ''<em>\mathsf{even}</em>'' here?]]<br><br>&emsp;&emsp;;; ⟨2⟩ So terse that no editor name is provided.<br>&emsp;&emsp;[ [remark:][Please improve your transition sentences.]]<br><br>&emsp;&emsp;;; ⟨★⟩ Unlike 0, examples 1 and 2 will have the default SIGNOFF<br>&emsp;&emsp;;; catenated as well as the default red color.<br><br>(fn NAME KWDS &optional DOCSTRING &rest BODY)">org-defblock</abbr>.
+The block below adapts the docstring examples of <abbr class="tooltip" title="Declare a new special block, and link, in the style of ‘defun’.<br><br>To remove support for a block NAME, simply use ‘org-undefblock’.<br><br>A full featured example is at the end of this documentation string.<br><br>This is an anaphoric macro that provides export support for<br>special blocks <strong>and</strong> links named NAME. Just as an Org-mode<br>src-block consumes as main argument the language for the src<br>block, our special blocks too consume a MAIN-ARG; it may be a<br>symbol or a cons-list consisting of a symbolic name (with which<br>to refer to the main argument in the definition of the block)<br>followed by a default value, then, optionally, any information<br>for a one-time setup of the associated link type.<br><br>The main arg may be a sequence of symbols separated by spaces,<br>and a few punctuation with the exception of comma ‘,’ since it is<br>a special Lisp operator. In doubt, enclose the main arg in<br>quotes.<br><br>Then, just as Org-mode src blocks consume key-value pairs, our<br>special blocks consume a number of keyword arguments.<br><br>Together, the main and keyword arguments form KWDS, written as a<br>‘cl-defun’ arglist; by way of example,<br><br>&emsp; (&optional (title ''Details'') &key (color ''green'') style)<br><br>declares main argument TITLE, defaulting to ''Details'', and<br>keyword arguments COLOR and STYLE.&emsp;As a convenience, KWDS may<br>instead be flattened into (main default key₀ value₀ … keyₙ valueₙ);<br>the above is then (title ''Details'' color ''green'' style nil).<br>As with ‘cl-defun’, a header line’s unknown keywords are an export-time<br>error unless KWDS writes ‘&allow-other-keys’; the flattened form always<br>allows them.<br><br>KWDS may also carry options, which are not arguments:<br>+ ‘:block nil’ declines block support: #+begin_NAME is left to Org, yet the<br>&emsp;link and tag still work, through ‘org-block/NAME’.<br>+ ‘:link nil’ declines the link type NAME:; ‘:link t’ makes it; and ‘:link<br>&emsp;[:face … :display …]’ makes it with that ‘org-deflink’ display; e.g.,<br>&emsp;[:face =’(:foreground ''red'')] shows such links in red.<br>+ ‘:tag nil’ declines the tag: otherwise a section tagged :NAME: exports as a<br>&emsp;NAME block around its text; the tag’s underscore-separated items form the<br>&emsp;main argument, and the section’s properties supply keyword arguments by<br>&emsp;name ---every property bar Org’s own, when the block allows other keys.<br>&emsp;E.g., ''<strong> Stuck? :details_Hint:'' folds its text away under the<br>&emsp;title Hint.&emsp;See ‘org--defblock-section-to-block’.<br>&emsp;A block cannot hold a heading, so ‘:tag [:subsections MODE]’ says what becomes<br>&emsp;of a tagged section’s subsections: ‘ignore’ leaves them outside the block, as<br>&emsp;‘:tag t’ does; ‘error’ refuses a section that has any; and ‘recurse’ wraps<br>&emsp;each subsection’s text in a block of its own.<br>&emsp;The link and tag default to ‘org-defblock-links-and-tags’; for just one of<br>&emsp;them, see ‘org-deflink’ and ‘org-deftag’.<br>+ ‘:edit-indirect-mode MODE’ makes C-c =’ edit the block in MODE.<br>+ ‘:fontify [:begin STRING :end STRING :face FACE]’ says how the block looks in Org buffers;<br>&emsp;e.g., [:begin ''Proof.'' :end ''⏹'' :face =’italic] shows “#+begin_proof” as “Proof.”,<br>&emsp;“#+end_proof” as “⏹”, and the contents in italics too.&emsp;Each part is optional; see<br>&emsp;‘org--fontify-blocks’.<br><br>After that is an optional DOCSTRING, a familar feature of DEFUN.<br>The docstring is displayed as part of the tooltip for the<br>produced link type.<br><br>Finally, the BODY is a (sequence of) Lisp forms ---no progn<br>needed--- that may refer to the names BACKEND and CONTENTS which<br>refer to the current export backend and the contents of the<br>special block ---or the description clause of a link.<br><br>CONTENTS refers to an Org-mode parsed string; i.e., Org-markup is<br>acknowledged.<br><br>In, hopefully, rare circumstances, one may refer to RAW-CONTENTS<br>to look at the fully unparsed contents.<br><br>Finally, this macro exposes two functions:<br>+ ORG-EXPORT: Wrap the argument in an export block for the current backend.<br>+ ORG-PARSE: This should ONLY be called within an ORG-EXPORT call,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; to escape text to Org, and out of the export block.<br><br>⇄ We use “@@html:⋯:@@” when altering CONTENTS, but otherwise use raw HTML </strong>around* CONTENTS.<br>⇄ For example: (format ''<div>%s</div>'' (s-replace ''#+columnbreak:'' ''@@html:<hr>@@'' contents))<br><br><hr><br><br>The relationship between links and special blocks:<br><br>&emsp;[ [type:label][description]]<br>≈<br>&emsp; #+begin_type label<br>&emsp;&emsp;description<br>&emsp; #+end_type<br><br><hr><br><br>Example declaration, with all possible features shown:<br><br>&emsp; ;; We can use variable values when defining new blocks<br>&emsp; (setq angry-red ’(:foreground ''red'' :weight bold))<br><br>&emsp; (org-defblock remark<br>&emsp;&emsp; (&optional (editor ''Editor Remark'') &key (color ''red'') (signoff '''')<br>&emsp;&emsp;&emsp;:link [:face angry-red])<br>&emsp;&emsp; ''Top level (HTML & LaTeX) editorial remarks; in Emacs they’re angry red.''<br>&emsp;&emsp; (format (if (equal backend ’html)<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; ''<strong style=\''color: %s;\''>⟦%s:&emsp;%s%s⟧</strong>''<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; ''{\color{%s}\bfseries %s:&emsp;%s%s}'')<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; color editor contents signoff))<br><br>&emsp; ;; I don’t want to change the definition, but I’d like to have<br>&emsp; ;; the following as personalised defaults for the “remark” block.<br>&emsp; ;; OR, I’d like to set this for links, which do not have argument options.<br>&emsp; (org-set-block-header-args remark :main-arg ''Jasim Jameson'' :signoff ''( Aim for success! )'')<br><br>Three example uses:<br><br>&emsp;&emsp;;; ⟨0⟩ As a special blocks with arguments given.<br>&emsp;&emsp;#+begin_remark Bobbert Barakallah :signoff ''Thank-you for pointing this out!'' :color green<br>&emsp;&emsp;I was trying to explain that <em>{large (n × (n + 1) over 2}</em> is always an integer.<br>&emsp;&emsp;#+end_remark<br><br>&emsp;&emsp;;; ⟨1⟩ As a terse link, using default values for the args.<br>&emsp;&emsp;;;&emsp;&emsp; Notice that Org-mode formatting is recoqgnised even in links.<br>&emsp;&emsp;[ [remark:Jasim Jameson][Why are you taking about ''<em>\mathsf{even}</em>'' here?]]<br><br>&emsp;&emsp;;; ⟨2⟩ So terse that no editor name is provided.<br>&emsp;&emsp;[ [remark:][Please improve your transition sentences.]]<br><br>&emsp;&emsp;;; ⟨★⟩ Unlike 0, examples 1 and 2 will have the default SIGNOFF<br>&emsp;&emsp;;; catenated as well as the default red color.<br><br>(fn NAME KWDS &optional DOCSTRING &rest BODY)">org-defblock</abbr>.
 On export, <code>blog--style-setup</code> tags the <code>* Abstract</code> heading <code>:abstract:</code>, and the block's tag boxes
 that section's text; <code>[:subsections ignore]</code> leaves any subsection outside the box, rather than
 choking on a heading the box cannot hold.
@@ -762,7 +798,7 @@ In this article, we learn to have fun!
 </div>
 </div>
 <div id="outline-container-redirect-zero-duplication-bridges-to-external-org-files" class="outline-3">
-<h3 id="redirect-zero-duplication-bridges-to-external-org-files"><span class="section-number-3">3.3.</span> <a href="#redirect-zero-duplication-bridges-to-external-org-files">REDIRECT: zero-duplication bridges to external Org files</a></h3>
+<h3 id="redirect-zero-duplication-bridges-to-external-org-files"><span class="section-number-3">3.4.</span> <a href="#redirect-zero-duplication-bridges-to-external-org-files">REDIRECT: zero-duplication bridges to external Org files</a></h3>
 <div class="outline-text-3" id="text-redirect-zero-duplication-bridges-to-external-org-files">
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
@@ -807,7 +843,7 @@ treat these articles like any other.
 </details>
 </div>
 <div id="outline-container-the-repo-owns-the-org-the-blog-points-at-it" class="outline-4">
-<h4 id="the-repo-owns-the-org-the-blog-points-at-it"><span class="section-number-4">3.3.1.</span> <a href="#the-repo-owns-the-org-the-blog-points-at-it">The repo owns the <code>.org</code>; the blog points at it</a></h4>
+<h4 id="the-repo-owns-the-org-the-blog-points-at-it"><span class="section-number-4">3.4.1.</span> <a href="#the-repo-owns-the-org-the-blog-points-at-it">The repo owns the <code>.org</code>; the blog points at it</a></h4>
 <div class="outline-text-4" id="text-the-repo-owns-the-org-the-blog-points-at-it">
 <p>
 By way of example, <a href="https://github.com/alhassy/holy-books">holy-books</a> is a literate Emacs package: <code>holy-books.org</code> tangles to
@@ -863,7 +899,7 @@ re-tangles the <code>.org</code> and fails if <code>git diff --exit-code</code> 
 </div>
 </div>
 <div id="outline-container-vendoring-redirects-so-ci-can-resolve-them" class="outline-4">
-<h4 id="vendoring-redirects-so-ci-can-resolve-them"><span class="section-number-4">3.3.2.</span> <a href="#vendoring-redirects-so-ci-can-resolve-them">A REDIRECT tracks <code>master</code>: vendoring, freshness, and staleness</a></h4>
+<h4 id="vendoring-redirects-so-ci-can-resolve-them"><span class="section-number-4">3.4.2.</span> <a href="#vendoring-redirects-so-ci-can-resolve-them">A REDIRECT tracks <code>master</code>: vendoring, freshness, and staleness</a></h4>
 <div class="outline-text-4" id="text-vendoring-redirects-so-ci-can-resolve-them">
 <p>
 A <code>:REDIRECT:</code> of <code>~/.emacs.d/init.org</code> works on our laptop and fails on CI, which has no
@@ -933,7 +969,7 @@ message tells us to fix the <code>:REDIRECT:</code>.</li>
 </div>
 </div>
 <div id="outline-container-making-a-source-include-ready" class="outline-4">
-<h4 id="making-a-source-include-ready"><span class="section-number-4">3.3.3.</span> <a href="#making-a-source-include-ready">Making a source include-ready</a></h4>
+<h4 id="making-a-source-include-ready"><span class="section-number-4">3.4.3.</span> <a href="#making-a-source-include-ready">Making a source include-ready</a></h4>
 <div class="outline-text-4" id="text-making-a-source-include-ready">
 <p>
 Three things that are right in the repo are wrong in the blog, so <code>blog--prepare-redirect</code>
@@ -1150,7 +1186,7 @@ one and writing back to a throwaway checkout."</span>
 </div>
 </div>
 <div id="outline-container-site-nav-section" class="outline-3">
-<h3 id="site-nav-section"><span class="section-number-3">3.4.</span> <a href="#site-nav-section">SITE<sub>NAV</sub>: data-driven site navigation from container subtrees</a></h3>
+<h3 id="site-nav-section"><span class="section-number-3">3.5.</span> <a href="#site-nav-section">SITE<sub>NAV</sub>: data-driven site navigation from container subtrees</a></h3>
 <div class="outline-text-3" id="text-site-nav-section">
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
@@ -1204,14 +1240,16 @@ registry, validates slugs, and only then saves and previews.  <kbd style="">C-RE
                   (<span style="color: #a626a4;">interactive</span>)
                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Container slugs first, so :TITLE: overrides win over raw heading text.
 </span>                  (blog--assign-slugs)
-                  (blog--ensure-useful-section-anchors)
+                  (blog--ensure-useful-section-anchors current-prefix-arg)
                   (blog--bump-modified-stamp)
                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Blog-wide checks are for blog files; a slug clash in ~/blog mustn't block saving another repo's .org.
 </span>                  (<span style="color: #a626a4;">when</span> (file-in-directory-p buffer-file-name blog-posts-directory)
                     (blog--refresh-posts)
                     (blog--validate-slugs))
                   (save-buffer)
-                  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))))
+                  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Last, so the preview's own messages don't bury the reminder.
+</span>                  (blog--warn-placeholder-ids)))
     (define-key m (kbd <span style="color: #50a14f;">"C-RET"</span>)
                 (<span style="color: #a626a4;">lambda</span> ()
                   (<span style="color: #a626a4;">interactive</span>)
@@ -1229,6 +1267,8 @@ Binds:
              section anchors, vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
+  C-u C-x C-s ---likewise, but repeated section ids become &lt;slug&gt;--placeholder-N;
+             every later save reminds us of them until we rename them
   C-RET    ---new article / new post (dispatches on article style)
   C-c i i ---insert image from file (C-u to rename before committing)
   C-c i s ---take a screenshot and insert it
@@ -1706,7 +1746,11 @@ Skips hidden directories, `</span><span style="color: #50a14f; font-weight: bold
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--info</span> (post-filename)
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--draft-file-p</span> (file)
+  <span style="color: #50a14f; font-style: italic;">"FILE &#8614; non-nil when it lives under ~/blog/draft/, whose every article is a draft."</span>
+  (file-in-directory-p file (expand-file-name <span style="color: #50a14f;">"draft"</span> blog-posts-directory)))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--info</span> (post-filename)
   <span style="color: #50a14f; font-style: italic;">"Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
 
 Example use: (blog--info \"~/blog/HeytingAlgebra.org\")
@@ -1742,6 +1786,11 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
           (cons <span style="color: #50a14f;">"file"</span> (f-base post-filename))
           keyword-pairs)
          (cons <span style="color: #50a14f;">"url"</span> (blog--url (f-base post-filename)))
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A draft says #+draft: t, or lives under draft/; the temp file of a container draft says the former.
+</span>         (cons <span style="color: #50a14f;">"draft"</span> (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">or</span> (blog--draft-file-p post-filename)
+                                 (<span style="color: #a626a4;">progn</span> (goto-char (point-min))
+                                        (re-search-forward <span style="color: #50a14f;">"^#\\+draft:[ ]*t[ ]*$"</span> nil t)))
+                         <span style="color: #50a14f;">"t"</span>))
          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Prefer an explicit #+history_url: (injected for container sub-articles)
 </span>         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">over the auto-derived URL based on the file basename.
 </span>         (cons <span style="color: #50a14f;">"history"</span>
@@ -1772,6 +1821,10 @@ Since "accessor" begins with 'a', and '@' looks like one, every accessor starts 
 </span>
 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Extract the '#+title:' from POST-FILENAME.
 </span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">@title</span>       (json) (map-elt json <span style="color: #50a14f;">"title"</span>))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">@draft?</span> (json)
+  <span style="color: #50a14f; font-style: italic;">"JSON &#8614; non-nil when it's a draft: published at its URL, yet unlisted; see &#167;&#8220;Drafts&#8221;."</span>
+  (equal <span style="color: #50a14f;">"t"</span> (map-elt json <span style="color: #50a14f;">"draft"</span>)))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--title-html</span> (title)
   <span style="color: #50a14f; font-style: italic;">"Strip Org export-snippet markers from TITLE so embedded HTML renders.
@@ -2095,7 +2148,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
                 (org-element-property <span style="color: #e44649;">:commentedp</span> headline-node))
       (<span style="color: #a626a4;">let*</span> (<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">draft?
 </span>             (draft? (<span style="color: #a626a4;">or</span> (member <span style="color: #50a14f;">"draft"</span> heading-tags)
-                         (equal <span style="color: #50a14f;">"t"</span> (org-element-property <span style="color: #e44649;">:DRAFT</span> headline-node))))
+                         (equal <span style="color: #50a14f;">"t"</span> (org-element-property <span style="color: #e44649;">:DRAFT</span> headline-node))
+                         (blog--draft-file-p container-file)))
              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">title: :TITLE: property overrides heading text
 </span>             (title (<span style="color: #a626a4;">or</span> (org-element-property <span style="color: #e44649;">:TITLE</span> headline-node)
                         (org-element-property <span style="color: #e44649;">:raw-value</span> headline-node)))
@@ -2188,7 +2242,8 @@ Headings tagged :draft: are included but marked."</span>
 <ul class="org-ul">
 <li><code>blog-posts</code> &#x2014;every post-alist from the <code>.org</code> files under <code>~/blog/</code>, newest first; <code>blog-make-index-page</code>
 turns each into a card on the index and tag pages.</li>
-<li><code>blog-tags</code> &#x2014;the sorted, unique tags of <code>blog-posts</code>; for tag pages and completion.</li>
+<li><code>blog-tags</code> &#x2014;the sorted, unique tags of <code>blog--listed-posts</code>, which omits §<a href="#drafts-published-yet-unlisted">drafts</a>; for tag
+pages and completion.  Listings &#x2014;the index, tag pages, and RSS&#x2014; draw on <code>blog--listed-posts</code> too.</li>
 </ul>
 
 <p>
@@ -2275,27 +2330,31 @@ calendar day; on failure it shows the source file, title, and offending date at 
 <span class="linenr">70: </span>    (<span style="color: #a626a4;">setq</span> blog-posts (car result))
 <span class="linenr">71: </span>    (<span style="color: #a626a4;">setq</span> blog-pages (cdr result))
 <span class="linenr">72: </span>    (<span style="color: #a626a4;">setq</span> blog-tags
-<span class="linenr">73: </span>          (sort (seq-uniq (mapcan #'@tag-list blog-posts)) #'string&lt;))
+<span class="linenr">73: </span>          (sort (seq-uniq (mapcan #'@tag-list (blog--listed-posts))) #'string&lt;))
 <span class="linenr">74: </span>    (blog--rebuild-preamble)))
 <span class="linenr">75: </span>
-<span class="linenr">76: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-page-preamble</span> <span style="color: #50a14f;">""</span>
-<span class="linenr">77: </span>  <span style="color: #50a14f; font-style: italic;">"HTML injected at the top of every exported page: the site nav bar.
-<span class="linenr">78: </span>Set by blog--rebuild-preamble whenever blog-pages changes."</span>)
+<span class="linenr">76: </span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--listed-posts</span> ()
+<span class="linenr">77: </span>  <span style="color: #50a14f; font-style: italic;">"`</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-posts</span><span style="color: #50a14f; font-style: italic;">' sans drafts: what the index, tag pages, and RSS feeds list."</span>
+<span class="linenr">78: </span>  (seq-remove #'@draft? blog-posts))
 <span class="linenr">79: </span>
-<span class="linenr">80: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-page-header</span> <span style="color: #50a14f;">""</span>
-<span class="linenr">81: </span>  <span style="color: #50a14f; font-style: italic;">"HTML injected into the &lt;head&gt; of every exported page: CSS, JS, MathJax, etc.
-<span class="linenr">82: </span>Set once at load time by the setq block near the blog-banner section."</span>)
+<span class="linenr">80: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-page-preamble</span> <span style="color: #50a14f;">""</span>
+<span class="linenr">81: </span>  <span style="color: #50a14f; font-style: italic;">"HTML injected at the top of every exported page: the site nav bar.
+<span class="linenr">82: </span>Set by blog--rebuild-preamble whenever blog-pages changes."</span>)
 <span class="linenr">83: </span>
-<span class="linenr">84: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-posts</span> nil
-<span class="linenr">85: </span>  <span style="color: #50a14f; font-style: italic;">"All post metadata, sorted newest-first. Initialized by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">' and `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">'; refresh with (blog--refresh-posts)."</span>)
-<span class="linenr">86: </span>
-<span class="linenr">87: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-pages</span> nil
-<span class="linenr">88: </span>  <span style="color: #50a14f; font-style: italic;">"Site navigation page metadata (subtrees with :SITE_NAV: t).
-<span class="linenr">89: </span>These appear as header links on every page but not as blog post cards.
-<span class="linenr">90: </span>Initialized by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">' and `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">'; refresh with (blog--refresh-posts)."</span>)
-<span class="linenr">91: </span>
-<span class="linenr">92: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-tags</span> nil
-<span class="linenr">93: </span>  <span style="color: #50a14f; font-style: italic;">"Tags for my blog articles. Initialized by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">' and `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">'; refresh with (blog--refresh-posts)."</span>)
+<span class="linenr">84: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-page-header</span> <span style="color: #50a14f;">""</span>
+<span class="linenr">85: </span>  <span style="color: #50a14f; font-style: italic;">"HTML injected into the &lt;head&gt; of every exported page: CSS, JS, MathJax, etc.
+<span class="linenr">86: </span>Set once at load time by the setq block near the blog-banner section."</span>)
+<span class="linenr">87: </span>
+<span class="linenr">88: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-posts</span> nil
+<span class="linenr">89: </span>  <span style="color: #50a14f; font-style: italic;">"All post metadata, sorted newest-first. Initialized by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">' and `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">'; refresh with (blog--refresh-posts)."</span>)
+<span class="linenr">90: </span>
+<span class="linenr">91: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-pages</span> nil
+<span class="linenr">92: </span>  <span style="color: #50a14f; font-style: italic;">"Site navigation page metadata (subtrees with :SITE_NAV: t).
+<span class="linenr">93: </span>These appear as header links on every page but not as blog post cards.
+<span class="linenr">94: </span>Initialized by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">' and `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">'; refresh with (blog--refresh-posts)."</span>)
+<span class="linenr">95: </span>
+<span class="linenr">96: </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-tags</span> nil
+<span class="linenr">97: </span>  <span style="color: #50a14f; font-style: italic;">"Tags for my blog articles. Initialized by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">' and `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-all</span><span style="color: #50a14f; font-style: italic;">'; refresh with (blog--refresh-posts)."</span>)
 </pre>
 </div>
 
@@ -2439,9 +2498,17 @@ That global aside, <kbd style="">C-c C-e h h</kbd> on an unrelated Org file is u
                    (<span style="color: #e44649;">:html-postamble</span> nil <span style="color: #50a14f;">"html-postamble"</span> nil)
                    (<span style="color: #e44649;">:html-table-caption-above</span> nil nil nil)
                    (<span style="color: #e44649;">:html-format-headline-function</span> nil nil #'blog--format-headline))
+  <span style="color: #e44649;">:filters-alist</span> '((<span style="color: #e44649;">:filter-options</span> . blog--draft-noindex))
   <span style="color: #e44649;">:translate-alist</span> '((headline . blog--headline)
                      (link . blog--link)
                      (inner-template . blog--inner-template)))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--draft-noindex</span> (info _backend)
+  <span style="color: #50a14f; font-style: italic;">"INFO &#8614; INFO, with a noindex robots tag in a draft's &lt;head&gt;, so search engines skip it."</span>
+  (<span style="color: #a626a4;">when</span> (@draft? (blog--info (plist-get info <span style="color: #e44649;">:input-file</span>)))
+    (plist-put info <span style="color: #e44649;">:html-head-extra</span>
+               (concat (plist-get info <span style="color: #e44649;">:html-head-extra</span>) <span style="color: #50a14f;">"\n&lt;meta name=\"robots\" content=\"noindex\"&gt;"</span>)))
+  info)
 
 (<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog--link-base-directory</span> nil
   <span style="color: #50a14f; font-style: italic;">"Directory that relative file links resolve against; nil means the exported file's own directory.
@@ -2478,6 +2545,10 @@ the blog keep their links as written.  Radio links point at their =&lt;&lt;&lt;t
          (post (blog--info file)))
     (concat
      (blog--header-html post)
+     (<span style="color: #a626a4;">when</span> (@draft? post)
+       (concat <span style="color: #50a14f;">"&lt;center&gt;&lt;p style=\"background:#fff3cd;border:1px dashed #b58900;padding:0.5em;"</span>
+               <span style="color: #50a14f;">"max-width:40em;\"&gt;&#128679; &lt;b&gt;Draft&lt;/b&gt; &amp;mdash;unlisted while I think it over; "</span>
+               <span style="color: #50a14f;">"please don't share it just yet.&lt;/p&gt;&lt;/center&gt;"</span>))
      blog--sanitise-title-js
      <span style="color: #50a14f;">"&lt;center&gt;"</span> (@tags post) <span style="color: #50a14f;">"&lt;/center&gt;"</span>
      (@image post (blog--url <span style="color: #50a14f;">"resources/"</span>))
@@ -3398,32 +3469,57 @@ lacking a <code>CUSTOM_ID</code> its kebab-case slug; files not re-saved since g
 at export time, via <code>blog--stable-headline-ids</code>, so CI never emits random ids.
 </p>
 
+<p>
+Two headings named, say, <code>Notes</code> would share the slug <code>notes</code>; plain <abbr class="tooltip" style="border: none; text-decoration: none;" title="C-x C-s ∷ save-buffer<br>Save current buffer in visited file if modified.<br>Variations are described below.<br><br>By default, makes the previous version into a backup file<br> if previously requested or if this is the first save.<br>Prefixed with one C-u, marks this version<br> to become a backup when the next save is done.<br>Prefixed with two C-u’s,<br> makes the previous version into a backup file.<br>Prefixed with three C-u’s, marks this version<br> to become a backup when the next save is done,<br> and makes the previous version into a backup file.<br><br>With a numeric prefix argument of 0, never make the previous version<br>into a backup file.<br><br>Note that the various variables that control backups, such<br>as ‘version-control’, ‘backup-enable-predicate’, ‘vc-make-backup-files’,<br>and ‘backup-inhibited’, to name just the more popular ones, still<br>control whether a backup will actually be produced, even when you<br>invoke this command prefixed with two or three C-u’s.<br><br>If a file’s name is FOO, the names of its numbered backup versions are<br> FOO.<code>i</code> for various integers i.&emsp;A non-numbered backup file is called FOO<code>.<br>Numeric backups (rather than FOO</code>) will be made if value of<br> ‘version-control’ is not the atom ‘never’ and either there are already<br> numeric versions of the file being backed up, or ‘version-control’ is<br> non-nil.<br>We don’t want excessive versions piling up, so there are variables<br> ‘kept-old-versions’, which tells Emacs how many oldest versions to keep,<br> and ‘kept-new-versions’, which tells how many newest versions to keep.<br> Defaults are 2 old versions and 2 new.<br>‘dired-kept-versions’ controls Dired’s clean-directory (.) command.<br>If ‘delete-old-versions’ is nil, system will query user<br> before trimming versions.&emsp;Otherwise it does it silently.<br><br>If ‘vc-make-backup-files’ is nil, which is the default,<br> no backup files are made for files managed by version control.<br> (This is because the version control system itself records previous versions.)<br><br>See the subroutine ‘basic-save-buffer’ for more information.<br><br>(fn &optional ARG)"><kbd style="border-color: red">C-x C-s</kbd></abbr> refuses, while
+<kbd style="">C-u C-x C-s</kbd> stamps <code>notes--placeholder-2</code>, … so we can preview a rough draft right away.  Since
+<code>blog--make-slug</code> collapses dash runs, no real slug contains <code>--</code>, so the marker is unambiguous:
+every later save logs each placeholder to <code>*Messages*</code> ---<kbd style="">C-h e</kbd>&#x2014; until we name it properly.
+</p>
+
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">blog--ensure-useful-section-anchors: Run on every C-x C-s</font></strong></summary>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--ensure-useful-section-anchors</span> (<span style="color: #c18401;">&amp;rest</span> _)
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--placeholder-id-regexp</span> <span style="color: #50a14f;">"--placeholder-[0-9]+\\'"</span>
+  <span style="color: #50a14f; font-style: italic;">"Matches a placeholder CUSTOM_ID; `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--make-slug</span><span style="color: #50a14f; font-style: italic;">' collapses dash runs, so no real slug contains &#8220;--&#8221;."</span>)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--ensure-useful-section-anchors</span> (<span style="color: #c18401;">&amp;optional</span> placeholders)
   <span style="color: #50a14f; font-style: italic;">"Org sections without a CUSTOM_ID are given one derived from the heading title.
 
 Uses `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--make-slug</span><span style="color: #50a14f; font-style: italic;">' so the result is lowercase kebab-case, consistent with
-URL slugs.  If a collision is detected, pops a message-box and undoes.
+URL slugs.  On a collision, pops a message-box and undoes ---unless PLACEHOLDERS
+(C-u C-x C-s), whence the id becomes a unique placeholder to tidy up in due time.
 
 E.g., &#8623; We'll go on a &#8704;&#8707;&#8645; adventure
    &#8614;  well-go-on-a-adventure
-"</span>
-  (<span style="color: #a626a4;">interactive</span>)
-  (<span style="color: #a626a4;">let</span> ((ids))
+   &#8614;  well-go-on-a-adventure--placeholder-2, when repeated with PLACEHOLDERS"</span>
+  (<span style="color: #a626a4;">interactive</span> <span style="color: #50a14f;">"P"</span>)
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Existing ids count too, else a fresh slug could silently clash with a hand-written one.
+</span>  (<span style="color: #a626a4;">let</span> ((ids (org-map-entries (<span style="color: #a626a4;">lambda</span> () (org-entry-get nil <span style="color: #50a14f;">"CUSTOM_ID"</span>)) <span style="color: #50a14f;">"CUSTOM_ID={.}"</span>)))
     (org-map-entries
      (<span style="color: #a626a4;">lambda</span> ()
        (<span style="color: #a626a4;">org-with-point-at</span> (point)
-         (<span style="color: #a626a4;">let</span> ((id (org-entry-get nil <span style="color: #50a14f;">"CUSTOM_ID"</span>)))
-           (<span style="color: #a626a4;">unless</span> id
-             (<span style="color: #a626a4;">setq</span> id (blog--make-slug (nth 4 (org-heading-components))))
-             (<span style="color: #a626a4;">if</span> (not (member id ids))
-                 (<span style="color: #a626a4;">push</span> id ids)
-               (message-box <span style="color: #50a14f;">"Oh no, a repeated id!\n\n\t%s"</span> id)
-               (undo)
-               (<span style="color: #a626a4;">setq</span> quit-flag t))
+         (<span style="color: #a626a4;">unless</span> (org-entry-get nil <span style="color: #50a14f;">"CUSTOM_ID"</span>)
+           (<span style="color: #a626a4;">let*</span> ((slug (blog--make-slug (nth 4 (org-heading-components))))
+                  (id slug)
+                  (n 1))
+             (<span style="color: #a626a4;">when</span> (member id ids)
+               (<span style="color: #a626a4;">unless</span> placeholders
+                 (message-box <span style="color: #50a14f;">"Oh no, a repeated id!\n\n\t%s\n\nC-u C-x C-s makes every repeated id unique, e.g., %s--placeholder-2, so we can preview now and name them in due time."</span>
+                              id id)
+                 (undo)
+                 (<span style="color: #a626a4;">setq</span> quit-flag t))
+               (<span style="color: #a626a4;">while</span> (member id ids)
+                 (<span style="color: #a626a4;">setq</span> id (format <span style="color: #50a14f;">"%s--placeholder-%d"</span> slug (<span style="color: #a626a4;">cl-incf</span> n)))))
+             (<span style="color: #a626a4;">push</span> id ids)
              (org-entry-put nil <span style="color: #50a14f;">"CUSTOM_ID"</span> id))))))))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--warn-placeholder-ids</span> ()
+  <span style="color: #50a14f; font-style: italic;">"Log each placeholder CUSTOM_ID, with its heading, to *Messages*; then say how many there are."</span>
+  (<span style="color: #a626a4;">when-let</span> ((hits (org-map-entries
+                    (<span style="color: #a626a4;">lambda</span> () (format <span style="color: #50a14f;">"  %s  &#8592;  %s"</span> (org-entry-get nil <span style="color: #50a14f;">"CUSTOM_ID"</span>) (org-get-heading t t t t)))
+                    <span style="color: #50a14f;">"CUSTOM_ID={--placeholder-[0-9]+$}"</span>)))
+    (<span style="color: #a626a4;">dolist</span> (h hits) (message <span style="color: #50a14f;">"%s"</span> h))
+    (message <span style="color: #50a14f;">"&#9888; %d placeholder id(s) in this article; C-h e to see them all"</span> (length hits))))
 
 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Anchor assignment is an interactive-authoring concern ---it should only
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">happen while you can still edit the generated id, i.e. during C-x C-s
@@ -3658,7 +3754,7 @@ and their RSS feeds &#x2014;all from <code>blog-posts</code>.
 </p>
 
 <p>
-<abbr class="tooltip" title="Assemble index.html and every tag page.<br><br>Builds one Org buffer per output file, each populated directly from<br>the relevant subset of blog-posts ---no copy-then-delete.">blog-make-index-page</abbr> renders <code>index.html</code>: one card per article, with its title, date, image,
+<abbr class="tooltip" title="Assemble index.html, the unlisted drafts.html, and every tag page.<br><br>Builds one Org buffer per output file, each populated directly from<br>the relevant subset of blog-posts ---no copy-then-delete.">blog-make-index-page</abbr> renders <code>index.html</code>: one card per article, with its title, date, image,
 abstract, and a read-more badge.
 </p>
 
@@ -3727,61 +3823,68 @@ abstract, and a read-more badge.
 <span class="linenr"> 62: </span>  <span style="color: #50a14f; font-style: italic;">"Return a fresh Org buffer for POSTS with GREETING, targeting EXPORT-FILE-NAME.
 <span class="linenr"> 63: </span>RSS-FILE is the filename of the associated feed (\"rss.xml\" for the index,
 <span class="linenr"> 64: </span>\"&lt;tag&gt;-rss.xml\" for a tag page).  It is surfaced as a prominent link right
-<span class="linenr"> 65: </span>under the greeting so readers see it without scrolling.
-<span class="linenr"> 66: </span>Caller is responsible for killing the buffer when done."</span>
-<span class="linenr"> 67: </span>  (<span style="color: #a626a4;">let</span> ((buf (generate-new-buffer <span style="color: #50a14f;">" *blog-page*"</span>))
-<span class="linenr"> 68: </span>        (rss (<span style="color: #a626a4;">or</span> rss-file <span style="color: #50a14f;">"rss.xml"</span>)))
-<span class="linenr"> 69: </span>    (<span style="color: #a626a4;">with-current-buffer</span> buf
-<span class="linenr"> 70: </span>      (insert
-<span class="linenr"> 71: </span>       (format <span style="color: #50a14f;">"#+EXPORT_FILE_NAME: %s\n"</span> export-file-name)
-<span class="linenr"> 72: </span>       <span style="color: #50a14f;">"#+options: toc:nil title:nil html-postamble:nil\n"</span>
-<span class="linenr"> 73: </span>       <span style="color: #50a14f;">"#+begin_export html\n"</span>
-<span class="linenr"> 74: </span>       blog-page-preamble <span style="color: #50a14f;">"\n"</span>
-<span class="linenr"> 75: </span>       blog-page-header <span style="color: #50a14f;">"\n"</span>
-<span class="linenr"> 76: </span>       <span style="color: #50a14f;">"#+end_export\n"</span>
-<span class="linenr"> 77: </span>       <span style="color: #50a14f;">"#+html: &lt;br&gt;\n"</span>
-<span class="linenr"> 78: </span>       greeting <span style="color: #50a14f;">"\n"</span>
-<span class="linenr"> 79: </span>       (format <span style="color: #50a14f;">"#+html: &lt;p style=\"text-align:center;\"&gt;&lt;a href=\"%s\"&gt;&#128225; Subscribe via RSS&lt;/a&gt;&lt;/p&gt;\n"</span> rss)
-<span class="linenr"> 80: </span>       <span style="color: #50a14f;">"#+html: &lt;br&gt;\n"</span>
-<span class="linenr"> 81: </span>       (blog--toc-block posts)
-<span class="linenr"> 82: </span>       <span style="color: #50a14f;">"#+html: &lt;br&gt;\n"</span>
-<span class="linenr"> 83: </span>       (mapconcat #'blog--card posts <span style="color: #50a14f;">"\n"</span>)
-<span class="linenr"> 84: </span>       <span style="color: #50a14f;">"\n#+begin_export html\n"</span>
-<span class="linenr"> 85: </span>       <span style="color: #50a14f;">"&lt;hr&gt; &lt;center&gt; &lt;em&gt; Thanks for reading everything! &#128513; Bye! &#128075; &lt;/em&gt;"</span>
-<span class="linenr"> 86: </span>       <span style="color: #50a14f;">" &lt;/center&gt; &lt;br/&gt;\n"</span>
-<span class="linenr"> 87: </span>       (blog--license)
-<span class="linenr"> 88: </span>       <span style="color: #50a14f;">"\n#+end_export\n"</span>)
-<span class="linenr"> 89: </span>      (org-mode)
-<span class="linenr"> 90: </span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">ospe provides the `badge:`, `doc:`, `tweet:` etc. link handlers
-<span class="linenr"> 91: </span></span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">used throughout `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">blog--card</span><span style="color: #a0a1a7;">', and appends tooltipster CSS/JS
-<span class="linenr"> 92: </span></span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">to `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org-html-head-extra</span><span style="color: #a0a1a7;">' on first activation (idempotent:
-<span class="linenr"> 93: </span></span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">ospe's setup-guard wraps the injection).
-<span class="linenr"> 94: </span></span>      (org-special-block-extras-mode 1))
-<span class="linenr"> 95: </span>    buf))
-<span class="linenr"> 96: </span>
-<span class="linenr"> 97: </span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog-make-index-page</span> ()
-<span class="linenr"> 98: </span>  <span style="color: #50a14f; font-style: italic;">"Assemble index.html and every tag page.
-<span class="linenr"> 99: </span>
-<span class="linenr">100: </span>Builds one Org buffer per output file, each populated directly from
-<span class="linenr">101: </span>the relevant subset of blog-posts ---no copy-then-delete."</span>
-<span class="linenr">102: </span>  (<span style="color: #a626a4;">cl-flet</span> ((export-page (posts greeting dest rss)
-<span class="linenr">103: </span>               (<span style="color: #a626a4;">let</span> ((buf (blog--make-page-buffer posts greeting dest rss)))
-<span class="linenr">104: </span>                 (<span style="color: #a626a4;">unwind-protect</span>
-<span class="linenr">105: </span>                     (<span style="color: #a626a4;">with-current-buffer</span> buf (org-export-to-file 'blog-page (org-export-output-file-name <span style="color: #50a14f;">".html"</span>)))
-<span class="linenr">106: </span>                   (<span style="color: #a626a4;">with-current-buffer</span> buf (set-buffer-modified-p nil))
-<span class="linenr">107: </span>                   (kill-buffer buf)))))
-<span class="linenr">108: </span>    (export-page blog-posts
-<span class="linenr">109: </span>                 (blog--greeting)
-<span class="linenr">110: </span>                 (concat blog-publish-directory <span style="color: #50a14f;">"index.html"</span>)
-<span class="linenr">111: </span>                 <span style="color: #50a14f;">"rss.xml"</span>)
-<span class="linenr">112: </span>    (<span style="color: #a626a4;">let</span> ((by-tag (blog--posts-by-tag)))
-<span class="linenr">113: </span>      (<span style="color: #a626a4;">dolist</span> (tag blog-tags)
-<span class="linenr">114: </span>        (message <span style="color: #50a14f;">"=&gt; Generating tag page: %s..."</span> tag)
-<span class="linenr">115: </span>        (<span style="color: #a626a4;">let</span> ((slug (blog--tag-slug tag)))
-<span class="linenr">116: </span>          (export-page (gethash tag by-tag)
-<span class="linenr">117: </span>                       (blog--greeting tag)
-<span class="linenr">118: </span>                       (concat blog-publish-directory (concat <span style="color: #50a14f;">"tag-"</span> slug <span style="color: #50a14f;">".html"</span>))
-<span class="linenr">119: </span>                       (concat slug <span style="color: #50a14f;">"-rss.xml"</span>)))))))
+<span class="linenr"> 65: </span>under the greeting so readers see it without scrolling; nil omits it, as
+<span class="linenr"> 66: </span>drafts have no feed.
+<span class="linenr"> 67: </span>Caller is responsible for killing the buffer when done."</span>
+<span class="linenr"> 68: </span>  (<span style="color: #a626a4;">let</span> ((buf (generate-new-buffer <span style="color: #50a14f;">" *blog-page*"</span>))
+<span class="linenr"> 69: </span>        (rss rss-file))
+<span class="linenr"> 70: </span>    (<span style="color: #a626a4;">with-current-buffer</span> buf
+<span class="linenr"> 71: </span>      (insert
+<span class="linenr"> 72: </span>       (format <span style="color: #50a14f;">"#+EXPORT_FILE_NAME: %s\n"</span> export-file-name)
+<span class="linenr"> 73: </span>       <span style="color: #50a14f;">"#+options: toc:nil title:nil html-postamble:nil\n"</span>
+<span class="linenr"> 74: </span>       <span style="color: #50a14f;">"#+begin_export html\n"</span>
+<span class="linenr"> 75: </span>       blog-page-preamble <span style="color: #50a14f;">"\n"</span>
+<span class="linenr"> 76: </span>       blog-page-header <span style="color: #50a14f;">"\n"</span>
+<span class="linenr"> 77: </span>       <span style="color: #50a14f;">"#+end_export\n"</span>
+<span class="linenr"> 78: </span>       <span style="color: #50a14f;">"#+html: &lt;br&gt;\n"</span>
+<span class="linenr"> 79: </span>       greeting <span style="color: #50a14f;">"\n"</span>
+<span class="linenr"> 80: </span>       (<span style="color: #a626a4;">if</span> rss (format <span style="color: #50a14f;">"#+html: &lt;p style=\"text-align:center;\"&gt;&lt;a href=\"%s\"&gt;&#128225; Subscribe via RSS&lt;/a&gt;&lt;/p&gt;\n"</span> rss) <span style="color: #50a14f;">""</span>)
+<span class="linenr"> 81: </span>       <span style="color: #50a14f;">"#+html: &lt;br&gt;\n"</span>
+<span class="linenr"> 82: </span>       (blog--toc-block posts)
+<span class="linenr"> 83: </span>       <span style="color: #50a14f;">"#+html: &lt;br&gt;\n"</span>
+<span class="linenr"> 84: </span>       (mapconcat #'blog--card posts <span style="color: #50a14f;">"\n"</span>)
+<span class="linenr"> 85: </span>       <span style="color: #50a14f;">"\n#+begin_export html\n"</span>
+<span class="linenr"> 86: </span>       <span style="color: #50a14f;">"&lt;hr&gt; &lt;center&gt; &lt;em&gt; Thanks for reading everything! &#128513; Bye! &#128075; &lt;/em&gt;"</span>
+<span class="linenr"> 87: </span>       <span style="color: #50a14f;">" &lt;/center&gt; &lt;br/&gt;\n"</span>
+<span class="linenr"> 88: </span>       (blog--license)
+<span class="linenr"> 89: </span>       <span style="color: #50a14f;">"\n#+end_export\n"</span>)
+<span class="linenr"> 90: </span>      (org-mode)
+<span class="linenr"> 91: </span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">ospe provides the `badge:`, `doc:`, `tweet:` etc. link handlers
+<span class="linenr"> 92: </span></span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">used throughout `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">blog--card</span><span style="color: #a0a1a7;">', and appends tooltipster CSS/JS
+<span class="linenr"> 93: </span></span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">to `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org-html-head-extra</span><span style="color: #a0a1a7;">' on first activation (idempotent:
+<span class="linenr"> 94: </span></span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">ospe's setup-guard wraps the injection).
+<span class="linenr"> 95: </span></span>      (org-special-block-extras-mode 1))
+<span class="linenr"> 96: </span>    buf))
+<span class="linenr"> 97: </span>
+<span class="linenr"> 98: </span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog-make-index-page</span> ()
+<span class="linenr"> 99: </span>  <span style="color: #50a14f; font-style: italic;">"Assemble index.html, the unlisted drafts.html, and every tag page.
+<span class="linenr">100: </span>
+<span class="linenr">101: </span>Builds one Org buffer per output file, each populated directly from
+<span class="linenr">102: </span>the relevant subset of blog-posts ---no copy-then-delete."</span>
+<span class="linenr">103: </span>  (<span style="color: #a626a4;">cl-flet</span> ((export-page (posts greeting dest rss)
+<span class="linenr">104: </span>               (<span style="color: #a626a4;">let</span> ((buf (blog--make-page-buffer posts greeting dest rss)))
+<span class="linenr">105: </span>                 (<span style="color: #a626a4;">unwind-protect</span>
+<span class="linenr">106: </span>                     (<span style="color: #a626a4;">with-current-buffer</span> buf (org-export-to-file 'blog-page (org-export-output-file-name <span style="color: #50a14f;">".html"</span>)))
+<span class="linenr">107: </span>                   (<span style="color: #a626a4;">with-current-buffer</span> buf (set-buffer-modified-p nil))
+<span class="linenr">108: </span>                   (kill-buffer buf)))))
+<span class="linenr">109: </span>    (export-page (blog--listed-posts)
+<span class="linenr">110: </span>                 (blog--greeting)
+<span class="linenr">111: </span>                 (concat blog-publish-directory <span style="color: #50a14f;">"index.html"</span>)
+<span class="linenr">112: </span>                 <span style="color: #50a14f;">"rss.xml"</span>)
+<span class="linenr">113: </span>    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Unlisted like the drafts it lists: linked from nowhere, noindex, and no feed.
+<span class="linenr">114: </span></span>    (export-page (seq-filter #'@draft? blog-posts)
+<span class="linenr">115: </span>                 (concat <span style="color: #50a14f;">"#+html_head_extra: &lt;meta name=\"robots\" content=\"noindex\"&gt;\n"</span>
+<span class="linenr">116: </span>                         <span style="color: #50a14f;">"Here are my drafts: published, yet unlisted ---still mulling them over. @@html:&lt;br&gt;&lt;br&gt;@@"</span>)
+<span class="linenr">117: </span>                 (concat blog-publish-directory <span style="color: #50a14f;">"drafts.html"</span>)
+<span class="linenr">118: </span>                 nil)
+<span class="linenr">119: </span>    (<span style="color: #a626a4;">let</span> ((by-tag (blog--posts-by-tag)))
+<span class="linenr">120: </span>      (<span style="color: #a626a4;">dolist</span> (tag blog-tags)
+<span class="linenr">121: </span>        (message <span style="color: #50a14f;">"=&gt; Generating tag page: %s..."</span> tag)
+<span class="linenr">122: </span>        (<span style="color: #a626a4;">let</span> ((slug (blog--tag-slug tag)))
+<span class="linenr">123: </span>          (export-page (gethash tag by-tag)
+<span class="linenr">124: </span>                       (blog--greeting tag)
+<span class="linenr">125: </span>                       (concat blog-publish-directory (concat <span style="color: #50a14f;">"tag-"</span> slug <span style="color: #50a14f;">".html"</span>))
+<span class="linenr">126: </span>                       (concat slug <span style="color: #50a14f;">"-rss.xml"</span>)))))))
 </pre>
 </div>
 
@@ -3924,7 +4027,7 @@ Deriving the date from <code>git log</code> instead would make every <code>[typo
 <span class="linenr">57: </span>`</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--refresh-posts</span><span style="color: #50a14f; font-style: italic;">' call ---cheapest to just call this fresh at each
 <span class="linenr">58: </span>consumer (index/RSS loops)."</span>
 <span class="linenr">59: </span>  (<span style="color: #a626a4;">let</span> ((by-tag (make-hash-table <span style="color: #e44649;">:test</span> #'equal)))
-<span class="linenr">60: </span>    (<span style="color: #a626a4;">dolist</span> (p blog-posts)
+<span class="linenr">60: </span>    (<span style="color: #a626a4;">dolist</span> (p (blog--listed-posts))
 <span class="linenr">61: </span>      (<span style="color: #a626a4;">dolist</span> (tag (@tag-list p))
 <span class="linenr">62: </span>        (<span style="color: #a626a4;">push</span> p (gethash tag by-tag))))
 <span class="linenr">63: </span>    (maphash (<span style="color: #a626a4;">lambda</span> (k v) (puthash k (nreverse v) by-tag)) by-tag)
@@ -3932,7 +4035,7 @@ Deriving the date from <code>git log</code> instead would make every <code>[typo
 <span class="linenr">65: </span>
 <span class="linenr">66: </span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--make-rss-feed</span> ()
 <span class="linenr">67: </span>  <span style="color: #50a14f; font-style: italic;">"Emit rss.xml (all posts) plus one &lt;tag&gt;-rss.xml per tag."</span>
-<span class="linenr">68: </span>  (blog--make-one-rss-feed blog-posts <span style="color: #50a14f;">"rss.xml"</span>)
+<span class="linenr">68: </span>  (blog--make-one-rss-feed (blog--listed-posts) <span style="color: #50a14f;">"rss.xml"</span>)
 <span class="linenr">69: </span>  (<span style="color: #a626a4;">let</span> ((by-tag (blog--posts-by-tag)))
 <span class="linenr">70: </span>    (<span style="color: #a626a4;">dolist</span> (tag blog-tags)
 <span class="linenr">71: </span>      (blog--make-one-rss-feed
@@ -3991,7 +4094,7 @@ pushing.
 <pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--publishable-p</span> (file)
   <span style="color: #50a14f; font-style: italic;">"Return non-nil if FILE is an article that should be published.
 A file is publishable when it has any of:
-  - #+date:                     ---standalone post
+  - #+modified:                 ---standalone post
   - #+article_style: multiple   ---container of subtree articles
   - #+site_nav:                 ---top-level nav page (e.g. about.org)
 
@@ -4001,8 +4104,9 @@ their own (e.g. MathJaxPreamble.org) must opt out explicitly with
   #+exclude_from_publish: t
 
 Any other .org file missing /both/ a publish marker and the opt-out
-signals a (user-error) ---we do not silently skip files that just
-forgot their #+date:."</span>
+is stamped with #+modified: &lt;today&gt;, below its leading #-lines, and
+published ---a stray scratch file becomes a fresh article, not a
+failed build."</span>
   (<span style="color: #a626a4;">with-temp-buffer</span>
     (insert-file-contents file)
     (<span style="color: #a626a4;">cl-flet</span> ((kw (k) (blog--file-keyword nil k)))
@@ -4011,9 +4115,17 @@ forgot their #+date:."</span>
        ((kw <span style="color: #50a14f;">"modified"</span>) t)
        ((equal (kw <span style="color: #50a14f;">"article_style"</span>) <span style="color: #50a14f;">"multiple"</span>) t)
        ((kw <span style="color: #50a14f;">"site_nav"</span>) t)
-       (t (<span style="font-weight: bold;">user-error</span>
-           <span style="color: #50a14f;">"%s has no #+modified:, #+article_style: multiple, or #+site_nav: ---add one, or #+exclude_from_publish: t if this is an include-only fragment"</span>
-           (f-filename file)))))))
+       (t (<span style="color: #a626a4;">let</span> ((today (format-time-string <span style="color: #50a14f;">"%Y-%m-%d"</span>)))
+            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Below the keyword block, so a leading &#8220;-*- &#8230; -*-&#8221; line stays first.
+</span>            (goto-char (point-min))
+            (<span style="color: #a626a4;">while</span> (looking-at <span style="color: #50a14f;">"#"</span>) (forward-line))
+            (insert (format <span style="color: #50a14f;">"#+modified: %s\n"</span> today))
+            (write-region nil nil file)
+            (<span style="color: #a626a4;">when-let</span> ((buf (get-file-buffer file)))
+              (<span style="color: #a626a4;">with-current-buffer</span> buf
+                (<span style="color: #a626a4;">unless</span> (buffer-modified-p) (revert-buffer t t t))))
+            (message <span style="color: #50a14f;">"%s had no #+modified:; stamped it %s"</span> (f-filename file) today)
+            t))))))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog-publish-all</span> ()
   <span style="color: #50a14f; font-style: italic;">"Batch-publish every article and regenerate the index.  The sole CI entry point.
@@ -4777,7 +4889,7 @@ Column Width
 
 <p>
 When blogging, I see live HTML previews whenever I save thanks to
-<abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function 90F><br><br>C-x C-s		#<interpreted-function 9FA><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr>.  As such, I cannot have my lines being too wide. I'll settle
+<abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-u C-x C-s ---likewise, but repeated section ids become <slug>--placeholder-N;<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; every later save reminds us of them until we rename them<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function 0C8><br><br>C-x C-s		#<interpreted-function 099><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr>.  As such, I cannot have my lines being too wide. I'll settle
 for a modest 80 columns &#x2014;set buffer-locally by <code>my/blogging-mode</code>.  Then <abbr class="tooltip" style="border: none; text-decoration: none;" title="M-q ∷ org-fill-paragraph<br>Fill element at point, when applicable.<br><br>This function only applies to comment blocks, comments, example<br>blocks and paragraphs.&emsp;Also, as a special case, re-align table<br>when point is at one.<br><br>For convenience, when point is at a plain list, an item or<br>a footnote definition, try to fill the first paragraph within.<br><br>If JUSTIFY is non-nil (interactively, with prefix argument),<br>justify as well.&emsp;If ‘sentence-end-double-space’ is non-nil, then<br>period followed by one space does not end a sentence, so don’t<br>break a line there.&emsp;The variable ‘fill-column’ controls the<br>width for filling.<br><br>The REGION argument is non-nil if called interactively; in that<br>case, if Transient Mark mode is enabled and the mark is active,<br>fill each of the elements in the active region, instead of just<br>filling the current element.<br><br>(fn &optional JUSTIFY REGION)"><kbd style="border-color: red">M-q</kbd></abbr>
 will format my paragraphs to wrap nicely into this 80-column width.
 </p>

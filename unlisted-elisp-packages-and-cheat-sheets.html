@@ -1,0 +1,1556 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-10-15 Thu 18:26 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Elisp packages &amp; Lisp cheat-sheet scraps</title>
+<meta name="description" content="Issues, ideas, and snippets for org-special-block-extras, lf.el, and my Lisp cheat sheets." />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style>
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+          <script type="text/javascript">
+              if (typeof jQuery == 'undefined') {
+                  document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+              }
+          </script>
+
+           <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+            <script>
+                   $(document).ready(function() {
+                       $('.tooltip').tooltipster({
+                           theme: 'tooltipster-punk',
+                           contentAsHTML: true,
+                           animation: 'grow',
+                           delay: [100,500],
+                           // trigger: 'click'
+                           trigger: 'custom',
+                           triggerOpen: {
+                               mouseenter: true
+                           },
+                           triggerClose: {
+                               originClick: true,
+                               scroll: true
+                           }
+           });
+                   });
+               </script>
+
+          <style>
+             abbr {color: red;}
+
+             .tooltip { border-bottom: 1px dotted #000;
+                        color:red;
+                        text-decoration: none;}
+          </style>
+          
+<meta name="robots" content="noindex">
+</head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">My Elisp packages & Lisp cheat-sheet scraps</h1></center><center><p style="background:#fff3cd;border:1px dashed #b58900;padding:0.5em;max-width:40em;">🚧 <b>Draft</b> &mdash;unlisted while I think it over; please don't share it just yet.</p></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/unlisted-elisp-packages-and-cheat-sheets.org.html"><img src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/alhassy.github.io/commits/master/draft/todo.org"><img src="https://img.shields.io/badge/-History-informational?logo=github"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org-special-block-extras">1. org-special-block-extras</a>
+<ul>
+<li><a href="#httpssachachuacomblog202301adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export">1.1. https://sachachua.com/blog/2023/01/adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export/</a></li>
+<li><a href="#alhassyorg-special-block-extras-wrong-type-argument-on-margin-kbd-links-issue-40">1.2. [alhassy/org-special-block-extras] Wrong type argument on `margin`, `kbd` links (Issue #40)</a></li>
+<li><a href="#alhassyorg-special-block-extras-any-interest-in-proposing-this-package-for-inclusion-in-either-gnu-or-nongnu-elpa-issue-46">1.3. [alhassy/org-special-block-extras] Any interest in proposing this package for inclusion in either GNU or NonGNU ELPA? (Issue #46)</a></li>
+<li><a href="#defmethod">1.4. defmethod</a></li>
+<li><a href="#incorporate-ob-latex-to-png-pkg-smart-diagrams-into-org-graphel">1.5. Incorporate ob-latex-to-png pkg smart diagrams into org-graph.el</a></li>
+<li><a href="#org-special-block-extras-example-of-how-the-tag-ignore-modifies-a-section">1.6. Org-special-block extras: Example of how the tag :ignore: modifies a section</a></li>
+<li><a href="#adding-org-eldoc-support-for-special-blocks-works-org-get-title-or-body">1.7. Adding org-eldoc support for special blocks, works!  (org-get-title-or-body)</a></li>
+<li><a href="#mention-git-link-type-in-my-org-special-block-extras-org-file">1.8. Mention <code>git:</code> link-type in my org-special-block extras .org file</a></li>
+<li><a href="#httpspankeublogpretty-babel-src-blockshtml-ship-with-my-package">1.9. https://pank.eu/blog/pretty-babel-src-blocks.html &#x2013; ship with my package ;-)</a></li>
+</ul>
+</li>
+<li><a href="#repl-driven-development-blog-article">2. Repl driven development blog article</a>
+<ul>
+<li><a href="#functions-explained-through-patterns-repl-driven-development">2.1. Functions Explained Through Patterns - repl driven development</a></li>
+<li><a href="#jshell-eager-eval">2.2. jshell eager eval</a></li>
+<li><a href="#f-bash-convert-any-command-to-a-repl-osascript">2.3. F#, bash (convert any command to a repl),  Osascript</a></li>
+<li><a href="#rddel-for-smalltalk">2.4. RDD.el for smalltalk</a></li>
+<li><a href="#elisp-dev-tools">2.5. elisp dev tools</a></li>
+<li><a href="#alhassyrepl-driven-development-project-website-in-header-comment-yields-a-404-issue-2">2.6. [alhassy/repl-driven-development] Project website in header comment yields a 404 (Issue #2)</a></li>
+<li><a href="#add-to-rdd-sources-for-clojure">2.7. Add to RDD sources for clojure</a></li>
+<li><a href="#managing-code-with-outlines-modern-emacs">2.8. Managing code with Outlines | Modern Emacs</a></li>
+<li><a href="#re-alhassyrepl-driven-development-problems-with-output-being-overwritten-while-using-scala-issue-7">2.9. Re: [alhassy/repl-driven-development] problems with output being overwritten while using scala (Issue #7)</a></li>
+<li><a href="#rddel-expand-region-remarks">2.10. rdd.el expand-region remarks</a></li>
+</ul>
+</li>
+<li><a href="#alhassyob-latex-as-png-files-should-not-clutter-user-emacs-directory-issue-3">3. [alhassy/ob-latex-as-png] Files should not clutter user-emacs-directory (Issue #3)</a></li>
+<li><a href="#alhassyob-latex-as-png-report-error-and-abort-upon-latex-compile-error-pr-4">4. [alhassy/ob-latex-as-png] Report error and abort upon latex compile error (PR #4)</a></li>
+<li><a href="#alhassyob-latex-as-png-use-dedicated-subdirectory-for-output-data-pr-5">5. [alhassy/ob-latex-as-png] Use dedicated subdirectory for output data (PR #5)</a></li>
+<li><a href="#re-artawowerblamerel-clickable-annotations-issue-7">6. Re: [Artawower/blamer.el] Clickable Annotations (Issue #7)</a></li>
+<li><a href="#refactor-osbeel-using-my-knowledge-of-martin-fowler-refactoring-reward-not-goal">7. Refactor osbe.el using my knowledge of Martin Fowler refactoring :+) &#x2014;reward, not goal.</a></li>
+<li><a href="#literate-programming-writ-large">8. Literate Programming Writ Large</a></li>
+<li><a href="#re-alhassyorg-special-block-extras-doesnt-work-with-revealjs">9. Re: [alhassy/org-special-block-extras] Doesn't work with RevealJS</a></li>
+<li><a href="#httpseli5ggwhat20is20org-special-block-extraseli5-what-is-org-special-block-extras">10. ELI5: what is org-special-block-extras</a></li>
+<li><a href="#casting-spels-in-lisp-lisp-cheat-sheet-also-in-init">11. Casting SPELs in Lisp ؛؛ Lisp cheat sheet ;; also in init</a></li>
+<li><a href="#lisp-cheat-sheet-and-init-re-lisp">12. Lisp cheat sheet and init ;; re: Lisp</a></li>
+<li><a href="#elisp-cheat-sheet">13. Elisp cheat sheet</a></li>
+<li><a href="#structure-and-interpretation-of-computer-programs-2e-top-add-to-lisp-cheatsheet">14. Structure and Interpretation of Computer Programs, 2e: Top add to lisp cheatsheet</a></li>
+<li><a href="#debugging-elisp">15. Debugging Elisp</a></li>
+<li><a href="#clhs-function-write-to-string-prin1-to-string">16. CLHS: Function WRITE-TO-STRING, PRIN1-TO-STRING&#x2026;</a></li>
+<li><a href="#sequence-functions">17. Sequence Functions</a></li>
+<li><a href="#alhassyob-latex-as-png-file-paths-containing-cause-export-errors-2">18. [alhassy/ob-latex-as-png] File paths containing "." cause export errors (#2)</a></li>
+<li><a href="#lfel">19. lf.el</a>
+<ul>
+<li><a href="#httpswwwcreativeapplicationsnettutorialsintroduction-to-clojure-part-1introduction-to-clojure-modern-dialect-of-lisp-part-1-creativeapplicationsnet">19.1. Introduction to Clojure – Modern dialect of Lisp (Part 1) – CreativeApplications.Net</a></li>
+<li><a href="#httpswannodettegithubio20150112lazy-contractslazy-contracts-in-30-lines">19.2. Lazy Contracts in 30 lines</a></li>
+<li><a href="#httpswannodettegithubio20150110faster-validation-through-immutabilityfaster-validation-through-immutability">19.3. Faster Validation Through Immutability</a></li>
+<li><a href="#httpsdzonecomarticlesrefactoring-and-type-errors-in-clojurerefactoring-and-type-errors-in-clojure-dzone-java">19.4. Refactoring and Type Errors in Clojure - DZone Java</a></li>
+<li><a href="#httpspragprogcomtitlesroclojuregetting-clojuregetting-clojure-build-your-functional-skills-one-idea-at-a-time-by-russ-olsen">19.5. Getting Clojure: Build Your Functional Skills One Idea at a Time by Russ Olsen</a></li>
+<li><a href="#httpsblogfrankelchlearning-clojure4learning-clojure-dependent-types-and-contract-based-programming">19.6. Learning Clojure: dependent types and contract-based programming</a></li>
+<li><a href="#httpsostashdevposts2021-07-01-pre-post-conditionsutmsourcefeedburnerutmmediumfeedutmcampaignfeed3aclojure28planetclojure29pre-and-post-conditions-in-clojure-ostashdev">19.7. Pre and post conditions in Clojure - Ostash.Dev</a></li>
+<li><a href="#httpswwwyoutubecomwatchvw6xkxiyxbboabchannelonthecodeagainclojure-pre-and-post-conditions-youtube">19.8. Clojure: Pre and Post conditions - YouTube</a></li>
+<li><a href="#httpsclojureorgguidesspecclojure-spec-guide">19.9. Clojure - spec Guide</a></li>
+<li><a href="#httpspurelyfunctionaltvmini-guideclojure-spec-vs-schema5-differences-between-clojurespec-and-schema-purelyfunctionaltv">19.10. 5 Differences between clojure.spec and Schema - PurelyFunctional.tv</a></li>
+<li><a href="#httpsdocsracket-langorgguidecontracts-general-functionshtml73-contracts-on-functions-in-general">19.11. 7.3 Contracts on Functions in General</a></li>
+</ul>
+</li>
+<li><a href="#org-exp-blocksel-pre-process-blocks-when-exporting-org-files">20. org-exp-blocks.el – pre-process blocks when exporting org files</a></li>
+<li><a href="#probabilitycheatsheet">21. ProbabilityCheatSheet</a></li>
+<li><a href="#defacto-print-method">22. defacto print method</a></li>
+<li><a href="#quick-adds-to-cheatsheet">23. quick adds to cheatsheet</a></li>
+<li><a href="#cheatsheet">24. Cheatsheet</a></li>
+<li><a href="#threading-macro">25. threading macro</a></li>
+<li><a href="#edebug-lispcheatsheet">26. edebug :lisp<sub>cheat</sub>_<sub>sheet</sub>: ♥‿♥ !!</a></li>
+<li><a href="#agda">27. agda</a></li>
+<li><a href="#mention-this-alongside-cond-lisp-cheat-sheet-something-to-be-aware-of">28. Mention this alongside cond, lisp cheat sheet, something to be aware of.</a></li>
+<li><a href="#lemp-home-page-enhanced-c">29. LeMP Home Page · Enhanced C#</a></li>
+<li><a href="#queensland-fp-lab-functional-programming-cheat-sheet">30. Queensland FP Lab - Functional Programming Cheat Sheet</a></li>
+<li><a href="#surjectivity-and-injectiity">31. Surjectivity and injectiity</a></li>
+<li><a href="#elisp-cheat-sheet-to-add">32. elisp cheat sheet, to add</a>
+<ul>
+<li><a href="#elisp-emacs-learning-sources">32.1. elisp, emacs learning sources</a></li>
+</ul>
+</li>
+<li><a href="#add-to-elisp-cheat-sheet">33. add to elisp cheat sheet</a></li>
+</ul>
+</div>
+</div>
+<p>
+<a href="https://alhassy.com/unlisted-notes-table-of-contents">↑ All unlisted notes</a>
+</p>
+<div id="outline-container-org-special-block-extras" class="outline-2">
+<h2 id="org-special-block-extras"><span class="section-number-2">1.</span> <a href="#org-special-block-extras">org-special-block-extras</a></h2>
+<div class="outline-text-2" id="text-org-special-block-extras">
+</div>
+<div id="outline-container-httpssachachuacomblog202301adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export" class="outline-3">
+<h3 id="httpssachachuacomblog202301adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export"><span class="section-number-3">1.1.</span> <a href="https://sachachua.com/blog/2023/01/adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export/">https://sachachua.com/blog/2023/01/adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export/</a></h3>
+<div class="outline-text-3" id="text-httpssachachuacomblog202301adding-a-custom-header-argument-to-org-mode-source-blocks-and-using-that-argument-during-export">
+</div>
+</div>
+<div id="outline-container-alhassyorg-special-block-extras-wrong-type-argument-on-margin-kbd-links-issue-40" class="outline-3">
+<h3 id="alhassyorg-special-block-extras-wrong-type-argument-on-margin-kbd-links-issue-40"><span class="section-number-3">1.2.</span> <a href="#alhassyorg-special-block-extras-wrong-type-argument-on-margin-kbd-links-issue-40">[alhassy/org-special-block-extras] Wrong type argument on `margin`, `kbd` links (Issue #40)</a></h3>
+<div class="outline-text-3" id="text-alhassyorg-special-block-extras-wrong-type-argument-on-margin-kbd-links-issue-40">
+<p>
+<a href="https://github.com/alhassy/org-special-block-extras/issues/40#issuecomment-1610373948">https://github.com/alhassy/org-special-block-extras/issues/40#issuecomment-1610373948</a>
+</p>
+</div>
+</div>
+<div id="outline-container-alhassyorg-special-block-extras-any-interest-in-proposing-this-package-for-inclusion-in-either-gnu-or-nongnu-elpa-issue-46" class="outline-3">
+<h3 id="alhassyorg-special-block-extras-any-interest-in-proposing-this-package-for-inclusion-in-either-gnu-or-nongnu-elpa-issue-46"><span class="section-number-3">1.3.</span> <a href="#alhassyorg-special-block-extras-any-interest-in-proposing-this-package-for-inclusion-in-either-gnu-or-nongnu-elpa-issue-46">[alhassy/org-special-block-extras] Any interest in proposing this package for inclusion in either GNU or NonGNU ELPA? (Issue #46)</a></h3>
+<div class="outline-text-3" id="text-alhassyorg-special-block-extras-any-interest-in-proposing-this-package-for-inclusion-in-either-gnu-or-nongnu-elpa-issue-46">
+<p>
+<a href="https://github.com/alhassy/org-special-block-extras/issues/46">https://github.com/alhassy/org-special-block-extras/issues/46</a>
+</p>
+</div>
+</div>
+<div id="outline-container-defmethod" class="outline-3">
+<h3 id="defmethod"><span class="section-number-3">1.4.</span> <a href="#defmethod">defmethod</a></h3>
+<div class="outline-text-3" id="text-defmethod">
+<div class="org-src-container">
+<pre class="src src-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">undefining a cl-defgeneric, you can use the fmakunbound function to remove the function binding.
+</span>
+
+(cl-defgeneric greet (name)
+  <span style="color: #50a14f; font-style: italic;">"A generic function to greet someone."</span>)
+
+(cl-defmethod greet ((name string))
+  <span style="color: #50a14f; font-style: italic;">"A method to greet someone by their name."</span>
+  (message <span style="color: #50a14f;">"Hello, %s!"</span> name))
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">works
+</span>(greet <span style="color: #50a14f;">"Musa"</span>)
+
+(fmakunbound 'greet)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">crashes
+</span>(greet <span style="color: #50a14f;">"Musa"</span>)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Please note that fmakunbound completely removes the function binding, so if you intend to re-define the generic
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">function later, you would need to redefine it from scratch.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Keep in mind that undefining a cl-defgeneric should be done with caution, as it may impact other parts of your
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">codebase that rely on the generic function. Make sure to consider the broader implications and structure your code
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">accordingly.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">With the &#8220;:method&#8221; keyword, it's easier to see defgeneric as a normal function that has a dictionary from
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">types/specializers to implementations. Then a function call is essentially a instanceof / type-of based look-up.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span>(cl-defgeneric greet (name)
+  <span style="color: #50a14f; font-style: italic;">"A generic function to greet someone."</span>
+   (<span style="color: #e44649;">:method</span> ((name string)) (message <span style="color: #50a14f;">"&#10216;1&#10217; Hello, %s!"</span> name))
+   (<span style="color: #e44649;">:method</span> ((name symbol)) (message <span style="color: #50a14f;">"&#10216;2&#10217; Greetings, %s!"</span> name)))
+
+(greet <span style="color: #50a14f;">"Musa"</span>)
+(greet 'Chad)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-incorporate-ob-latex-to-png-pkg-smart-diagrams-into-org-graphel" class="outline-3">
+<h3 id="incorporate-ob-latex-to-png-pkg-smart-diagrams-into-org-graphel"><span class="section-number-3">1.5.</span> <a href="#incorporate-ob-latex-to-png-pkg-smart-diagrams-into-org-graphel">Incorporate ob-latex-to-png pkg smart diagrams into org-graph.el</a></h3>
+<div class="outline-text-3" id="text-incorporate-ob-latex-to-png-pkg-smart-diagrams-into-org-graphel">
+</div>
+</div>
+<div id="outline-container-org-special-block-extras-example-of-how-the-tag-ignore-modifies-a-section" class="outline-3">
+<h3 id="org-special-block-extras-example-of-how-the-tag-ignore-modifies-a-section"><span class="section-number-3">1.6.</span> <a href="#org-special-block-extras-example-of-how-the-tag-ignore-modifies-a-section">Org-special-block extras: Example of how the tag :ignore: modifies a section</a></h3>
+<div class="outline-text-3" id="text-org-special-block-extras-example-of-how-the-tag-ignore-modifies-a-section">
+<p>
+Headings
+Use the :ignore: tag on headlines to omit the headline when exporting, but keep its contents.
+</p>
+
+<p>
+(ox-extras-activate '(ignore-headlines))
+Alternatively, use the :noexport: tag to omit the headline and its contents.
+</p>
+
+<p>
+;;;; noexport is in the list by default
+;; (add-to-list 'org-export-exclude-tags "noexport")
+Drawers
+Ignore all drawers when exporting, by default.
+</p>
+
+<p>
+(setq org-export-with-drawers nil)
+</p>
+</div>
+</div>
+<div id="outline-container-adding-org-eldoc-support-for-special-blocks-works-org-get-title-or-body" class="outline-3">
+<h3 id="adding-org-eldoc-support-for-special-blocks-works-org-get-title-or-body"><span class="section-number-3">1.7.</span> <a href="#adding-org-eldoc-support-for-special-blocks-works-org-get-title-or-body">Adding org-eldoc support for special blocks, works!  (org-get-title-or-body)</a></h3>
+<div class="outline-text-3" id="text-adding-org-eldoc-support-for-special-blocks-works-org-get-title-or-body">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">my-org-eldoc-show-special-block</span> (orig-fun <span style="color: #c18401;">&amp;rest</span> args)
+  <span style="color: #50a14f; font-style: italic;">"Enhance `org-eldoc-documentation-function` to show info about `org-special-block`."</span>
+  (<span style="color: #a626a4;">let</span> ((result (apply orig-fun args))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Call the original function
+</span>    (<span style="color: #a626a4;">or</span>
+     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Check if the point is inside an org-special-block
+</span>     (<span style="color: #a626a4;">when</span> (org-at-block-p)
+       (<span style="color: #a626a4;">let*</span> ((element (org-element-at-point))
+              (block-name (org-element-property <span style="color: #e44649;">:type</span> element)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Get block name
+</span>              (header-args (org-element-property <span style="color: #e44649;">:parameters</span> element))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Get header arguments
+</span>         (concat <span style="color: #50a14f;">"Block: "</span> block-name
+                 (<span style="color: #a626a4;">if</span> header-args
+                     (concat <span style="color: #50a14f;">" | Header args: "</span> header-args)))))
+     result))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Fallback to the original result if not in a special block
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Add the advice to enhance the documentation function
+</span>(advice-add 'org-eldoc-documentation-function <span style="color: #e44649;">:around</span> #'my-org-eldoc-show-special-block)
+
+</pre>
+</div>
+
+<p>
+Let's try it out:
+</p>
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>This is the tile</h3> 
+<p>
+This is boxed text!
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-mention-git-link-type-in-my-org-special-block-extras-org-file" class="outline-3">
+<h3 id="mention-git-link-type-in-my-org-special-block-extras-org-file"><span class="section-number-3">1.8.</span> <a href="#mention-git-link-type-in-my-org-special-block-extras-org-file">Mention <code>git:</code> link-type in my org-special-block extras .org file</a></h3>
+<div class="outline-text-3" id="text-mention-git-link-type-in-my-org-special-block-extras-org-file">
+<p>
+<a href="https://git.sr.ht/~bzg/org-contrib/tree/master/item/lisp/ol-git-link.el">https://git.sr.ht/~bzg/org-contrib/tree/master/item/lisp/ol-git-link.el</a>
+</p>
+
+
+<ul class="org-ul">
+<li><b>org-git-link.el:</b> Provide org links to specific file version</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-httpspankeublogpretty-babel-src-blockshtml-ship-with-my-package" class="outline-3">
+<h3 id="httpspankeublogpretty-babel-src-blockshtml-ship-with-my-package"><span class="section-number-3">1.9.</span> <a href="https://pank.eu/blog/pretty-babel-src-blocks.html">https://pank.eu/blog/pretty-babel-src-blocks.html</a> &#x2013; ship with my package ;-)</h3>
+<div class="outline-text-3" id="text-httpspankeublogpretty-babel-src-blockshtml-ship-with-my-package">
+</div>
+</div>
+</div>
+<div id="outline-container-repl-driven-development-blog-article" class="outline-2">
+<h2 id="repl-driven-development-blog-article"><span class="section-number-2">2.</span> <a href="#repl-driven-development-blog-article">Repl driven development blog article</a></h2>
+<div class="outline-text-2" id="text-repl-driven-development-blog-article">
+</div>
+<div id="outline-container-functions-explained-through-patterns-repl-driven-development" class="outline-3">
+<h3 id="functions-explained-through-patterns-repl-driven-development"><span class="section-number-3">2.1.</span> <a href="#functions-explained-through-patterns-repl-driven-development">Functions Explained Through Patterns - repl driven development</a></h3>
+<div class="outline-text-3" id="text-functions-explained-through-patterns-repl-driven-development">
+<p>
+<a href="http://blog.josephwilk.net/clojure/functions-explained-through-patterns.html">http://blog.josephwilk.net/clojure/functions-explained-through-patterns.html</a>
+REPL driven development. If you don’t understand a function use an interactive
+REPL to explore examples.
+</p>
+</div>
+</div>
+<div id="outline-container-jshell-eager-eval" class="outline-3">
+<h3 id="jshell-eager-eval"><span class="section-number-3">2.2.</span> <a href="#jshell-eager-eval">jshell eager eval</a></h3>
+<div class="outline-text-3" id="text-jshell-eager-eval">
+<p>
+Inbox
+</p>
+
+<p>
+To keep things simple, JShell also doesn’t need semicolons to end statements, so using them is entirely optional. This can make it difficult to write complex statements across multiple lines, as it will automatically execute the statement eagerly, as soon as it makes sense to do so:
+</p>
+
+<p>
+==&gt; "Hello, World"
+$3 ==&gt; "Hello, World"
+</p>
+
+<p>
+==&gt; "Hello, World".substring(
+   &#x2026;&gt; 3, 5)
+$4 ==&gt; "lo"
+</p>
+
+<p>
+==&gt;
+</p>
+</div>
+</div>
+<div id="outline-container-f-bash-convert-any-command-to-a-repl-osascript" class="outline-3">
+<h3 id="f-bash-convert-any-command-to-a-repl-osascript"><span class="section-number-3">2.3.</span> <a href="#f-bash-convert-any-command-to-a-repl-osascript">F#, bash (convert any command to a repl),  Osascript</a></h3>
+<div class="outline-text-3" id="text-f-bash-convert-any-command-to-a-repl-osascript">
+</div>
+<div id="outline-container-f" class="outline-4">
+<h4 id="f"><span class="section-number-4">2.3.1.</span> <a href="#f">F#</a></h4>
+<div class="outline-text-4" id="text-f">
+<p>
+First:
+</p>
+
+<p>
+brew install mono
+</p>
+
+<p>
+run f# console/repl: fsharpi
+</p>
+
+<p>
+compile files: fsharpc file.fs
+</p>
+
+<p>
+Then:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The trailing &#8220;-&#8221; turns readline off, so process doesn't wait.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Turned off readline when running as background non-console process.
+</span>(repl-driven-development [C-x e f] <span style="color: #50a14f;">"fsharpi --readline-"</span>
+   <span style="color: #e44649;">:name</span> 'fsharp-repl
+   <span style="color: #e44649;">:blink</span> 'pulsar-blue
+   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Add command terminator, so submissions don't need it.
+</span>   <span style="color: #e44649;">:input-rewrite-fn</span> (<span style="color: #a626a4;">lambda</span> (in) (concat in <span style="color: #50a14f;">";;"</span>)))
+</pre>
+</div>
+
+<p>
+Except the last line, these are all valid OCaml as well as valid F#:
+</p>
+<div class="org-src-container">
+<pre class="src src-ocaml">1 + 2             (* ⇒ - : int = 3 *)
+"fsharp"          (* ⇒ - : string = "ocaml" **)
+true              (* ⇒ - : bool = true *)
+fun x y -&gt; x + y  (* ⇒ - : int -&gt; int -&gt; int = &lt;fun&gt; *)
+(fun x y -&gt; x + y) 3 4 (* ⇒ - : int = 7 *)
+System.Environment.GetEnvironmentVariable("TERM")
+</pre>
+</div>
+</div>
+<ol class="org-ol">
+<li><a id="convert-any-command-into-a-repl"></a><a href="#convert-any-command-into-a-repl">Convert any command into a REPL</a><br />
+<div class="outline-text-6" id="text-convert-any-command-into-a-repl">
+<p>
+Open a terminal and enter:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell"><span style="color: #a626a4;">while </span><span style="color: #e44649;">read</span> line ; <span style="color: #a626a4;">do </span><span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"$line"</span> | tr <span style="color: #50a14f;">'[a-z]'</span> <span style="color: #50a14f;">'[A-Z]'</span> ; <span style="color: #a626a4;">done</span>
+</pre>
+</div>
+<p>
+You know have an “upcase REPL”.
+</p>
+
+<p>
+Between “do ⋯ done” you can run whatever command tool you like, thereby converting it into
+a simple REPL.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(repl-driven-development
+ [C-x e u] <span style="color: #50a14f;">"bash"</span>
+ <span style="color: #e44649;">:name</span> 'upcase-repl
+ <span style="color: #e44649;">:blink</span> 'pulsar-blue
+ <span style="color: #e44649;">:init</span> <span style="color: #50a14f;">"   echo \"Screaming fun with Emacs (&#65377;&#9685;&#8255;&#9685;&#65377;))\"
+        \n while read line ; do echo -n \"&#4314;(&#3232;&#30410;&#3232;)&#4314; says \"; echo \"$line\" | tr '[a-z]' '[A-Z]' ; done"</span>)
+</pre>
+</div>
+
+<p>
+Example usage:
+</p>
+<div class="org-src-container">
+<pre class="src src-text">hello there my friends
+
+why so mad
+
+bye
+</pre>
+</div>
+</div>
+</li>
+</ol>
+<li><a id="emacs-as-an-applescript-editor"></a><a href="#emacs-as-an-applescript-editor">Emacs as an AppleScript editor</a><br />
+<div class="outline-text-5" id="text-emacs-as-an-applescript-editor">
+<ul class="org-ul">
+<li>AppleScript is a high-level, English-like scripting language developed by Apple for automating tasks on macOS.</li>
+</ul>
+<p>
+It allows you to create complex scripts and automate various operations within the macOS environment, including interacting with applications, system settings, and more.
+</p>
+<ul class="org-ul">
+<li>The interpreter for AppleScript is called <code>osascript</code>.</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(repl-driven-development
+ [C-x e a] <span style="color: #50a14f;">"bash"</span>
+ <span style="color: #e44649;">:name</span> 'applescript-repl
+ <span style="color: #e44649;">:blink</span> 'pulsar-blue
+ <span style="color: #e44649;">:init</span> <span style="color: #50a14f;">"while true; do
+    read input
+    osa_script=\"\"
+    while [ \"$input\" != \";;\" ]; do
+        osa_script=\"$osa_script$input\"$'</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">\n</span><span style="color: #50a14f;">'
+        read input
+    done
+    echo $(osascript -e \"$osa_script\") &amp;&amp; echo \"Done (&#9685;&#8255;&#9685;)\"
+    done"</span>
+ <span style="color: #e44649;">:input-rewrite-fn</span> (<span style="color: #a626a4;">lambda</span> (in) (format <span style="color: #50a14f;">"%s\n;;"</span> in)))
+</pre>
+</div>
+
+<p>
+Example usage:
+</p>
+<div class="org-src-container">
+<pre class="src src-osascript">-- See a pretty box!
+display dialog "Hello World"
+
+-- Hear a motivation message
+say "You can do it, buddy!"
+
+-- Toggle light/dark OS themes
+tell application "System Events"
+  tell appearance preferences
+  set dark mode to not dark mode
+  end tell
+end tell
+
+-- Open TextEdit and enter “hello world”
+tell application "TextEdit"
+    activate
+    make new document
+    set text of front document to "hello world"
+end tell
+
+-- Change the desktop wallpaper
+tell application "System Events"
+    tell current desktop
+        set picture to file "Path:To:Your:Image.jpg"
+    end tell
+end tell
+
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-osascript">set imageUrl to "some image api"
+
+
+-- Define the API URL
+set apiUrl to "some image api / search?height%3C=300"
+
+-- Use `curl` to retrieve the JSON data from the API
+set jsonPayload to do shell script "curl -s " &amp; quoted form of apiUrl
+
+-- Use `jq` to extract the URL from the JSON
+set imageUrl to do shell script "echo " &amp; quoted form of jsonPayload &amp; " | jq -r '.images[0].url'"
+
+-- Define the path to save the image locally
+set imagePath to (path to desktop as text) &amp; "my-image.jpg"
+
+-- Download the image
+do shell script "curl -f -s -o " &amp; quoted form of POSIX path of imagePath &amp; " " &amp; quoted form of imageUrl
+
+-- Set the downloaded image as the desktop wallpaper
+tell application "System Events"
+  set picture of every desktop to POSIX file  "/Users/musa/Desktop/my-image.jpg"
+end tell
+</pre>
+</div>
+
+<p>
+Notice that this gives us a “applescript-eval” command, which we can use from within Emacs Lisp code
+to reach into the MacOS ecosystem &#x2014;e.g., to run actions in other tools or alter system-wide settings.
+</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-rddel-for-smalltalk" class="outline-3">
+<h3 id="rddel-for-smalltalk"><span class="section-number-3">2.4.</span> <a href="#rddel-for-smalltalk">RDD.el for smalltalk</a></h3>
+<div class="outline-text-3" id="text-rddel-for-smalltalk">
+<p>
+<a href="http://stephane.ducasse.free.fr/FreeBooks/Gnu/ProgrammingUsingGnuSmalltalk.pdf">http://stephane.ducasse.free.fr/FreeBooks/Gnu/ProgrammingUsingGnuSmalltalk.pdf</a>
+</p>
+</div>
+</div>
+<div id="outline-container-elisp-dev-tools" class="outline-3">
+<h3 id="elisp-dev-tools"><span class="section-number-3">2.5.</span> <a href="#elisp-dev-tools">elisp dev tools</a></h3>
+<div class="outline-text-3" id="text-elisp-dev-tools">
+<p>
+<a href="https://www.reddit.com/r/emacs/comments/1051bfu/what_packages_do_i_need_to_for_the_best_elisp/">https://www.reddit.com/r/emacs/comments/1051bfu/what_packages_do_i_need_to_for_the_best_elisp/</a>
+</p>
+
+<p>
+<a href="https://github.com/p3r7/awesome-elisp#development-tools">https://github.com/p3r7/awesome-elisp#development-tools</a>
+</p>
+</div>
+</div>
+<div id="outline-container-alhassyrepl-driven-development-project-website-in-header-comment-yields-a-404-issue-2" class="outline-3">
+<h3 id="alhassyrepl-driven-development-project-website-in-header-comment-yields-a-404-issue-2"><span class="section-number-3">2.6.</span> <a href="#alhassyrepl-driven-development-project-website-in-header-comment-yields-a-404-issue-2">[alhassy/repl-driven-development] Project website in header comment yields a 404 (Issue #2)</a></h3>
+<div class="outline-text-3" id="text-alhassyrepl-driven-development-project-website-in-header-comment-yields-a-404-issue-2">
+<p>
+<a href="https://github.com/alhassy/repl-driven-development/issues/2">https://github.com/alhassy/repl-driven-development/issues/2</a>
+</p>
+</div>
+</div>
+<div id="outline-container-add-to-rdd-sources-for-clojure" class="outline-3">
+<h3 id="add-to-rdd-sources-for-clojure"><span class="section-number-3">2.7.</span> <a href="#add-to-rdd-sources-for-clojure">Add to RDD sources for clojure</a></h3>
+<div class="outline-text-3" id="text-add-to-rdd-sources-for-clojure">
+<p>
+<a href="https://www.classcentral.com/report/best-clojure-courses/#anchor-1">https://www.classcentral.com/report/best-clojure-courses/#anchor-1</a>
+</p>
+</div>
+</div>
+<div id="outline-container-managing-code-with-outlines-modern-emacs" class="outline-3">
+<h3 id="managing-code-with-outlines-modern-emacs"><span class="section-number-3">2.8.</span> <a href="#managing-code-with-outlines-modern-emacs">Managing code with Outlines | Modern Emacs</a></h3>
+<div class="outline-text-3" id="text-managing-code-with-outlines-modern-emacs">
+<p>
+<a href="http://www.modernemacs.com/post/outline-ivy/">http://www.modernemacs.com/post/outline-ivy/</a>
+</p>
+</div>
+</div>
+<div id="outline-container-re-alhassyrepl-driven-development-problems-with-output-being-overwritten-while-using-scala-issue-7" class="outline-3">
+<h3 id="re-alhassyrepl-driven-development-problems-with-output-being-overwritten-while-using-scala-issue-7"><span class="section-number-3">2.9.</span> <a href="#re-alhassyrepl-driven-development-problems-with-output-being-overwritten-while-using-scala-issue-7">Re: [alhassy/repl-driven-development] problems with output being overwritten while using scala (Issue #7)</a></h3>
+<div class="outline-text-3" id="text-re-alhassyrepl-driven-development-problems-with-output-being-overwritten-while-using-scala-issue-7">
+<p>
+<a href="https://github.com/alhassy/repl-driven-development/issues/7#event-11190092678">https://github.com/alhassy/repl-driven-development/issues/7#event-11190092678</a>
+</p>
+
+<p>
+Fed Reggiardo &lt;notifications@github.com&gt;
+Fri, Dec 8, 2023, 2:00 AM
+to alhassy/repl-driven-development, Subscribed
+</p>
+
+<p>
+Closed #7 as completed.
+</p>
+
+<p>
+—
+Reply to this email directly, view it on GitHub, or unsubscribe.
+</p>
+</div>
+</div>
+<div id="outline-container-rddel-expand-region-remarks" class="outline-3">
+<h3 id="rddel-expand-region-remarks"><span class="section-number-3">2.10.</span> <a href="#rddel-expand-region-remarks">rdd.el expand-region remarks</a></h3>
+<div class="outline-text-3" id="text-rddel-expand-region-remarks">
+<p>
+(bind-key "s-r" #'er/expand-region)
+;; er uses regular expressions
+;; To use concrete syntax tree aware expansions (via “tree-sitter”),
+;; both ts-movement and combomulate.el seem to provide this feature and more.
+;; See comments of <a href="https://www.reddit.com/r/emacs/comments/10d33sr/tsmovement_a_package_to_navigate_the_treesitter/">https://www.reddit.com/r/emacs/comments/10d33sr/tsmovement_a_package_to_navigate_the_treesitter/</a>
+;; See <a href="https://www.masteringemacs.org/article/combobulate-structured-movement-editing-treesitter">https://www.masteringemacs.org/article/combobulate-structured-movement-editing-treesitter</a>
+;;
+;; Or just integrate tree-sitter into er directly: <a href="https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/20#issuecomment-1352675350">https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/20#issuecomment-1352675350</a>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-alhassyob-latex-as-png-files-should-not-clutter-user-emacs-directory-issue-3" class="outline-2">
+<h2 id="alhassyob-latex-as-png-files-should-not-clutter-user-emacs-directory-issue-3"><span class="section-number-2">3.</span> <a href="#alhassyob-latex-as-png-files-should-not-clutter-user-emacs-directory-issue-3">[alhassy/ob-latex-as-png] Files should not clutter user-emacs-directory (Issue #3)</a></h2>
+<div class="outline-text-2" id="text-alhassyob-latex-as-png-files-should-not-clutter-user-emacs-directory-issue-3">
+<p>
+<a href="https://github.com/alhassy/ob-latex-as-png/issues/3">https://github.com/alhassy/ob-latex-as-png/issues/3</a>
+</p>
+</div>
+</div>
+<div id="outline-container-alhassyob-latex-as-png-report-error-and-abort-upon-latex-compile-error-pr-4" class="outline-2">
+<h2 id="alhassyob-latex-as-png-report-error-and-abort-upon-latex-compile-error-pr-4"><span class="section-number-2">4.</span> <a href="#alhassyob-latex-as-png-report-error-and-abort-upon-latex-compile-error-pr-4">[alhassy/ob-latex-as-png] Report error and abort upon latex compile error (PR #4)</a></h2>
+<div class="outline-text-2" id="text-alhassyob-latex-as-png-report-error-and-abort-upon-latex-compile-error-pr-4">
+<p>
+  <a href="https://github.com/alhassy/ob-latex-as-png/pull/4">https://github.com/alhassy/ob-latex-as-png/pull/4</a>
+Mine this for useful info
+</p>
+</div>
+</div>
+<div id="outline-container-alhassyob-latex-as-png-use-dedicated-subdirectory-for-output-data-pr-5" class="outline-2">
+<h2 id="alhassyob-latex-as-png-use-dedicated-subdirectory-for-output-data-pr-5"><span class="section-number-2">5.</span> <a href="#alhassyob-latex-as-png-use-dedicated-subdirectory-for-output-data-pr-5">[alhassy/ob-latex-as-png] Use dedicated subdirectory for output data (PR #5)</a></h2>
+<div class="outline-text-2" id="text-alhassyob-latex-as-png-use-dedicated-subdirectory-for-output-data-pr-5">
+<ul class="org-ul">
+<li><a href="https://github.com/alhassy/ob-latex-as-png/pull/5">https://github.com/alhassy/ob-latex-as-png/pull/5</a></li>
+<li>Mine this for useful info</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-re-artawowerblamerel-clickable-annotations-issue-7" class="outline-2">
+<h2 id="re-artawowerblamerel-clickable-annotations-issue-7"><span class="section-number-2">6.</span> <a href="#re-artawowerblamerel-clickable-annotations-issue-7">Re: [Artawower/blamer.el] Clickable Annotations (Issue #7)</a></h2>
+<div class="outline-text-2" id="text-re-artawowerblamerel-clickable-annotations-issue-7">
+<p>
+Inbox
+</p>
+
+<p>
+Art &lt;notifications@github.com&gt;
+Sat, Jan 20, 9:10 AM
+to Artawower/blamer.el, me, Author
+</p>
+
+<p>
+Closed #7 as completed.
+</p>
+
+<p>
+<a href="https://github.com/Artawower/blamer.el/issues/7#event-11546112088">https://github.com/Artawower/blamer.el/issues/7#event-11546112088</a>
+</p>
+</div>
+</div>
+<div id="outline-container-refactor-osbeel-using-my-knowledge-of-martin-fowler-refactoring-reward-not-goal" class="outline-2">
+<h2 id="refactor-osbeel-using-my-knowledge-of-martin-fowler-refactoring-reward-not-goal"><span class="section-number-2">7.</span> <a href="#refactor-osbeel-using-my-knowledge-of-martin-fowler-refactoring-reward-not-goal">Refactor osbe.el using my knowledge of Martin Fowler refactoring :+) &#x2014;reward, not goal.</a></h2>
+<div class="outline-text-2" id="text-refactor-osbeel-using-my-knowledge-of-martin-fowler-refactoring-reward-not-goal">
+<p>
+Make a top level heading 'Rewards'
+</p>
+</div>
+</div>
+<div id="outline-container-literate-programming-writ-large" class="outline-2">
+<h2 id="literate-programming-writ-large"><span class="section-number-2">8.</span> <a href="#literate-programming-writ-large">Literate Programming Writ Large</a></h2>
+<div class="outline-text-2" id="text-literate-programming-writ-large">
+<p>
+very useful for LP for org-special-block-extras
+<a href="https://howardism.org/Technical/Emacs/literate-writ-large.html#fnr.1">https://howardism.org/Technical/Emacs/literate-writ-large.html#fnr.1</a>
+</p>
+</div>
+</div>
+<div id="outline-container-re-alhassyorg-special-block-extras-doesnt-work-with-revealjs" class="outline-2">
+<h2 id="re-alhassyorg-special-block-extras-doesnt-work-with-revealjs"><span class="section-number-2">9.</span> <a href="#re-alhassyorg-special-block-extras-doesnt-work-with-revealjs">Re: [alhassy/org-special-block-extras] Doesn't work with RevealJS</a></h2>
+<div class="outline-text-2" id="text-re-alhassyorg-special-block-extras-doesnt-work-with-revealjs">
+<p>
+From: suhail-singh &lt;notifications@github.com&gt;
+Subject: Re: [alhassy/org-special-block-extras] Doesn't work with RevealJS
+ HTML Backend (Issue #44)
+</p>
+
+<p>
+Date: Tue, 30 Apr 2024 18:02:49 -0700 (13 weeks, 6 days, 10 hours ago)
+Reply-To: alhassy/org-special-block-extras
+ &lt;reply+AG2IR5H3Y7ISE3DVP3F6NE6EHV23TEVBNHHG2FRPYY@reply.github.com&gt;
+Attachment: [2. text/plain]&#x2026;
+</p>
+
+<p>
+This is because org-special-block-extras hardcodes backend checks based on
+strict equality (e.g. using (equal backend 'html) or (equal backend 'latex))
+instead of using org-export-derived-backend-p from 'ox.
+</p>
+
+<p>
+Perhaps @alhassy will have time to either fix it or review a patch that fixes
+it.
+</p>
+
+<p>
+—
+Reply to this email directly, view it on GitHub, or unsubscribe.
+You are receiving this because you were mentioned.
+</p>
+</div>
+</div>
+<div id="outline-container-httpseli5ggwhat20is20org-special-block-extraseli5-what-is-org-special-block-extras" class="outline-2">
+<h2 id="httpseli5ggwhat20is20org-special-block-extraseli5-what-is-org-special-block-extras"><span class="section-number-2">10.</span> <a href="https://eli5.gg/what%20is%20org-special-block-extras">ELI5: what is org-special-block-extras</a></h2>
+<div class="outline-text-2" id="text-httpseli5ggwhat20is20org-special-block-extraseli5-what-is-org-special-block-extras">
+</div>
+</div>
+<div id="outline-container-casting-spels-in-lisp-lisp-cheat-sheet-also-in-init" class="outline-2">
+<h2 id="casting-spels-in-lisp-lisp-cheat-sheet-also-in-init"><span class="section-number-2">11.</span> <a href="#casting-spels-in-lisp-lisp-cheat-sheet-also-in-init">Casting SPELs in Lisp ؛؛ Lisp cheat sheet ;; also in init</a></h2>
+<div class="outline-text-2" id="text-casting-spels-in-lisp-lisp-cheat-sheet-also-in-init">
+<p>
+<a href="http://www.lisperati.com/casting-spels-emacs/html/casting-spels-emacs-1.html">http://www.lisperati.com/casting-spels-emacs/html/casting-spels-emacs-1.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-lisp-cheat-sheet-and-init-re-lisp" class="outline-2">
+<h2 id="lisp-cheat-sheet-and-init-re-lisp"><span class="section-number-2">12.</span> <a href="#lisp-cheat-sheet-and-init-re-lisp">Lisp cheat sheet and init ;; re: Lisp</a></h2>
+<div class="outline-text-2" id="text-lisp-cheat-sheet-and-init-re-lisp">
+<ul class="org-ul">
+<li>The best thing about Lisp is that it has no concrete syntax &#x2014;with macros you can make whatever syntax you want!</li>
+<li>With macros&#x2026;
+<ul class="org-ul">
+<li>A hundred-year language should, however, be succinct. First “write down the program you’d like to be able to write, regardless of whether there is a compiler that can translate it or hardware that can run it.” And of course the program you’d really like to write is the shortest one possible:</li>
+<li>[T]he algorithm for language design becomes: look at a program and ask, is there any way to write this that’s shorter?</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-elisp-cheat-sheet" class="outline-2">
+<h2 id="elisp-cheat-sheet"><span class="section-number-2">13.</span> <a href="#elisp-cheat-sheet">Elisp cheat sheet</a></h2>
+<div class="outline-text-2" id="text-elisp-cheat-sheet">
+<p>
+Mention that emacs is a lisp interpreter at the start of the cheatsheet&#x2026;
+</p>
+
+<p>
+A list in LISP looks like this:
+</p>
+
+<p>
+(Knife Fork Spoon)
+</p>
+
+<p>
+or like these two examples
+(set-background-color "yellow")    &lt;- C-x C-e
+(set-background-color "white")    &lt;- C-x C-e
+</p>
+
+<p>
+If the first item in the list is a function you can evaluate the list by placing the cursor just after the bracket at the end of the list and pressing C-x C-e. Try it with the two lists above. Copy them into Emacs and then C-x C-e where indicated to turn the Emacs background yellow and then to set it white again.
+</p>
+
+<p>
+If you try to evaluate the (Knife Fork Spoon) list you’ll get an error telling you that Knife is a void function.
+</p>
+
+<p>
+Try evaluating the following lists in Emacs by typing C-x C-e after the closing bracket:
+(linum-mode)
+(message "This is the echo area")
+(* 2 3)
+(+ 4 5)
+</p>
+
+<p>
+The last three will output their results in the echo area, the area at the bottom of Emacs.
+</p>
+
+
+<p>
+C-u C-x C-e will insert any output directly in the text area, rather than in the echo area.
+</p>
+
+<p>
+Use doc∷xxx links for html and change how they behave for latex. Mention in latex that the htmk has tooltip documentation, but C-h o &#x2026;.!
+</p>
+
+<p>
+<a href="https://tech.tonyballantyne.com/emacs/2-functions-in-elisp/">https://tech.tonyballantyne.com/emacs/2-functions-in-elisp/</a>
+</p>
+</div>
+</div>
+<div id="outline-container-structure-and-interpretation-of-computer-programs-2e-top-add-to-lisp-cheatsheet" class="outline-2">
+<h2 id="structure-and-interpretation-of-computer-programs-2e-top-add-to-lisp-cheatsheet"><span class="section-number-2">14.</span> <a href="#structure-and-interpretation-of-computer-programs-2e-top-add-to-lisp-cheatsheet">Structure and Interpretation of Computer Programs, 2e: Top add to lisp cheatsheet</a></h2>
+<div class="outline-text-2" id="text-structure-and-interpretation-of-computer-programs-2e-top-add-to-lisp-cheatsheet">
+<p>
+<a href="http://sarabander.github.io/sicp/html/">http://sarabander.github.io/sicp/html/</a>
+</p>
+</div>
+</div>
+<div id="outline-container-debugging-elisp" class="outline-2">
+<h2 id="debugging-elisp"><span class="section-number-2">15.</span> <a href="#debugging-elisp">Debugging Elisp</a></h2>
+<div class="outline-text-2" id="text-debugging-elisp">
+<p>
+"From Debugging Elisp Part 1: Earn your independence:
+Go to where the function is defined.
+Press C-u C-M-x. Edebug breakpoint for function.
+Invoke function in question.
+n/c will get you around.
+q when done."
+<a href="https://xenodium.com/learning-emacs-lisp/#:~:text=From%20Debugging%20Elisp,q%20when%20done">https://xenodium.com/learning-emacs-lisp/#:~:text=From%20Debugging%20Elisp,q%20when%20done</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-clhs-function-write-to-string-prin1-to-string" class="outline-2">
+<h2 id="clhs-function-write-to-string-prin1-to-string"><span class="section-number-2">16.</span> <a href="#clhs-function-write-to-string-prin1-to-string">CLHS: Function WRITE-TO-STRING, PRIN1-TO-STRING&#x2026;</a></h2>
+<div class="outline-text-2" id="text-clhs-function-write-to-string-prin1-to-string">
+<p>
+<a href="http://www.lispworks.com/documentation/lw50/CLHS/Body/f_wr_to_.htm#write-to-string">http://www.lispworks.com/documentation/lw50/CLHS/Body/f_wr_to_.htm#write-to-string</a>
+</p>
+</div>
+</div>
+<div id="outline-container-sequence-functions" class="outline-2">
+<h2 id="sequence-functions"><span class="section-number-2">17.</span> <a href="#sequence-functions">Sequence Functions</a></h2>
+<div class="outline-text-2" id="text-sequence-functions">
+<p>
+<a href="https://www.gnu.org/software/emacs/manual/html_mono/cl.html#Sequence-Functions">https://www.gnu.org/software/emacs/manual/html_mono/cl.html#Sequence-Functions</a>
+</p>
+</div>
+</div>
+<div id="outline-container-alhassyob-latex-as-png-file-paths-containing-cause-export-errors-2" class="outline-2">
+<h2 id="alhassyob-latex-as-png-file-paths-containing-cause-export-errors-2"><span class="section-number-2">18.</span> <a href="#alhassyob-latex-as-png-file-paths-containing-cause-export-errors-2">[alhassy/ob-latex-as-png] File paths containing "." cause export errors (#2)</a></h2>
+<div class="outline-text-2" id="text-alhassyob-latex-as-png-file-paths-containing-cause-export-errors-2">
+<p>
+Inbox
+</p>
+
+<p>
+Joe Osborn &lt;notifications@github.com&gt;
+Thu, Jul 30, 2020, 1:29 PM
+to alhassy/ob-latex-as-png, Subscribed
+</p>
+
+<p>
+I'm not sure that string splitting on "." here is the right move to get the file path without extension: <a href="https://github.com/alhassy/ob-latex-as-png/blob/d21d436814e9605cf2a942b709f957695298dc70/ob-latex-as-png.el#L107">https://github.com/alhassy/ob-latex-as-png/blob/d21d436814e9605cf2a942b709f957695298dc70/ob-latex-as-png.el#L107</a>
+</p>
+
+<p>
+If I use a path like ../img/whatever.png the filename is just the empty string, which is not ideal. Locally I replaced this binding with (file-name-sans-extension file.ext) and it seems to work much better.
+</p>
+</div>
+</div>
+<div id="outline-container-lfel" class="outline-2">
+<h2 id="lfel"><span class="section-number-2">19.</span> <a href="#lfel">lf.el</a></h2>
+<div class="outline-text-2" id="text-lfel">
+</div>
+<div id="outline-container-httpswwwcreativeapplicationsnettutorialsintroduction-to-clojure-part-1introduction-to-clojure-modern-dialect-of-lisp-part-1-creativeapplicationsnet" class="outline-3">
+<h3 id="httpswwwcreativeapplicationsnettutorialsintroduction-to-clojure-part-1introduction-to-clojure-modern-dialect-of-lisp-part-1-creativeapplicationsnet"><span class="section-number-3">19.1.</span> <a href="https://www.creativeapplications.net/tutorials/introduction-to-clojure-part-1/">Introduction to Clojure – Modern dialect of Lisp (Part 1) – CreativeApplications.Net</a></h3>
+<div class="outline-text-3" id="text-httpswwwcreativeapplicationsnettutorialsintroduction-to-clojure-part-1introduction-to-clojure-modern-dialect-of-lisp-part-1-creativeapplicationsnet">
+</div>
+</div>
+<div id="outline-container-httpswannodettegithubio20150112lazy-contractslazy-contracts-in-30-lines" class="outline-3">
+<h3 id="httpswannodettegithubio20150112lazy-contractslazy-contracts-in-30-lines"><span class="section-number-3">19.2.</span> <a href="http://swannodette.github.io/2015/01/12/lazy-contracts/">Lazy Contracts in 30 lines</a></h3>
+<div class="outline-text-3" id="text-httpswannodettegithubio20150112lazy-contractslazy-contracts-in-30-lines">
+</div>
+</div>
+<div id="outline-container-httpswannodettegithubio20150110faster-validation-through-immutabilityfaster-validation-through-immutability" class="outline-3">
+<h3 id="httpswannodettegithubio20150110faster-validation-through-immutabilityfaster-validation-through-immutability"><span class="section-number-3">19.3.</span> <a href="http://swannodette.github.io/2015/01/10/faster-validation-through-immutability/">Faster Validation Through Immutability</a></h3>
+<div class="outline-text-3" id="text-httpswannodettegithubio20150110faster-validation-through-immutabilityfaster-validation-through-immutability">
+</div>
+</div>
+<div id="outline-container-httpsdzonecomarticlesrefactoring-and-type-errors-in-clojurerefactoring-and-type-errors-in-clojure-dzone-java" class="outline-3">
+<h3 id="httpsdzonecomarticlesrefactoring-and-type-errors-in-clojurerefactoring-and-type-errors-in-clojure-dzone-java"><span class="section-number-3">19.4.</span> <a href="https://dzone.com/articles/refactoring-and-type-errors-in-clojure">Refactoring and Type Errors in Clojure - DZone Java</a></h3>
+<div class="outline-text-3" id="text-httpsdzonecomarticlesrefactoring-and-type-errors-in-clojurerefactoring-and-type-errors-in-clojure-dzone-java">
+</div>
+</div>
+<div id="outline-container-httpspragprogcomtitlesroclojuregetting-clojuregetting-clojure-build-your-functional-skills-one-idea-at-a-time-by-russ-olsen" class="outline-3">
+<h3 id="httpspragprogcomtitlesroclojuregetting-clojuregetting-clojure-build-your-functional-skills-one-idea-at-a-time-by-russ-olsen"><span class="section-number-3">19.5.</span> <a href="https://pragprog.com/titles/roclojure/getting-clojure/">Getting Clojure: Build Your Functional Skills One Idea at a Time by Russ Olsen</a></h3>
+<div class="outline-text-3" id="text-httpspragprogcomtitlesroclojuregetting-clojuregetting-clojure-build-your-functional-skills-one-idea-at-a-time-by-russ-olsen">
+</div>
+</div>
+<div id="outline-container-httpsblogfrankelchlearning-clojure4learning-clojure-dependent-types-and-contract-based-programming" class="outline-3">
+<h3 id="httpsblogfrankelchlearning-clojure4learning-clojure-dependent-types-and-contract-based-programming"><span class="section-number-3">19.6.</span> <a href="https://blog.frankel.ch/learning-clojure/4/">Learning Clojure: dependent types and contract-based programming</a></h3>
+<div class="outline-text-3" id="text-httpsblogfrankelchlearning-clojure4learning-clojure-dependent-types-and-contract-based-programming">
+</div>
+</div>
+<div id="outline-container-httpsostashdevposts2021-07-01-pre-post-conditionsutmsourcefeedburnerutmmediumfeedutmcampaignfeed3aclojure28planetclojure29pre-and-post-conditions-in-clojure-ostashdev" class="outline-3">
+<h3 id="httpsostashdevposts2021-07-01-pre-post-conditionsutmsourcefeedburnerutmmediumfeedutmcampaignfeed3aclojure28planetclojure29pre-and-post-conditions-in-clojure-ostashdev"><span class="section-number-3">19.7.</span> <a href="https://ostash.dev/posts/2021-07-01-pre-post-conditions/?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+clojure+%28Planet+Clojure%29">Pre and post conditions in Clojure - Ostash.Dev</a></h3>
+<div class="outline-text-3" id="text-httpsostashdevposts2021-07-01-pre-post-conditionsutmsourcefeedburnerutmmediumfeedutmcampaignfeed3aclojure28planetclojure29pre-and-post-conditions-in-clojure-ostashdev">
+</div>
+</div>
+<div id="outline-container-httpswwwyoutubecomwatchvw6xkxiyxbboabchannelonthecodeagainclojure-pre-and-post-conditions-youtube" class="outline-3">
+<h3 id="httpswwwyoutubecomwatchvw6xkxiyxbboabchannelonthecodeagainclojure-pre-and-post-conditions-youtube"><span class="section-number-3">19.8.</span> <a href="https://www.youtube.com/watch?v=w6xkxiYXBBo&amp;ab_channel=onthecodeagain">Clojure: Pre and Post conditions - YouTube</a></h3>
+<div class="outline-text-3" id="text-httpswwwyoutubecomwatchvw6xkxiyxbboabchannelonthecodeagainclojure-pre-and-post-conditions-youtube">
+</div>
+</div>
+<div id="outline-container-httpsclojureorgguidesspecclojure-spec-guide" class="outline-3">
+<h3 id="httpsclojureorgguidesspecclojure-spec-guide"><span class="section-number-3">19.9.</span> <a href="https://clojure.org/guides/spec">Clojure - spec Guide</a></h3>
+<div class="outline-text-3" id="text-httpsclojureorgguidesspecclojure-spec-guide">
+</div>
+</div>
+<div id="outline-container-httpspurelyfunctionaltvmini-guideclojure-spec-vs-schema5-differences-between-clojurespec-and-schema-purelyfunctionaltv" class="outline-3">
+<h3 id="httpspurelyfunctionaltvmini-guideclojure-spec-vs-schema5-differences-between-clojurespec-and-schema-purelyfunctionaltv"><span class="section-number-3">19.10.</span> <a href="https://purelyfunctional.tv/mini-guide/clojure-spec-vs-schema/">5 Differences between clojure.spec and Schema - PurelyFunctional.tv</a></h3>
+<div class="outline-text-3" id="text-httpspurelyfunctionaltvmini-guideclojure-spec-vs-schema5-differences-between-clojurespec-and-schema-purelyfunctionaltv">
+</div>
+</div>
+<div id="outline-container-httpsdocsracket-langorgguidecontracts-general-functionshtml73-contracts-on-functions-in-general" class="outline-3">
+<h3 id="httpsdocsracket-langorgguidecontracts-general-functionshtml73-contracts-on-functions-in-general"><span class="section-number-3">19.11.</span> <a href="https://docs.racket-lang.org/guide/contracts-general-functions.html">7.3 Contracts on Functions in General</a></h3>
+<div class="outline-text-3" id="text-httpsdocsracket-langorgguidecontracts-general-functionshtml73-contracts-on-functions-in-general">
+</div>
+</div>
+</div>
+<div id="outline-container-org-exp-blocksel-pre-process-blocks-when-exporting-org-files" class="outline-2">
+<h2 id="org-exp-blocksel-pre-process-blocks-when-exporting-org-files"><span class="section-number-2">20.</span> <a href="#org-exp-blocksel-pre-process-blocks-when-exporting-org-files">org-exp-blocks.el – pre-process blocks when exporting org files</a></h2>
+<div class="outline-text-2" id="text-org-exp-blocksel-pre-process-blocks-when-exporting-org-files">
+<p>
+<a href="https://orgmode.org/worg/org-contrib/org-exp-blocks.html">https://orgmode.org/worg/org-contrib/org-exp-blocks.html</a>
+</p>
+
+<p>
+Org-export-blocks allows for the pre-processing or blocks in org-mode files to create images, or specially formatted HTML or LaTeX output. Written by Eric Schulte.
+Org-exp-blocks is now part of the Org core as ob-exp.el.
+</p>
+
+<p>
+<a href="https://git.savannah.gnu.org/cgit/emacs/org-mode.git/tree/lisp/ob-exp.el">https://git.savannah.gnu.org/cgit/emacs/org-mode.git/tree/lisp/ob-exp.el</a>
+</p>
+</div>
+</div>
+<div id="outline-container-probabilitycheatsheet" class="outline-2">
+<h2 id="probabilitycheatsheet"><span class="section-number-2">21.</span> <a href="#probabilitycheatsheet">ProbabilityCheatSheet</a></h2>
+<div class="outline-text-2" id="text-probabilitycheatsheet">
+<p>
+Not made with OrgCheatSheet, but in the same spirit.
+<a href="https://static1.squarespace.com/static/54bf3241e4b0f0d81bf7ff36/t/55e9494fe4b011aed10e48e5/1441352015658/probability_cheatsheet.pdf">https://static1.squarespace.com/static/54bf3241e4b0f0d81bf7ff36/t/55e9494fe4b011aed10e48e5/1441352015658/probability_cheatsheet.pdf</a>
+</p>
+</div>
+</div>
+<div id="outline-container-defacto-print-method" class="outline-2">
+<h2 id="defacto-print-method"><span class="section-number-2">22.</span> <a href="#defacto-print-method">defacto print method</a></h2>
+<div class="outline-text-2" id="text-defacto-print-method">
+</div>
+</div>
+<div id="outline-container-quick-adds-to-cheatsheet" class="outline-2">
+<h2 id="quick-adds-to-cheatsheet"><span class="section-number-2">23.</span> <a href="#quick-adds-to-cheatsheet">quick adds to cheatsheet</a></h2>
+<div class="outline-text-2" id="text-quick-adds-to-cheatsheet">
+</div>
+</div>
+<div id="outline-container-cheatsheet" class="outline-2">
+<h2 id="cheatsheet"><span class="section-number-2">24.</span> <a href="#cheatsheet">Cheatsheet</a></h2>
+<div class="outline-text-2" id="text-cheatsheet">
+<p>
+look at the ideas and REAdME presented here: <a href="https://github.com/dangom/org-thesis">https://github.com/dangom/org-thesis</a>
+adapted similar where possible ^_^
+</p>
+</div>
+</div>
+<div id="outline-container-threading-macro" class="outline-2">
+<h2 id="threading-macro"><span class="section-number-2">25.</span> <a href="#threading-macro">threading macro</a></h2>
+<div class="outline-text-2" id="text-threading-macro">
+<p>
+Rewrite `(x h g f)` to `(f (g (h x)))` as as seen in the threading library <a href="https://pkgs.racket-lang.org/package/threading">https://pkgs.racket-lang.org/package/threading</a>, this is also much used in clojure using `-&gt;`.
+</p>
+
+<p>
+Fun exercise to include in PDF.
+</p>
+
+<p>
+Create your own control structure. (e.g. <a href="https://pkgs.racket-lang.org/package/spipe">https://pkgs.racket-lang.org/package/spipe</a>)
+</p>
+</div>
+</div>
+<div id="outline-container-edebug-lispcheatsheet" class="outline-2">
+<h2 id="edebug-lispcheatsheet"><span class="section-number-2">26.</span> <a href="#edebug-lispcheatsheet">edebug :lisp<sub>cheat</sub>_<sub>sheet</sub>: ♥‿♥ !!</a></h2>
+<div class="outline-text-2" id="text-edebug-lispcheatsheet">
+<p>
+   emacs will show you what's going on, and you will be able to find out exactly
+which line is causing this error.
+</p>
+
+<p>
+<a href="https://endlessparentheses.com/debugging-emacs-lisp-part-1-earn-your-independence.html">https://endlessparentheses.com/debugging-emacs-lisp-part-1-earn-your-independence.html</a>
+</p>
+
+<p>
+Another useful command to know is M-x toggle-debug-on-error.
+</p>
+
+<p>
+If you invoke that command, whenever emacs reaches an error it will give you the
+backtrace of the error. It's not as powerful as edebug, but it can be very
+informative sometimes.
+</p>
+
+<p>
+Possibly better is to use the (debug) function!!! No more printfs!
+</p>
+
+<p>
+<a href="https://endlessparentheses.com/debugging-elisp-part-2-advanced-topics.html">https://endlessparentheses.com/debugging-elisp-part-2-advanced-topics.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-agda" class="outline-2">
+<h2 id="agda"><span class="section-number-2">27.</span> <a href="#agda">agda</a></h2>
+<div class="outline-text-2" id="text-agda">
+<p>
+<a href="https://www.reddit.com/r/agda/comments/bwhctx/writing_a_simple_endless_echoing_prompt/?utm_medium=android_app&amp;utm_source=share">https://www.reddit.com/r/agda/comments/bwhctx/writing_a_simple_endless_echoing_prompt/?utm_medium=android_app&amp;utm_source=share</a>
+</p>
+</div>
+</div>
+<div id="outline-container-mention-this-alongside-cond-lisp-cheat-sheet-something-to-be-aware-of" class="outline-2">
+<h2 id="mention-this-alongside-cond-lisp-cheat-sheet-something-to-be-aware-of"><span class="section-number-2">28.</span> <a href="#mention-this-alongside-cond-lisp-cheat-sheet-something-to-be-aware-of">Mention this alongside cond, lisp cheat sheet, something to be aware of.</a></h2>
+<div class="outline-text-2" id="text-mention-this-alongside-cond-lisp-cheat-sheet-something-to-be-aware-of">
+<p>
+<a href="https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#more-patterns-in-more-places">https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#more-patterns-in-more-places</a>
+</p>
+</div>
+</div>
+<div id="outline-container-lemp-home-page-enhanced-c" class="outline-2">
+<h2 id="lemp-home-page-enhanced-c"><span class="section-number-2">29.</span> <a href="#lemp-home-page-enhanced-c">LeMP Home Page · Enhanced C#</a></h2>
+<div class="outline-text-2" id="text-lemp-home-page-enhanced-c">
+<p>
+<a href="http://ecsharp.net/lemp/">http://ecsharp.net/lemp/</a>
+</p>
+</div>
+</div>
+<div id="outline-container-queensland-fp-lab-functional-programming-cheat-sheet" class="outline-2">
+<h2 id="queensland-fp-lab-functional-programming-cheat-sheet"><span class="section-number-2">30.</span> <a href="#queensland-fp-lab-functional-programming-cheat-sheet">Queensland FP Lab - Functional Programming Cheat Sheet</a></h2>
+<div class="outline-text-2" id="text-queensland-fp-lab-functional-programming-cheat-sheet">
+<p>
+<a href="https://qfpl.io/posts/fp-cheat-sheet/">https://qfpl.io/posts/fp-cheat-sheet/</a>
+</p>
+</div>
+</div>
+<div id="outline-container-surjectivity-and-injectiity" class="outline-2">
+<h2 id="surjectivity-and-injectiity"><span class="section-number-2">31.</span> <a href="#surjectivity-and-injectiity">Surjectivity and injectiity</a></h2>
+<div class="outline-text-2" id="text-surjectivity-and-injectiity">
+<p>
+There are a number of ways to define surjectivity of a function: Pointwise
+with ∀-∃ or by counting where points are set, or pointfree via cancellation or
+via a pre-inverse.  Indeed, “id = f ∘ g” read left-to-right says
+“every element y of the target is obtainable from f, as witnessed by g(y)”;
+whence “f is surjective”!
+</p>
+
+<ul class="org-ul">
+<li>f surjective ≈ “f onto points”
+<ul class="org-ul">
+<li>Every point y is of the form f(x)</li>
+</ul></li>
+<li>f injective ≈ “f onto equations”
+<ul class="org-ul">
+<li>Every equality y₁ = y₂ is really the f-image of the equality x₁ = x₂
+provided yᵢ = f(xᵢ).</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-elisp-cheat-sheet-to-add" class="outline-2">
+<h2 id="elisp-cheat-sheet-to-add"><span class="section-number-2">32.</span> <a href="#elisp-cheat-sheet-to-add">elisp cheat sheet, to add</a></h2>
+<div class="outline-text-2" id="text-elisp-cheat-sheet-to-add">
+<p>
+<a href="https://www.emacswiki.org/emacs/ElispCookbook">https://www.emacswiki.org/emacs/ElispCookbook</a>
+</p>
+
+<p>
+&#x2013;
+</p>
+
+<p>
+The Emacs Lisp Reference Manual (also known as the elisp or lispref) manual, is
+documentation about the language used to extend Emacs, EmacsLisp.
+</p>
+
+<p>
+GnuEmacs has an <a href="https://www.emacswiki.org/emacs/EmacsManual">EmacsManual</a> ,
+an <a href="https://www.emacswiki.org/emacs/EmacsLispIntro">EmacsLispIntro</a> , and an
+<a href="https://www.emacswiki.org/emacs/EmacsLispReference">EmacsLispReference</a>
+. Starting with Emacs 22, all three manuals are included.
+</p>
+
+<p>
+&#x2014;
+</p>
+
+<p>
+Elisp meta-turorial
+</p>
+<ul class="org-ul">
+<li><a href="https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3">https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3</a></li>
+</ul>
+
+<p>
+&#x2014;
+</p>
+
+
+<ul class="org-ul">
+<li>I reference the <a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/index.html">manual</a> throughout the guide by HTML link, but you can read it inside your Emacs itself. Run: C-h i m Elisp RET</li>
+
+<li><p>
+Add links in strategic positions:
+</p>
+<ul class="org-ul">
+<li><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Dynamic-Binding.html#Dynamic-Binding">https://www.gnu.org/software/emacs/manual/html_node/elisp/Dynamic-Binding.html#Dynamic-Binding</a></li>
+<li><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Lexical-Binding.html#Lexical-Binding">https://www.gnu.org/software/emacs/manual/html_node/elisp/Lexical-Binding.html#Lexical-Binding</a></li>
+</ul>
+<ul class="org-ul">
+<li><a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Macros.html#Macros">https://www.gnu.org/software/emacs/manual/html_node/elisp/Macros.html#Macros</a></li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li><a href="http://ergoemacs.org/emacs/elisp.html">http://ergoemacs.org/emacs/elisp.html</a></li>
+
+<li><a href="https://www.gnu.org/software/emacs/manual/html_node/eintr/index.html">https://www.gnu.org/software/emacs/manual/html_node/eintr/index.html</a>
+<ul class="org-ul">
+<li><p>
+This' different than the manual;
+“This is an Introduction to Programming in Emacs Lisp, for people who are
+not programmers.”
+</p>
+
+<p>
+Learn Lisp the easy way: Read the Introduction to Programming in Emacs Lisp,
+written by Robert J. Chassell. Highly recommended for those without prior
+Lisp programming experience.
+</p></li>
+</ul></li>
+</ul>
+
+<p>
+Until Emacs 21, the EmacsLisp introduction was distributed separately. The
+introduction comes in Texinfo format, which means that it can be converted to a
+variety of formats: info, html, and others. So, for example, in Debian, apt-get
+install emacs-lisp-intro would do the trick.
+</p>
+
+<p>
+The way to read the intro is to type ‘C-h i’ to start Info, and then `m Emacs
+Lisp Intro RET' or evaluate (info "(eintr) Top").
+</p>
+
+
+<p>
+<a href="https://github.com/RenWenshan/emacs-lisp-intro-solutions">Solutions to the
+exercises in the `An Introduction to Programming in Emacs Lisp' </a>
+</p>
+
+
+<p>
+&#x2014; buffer locals &#x2014;
+</p>
+
+<p>
+If you want to set your own buffer-local variable, use this:
+</p>
+
+<p>
+(defvar your-variable-name nil "Your documentation here.")  Then later on in
+your code that will run in a given buffer, use:
+</p>
+
+<p>
+(set (make-local-variable 'your-variable-name) &lt;the-value&gt;) This is very handy
+in many scenarios when writing functionality. Note that buffer local variables
+are reset when you revert the buffer or change modes.
+</p>
+
+<p>
+<a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Buffer_002dLocal-Variables.html#Buffer_002dLocal-Variables">https://www.gnu.org/software/emacs/manual/html_node/elisp/Buffer_002dLocal-Variables.html#Buffer_002dLocal-Variables</a>
+</p>
+
+<p>
+-&#x2014; Save excursion Often you want to jump around the buffer to either query or
+manipulate something, and then go back to where you were originally. To do this,
+use:
+</p>
+
+<p>
+(save-excursion &#x2026;)  For example:
+</p>
+
+<p>
+(save-excursion (beginning-of-line) (looking-at "X")) Will return whether the
+current line starts with X.
+</p>
+
+<p>
+Similarly there is save-window-excursion.
+</p>
+
+<p>
+&#x2014;
+</p>
+
+<p>
+Defining interactive functions To be able to run a function of your own from a
+keybinding, it needs to be interactive. You need to add (interactive) to your
+defun
+</p>
+
+<p>
+&#x2014; Defining your own major mode You can generally use define-derived-mode. See
+the manual on this.
+</p>
+
+<p>
+Example:
+</p>
+
+<p>
+(define-derived-mode hypertext-mode text-mode "Hypertext" "Major mode for
+   hypertext.  \\{hypertext-mode-map}" (setq case-fold-search nil))
+</p>
+
+<p>
+(define-key hypertext-mode-map [down-mouse-3] 'do-hyper-link) Defining a minor
+   mode Minor modes act as enhancements to existing modes. See the manual about
+   define-minor-mode.
+</p>
+
+<p>
+A dummy example:
+</p>
+
+<p>
+(defvar elisp-guide-mode-map (make-sparse-keymap)) (define-minor-mode
+elisp-guide-mode "A simple minor mode example."  :lighter " ELGuide" :keymap
+elisp-guide-mode-map (if (bound-and-true-p elisp-guide-mode) (message "Elisp
+guide activated!")  (message "Bye!")))  (define-key elisp-guide-mode-map (kbd
+"C-c C-a") 'elisp-guide-go) (defun elisp-guide-go () (interactive) (message
+"Go!"))
+</p>
+
+<p>
+&#x2014;
+</p>
+</div>
+<div id="outline-container-elisp-emacs-learning-sources" class="outline-3">
+<h3 id="elisp-emacs-learning-sources"><span class="section-number-3">32.1.</span> <a href="#elisp-emacs-learning-sources">elisp, emacs learning sources</a></h3>
+<div class="outline-text-3" id="text-elisp-emacs-learning-sources">
+<p>
+Read any one of these:
+</p>
+<ul class="org-ul">
+<li><a href="https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3">https://www.emacswiki.org/emacs/LearnEmacsLisp#toc3</a></li>
+<li>All online (•̀ᴗ•́)و</li>
+</ul>
+
+<p>
+<a href="http://nic.ferrier.me.uk/blog/2012_07/tips-and-tricks-for-emacslisp">http://nic.ferrier.me.uk/blog/2012_07/tips-and-tricks-for-emacslisp</a>
+</p>
+
+<p>
+<a href="https://cjohansen.no/an-introduction-to-elisp/">https://cjohansen.no/an-introduction-to-elisp/</a>
+</p>
+
+<ul class="org-ul">
+<li>Mike Zamansky's <a href="https://cestlaz.github.io/stories/emacs/">general Emacs video tutorials</a>.</li>
+
+<li>Rainer König's <a href="https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE">Org-mode video tutorials</a> &#x2014;roughly 7-minute videos on discovering org-mode.</li>
+
+<li><a href="https://www.iro.umontreal.ca/~monnier/hopl-4-emacs-lisp.pdf">https://www.iro.umontreal.ca/~monnier/hopl-4-emacs-lisp.pdf</a>
+Evolution of Emacs Lisp</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-add-to-elisp-cheat-sheet" class="outline-2">
+<h2 id="add-to-elisp-cheat-sheet"><span class="section-number-2">33.</span> <a href="#add-to-elisp-cheat-sheet">add to elisp cheat sheet</a></h2>
+<div class="outline-text-2" id="text-add-to-elisp-cheat-sheet">
+<p>
+The interactive spec says how to read arguments interactively. Type C-h f
+interactive RET for more details
+</p>
+</div>
+</div>
+<hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>

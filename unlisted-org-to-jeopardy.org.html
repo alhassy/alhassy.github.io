@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>unlisted-org-to-jeopardy.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #0184bc; font-weight: bold;">* Example exporting html :: Jeopardy</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">unlisted-org-to-jeopardy</span>
+<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2026-10-15&gt;</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">A single-page Jeopardy game</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://alhassy.com/unlisted-notes-table-of-contents">&#8593; All unlisted notes</a></span>
+ 
+This is a 5x5 jeopardy game as a single page web-app.
+
+<span style="color: #a0a1a7;">#+begin_export html
+</span>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Musa's Awesome Jeopardy Game&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            margin: 20px 0;
+            color: #333;
+        }
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px 0;
+        }
+        .quiz-grid div {
+            padding: 10px;
+            background: #007BFF;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .quiz-grid div:hover {
+            background: #0056b3;
+        }
+        .quiz-grid .header {
+            background: #0056b3;
+            font-weight: bold;
+            cursor: default;
+        }
+        .quiz-grid .header:hover {
+            background: #0056b3;
+        }
+        .quiz-grid .disabled {
+            background: grey;
+            cursor: not-allowed;
+        }
+        .quiz-container {
+            display: none;
+            width: 90%;
+            max-width: 600px;
+            background: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .answer {
+            font-size: 1em;
+            margin-top: 10px;
+            color: #555;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Musa's Awesome Jeopardy Game&lt;/h1&gt;
+
+    &lt;div class="quiz-grid" id="quiz-grid"&gt;
+        &lt;!-- Grid will be populated dynamically --&gt;
+    &lt;/div&gt;
+
+    &lt;button id="reset-btn" style="display: none;"&gt;Reset&lt;/button&gt;
+
+    &lt;div class="quiz-container" id="quiz-container"&gt;
+        &lt;p class="question" id="question"&gt;Loading...&lt;/p&gt;
+        &lt;p class="answer" id="answer" style="display: none;"&gt;Answer: &lt;/p&gt;
+        &lt;div class="button-group"&gt;
+            &lt;button id="show-answer-btn" style="display: none;"&gt;Show Answer&lt;/button&gt;
+            &lt;button id="main-screen-btn" style="display: none;"&gt;Main Screen&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;footer&gt;
+        Thank you for playing &lt;br&gt; Made by Musa
+    &lt;/footer&gt;
+
+    &lt;script&gt;
+        const categories = [
+            {
+                "category": "Geography",
+                "questions": [
+                    { "question": "What is the capital of France?", "answer": "Paris", "difficulty": 100 },
+                    { "question": "Which continent is the Sahara Desert located on?", "answer": "Africa", "difficulty": 200 },
+                    { "question": "What is the longest river in the world?", "answer": "The Nile", "difficulty": 300 },
+                    { "question": "Which country has the most natural lakes?", "answer": "Canada", "difficulty": 400 },
+                    { "question": "What is the smallest country in the world?", "answer": "Vatican City", "difficulty": 500 }
+                ]
+            },
+            {
+                "category": "Technology",
+                "questions": [
+                    { "question": "What does HTML stand for?", "answer": "HyperText Markup Language", "difficulty": 100 },
+                    { "question": "What is the most popular programming language in 2023?", "answer": "JavaScript", "difficulty": 200 },
+                    { "question": "What is the name of the first computer virus?", "answer": "Creeper", "difficulty": 300 },
+                    { "question": "Which company developed the Python programming language?", "answer": "CWI", "difficulty": 400 },
+                    { "question": "What does RAM stand for?", "answer": "Random Access Memory", "difficulty": 500 }
+                ]
+            },
+            {
+                "category": "History",
+                "questions": [
+                    { "question": "Who was the first President of the United States?", "answer": "George Washington", "difficulty": 100 },
+                    { "question": "In what year did World War II end?", "answer": "1945", "difficulty": 200 },
+                    { "question": "Who was known as the Iron Lady?", "answer": "Margaret Thatcher", "difficulty": 300 },
+                    { "question": "Which empire was ruled by Genghis Khan?", "answer": "Mongol Empire", "difficulty": 400 },
+                    { "question": "What year did the Berlin Wall fall?", "answer": "1989", "difficulty": 500 }
+                ]
+            },
+            {
+                "category": "Science",
+                "questions": [
+                    { "question": "What planet is known as the Red Planet?", "answer": "Mars", "difficulty": 100 },
+                    { "question": "What is the chemical symbol for water?", "answer": "H2O", "difficulty": 200 },
+                    { "question": "What gas do plants absorb from the atmosphere?", "answer": "Carbon Dioxide", "difficulty": 300 },
+                    { "question": "Who developed the theory of relativity?", "answer": "Albert Einstein", "difficulty": 400 },
+                    { "question": "What is the hardest natural substance on Earth?", "answer": "Diamond", "difficulty": 500 }
+                ]
+            },
+            {
+                "category": "Entertainment",
+                "questions": [
+                    { "question": "Who played Jack in Titanic?", "answer": "Leonardo DiCaprio", "difficulty": 100 },
+                    { "question": "Which movie won the first-ever Academy Award for Best Picture?", "answer": "Wings", "difficulty": 200 },
+                    { "question": "What is the longest-running Broadway show?", "answer": "The Phantom of the Opera", "difficulty": 300 },
+                    { "question": "Who is known as the King of Pop?", "answer": "Michael Jackson", "difficulty": 400 },
+                    { "question": "What year was the first Harry Potter movie released?", "answer": "2001", "difficulty": 500 }
+                ]
+            }
+        ];
+
+        const gridElement = document.getElementById('quiz-grid');
+        const quizContainer = document.getElementById('quiz-container');
+        const questionElement = document.getElementById('question');
+        const answerElement = document.getElementById('answer');
+        const showAnswerButton = document.getElementById('show-answer-btn');
+        const mainScreenButton = document.getElementById('main-screen-btn');
+        const resetButton = document.getElementById('reset-btn');
+
+        function loadGrid() {
+            categories.forEach(category =&gt; {
+                const header = document.createElement('div');
+                header.textContent = category.category;
+                header.className = 'header';
+                gridElement.appendChild(header);
+
+                category.questions.forEach(question =&gt; {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.textContent = question.difficulty;
+                    questionDiv.onclick = () =&gt; {
+                        if (!questionDiv.classList.contains('disabled')) showQuestion(question, questionDiv);
+                    };
+                    gridElement.appendChild(questionDiv);
+                });
+            });
+        }
+
+        function showQuestion(question, questionDiv) {
+            gridElement.style.display = 'none';
+            quizContainer.style.display = 'block';
+            questionElement.textContent = question.question;
+            answerElement.textContent = `Answer: ${question.answer}`;
+            answerElement.style.display = 'none';
+            showAnswerButton.style.display = 'block';
+            mainScreenButton.style.display = 'none';                                                     resetButton.style.display = 'none';
+
+            showAnswerButton.onclick = () =&gt; {
+                answerElement.style.display = 'block';
+                showAnswerButton.style.display = 'none';
+                mainScreenButton.style.display = 'block';
+            };
+
+            mainScreenButton.onclick = () =&gt; {
+                quizContainer.style.display = 'none';
+                gridElement.style.display = 'grid';
+                questionDiv.classList.add('disabled');
+                resetButton.style.display = 'block'; // Show reset button on the main screen
+                questionDiv.classList.add('disabled'); // Disable clicked question
+            };
+        }
+
+        resetButton.onclick = () =&gt; {
+            document.querySelectorAll('.quiz-grid div').forEach(div =&gt; div.classList.remove('disabled'));
+        };
+
+        loadGrid();
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<span style="color: #a0a1a7;">#+end_export 
+</span>
+</pre>
+  </body>
+</html>

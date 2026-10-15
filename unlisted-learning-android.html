@@ -1,0 +1,1803 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-10-15 Thu 18:26 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Learning Android: a quotes app, step by step</title>
+<meta name="description" content="From Hello World to a Google-Keep-like list backed by a user's file." />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style>
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+          <script type="text/javascript">
+              if (typeof jQuery == 'undefined') {
+                  document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+              }
+          </script>
+
+           <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+            <script>
+                   $(document).ready(function() {
+                       $('.tooltip').tooltipster({
+                           theme: 'tooltipster-punk',
+                           contentAsHTML: true,
+                           animation: 'grow',
+                           delay: [100,500],
+                           // trigger: 'click'
+                           trigger: 'custom',
+                           triggerOpen: {
+                               mouseenter: true
+                           },
+                           triggerClose: {
+                               originClick: true,
+                               scroll: true
+                           }
+           });
+                   });
+               </script>
+
+          <style>
+             abbr {color: red;}
+
+             .tooltip { border-bottom: 1px dotted #000;
+                        color:red;
+                        text-decoration: none;}
+          </style>
+          
+<meta name="robots" content="noindex">
+</head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">Learning Android: a quotes app, step by step</h1></center><center><p style="background:#fff3cd;border:1px dashed #b58900;padding:0.5em;max-width:40em;">🚧 <b>Draft</b> &mdash;unlisted while I think it over; please don't share it just yet.</p></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/unlisted-learning-android.org.html"><img src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/alhassy.github.io/commits/master/draft/todo.org"><img src="https://img.shields.io/badge/-History-informational?logo=github"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#android-development">1. Android Development</a>
+<ul>
+<li><a href="#hello-world-app">1.1. Hello World App</a></li>
+</ul>
+</li>
+<li><a href="#android-app-learning">2. Android App Learning</a>
+<ul>
+<li><a href="#1-create-your-first-android-app-hello-world-install-the-apk-on-your-phone">2.1. ⟨1⟩ Create Your First Android App: “Hello World” &amp; install the APK on your phone</a></li>
+<li><a href="#2-following-on-1-lets-make-a-simple-screaming-toast-popup-app">2.2. ⟨2⟩ Following on ⟨1⟩, let's make a simple SCREAMING TOAST POPUP app</a></li>
+<li><a href="#3-now-lets-make-a-random-quote-pop-up">2.3. ⟨3⟩ Now, let's make a random quote pop-up</a></li>
+<li><a href="#4-read-a-quotes-file-from-the-users-phone-and-produce-random-quotes-from-that">2.4. ⟨4⟩ Read a quotes file from the user's phone, and produce random quotes from that!</a></li>
+<li><a href="#5-show-a-quotes-file-in-the-app">2.5. ⟨5⟩ Show a quotes file in the app</a></li>
+<li><a href="#6-allow-use-to-edit-the-quotes-in-the-app-and-persist-the-changes">2.6. ⟨6⟩ Allow use to edit the quotes in the app and persist the changes!</a></li>
+<li><a href="#7-how-to-show-a-dynamic-list-of-elements">2.7. ⟨7⟩ How to show a dynamic list of elements?</a></li>
+<li><a href="#8-make-our-dynamic-list-look-a-bit-like-google-keep">2.8. ⟨8⟩ Make our dynamic list look a bit like Google Keep</a></li>
+<li><a href="#8-load-our-dynamic-list-from-a-user-file">2.9. ⟨8⟩ Load our dynamic list from a user file</a></li>
+<li><a href="#9-have-the-users-file-persist-between-sessions-to-avoid-having-to-reelect-it-each-time-the-app-is-opened">2.10. ⟨9⟩ Have the user's file persist between sessions, to avoid having to reelect it each time the app is opened!</a></li>
+<li><a href="#10-tap-row-to-edit-an-item-and-have-changes-persist-whenever-user-exits-the-app">2.11. ⟨10⟩ Tap row to edit an item, and have changes persist whenever user exits the app</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+<a href="https://alhassy.com/unlisted-notes-table-of-contents">↑ All unlisted notes</a>
+</p>
+<div id="outline-container-android-development" class="outline-2">
+<h2 id="android-development"><span class="section-number-2">1.</span> <a href="#android-development">Android Development</a></h2>
+<div class="outline-text-2" id="text-android-development">
+</div>
+<div id="outline-container-hello-world-app" class="outline-3">
+<h3 id="hello-world-app"><span class="section-number-3">1.1.</span> <a href="#hello-world-app">Hello World App</a></h3>
+<div class="outline-text-3" id="text-hello-world-app">
+<ol class="org-ol">
+<li>Just as web-pages are composed of HTML for the look and JavaScript for the
+actions, Android Apps are composed of XML Layouts for the look and Java
+Activities for the actions.</li>
+
+<li>An Android App is a bunch of files in particular folder structure, and
+Android Studio sets all of this up for you when you create a new app.
+<ul class="org-ul">
+<li>Android Studio is essentially IntelliJ but configured for developing
+Android Apps, e.g., by having Android phone emulators on which to run your
+apps against.</li>
+</ul></li>
+
+<li>How to start with a brand new Java app: <a href="https://www.youtube.com/watch?v=jYhOA1UMJYg&amp;ab_channel=CSCORNERSunitaRai">https://www.youtube.com/watch?v=jYhOA1UMJYg&amp;ab_channel=CSCORNERSunitaRai</a>
+
+<ul class="org-ul">
+<li>This will take a few minutes since Gradle needs to download many things,
+then Android Studio needs to index the project.</li>
+</ul></li>
+
+<li>If you go to MainActivity.java and press the Run “▷” command, an APK is built
+and run on an emulator.
+
+<ul class="org-ul">
+<li>An APK file is an Android application package. It's basically a JAR or ZIP
+file for Android applications. Java classes are compiled to a specific
+bytecode that is run on the Android Runtime, not an ordinary JVM.</li>
+
+<li>An emulator recreates the exxct hardware eniornment of an Android device:
+From its CPU and memory through to the sound chips and the video display.
+As such, when you first run an app, it may take <i>several minutes</i> for the
+emulator to start.</li>
+</ul></li>
+
+<li><p>
+When you open activity<sub>main.xml</sub>, on the far right are a few icons and you can
+select between code view or design view (in which you drag-and-drop UI elements).
+</p>
+
+<p>
+Change line 13, to be something like
+</p>
+<div class="org-src-container">
+<pre class="src src-xml"><span style="color: #383a42; background-color: #fafafa;">android:text="Hello World, from me to you!"</span>
+</pre>
+</div>
+<p>
+Then re-run the app and see the change!
+</p></li>
+</ol>
+
+<p>
+All done, joy (｡◕‿◕｡)
+</p>
+
+<p>
+Summary:
+</p>
+<ul class="org-ul">
+<li>An activity specifies what the app <b>does</b> and how it should respond to the user.</li>
+<li>A layout specifies what the app <b>looks like</b>.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-android-app-learning" class="outline-2">
+<h2 id="android-app-learning"><span class="section-number-2">2.</span> <a href="#android-app-learning">Android App Learning</a></h2>
+<div class="outline-text-2" id="text-android-app-learning">
+<p>
+🩵 Make a simple app that reads Org tasks and shows notifications for
+them. That's all. Eventually, in time, have it show the tasks in the app, and
+maybe have it show a calendar. Call it “Org-notifier” since it does one thing:
+It notifies you of upcoming Org events!
+</p>
+<ul class="org-ul">
+<li><b>This should take a few hours to get an MVP, with minimal front-end!</b></li>
+</ul>
+
+<p>
+🤖 Just ask Gemini / Claude Code to do this for me 😁
+<i>I just want it!</i>
+</p>
+
+
+<p>
+[LOW]TODO: Make the details of an org tree foldable: Show a line's
+worth of details then show "&#x2026;", then when users click on the
+details they are all shown and the toast "Click again on the
+first line of these details to hide them." is shown.
+</p>
+
+<p>
+[LOW]TODO: If there is a URL in the details and the user clicks on it,
+then open it in the browser.
+</p>
+
+<p>
+[LOW]TODO: Add a button at the top of the screen "Show all" which
+recursively makes all trees visible, then the button becomes
+"Hide all", which folds up all trees.
+</p>
+</div>
+<div id="outline-container-1-create-your-first-android-app-hello-world-install-the-apk-on-your-phone" class="outline-3">
+<h3 id="1-create-your-first-android-app-hello-world-install-the-apk-on-your-phone"><span class="section-number-3">2.1.</span> <a href="#1-create-your-first-android-app-hello-world-install-the-apk-on-your-phone">⟨1⟩ Create Your First Android App: “Hello World” &amp; install the APK on your phone</a></h3>
+<div class="outline-text-3" id="text-1-create-your-first-android-app-hello-world-install-the-apk-on-your-phone">
+<p>
+Let's walk through the process of creating a “Hello World” Android app
+using Java:
+</p>
+
+<ol class="org-ol">
+<li>Launch Android Studio and select “Start a new Android Studio project.”
+<ul class="org-ul">
+<li>Note: Android Studio is a fork of IntelliJ dedicated to Android App development.</li>
+</ul></li>
+<li>Choose an appropriate template for your project, such as “Empty Views Activity.”</li>
+<li>Configure your project details, including name, package name, and location.
+<ul class="org-ul">
+<li>Select language to be <code>Java</code> and configuration language to be <code>Groovey</code>.</li>
+</ul></li>
+<li>Run your app by clicking the “Run” button in Android Studio. You should see
+“Hello, World” appear in the right side of the IDE, in a phone emulator.</li>
+<li>In the toolbar, select <code>Build → Generate App Bundles or APKs → Generate
+   APKs</code>. When it's done, a toast notification will pop-up with a <code>locate</code> link so
+you can see the generated <code>app-debug.apk</code> file.
+<ol class="org-ol">
+<li>Move that file to Dropbox.</li>
+<li>In your phone, open the file. This'll be done with <code>Package Installer</code>
+so you can install the app.</li>
+</ol></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-2-following-on-1-lets-make-a-simple-screaming-toast-popup-app" class="outline-3">
+<h3 id="2-following-on-1-lets-make-a-simple-screaming-toast-popup-app"><span class="section-number-3">2.2.</span> <a href="#2-following-on-1-lets-make-a-simple-screaming-toast-popup-app">⟨2⟩ Following on ⟨1⟩, let's make a simple SCREAMING TOAST POPUP app</a></h3>
+<div class="outline-text-3" id="text-2-following-on-1-lets-make-a-simple-screaming-toast-popup-app">
+<ol class="org-ol">
+<li>Once your project is set up, you'll be presented with the project's layout
+folder. Open the <code>activity_main.xml</code> file located in <code>res/layout</code>.
+<ul class="org-ul">
+<li>When you open <code>activity_main.xml</code> you get a designer interface, to see the
+actual XML code, double-click anywhere on any element in the <code>Component Tree</code>
+pane and select <code>Go to XML</code>.</li>
+</ul></li>
+<li><p>
+In the XML file, design your app's interface by adding a TextView
+element. Replace the existing code with the following:
+</p>
+<div class="org-src-container">
+<pre class="src src-xml"><span style="color: #383a42; background-color: #fafafa;">&lt;?</span><span style="color: #a626a4;">xml</span> <span style="color: #50a14f; font-style: italic;">version="1.0" encoding="utf-8"</span><span style="color: #383a42; background-color: #fafafa;">?&gt;</span>
+<span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">LinearLayout</span> <span style="color: #e44649;">xmlns</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">android</span>=<span style="color: #50a14f;">"http://schemas.android.com/apk/res/android"</span>
+    <span style="color: #e44649;">xmlns</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">tools</span>=<span style="color: #50a14f;">"http://schemas.android.com/tools"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"match_parent"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"match_parent"</span>
+    <span style="color: #e44649;">tools</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">context</span>=<span style="color: #50a14f;">".MainActivity"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">orientation</span>=<span style="color: #50a14f;">"vertical"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">gravity</span>=<span style="color: #50a14f;">"center"</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+    <span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">EditText</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">id</span>=<span style="color: #50a14f;">"@+id/myTextBox"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"match_parent"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_margin</span>=<span style="color: #50a14f;">"20sp"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">gravity</span>=<span style="color: #50a14f;">"center"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">hint</span>=<span style="color: #50a14f;">"Enter Text Here"</span> <span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+    <span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">Button</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">id</span>=<span style="color: #50a14f;">"@+id/myButton"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">text</span>=<span style="color: #50a14f;">"Click Here"</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+<span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #0184bc;">LinearLayout</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+</pre>
+</div></li>
+<li>Now, navigate to the <code>MainActivity.java</code> file located in <code>app/src/main/java/com/example/yourappname/</code>.</li>
+<li><p>
+Inside the <code>onCreate</code> method set the content view to your layout XML:
+</p>
+<div class="org-src-container">
+<pre class="src src-java"><span style="color: #50a14f; font-style: italic;">/** When user enters text and presses "Click me" button, show a toast with an emoji. */</span>
+<span style="font-weight: bold; text-decoration: underline;">@Override</span>
+<span style="color: #a626a4;">protected</span> <span style="color: #c18401;">void</span> <span style="color: #0184bc;">onCreate</span>(<span style="color: #c18401;">Bundle</span> <span style="color: #8b4513;">savedInstanceState</span>) {
+  <span style="color: #a626a4;">super</span>.onCreate(savedInstanceState);
+  EdgeToEdge.enable(<span style="color: #a626a4;">this</span>);
+  setContentView(R.layout.activity_main);
+
+  <span style="color: #c18401;">EditText</span> <span style="color: #8b4513;">myTextBox</span> = findViewById(R.id.myTextBox);
+  <span style="color: #c18401;">Button</span> <span style="color: #8b4513;">myButton</span> = findViewById(R.id.myButton);
+  myButton.setOnClickListener(__ -&gt; {
+      <span style="color: #c18401;">String</span> <span style="color: #8b4513;">text</span> = myTextBox.getText().toString().toUpperCase() + <span style="color: #50a14f;">" \uD83D\uDE01"</span>;
+      Toast.makeText(MainActivity.<span style="color: #a626a4;">this</span>, text, <span style="font-weight: bold; text-decoration: underline;">Toast</span>.LENGTH_SHORT).show();
+  });
+</pre>
+</div></li>
+<li>Run the app; try it out; then build the APK and try it on your phone 😁</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-3-now-lets-make-a-random-quote-pop-up" class="outline-3">
+<h3 id="3-now-lets-make-a-random-quote-pop-up"><span class="section-number-3">2.3.</span> <a href="#3-now-lets-make-a-random-quote-pop-up">⟨3⟩ Now, let's make a random quote pop-up</a></h3>
+<div class="outline-text-3" id="text-3-now-lets-make-a-random-quote-pop-up">
+<ol class="org-ol">
+<li><p>
+Modify the <code>activity_main.xml</code> to be:
+</p>
+<div class="org-src-container">
+<pre class="src src-xml"><span style="color: #383a42; background-color: #fafafa;">&lt;?</span><span style="color: #a626a4;">xml</span> <span style="color: #50a14f; font-style: italic;">version="1.0" encoding="utf-8"</span><span style="color: #383a42; background-color: #fafafa;">?&gt;</span>
+<span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">LinearLayout</span> <span style="color: #e44649;">xmlns</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">android</span>=<span style="color: #50a14f;">"http://schemas.android.com/apk/res/android"</span>
+    <span style="color: #e44649;">xmlns</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">tools</span>=<span style="color: #50a14f;">"http://schemas.android.com/tools"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"match_parent"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"match_parent"</span>
+    <span style="color: #e44649;">tools</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">context</span>=<span style="color: #50a14f;">".MainActivity"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">orientation</span>=<span style="color: #50a14f;">"vertical"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">gravity</span>=<span style="color: #50a14f;">"center"</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+    <span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">Button</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">id</span>=<span style="color: #50a14f;">"@+id/myButton"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">text</span>=<span style="color: #50a14f;">"See A Quote from Imam Ali"</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+<span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #0184bc;">LinearLayout</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+</pre>
+</div></li>
+
+<li><p>
+Modify the <code>MainActivity.java</code> file to have:
+</p>
+<div class="org-src-container">
+<pre class="src src-java"><span style="color: #a626a4;">public</span> <span style="color: #a626a4;">class</span> <span style="color: #c18401;">MainActivity</span> <span style="color: #a626a4;">extends</span> <span style="color: #c18401;">AppCompatActivity</span> {
+
+    <span style="color: #c18401;">String</span>[] <span style="color: #8b4513;">IMAM_ALI_QUOTES</span> = <span style="color: #a626a4;">new</span> <span style="color: #c18401;">String</span>[]
+            { <span style="color: #50a14f;">"Everyone who is taken by death asks for more time, while everyone who still has time makes excuses for procrastination."</span>
+            , <span style="color: #50a14f;">"Courtesy costs nothing, but buys everything."</span>
+            , <span style="color: #50a14f;">"Silence is the garden of thought."</span>
+            , <span style="color: #50a14f;">"The best revenge is to improve yourself."</span>
+            , <span style="color: #50a14f;">"To fight against one&#8217;s desires is the greatest of all fights."</span>
+            , <span style="color: #50a14f;">"Any day on which you don&#8217;t commit sins or disobey Allah is a day of celebration (Eid)."</span>
+            , <span style="color: #50a14f;">"If you don&#8217;t endure the difficulties of working, you are made to bear the misfortunes of poverty."</span>
+            , <span style="color: #50a14f;">"Don&#8217;t worry about how fast you do a job; instead, observe the best quality in whatever you do."</span>
+            , <span style="color: #50a14f;">"It&#8217;s beneath you to make a promise to your child and not keep it."</span>
+            , <span style="color: #50a14f;">"Enjoy your moments of happiness with all your heart to help you at the time of sadness."</span>
+            };
+
+    <span style="font-weight: bold; text-decoration: underline;">@Override</span>
+    <span style="color: #a626a4;">protected</span> <span style="color: #c18401;">void</span> <span style="color: #0184bc;">onCreate</span>(<span style="color: #c18401;">Bundle</span> <span style="color: #8b4513;">savedInstanceState</span>) {
+        <span style="color: #a626a4;">super</span>.onCreate(savedInstanceState);
+        EdgeToEdge.enable(<span style="color: #a626a4;">this</span>);
+        setContentView(R.layout.activity_main);
+
+        <span style="color: #c18401;">Button</span> <span style="color: #8b4513;">myButton</span> = findViewById(R.id.myButton);
+        myButton.setOnClickListener(__ -&gt; {
+            <span style="color: #c18401;">String</span> <span style="color: #8b4513;">randomText</span> = IMAM_ALI_QUOTES[ThreadLocalRandom.current().nextInt(IMAM_ALI_QUOTES.length)];
+            Toast.makeText(MainActivity.<span style="color: #a626a4;">this</span>, randomText, <span style="font-weight: bold; text-decoration: underline;">Toast</span>.LENGTH_SHORT).show();
+        });
+    }
+}
+</pre>
+</div></li>
+
+<li>Build the APK and deploy to your phone 😁</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-4-read-a-quotes-file-from-the-users-phone-and-produce-random-quotes-from-that" class="outline-3">
+<h3 id="4-read-a-quotes-file-from-the-users-phone-and-produce-random-quotes-from-that"><span class="section-number-3">2.4.</span> <a href="#4-read-a-quotes-file-from-the-users-phone-and-produce-random-quotes-from-that">⟨4⟩ Read a quotes file from the user's phone, and produce random quotes from that!</a></h3>
+<div class="outline-text-3" id="text-4-read-a-quotes-file-from-the-users-phone-and-produce-random-quotes-from-that">
+<ol class="org-ol">
+<li><p>
+Modify <code>activity_main.xml</code> to be:
+</p>
+<div class="org-src-container">
+<pre class="src src-xml"><span style="color: #383a42; background-color: #fafafa;">&lt;?</span><span style="color: #a626a4;">xml</span> <span style="color: #50a14f; font-style: italic;">version="1.0" encoding="utf-8"</span><span style="color: #383a42; background-color: #fafafa;">?&gt;</span>
+<span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">LinearLayout</span> <span style="color: #e44649;">xmlns</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">android</span>=<span style="color: #50a14f;">"http://schemas.android.com/apk/res/android"</span>
+    <span style="color: #e44649;">xmlns</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">tools</span>=<span style="color: #50a14f;">"http://schemas.android.com/tools"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"match_parent"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"match_parent"</span>
+    <span style="color: #e44649;">tools</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">context</span>=<span style="color: #50a14f;">".MainActivity"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">orientation</span>=<span style="color: #50a14f;">"vertical"</span>
+    <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">gravity</span>=<span style="color: #50a14f;">"center"</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+    <span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">Button</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">id</span>=<span style="color: #50a14f;">"@+id/myButton"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">text</span>=<span style="color: #50a14f;">"See A Random Quote"</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+    <span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #0184bc;">Button</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">id</span>=<span style="color: #50a14f;">"@+id/chooseFileButton"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_width</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_height</span>=<span style="color: #50a14f;">"wrap_content"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">text</span>=<span style="color: #50a14f;">"Choose Quotes File"</span>
+        <span style="color: #e44649;">android</span><span style="color: #383a42; background-color: #fafafa;">:</span><span style="color: #8b4513;">layout_marginTop</span>=<span style="color: #50a14f;">"16dp"</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+
+<span style="color: #383a42; background-color: #fafafa;">&lt;</span><span style="color: #383a42; background-color: #fafafa;">/</span><span style="color: #0184bc;">LinearLayout</span><span style="color: #383a42; background-color: #fafafa;">&gt;</span>
+</pre>
+</div></li>
+<li><p>
+Modify <code>MainActivity.java</code> to have:
+</p>
+<div class="org-src-container">
+<pre class="src src-java"><span style="color: #a626a4;">public</span> <span style="color: #a626a4;">class</span> <span style="color: #c18401;">MainActivity</span> <span style="color: #a626a4;">extends</span> <span style="color: #c18401;">AppCompatActivity</span> {
+
+    <span style="color: #50a14f; font-style: italic;">/**
+     * App preferences are saved in a PREFERENCES_FILE_NAME; we have one key-value pair we want
+     * to remember (URI_FIELD_NAME) between sessions; ie whenever user closes/opens the app.
+     */</span>
+    <span style="color: #a626a4;">private</span> <span style="color: #a626a4;">static</span> <span style="color: #a626a4;">final</span> <span style="color: #c18401;">String</span> <span style="color: #8b4513;">PREFERENCES_FILE_NAME</span> = <span style="color: #50a14f;">"quotes_preferences"</span>;
+    <span style="color: #a626a4;">private</span> <span style="color: #a626a4;">static</span> <span style="color: #a626a4;">final</span> <span style="color: #c18401;">String</span> <span style="color: #8b4513;">URI_FIELD_NAME</span> = <span style="color: #50a14f;">"quotes_uri"</span>;
+
+    <span style="color: #a626a4;">private</span> <span style="color: #a626a4;">final</span> <span style="color: #c18401;">List</span>&lt;<span style="color: #c18401;">String</span>&gt; <span style="color: #8b4513;">quotes</span> = <span style="color: #a626a4;">new</span> <span style="color: #c18401;">ArrayList</span>&lt;&gt;();
+
+    <span style="color: #a626a4;">private</span> <span style="color: #a626a4;">final</span> <span style="color: #c18401;">ActivityResultLauncher</span>&lt;<span style="color: #c18401;">String</span>[]&gt; <span style="color: #8b4513;">openFilePicker</span> =
+            registerForActivityResult(<span style="color: #a626a4;">new</span> <span style="font-weight: bold; text-decoration: underline;">ActivityResultContracts</span>.<span style="color: #c18401;">OpenDocument</span>(), uri -&gt; {
+                <span style="color: #a626a4;">if</span> (uri != <span style="font-weight: bold; text-decoration: underline;">null</span>) {
+                   getContentResolver().takePersistableUriPermission(uri, <span style="font-weight: bold; text-decoration: underline;">Intent</span>.FLAG_GRANT_READ_URI_PERMISSION);
+                   <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Save the URI for future sessions
+</span>                    getSharedPreferences(PREFERENCES_FILE_NAME, MODE_PRIVATE)
+                            .edit()
+                            .putString(URI_FIELD_NAME, uri.toString())
+                            .apply();
+                   <span style="color: #c18401;">String</span> <span style="color: #8b4513;">msg</span> = loadQuotesFromUri(uri)  ? <span style="color: #50a14f;">"Loaded quotes from file."</span> : <span style="color: #50a14f;">"Could not read quotes."</span>;
+                   Toast.makeText(<span style="color: #a626a4;">this</span>, msg, <span style="font-weight: bold; text-decoration: underline;">Toast</span>.LENGTH_SHORT).show();
+                }
+            });
+
+    <span style="font-weight: bold; text-decoration: underline;">@Override</span>
+    <span style="color: #a626a4;">protected</span> <span style="color: #c18401;">void</span> <span style="color: #0184bc;">onCreate</span>(<span style="color: #c18401;">Bundle</span> <span style="color: #8b4513;">savedInstanceState</span>) {
+        <span style="color: #a626a4;">super</span>.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Load previous file if available
+</span>        <span style="color: #c18401;">String</span> <span style="color: #8b4513;">saved</span> = getSharedPreferences(PREFERENCES_FILE_NAME, MODE_PRIVATE).getString(URI_FIELD_NAME, <span style="font-weight: bold; text-decoration: underline;">null</span>);
+        <span style="color: #a626a4;">if</span> (saved != <span style="font-weight: bold; text-decoration: underline;">null</span>) {
+            loadQuotesFromUri(Uri.parse(saved));
+        }
+        <span style="color: #c18401;">Button</span> <span style="color: #8b4513;">myButton</span> = findViewById(R.id.myButton);
+        myButton.setOnClickListener(__ -&gt; {
+            <span style="color: #c18401;">String</span> <span style="color: #8b4513;">randomText</span> = quotes.isEmpty()
+                    ? <span style="color: #50a14f;">"No quotes available."</span>
+                    : quotes.get(ThreadLocalRandom.current().nextInt(quotes.size()));
+            Toast.makeText(<span style="color: #a626a4;">this</span>, randomText, <span style="font-weight: bold; text-decoration: underline;">Toast</span>.LENGTH_SHORT).show();
+        });
+
+        <span style="color: #c18401;">Button</span> <span style="color: #8b4513;">chooseFileButton</span> = findViewById(R.id.chooseFileButton);
+        chooseFileButton.setOnClickListener(v -&gt;
+                <span style="color: #a0a1a7; font-weight: bold;">// </span><span style="color: #a0a1a7;">Allow both .txt files and other unknown files (e.g., Emacs .org files &#128521;)
+</span>                openFilePicker.launch(<span style="color: #a626a4;">new</span> <span style="color: #c18401;">String</span>[] {<span style="color: #50a14f;">"text/plain"</span>, <span style="color: #50a14f;">"application/octet-stream"</span>}));
+    }
+
+    <span style="color: #50a14f; font-style: italic;">/**
+     * Populate </span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">{@link #quotes}</span><span style="color: #50a14f; font-style: italic;"> with one quote per line in the given </span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">{@code uri}</span><span style="color: #50a14f; font-style: italic;">.
+     * </span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">@return</span><span style="color: #50a14f; font-style: italic;">  true iff the load is successful, else false.
+     */</span>
+    <span style="color: #a626a4;">private</span> <span style="color: #c18401;">boolean</span> <span style="color: #0184bc;">loadQuotesFromUri</span>(<span style="color: #c18401;">Uri</span> <span style="color: #8b4513;">uri</span>) {
+        <span style="color: #a626a4;">try</span> (<span style="color: #c18401;">BufferedReader</span> <span style="color: #8b4513;">reader</span> = <span style="color: #a626a4;">new</span> <span style="color: #c18401;">BufferedReader</span>(
+                <span style="color: #a626a4;">new</span> <span style="color: #c18401;">InputStreamReader</span>(getContentResolver().openInputStream(uri), <span style="font-weight: bold; text-decoration: underline;">StandardCharsets</span>.UTF_8))) {
+            quotes.clear();
+            <span style="color: #a626a4;">for</span>(<span style="color: #c18401;">String</span> <span style="color: #8b4513;">line</span> = reader.readLine(); line != <span style="font-weight: bold; text-decoration: underline;">null</span>; line = reader.readLine()) {
+                line = line.trim();
+                <span style="color: #a626a4;">if</span>(<span style="font-weight: bold;">!</span>line.isEmpty()) quotes.add(line);
+            }
+            <span style="color: #a626a4;">return</span> <span style="font-weight: bold; text-decoration: underline;">true</span>;
+        } <span style="color: #a626a4;">catch</span> (Exception ignored) { <span style="color: #a626a4;">return</span> <span style="font-weight: bold; text-decoration: underline;">false</span>; }
+    }
+}
+</pre>
+</div></li>
+<li>Now make a <code>quotes.org</code> file and save it to your <code>Dropbox</code> directory, then
+generate the APK and enjoy 😁</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-5-show-a-quotes-file-in-the-app" class="outline-3">
+<h3 id="5-show-a-quotes-file-in-the-app"><span class="section-number-3">2.5.</span> <a href="#5-show-a-quotes-file-in-the-app">⟨5⟩ Show a quotes file in the app</a></h3>
+<div class="outline-text-3" id="text-5-show-a-quotes-file-in-the-app">
+<ol class="org-ol">
+<li><p>
+Modify the view&#x2026;
+</p>
+<pre class="example">
+&lt;LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context=".MainActivity"
+    android:padding="16dp"&gt;
+
+    &lt;Button
+        android:id="@+id/myButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="See A Quote from Imam Ali"/&gt;
+
+    &lt;Button
+        android:id="@+id/chooseFileButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose Quotes File"
+        android:layout_marginTop="16dp"/&gt;
+
+    &lt;!-- Scrollable preview --&gt;
+    &lt;ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:layout_marginTop="16dp"&gt;
+
+        &lt;TextView
+            android:id="@+id/filePreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textIsSelectable="true"
+            android:text="Choose a file to preview it"
+            android:typeface="monospace"/&gt;
+    &lt;/ScrollView&gt;
+&lt;/LinearLayout&gt;
+</pre></li>
+
+<li><p>
+Modify the backend&#x2026;
+</p>
+<pre class="example">
+package com.example.helloworld;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+import java.nio.charset.StandardCharsets;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
+import android.widget.TextView;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class MainActivity extends AppCompatActivity {
+
+    private static final String PREFS = "quotes_prefs";
+    private static final String KEY_URI = "quotes_uri";
+    private static final Charset FILE_CHARSET = StandardCharsets.UTF_8;
+    private TextView filePreview;
+    private ExecutorService ioExecutor;
+
+    private final ActivityResultLauncher&lt;String[]&gt; openDocumentLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -&gt; {
+                if (uri == null) return;
+                // Only allow .txt / .org
+                if (!isAllowedFile(uri)) {
+                    Toast.makeText(this, "Please select a .txt or .org file.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                // Persist read permission when possible
+                try {
+                    getContentResolver().takePersistableUriPermission(
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (Exception ignored) { }
+                // Load and display (uppercase)
+                loadAndShowUppercased(uri);
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        filePreview = findViewById(R.id.filePreview);
+        ioExecutor = Executors.newSingleThreadExecutor();
+
+        Button myButton = findViewById(R.id.myButton);
+        myButton.setOnClickListener(__ -&gt;
+                Toast.makeText(this, "Tap \"Choose Quotes File\" to preview it.", Toast.LENGTH_SHORT).show());
+
+        Button chooseFileButton = findViewById(R.id.chooseFileButton);
+        chooseFileButton.setOnClickListener(v -&gt;
+                openDocumentLauncher.launch(new String[] {
+                        "text/plain",              // most providers mark .txt/.org as text/plain
+                        "application/octet-stream" // fallback for unknown text-y files
+                }));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (ioExecutor != null) ioExecutor.shutdownNow();
+    }
+
+    /**
+     * Background load + UI update. Assumes files are no more than 1MB, which is reasonable.
+     * My personal my-life.org file is 63B consisting of ~133k lines of plain text.
+     */
+    private void loadAndShowUppercased(Uri uri) {
+        filePreview.setText("Loading…");
+        ioExecutor.execute(() -&gt; {
+            try {
+                String content = readWholeFileAsString(uri);
+                if (content == null) {
+                    runOnUiThread(() -&gt; {
+                        filePreview.setText("");
+                        Toast.makeText(this, "Could not read file.", Toast.LENGTH_LONG).show();
+                    });
+                    return;
+                }
+
+                String upper = content.toUpperCase(Locale.ROOT);
+
+                runOnUiThread(() -&gt; {
+                    filePreview.setText(upper);
+                    // Optionally remember the URI for next app launch
+                    getSharedPreferences(PREFS, MODE_PRIVATE)
+                            .edit().putString(KEY_URI, uri.toString()).apply();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -&gt; {
+                    filePreview.setText("");
+                    Toast.makeText(this, "Error reading file.", Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    /** Read entire file as a String (GOOD for small files). Caps bytes to avoid OOM. */
+    private String readWholeFileAsString(Uri uri) throws Exception {
+        try (InputStream in = getContentResolver().openInputStream(uri);
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            if (in == null) return null;
+            byte[] buffer = new byte[16 * 1024]; // Assumes file is no more than 1MB
+            int n;
+            while ((n = in.read(buffer)) != -1) {
+                out.write(buffer, 0, n);
+            }
+            return out.toString(FILE_CHARSET.name());
+        }
+    }
+
+    private boolean isAllowedFile(Uri uri) {
+        String name = getDisplayName(uri);
+        if (name == null) return false;
+        String lower = name.toLowerCase(Locale.ROOT);
+        return lower.endsWith(".txt") || lower.endsWith(".org");
+    }
+
+    private String getDisplayName(Uri uri) {
+        try (Cursor c = getContentResolver()
+                .query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (c != null &amp;&amp; c.moveToFirst()) {
+                int idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (idx &gt;= 0) return c.getString(idx);
+            }
+        }
+        return null;
+    }
+}
+</pre></li>
+
+<li>To test this works, make a file <code>quotes.org</code> with some quotes, then start the
+app, then drag-and-drop the file into the app emulator and it will now be in
+the <code>Downloads</code> folder in the emulator. 😁
+<ul class="org-ul">
+<li>See also: <a href="https://stackoverflow.com/a/37860254">How to copy files to Android emulator instance - Stack Overflow</a></li>
+</ul></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-6-allow-use-to-edit-the-quotes-in-the-app-and-persist-the-changes" class="outline-3">
+<h3 id="6-allow-use-to-edit-the-quotes-in-the-app-and-persist-the-changes"><span class="section-number-3">2.6.</span> <a href="#6-allow-use-to-edit-the-quotes-in-the-app-and-persist-the-changes">⟨6⟩ Allow use to edit the quotes in the app and persist the changes!</a></h3>
+<div class="outline-text-3" id="text-6-allow-use-to-edit-the-quotes-in-the-app-and-persist-the-changes">
+<p>
+Cool, so I can preview a user's file. Now, instead of upcasing the contents, I
+want to allow the user to edit the file and have the changes persist back to the
+actual file whenever the user exits the app. How do?
+</p>
+
+<ol class="org-ol">
+<li>Change the view&#x2026;</li>
+</ol>
+<pre class="example">
+&lt;!-- activity_main.xml --&gt;
+&lt;LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity"&gt;
+
+    &lt;Button
+        android:id="@+id/openButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open .txt / .org"/&gt;
+
+    &lt;Button
+        android:id="@+id/saveAsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save As…"
+        android:layout_marginTop="8dp"/&gt;
+
+    &lt;EditText
+        android:id="@+id/editor"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:hint="Your file will appear here…"
+        android:gravity="top|start"
+        android:inputType="textMultiLine"
+        android:typeface="monospace"
+        android:scrollbars="vertical"/&gt;
+&lt;/LinearLayout&gt;
+</pre>
+
+<ol class="org-ol">
+<li>Change the backend&#x2026;</li>
+</ol>
+<pre class="example">
+package com.example.helloworld;
+
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.OpenableColumns;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+
+public class MainActivity extends AppCompatActivity {
+
+    private static final String PREFS = "quotes_prefs";
+    private static final String KEY_URI = "quotes_uri";
+
+    private EditText editor;
+    private Uri currentFileUri = null;
+
+    // Open existing file (.txt / .org)
+    private final ActivityResultLauncher&lt;String[]&gt; openDoc =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -&gt; {
+                if (uri == null) return;
+                if (!isAllowed(uri)) {
+                    Toast.makeText(this, "Please pick a .txt or .org file.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                // Try to persist both read &amp; write (write may not be granted; that's OK)
+                try {
+                    getContentResolver().takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    );
+                } catch (Exception ignored) {}
+
+                currentFileUri = uri;
+                getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_URI, uri.toString()).apply();
+                loadIntoEditor(uri);
+            });
+
+    // Create a new file for Save As…
+    private final ActivityResultLauncher&lt;String&gt; createDoc =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument("text/plain"), uri -&gt; {
+                if (uri == null) return;
+                if (saveToUri(uri, editor.getText().toString())) {
+                    currentFileUri = uri;
+                    getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_URI, uri.toString()).apply();
+                    Toast.makeText(this, "Saved.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Save failed.", Toast.LENGTH_LONG).show();
+                }
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        editor = findViewById(R.id.editor);
+
+        Button openButton = findViewById(R.id.openButton);
+        openButton.setOnClickListener(v -&gt;
+                openDoc.launch(new String[]{"text/plain", "application/octet-stream"}));
+
+        Button saveAsButton = findViewById(R.id.saveAsButton);
+        saveAsButton.setOnClickListener(v -&gt; {
+            String suggested = "quotes.txt";
+            if (currentFileUri != null) {
+                String name = getDisplayName(currentFileUri);
+                if (name != null &amp;&amp; !name.trim().isEmpty()) suggested = name;
+            }
+            createDoc.launch(suggested);
+        });
+
+        // Optionally auto-reopen last file
+        String saved = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_URI, null);
+        if (saved != null) {
+            Uri uri = Uri.parse(saved);
+            currentFileUri = uri;
+            loadIntoEditor(uri); // will no-op if the provider no longer grants access
+        }
+    }
+
+    /** Save on app/background exit */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (currentFileUri == null) return;
+
+        // Try to write back to the same Uri; if not writable, suggest Save As
+        if (!canWrite(currentFileUri)) {
+            // Not writable (provider policy or permission) → don't block exit; just notify
+            Toast.makeText(this, "This file is read-only. Use \"Save As…\" to save changes.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        boolean ok = saveToUri(currentFileUri, editor.getText().toString());
+        if (!ok) {
+            Toast.makeText(this, "Couldn’t save changes. Try \"Save As…\".", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /* -------------------- Helpers -------------------- */
+
+    private boolean isAllowed(Uri uri) {
+        String name = getDisplayName(uri);
+        if (name == null) return false;
+        String lower = name.toLowerCase(Locale.ROOT);
+        return lower.endsWith(".txt") || lower.endsWith(".org");
+    }
+
+    private String getDisplayName(Uri uri) {
+        try (Cursor c = getContentResolver()
+                .query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (c != null &amp;&amp; c.moveToFirst()) {
+                int idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (idx &gt;= 0) return c.getString(idx);
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private boolean canWrite(Uri uri) {
+        try {
+            DocumentFile df = DocumentFile.fromSingleUri(this, uri);
+            return df != null &amp;&amp; df.canWrite();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void loadIntoEditor(Uri uri) {
+        try (InputStream in = getContentResolver().openInputStream(uri);
+             BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            if (in == null) return;
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+            editor.setText(sb.toString());
+        } catch (SecurityException se) {
+            // Lost permission
+            Toast.makeText(this, "No access to that file anymore. Please reopen.", Toast.LENGTH_LONG).show();
+            editor.setText("");
+            currentFileUri = null;
+        } catch (Exception e) {
+            Toast.makeText(this, "Couldn’t open file.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Overwrite the file content (UTF-8). */
+    private boolean saveToUri(Uri uri, String text) {
+        try (OutputStream out = getContentResolver().openOutputStream(uri, "rwt")) {
+            if (out == null) return false;
+            byte[] data = text.getBytes(StandardCharsets.UTF_8);
+            out.write(data);
+            out.flush();
+            return true;
+        } catch (SecurityException se) {
+            // We only had read permission; user may need Save As
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
+</pre>
+</div>
+</div>
+<div id="outline-container-7-how-to-show-a-dynamic-list-of-elements" class="outline-3">
+<h3 id="7-how-to-show-a-dynamic-list-of-elements"><span class="section-number-3">2.7.</span> <a href="#7-how-to-show-a-dynamic-list-of-elements">⟨7⟩ How to show a dynamic list of elements?</a></h3>
+<div class="outline-text-3" id="text-7-how-to-show-a-dynamic-list-of-elements">
+<p>
+Suppose I want to show an arbitrary number of items in a list, eg as checkboxes?
+</p>
+
+<p>
+To do that we make a view and then reuse it, this is the <code>RecyclerView</code> library.
+</p>
+
+<ol class="org-ol">
+<li>First add  a view for your list items in the main view:</li>
+</ol>
+
+<p>
+<code>activity_main.xml</code>
+</p>
+<pre class="example">
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"&gt;
+
+    &lt;!-- The RecyclerView contains the views for my list items.
+         It is populated dynamically in MainActivity.java. --&gt;
+    &lt;androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/my_recycler_view"
+        android:clipToPadding="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" /&gt;
+
+&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;
+</pre>
+
+<ol class="org-ol">
+<li>Then decide how each individual item will be viewed:</li>
+</ol>
+
+<p>
+<code>text_row_item.xml</code>
+</p>
+<pre class="example">
+&lt;FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="20dp"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
+    android:gravity="center_vertical"
+    &gt;
+
+    &lt;TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/&gt;
+&lt;/FrameLayout&gt;
+</pre>
+
+<ol class="org-ol">
+<li>Then write the Java code that has the model of the list, how to make views,
+and how to populate views with data.</li>
+</ol>
+
+<p>
+<code>MyListAdapter.java</code>
+</p>
+<pre class="example">
+package com.example.lists;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+/**
+ * RecyclerView makes it easy to efficiently display large sets of data. You supply the data and
+ * define how each item looks, and the RecyclerView library dynamically creates the elements when
+ * they're needed.
+ *
+ * As the name implies, RecyclerView recycles those individual elements. When an item scrolls off
+ * the screen, RecyclerView doesn't destroy its view. Instead, RecyclerView reuses the view for new
+ * items that have scrolled onscreen. RecyclerView improves performance and your app's
+ * responsiveness, and it reduces power consumption.
+ *
+ * 😲 This adapter is invoked implicitly to request a view for a list item via
+ * {@link #onCreateViewHolder} and to bind data to that view via {@link #onBindViewHolder}.
+ */
+public class MyListItemAdapter extends RecyclerView.Adapter&lt;MyListItemAdapter.MyListItemView&gt; {
+    /**
+     * Denotes the view associated with an individual list item.
+     * This is the design of how each element looks &amp; behaves.
+     *
+     * The layout for the each view item is defined in an XML layout file: text_row_item.xml.
+     */
+    public static class MyListItemView extends RecyclerView.ViewHolder {
+        private final TextView textView;
+
+        public MyListItemView(View view) {
+            super(view);
+            textView = view.findViewById(R.id.textView);
+        }
+    }
+
+
+    /** Contains the data to populate views to be used by RecyclerView. */
+    private final String[] listItems;
+
+    public MyListItemAdapter(String[] listItems) {
+        this.listItems = listItems;
+    }
+
+    /**
+     * Create a new view, which defines the UI of the list item. Invoked by RecyclerView.
+     * (This method only creates the view, it does not bind any data to it!)
+     */
+    @NonNull
+    @Override
+    public MyListItemView onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        View view = LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.text_row_item, viewGroup, false);
+        return new MyListItemView(view);
+    }
+
+    /**
+     * Replace the contents of a view (invoked by RecyclerView).
+     *
+     * Get element from your dataset at this position and replace the contents of the view with that
+     * element.
+     */
+    @Override
+    public void onBindViewHolder(MyListItemView myListItemView, final int position) {
+            myListItemView.textView.setText(position  + ". "  + listItems[position]);
+    }
+
+    /**
+     * Return the size of your dataset (invoked by RecyclerView).
+     * RecyclerView uses this to determine when there are no more items that can be displayed.
+     */
+    @Override
+    public int getItemCount() {
+        return listItems.length;
+    }
+}
+</pre>
+
+<ol class="org-ol">
+<li>Finally, populate the recycler view in your main layout dynamically from your
+main Java code.</li>
+</ol>
+
+<p>
+<code>MainActivity.java</code>
+</p>
+<pre class="example">
+package com.example.lists;
+
+import android.os.Bundle;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+public class MainActivity extends AppCompatActivity {
+
+    String[] IMAM_ALI_QUOTES = new String[]
+            { "Everyone who is taken by death asks for more time, while everyone who still has time makes excuses for procrastination."
+                    , "Courtesy costs nothing, but buys everything."
+                    , "Silence is the garden of thought."
+                    , "The best revenge is to improve yourself."
+                    , "To fight against one’s desires is the greatest of all fights."
+                    , "Any day on which you don’t commit sins or disobey Allah is a day of celebration (Eid)."
+                    , "If you don’t endure the difficulties of working, you are made to bear the misfortunes of poverty."
+                    , "Don’t worry about how fast you do a job; instead, observe the best quality in whatever you do."
+                    , "It’s beneath you to make a promise to your child and not keep it."
+                    , "Enjoy your moments of happiness with all your heart to help you at the time of sadness."
+            };
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -&gt; {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
+        // Arrange items in a 1-dimensional grid. Use GridLayoutManager for 2-dimensional grids.
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        MyListItemAdapter myListItemAdapter = new MyListItemAdapter(IMAM_ALI_QUOTES);
+        recyclerView.setAdapter(myListItemAdapter);
+    }
+}
+</pre>
+
+
+<p>
+For more details and customisations, see <a href="https://developer.android.com/develop/ui/views/layout/recyclerview#java">Create dynamic lists with RecyclerView  |  Views  |  Android Developers</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-8-make-our-dynamic-list-look-a-bit-like-google-keep" class="outline-3">
+<h3 id="8-make-our-dynamic-list-look-a-bit-like-google-keep"><span class="section-number-3">2.8.</span> <a href="#8-make-our-dynamic-list-look-a-bit-like-google-keep">⟨8⟩ Make our dynamic list look a bit like Google Keep</a></h3>
+<div class="outline-text-3" id="text-8-make-our-dynamic-list-look-a-bit-like-google-keep">
+<p>
+If it doesn't show up, then change the language level to be a more recent version of Java:
+</p>
+<ul class="org-ul">
+<li><p>
+Open /Users/musa/AndroidStudioProjects/HelloWorld2/app/build.gradle
+</p>
+<pre class="example">
+ compileOptions {
+-    sourceCompatibility JavaVersion.VERSION_11
+-    targetCompatibility JavaVersion.VERSION_11
++    sourceCompatibility JavaVersion.VERSION_17
++    targetCompatibility JavaVersion.VERSION_17
+}
+</pre>
+<p>
+(Note newer versions like Java 25 might not be supported.)
+</p></li>
+
+<li>You should see something like “Sync now”, since the build options are out
+of date; so press that button.</li>
+<li>See also: <a href="https://stackoverflow.com/a/70043331">java - How do I change Project language level on Android Studio - Stack Overflow</a></li>
+</ul>
+
+
+<p>
+Open <code>MainActivity.java</code> and enter <code>var w = """\n""";</code> and it there should be no IDE
+errors. Otherwise, you should see a pop-up telling you need Java17, so click on
+that and change your setting to 17.
+</p>
+
+<p>
+Now that you can use text blocks, let's get to our main task&#x2026;
+</p>
+
+<p>
+activity<sub>main</sub>
+</p>
+<pre class="example">
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"&gt;
+
+    &lt;!-- The RecyclerView contains the views for my list items.
+         It is populated dynamically in MainActivity.java. --&gt;
+    &lt;androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/my_recycler_view"
+        android:clipToPadding="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" /&gt;
+
+&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;
+</pre>
+
+<p>
+org<sub>item</sub>
+</p>
+<pre class="example">
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"&gt;
+
+    &lt;CheckBox
+        android:id="@+id/check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/&gt;
+
+    &lt;LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="8dp"&gt;
+
+        &lt;TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="16sp" /&gt;
+
+        &lt;TextView
+            android:id="@+id/detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:typeface="monospace"
+            android:textSize="14sp" /&gt;
+    &lt;/LinearLayout&gt;
+&lt;/LinearLayout&gt;
+</pre>
+
+<p>
+Then our data model:
+OrgItem.java
+</p>
+<pre class="example">
+package com.example.lists;
+
+import android.annotation.SuppressLint;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+/**
+ * A tiny data model for what constitutes an item in the displayed list.
+ *
+ * For example,
+ * &lt;pre&gt;
+ *          * [X] My title
+ *            Some additional details here
+ * &lt;/pre&gt;
+ * becomes {@code new OrgItem("My title", "Some additional details here", true)}.
+ */
+public record OrgItem(String title, String detail, boolean checked) {
+
+    private static final Pattern HEADER = Pattern.compile(
+            "^\s*(?&lt;stars&gt;\*+)\s+(\[(?&lt;checkMark&gt;[xX ])\]\s+)?(?&lt;title&gt;.*)$");
+
+    // Split BEFORE each heading line, retaining the heading in each chunk.
+    // (?m) enables ^ to match the start of each line.
+    @SuppressLint("NewApi")
+    private static final Pattern SPLIT_ON_HEADER = Pattern.compile(
+            "(?m)(?=%s)".formatted(HEADER.pattern()));
+
+     /**
+     * Parse Org text so that every line starting with * becomes a checkbox item title,
+     * everything between that heading and the next * line becomes that item’s body/detail.
+     */
+    @SuppressLint("NewApi")
+    public static List&lt;OrgItem&gt; parse(String orgText) {
+       return Arrays.stream(SPLIT_ON_HEADER.split(orgText, -1))
+               // skip empties/prefix before first heading
+               .filter(chunk -&gt; !chunk.trim().isEmpty())
+               .flatMap(chunk -&gt; {
+                   String headerLine = chunk.lines().findFirst().orElseThrow();
+                   Matcher orgTree = HEADER.matcher(headerLine);
+                   if (!orgTree.lookingAt()) return Stream.of(); // chunk doesn't start with a heading =&gt; ignore
+                   // Extract pieces from the heading line
+                   String checkMark = orgTree.group("checkMark");       // may be null (no [ ] specified)
+                   boolean checked = checkMark != null &amp;&amp; !checkMark.equals(" ");
+                   String title     = orgTree.group("title").trim();
+                   // Detail is everything after the heading line.
+                   String detail = chunk.substring(orgTree.end());
+                   if (!detail.isEmpty()) {
+                       // drop exactly one leading line break if present, keep the rest verbatim
+                       detail = detail.replaceFirst("^\R", "");
+                   }
+                   return Stream.of(new OrgItem(title, detail, checked));
+               })
+               .toList();
+    }
+}
+</pre>
+
+<p>
+Then the adapter:
+OrgAdapter.java
+</p>
+<pre class="example">
+package com.example.lists;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+
+/**
+ * RecyclerView makes it easy to efficiently display large sets of data. You supply the data and
+ * define how each item looks, and the RecyclerView library dynamically creates the elements when
+ * they're needed.
+ *
+ * As the name implies, RecyclerView recycles those individual elements. When an item scrolls off
+ * the screen, RecyclerView doesn't destroy its view. Instead, RecyclerView reuses the view for new
+ * items that have scrolled onscreen. RecyclerView improves performance and your app's
+ * responsiveness, and it reduces power consumption.
+ *
+ * 😲 This adapter is invoked implicitly to request a view for a list item via
+ * {@link #onCreateViewHolder} and to bind data to that view via {@link #onBindViewHolder}.
+ */
+public class OrgAdapter extends RecyclerView.Adapter&lt;OrgAdapter.OrgItemView&gt; {
+    /**
+     * Denotes the view associated with an individual list item.
+     * This is the design of how each element looks &amp; behaves.
+     *
+     * The layout for the each view item is defined in an XML layout file: text_row_item.xml.
+     */
+    public static class OrgItemView extends RecyclerView.ViewHolder {
+        CheckBox check;
+        TextView title, detail;
+
+        public OrgItemView(View view) {
+            super(view);
+            check = view.findViewById(R.id.check);
+            title = view.findViewById(R.id.title);
+            detail = view.findViewById(R.id.detail);
+        }
+
+        /** Set the view to have the given {@link OrgItem} data. */
+        void bind(OrgItem orgItem) {
+            title.setText(orgItem.title());
+            check.setChecked(orgItem.checked());
+            if (orgItem.detail() != null &amp;&amp; !orgItem.detail().isEmpty()) {
+                detail.setVisibility(View.VISIBLE);
+                detail.setText(orgItem.detail());
+            } else {
+                detail.setVisibility(View.GONE);
+                detail.setText("");
+            }
+        }
+    }
+
+
+    /** Contains the data to populate views to be used by RecyclerView. */
+    private final List&lt;OrgItem&gt; listItems;
+
+    public OrgAdapter(List&lt;OrgItem&gt;  listItems) {
+        this.listItems = listItems;
+    }
+
+    /**
+     * Create a new view, which defines the UI of the list item. Invoked by RecyclerView.
+     * (This method only creates the view, it does not bind any data to it!)
+     */
+    @NonNull
+    @Override
+    public OrgItemView onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        View view = LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.org_item, viewGroup, false);
+        return new OrgItemView(view);
+    }
+
+    /**
+     * Replace the contents of a view (invoked by RecyclerView).
+     *
+     * Get element from your dataset at this position and replace the contents of the view with that
+     * element.
+     */
+    @Override
+    public void onBindViewHolder(OrgItemView orgItemView, final int position) {
+        OrgItem orgItem = listItems.get(position);
+        orgItemView.bind(orgItem);
+    }
+
+    /**
+     * Return the size of your dataset (invoked by RecyclerView).
+     * RecyclerView uses this to determine when there are no more items that can be displayed.
+     */
+    @Override
+    public int getItemCount() {
+        return listItems.size();
+    }
+}
+</pre>
+
+<p>
+Finally, MainActivity.java
+</p>
+<pre class="example">
+package com.example.lists;
+
+import android.os.Bundle;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+public class MainActivity extends AppCompatActivity {
+
+    String IMAM_ALI_QUOTES = """
+            * 0. Everyone who is taken by death asks for more time, while everyone who still has time makes excuses for procrastination.
+            * 1. Courtesy costs nothing, but buys everything.
+            * 2. Silence is the garden of thought.
+            * 3. The best revenge is to improve yourself.
+            * 4. To fight against one’s desires is the greatest of all fights.
+            * 5. Any day on which you don’t commit sins or disobey Allah is a day of celebration (Eid).
+                 Note: Allah = God.
+            * 6. If you don’t endure the difficulties of working, you are made to bear the misfortunes of poverty.
+            * [ ] 7. Don’t worry about how fast you do a job; instead, observe the best quality in whatever you do.
+            * [X] 8. It’s beneath you to make a promise to your child and not keep it.
+            * [x] 9. Enjoy your moments of happiness with all your heart to help you at the time of sadness.
+            """;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -&gt; {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
+        // Arrange items in a 1-dimensional grid. Use GridLayoutManager for 2-dimensional grids.
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        OrgAdapter orgAdapter = new OrgAdapter(OrgItem.parse(IMAM_ALI_QUOTES));
+        recyclerView.setAdapter(orgAdapter);
+    }
+}
+</pre>
+</div>
+</div>
+<div id="outline-container-8-load-our-dynamic-list-from-a-user-file" class="outline-3">
+<h3 id="8-load-our-dynamic-list-from-a-user-file"><span class="section-number-3">2.9.</span> <a href="#8-load-our-dynamic-list-from-a-user-file">⟨8⟩ Load our dynamic list from a user file</a></h3>
+<div class="outline-text-3" id="text-8-load-our-dynamic-list-from-a-user-file">
+<p>
+First, modify the main xml layout file:
+</p>
+<pre class="example">
++ &lt;RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"&gt;
+
+    &lt;!-- The RecyclerView contains the views for my list items.
+         It is populated dynamically in MainActivity.java. --&gt;
+    &lt;androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/my_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
++        android:layout_above="@id/button_load_file"
+        android:scrollbars="vertical" /&gt;
+
++    &lt;Button
++        android:id="@+id/button_load_file"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_alignParentBottom="true"
++        android:layout_centerHorizontal="true"
++        android:layout_margin="16dp"
++        android:text="Load Quotes from File" /&gt;
+
++ &lt;/RelativeLayout&gt;
+</pre>
+
+
+<ol class="org-ol">
+<li>?</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-9-have-the-users-file-persist-between-sessions-to-avoid-having-to-reelect-it-each-time-the-app-is-opened" class="outline-3">
+<h3 id="9-have-the-users-file-persist-between-sessions-to-avoid-having-to-reelect-it-each-time-the-app-is-opened"><span class="section-number-3">2.10.</span> <a href="#9-have-the-users-file-persist-between-sessions-to-avoid-having-to-reelect-it-each-time-the-app-is-opened">⟨9⟩ Have the user's file persist between sessions, to avoid having to reelect it each time the app is opened!</a></h3>
+<div class="outline-text-3" id="text-9-have-the-users-file-persist-between-sessions-to-avoid-having-to-reelect-it-each-time-the-app-is-opened">
+</div>
+</div>
+<div id="outline-container-10-tap-row-to-edit-an-item-and-have-changes-persist-whenever-user-exits-the-app" class="outline-3">
+<h3 id="10-tap-row-to-edit-an-item-and-have-changes-persist-whenever-user-exits-the-app"><span class="section-number-3">2.11.</span> <a href="#10-tap-row-to-edit-an-item-and-have-changes-persist-whenever-user-exits-the-app">⟨10⟩ Tap row to edit an item, and have changes persist whenever user exits the app</a></h3>
+<div class="outline-text-3" id="text-10-tap-row-to-edit-an-item-and-have-changes-persist-whenever-user-exits-the-app">
+<pre class="example">
+public void onBindViewHolder(OrgItemView orgItemView, final int position) {
+    OrgItem orgItem = listItems.get(position);
+    orgItemView.title.setText(orgItem.title());
+    orgItemView.check.setOnCheckedChangeListener(null);
+    orgItemView.check.setChecked(orgItem.checked());
+    // 😲 Next time!: orgItemView.check.setOnCheckedChangeListener((__, isChecked) -&gt; orgItem.checked ()= isChecked);
+
+    if (orgItem.detail() != null &amp;&amp; !orgItem.detail().isEmpty()) {
+        orgItemView.detail.setVisibility(View.VISIBLE);
+        orgItemView.detail.setText(orgItem.detail());
+    } else {
+        orgItemView.detail.setVisibility(View.GONE);
+        orgItemView.detail.setText("");
+    }
+
+    // 😲 Optional: tap row to toggle detail visibility
+    orgItemView.itemView.setOnClickListener(v -&gt; {
+        if (orgItemView.detail.getVisibility() == View.VISIBLE) {
+            orgItemView.detail.setVisibility(View.GONE);
+        } else if (orgItem.detail() != null &amp;&amp; !orgItem.detail().isEmpty()) {
+            orgItemView.detail.setVisibility(View.VISIBLE);
+        }
+    });    }
+</pre>
+</div>
+</div>
+</div>
+<hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>

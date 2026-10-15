@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>unlisted-faster-magit.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #0184bc; font-weight: bold;">* Faster Magit</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">unlisted-faster-magit</span>
+<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2026-10-15&gt;</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">Finding where Magit's status buffer spends its time, and trimming it.</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://alhassy.com/unlisted-notes-table-of-contents">&#8593; All unlisted notes</a></span>
+
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">When &#8220;C-x g&#8221; this shows me where the time goes.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Press &#8220;C-h e&#8221; and look for the items marked &#8220;!&#8221;, those took too much time.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">I add those too my loop below ---except anything mentioning &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">stage</span><span style="color: #a0a1a7;">&#8217;!
+</span>(<span style="color: #a626a4;">setq</span> magit-refresh-verbose  t)
+
+(<span style="color: #a626a4;">setq</span> magit-status-sections-hook nil)
+(loop for feature in '(magit-insert-unpushed-to-upstream-or-recent
+                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-stashes
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-untracked-files
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-unpulled-from-upstream
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-unpulled-from-pushremote
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-unpushed-to-pushremote
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-status-headers
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-tags-header
+</span>                         magit-insert-unstaged-changes
+                         magit-insert-merge-log
+                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-rebase-sequence
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-am-sequence
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-sequencer-sequence
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-bisect-output
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-bisect-rest
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">magit-insert-bisect-log
+</span>                         magit-insert-staged-changes
+                         magit-todos--insert-todos)
+do (add-hook 'magit-status-sections-hook feature))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+See also: <span style="text-decoration: underline;"><a href="https://jakemccrary.com/blog/2020/11/14/speeding-up-magit/">https://jakemccrary.com/blog/2020/11/14/speeding-up-magit/</a></span>
+
+
+Other optimizations, file specific:
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">setq</span> magit-diff-highlight-indentation nil
+      magit-diff-highlight-trailing nil
+      magit-diff-paint-whitespace nil
+      magit-diff-highlight-hunk-body nil
+      magit-diff-refine-hunk nil
+      magit-refresh-status-buffer nil
+      vc-handled-backends nil
+      vc-handled-backends (delq 'Git vc-handled-backends)
+      magit-auto-revert-mode nil)
+<span style="color: #a0a1a7;">#+end_src
+</span>See <span style="text-decoration: underline;"><a href="https://magit.vc/manual/magit/Performance.html">https://magit.vc/manual/magit/Performance.html</a></span>
+
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">w/status</span> ()
+  <span style="color: #50a14f; font-style: italic;">"Show magit status for work"</span>
+  (<span style="color: #a626a4;">interactive</span>)
+  (<span style="color: #a626a4;">setq</span> default-directory <span style="color: #50a14f;">"~/fwd"</span>)
+  (magit-status))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+
+</pre>
+  </body>
+</html>

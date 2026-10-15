@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>unlisted-elisp-debug-and-cl-generic.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #0184bc; font-weight: bold;">* Elisp leisure: print-style debugging &amp; cl-generic</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">unlisted-elisp-debug-and-cl-generic</span>
+<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2026-10-15&gt;</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">An unobtrusive debug-warn macro, and a romp through cl-generic.</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://alhassy.com/unlisted-notes-table-of-contents">&#8593; All unlisted notes</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Beautifully unobtrusive print-style debugging</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">beautifully-unobtrusive-print-style-debugging</span>
+<span style="font-weight: bold;">:END:</span>
+debug-warn macro
+
+This macro simplifies print-style debugging by automatically including the names of the containing function and argument forms, rather than requiring the programmer to write format strings manually.
+
+Source: <span style="text-decoration: underline;"><a href="https://github.com/alphapapa/emacs-package-dev-handbook#debugging">https://github.com/alphapapa/emacs-package-dev-handbook#debugging</a></span>
+
+<span style="color: #a0a1a7;">#+begin_src elisp
+</span>(<span style="color: #a626a4;">setq-local</span> warning-minimum-log-level <span style="color: #e44649;">:debug</span>)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">argh</span> (var)
+  (debug-warn (current-buffer) <span style="color: #50a14f;">"This is bad!"</span> (point) var)
+  var)
+
+(argh 1)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">C-x C-e this and notice it returns a result, 1, but also emits warnings
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">in the *Warnings* buffer:
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#9940; Debug (argh [interpreted]): (CURRENT-BUFFER):#&lt;buffer org-special-block-extras.org&gt; "This is bad!" (POINT):2189 VAR:1
+</span><span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_src elisp
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">map</span>)
+
+(<span style="color: #a626a4;">cl-defmacro</span> <span style="color: #0184bc;">debug-warn</span> (<span style="color: #c18401;">&amp;rest</span> args)
+  <span style="color: #50a14f; font-style: italic;">"Display a debug warning showing the runtime value of ARGS.
+The warning automatically includes the name of the containing
+function, and it is only displayed if `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">warning-minimum-log-level</span><span style="color: #50a14f; font-style: italic;">'
+is `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">:debug</span><span style="color: #50a14f; font-style: italic;">' at expansion time (otherwise the macro expands to nil
+and is eliminated by the byte-compiler).  When debugging, the
+form also returns nil so, e.g. it may be used in a conditional in
+place of nil.
+
+Each of ARGS may be a string, which is displayed as-is, or a
+symbol, the value of which is displayed prefixed by its name, or
+a Lisp form, which is displayed prefixed by its first symbol.
+
+Before the actual ARGS arguments, you can write keyword
+arguments, i.e. alternating keywords and values.  The following
+keywords are supported:
+
+  :buffer BUFFER   Name of buffer to pass to `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">display-warning</span><span style="color: #50a14f; font-style: italic;">'.
+  :level  LEVEL    Level passed to `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">display-warning</span><span style="color: #50a14f; font-style: italic;">', which see.
+                   Default is :debug."</span>
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">TODO: Can we use a compiler macro to handle this more elegantly?
+</span>  (<span style="color: #a626a4;">pcase-let*</span> ((fn-name (<span style="color: #a626a4;">when</span> byte-compile-current-buffer
+                          (<span style="color: #a626a4;">with-current-buffer</span> byte-compile-current-buffer
+                            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">This is a hack, but a nifty one.
+</span>                            (<span style="color: #a626a4;">save-excursion</span>
+                              (beginning-of-defun)
+                              (cl-second (read (current-buffer)))))))
+               (plist-args (<span style="color: #a626a4;">cl-loop</span> while (keywordp (car args))
+                                    collect (<span style="color: #a626a4;">pop</span> args)
+                                    collect (<span style="color: #a626a4;">pop</span> args)))
+               ((map (<span style="color: #e44649;">:buffer</span> buffer) (<span style="color: #e44649;">:level</span> level)) plist-args)
+               (level (<span style="color: #a626a4;">or</span> level <span style="color: #e44649;">:debug</span>))
+               (string (<span style="color: #a626a4;">cl-loop</span> for arg in args
+                                concat (<span style="color: #a626a4;">pcase</span> arg
+                                         ((pred stringp) <span style="color: #50a14f;">"%S "</span>)
+                                         ((pred symbolp)
+                                          (concat (upcase (symbol-name arg)) <span style="color: #50a14f;">":%S "</span>))
+                                         ((pred listp)
+                                          (concat <span style="color: #50a14f;">"("</span> (upcase (symbol-name (car arg)))
+                                                  (<span style="color: #a626a4;">pcase</span> (length arg)
+                                                    (1 <span style="color: #50a14f;">")"</span>)
+                                                    (_ <span style="color: #50a14f;">"...)"</span>))
+                                                  <span style="color: #50a14f;">":%S "</span>))))))
+    (<span style="color: #a626a4;">when</span> (eq <span style="color: #e44649;">:debug</span> warning-minimum-log-level)
+      `(<span style="color: #a626a4;">let</span> ((fn-name ,(<span style="color: #a626a4;">if</span> fn-name
+                           `',fn-name
+                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">In an interpreted function: use `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">backtrace-frame</span><span style="color: #a0a1a7;">' to get the
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">function name (we have to use a little hackery to figure out
+</span>                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">how far up the frame to look, but this seems to work).
+</span>                         `(<span style="color: #a626a4;">cl-loop</span> for frame in (backtrace-frames)
+                                   for fn = (cl-second frame)
+                                   when (not (<span style="color: #a626a4;">or</span> (subrp fn)
+                                                 (special-form-p fn)
+                                                 (eq 'backtrace-frames fn)))
+                                   return (make-symbol (format <span style="color: #50a14f;">"%s [interpreted]"</span> fn))))))
+         (display-warning fn-name (format ,string ,@args) ,level ,buffer)
+         nil))))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+RESULTS:</span>
+: debug-warn
+
+<span style="color: #8b4513; font-weight: bold;">** Playing with cl-generic</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">playing-with-cl-generic</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">cl-generic</span>)
+
+(<span style="color: #a626a4;">cl-defstruct</span> <span style="color: #c18401;">cow</span>)
+(<span style="color: #a626a4;">cl-defstruct</span> <span style="color: #c18401;">bird</span>)
+
+(<span style="color: #a626a4;">cl-defgeneric</span> <span style="color: #0184bc;">greet</span> (greeter <span style="color: #c18401;">&amp;optional</span> age more))
+(<span style="color: #a626a4;">cl-defmethod</span> <span style="color: #0184bc;">greet</span> ((_ cow)) <span style="color: #50a14f; font-style: italic;">"Moo!"</span>)
+(<span style="color: #a626a4;">cl-defmethod</span> <span style="color: #0184bc;">greet</span> ((_ bird)) <span style="color: #50a14f; font-style: italic;">"Chirp!"</span>)
+
+(greet (make-cow)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">=&gt; "Moo!"
+</span>(greet (make-bird)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">=&gt; "Chirp!"
+</span>
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Arity mismatch and now all existing uses of *greet* are broken!
+</span>(<span style="color: #a626a4;">cl-defmethod</span> <span style="color: #0184bc;">greet</span> ((_ bird) (age integer) (more string)) age)
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Need to start off with &amp;optional then go from there
+</span>(<span style="color: #a626a4;">cl-defgeneric</span> <span style="color: #0184bc;">greet2</span> (greeter <span style="color: #c18401;">&amp;optional</span> age more))
+(<span style="color: #a626a4;">cl-defmethod</span> <span style="color: #0184bc;">greet2</span> ((_ cow)) <span style="color: #50a14f; font-style: italic;">"Moo!"</span>)
+(<span style="color: #a626a4;">cl-defmethod</span> <span style="color: #0184bc;">greet2</span> ((_ bird)) <span style="color: #50a14f; font-style: italic;">"Chirp!"</span>)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Now these work!
+</span>(greet2 (make-cow))
+(greet2 (make-bird))
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">and this too!
+</span>(<span style="color: #a626a4;">cl-defmethod</span> <span style="color: #0184bc;">greet2</span> ((_ bird) (age integer) (more string)) age)
+(greet2 (make-bird) 12 <span style="color: #50a14f;">"nice"</span>)
+
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">NOTE:
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. A generic function acts as a placeholder for methods. There is no need to call cl-defgeneric yourself, as cl-defmethod will call it if necessary.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. There is no need to call cl-defgeneric yourself, as cl-defmethod will call it if necessary.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">You can also create a generic method with cl-defmethod (see Methods). When a method is created and there is no generic method in place with that name, then a new generic will be created, and the new method will use it.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. A method is a function that is executed if the arguments passed to it matches the method&#8217;s specializers.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. A method with no type specializer is a default method.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. a generic method is essentially a look-up table of specializers-to-implementations.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">0. If two cl-defmethods appear with the same specializers and the same qualifiers, then the second implementation replaces the first.
+</span><span style="color: #a0a1a7;">#+end_src
+</span>
+
+</pre>
+  </body>
+</html>

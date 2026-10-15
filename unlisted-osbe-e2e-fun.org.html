@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>unlisted-osbe-e2e-fun.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #0184bc; font-weight: bold;">* Lisp leisure: org-special-block-extras end-to-end</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">unlisted-osbe-e2e-fun</span>
+<span style="color: #a626a4;">:DATE:</span>        <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">&lt;2026-10-15&gt;</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">YAML-driven end-to-end tests for org-special-block-extras.</span>
+<span style="font-weight: bold;">:END:</span>
+
+<span style="text-decoration: underline;"><a href="https://alhassy.com/unlisted-notes-table-of-contents">&#8593; All unlisted notes</a></span>
+
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Read a YAML file that defines input and expectations.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Evaluate the arithmetic expression in input.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Check if the result matches the expectations in both value and parity.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Recursively read all YAML files in a specified directory.
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span>
+(<span style="color: #a626a4;">use-package</span> yaml)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">read-yaml-file</span> (file)
+  <span style="color: #50a14f; font-style: italic;">"Read and parse a YAML FILE, returning its contents as a hash table."</span>
+  (<span style="color: #a626a4;">with-temp-buffer</span>
+    (insert-file-contents file)
+    (yaml-parse-string (buffer-string))))
+
+(<span style="color: #a626a4;">with-temp-file</span> <span style="color: #50a14f;">"example.yaml"</span>
+  (insert <span style="color: #50a14f;">"
+input: |-
+  let x = 2
+  let y = 3
+  x + y
+expectations:
+  parity: odd
+  value: 5
+"</span>))
+(<span style="color: #a626a4;">setq</span> example (read-yaml-file <span style="color: #50a14f;">"example.yaml"</span>))
+
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">map</span>)
+(map-keys example)       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; (expectations input)
+</span>(map-elt example 'input) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; "2 + 2"
+</span>(map-nested-elt example '(expectations parity)) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; "odd"
+</span>(<span style="color: #a626a4;">map-let</span> (input expectations) example
+  (<span style="color: #a626a4;">map-let</span> (parity value) expectations
+    (format <span style="color: #50a14f;">"Does  %s  equal  %s, which is %s?"</span> (s-replace <span style="color: #50a14f;">"\n"</span> <span style="color: #50a14f;">"; "</span> input) value parity)))
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">&#8658; Does  let x = 2; let y = 3; x + y  equal  5, which is odd?
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">More tersely[?], we can specify &#8220;'key-name value-name&#8221; pairs using -let;
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">if value-name is the same as key-name, then we can omit it and it is inferred.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Below symbolic key 'input has no name after it, so a variable named &#8220;input&#8221; is created for us.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">However, symbolic key 'expectations has a value _pattern_ whose keys have inferred value names.
+</span>(<span style="color: #a626a4;">-let</span> [(<span style="color: #c18401;">&amp;hash</span> 'input 'expectations (<span style="color: #c18401;">&amp;hash</span> 'value 'parity)) example]
+  (format <span style="color: #50a14f;">"Does  %s  equal  %s, which is %s?"</span> (s-replace <span style="color: #50a14f;">"\n"</span> <span style="color: #50a14f;">"; "</span> input) value parity))
+
+<span style="color: #a0a1a7; font-weight: bold;">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span><span style="color: #a0a1a7;">
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">"Evaluate the JavaScript arithmetic EXPRESSION and return its result as a number."
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Define a function to calculate both value and parity
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">compute-values</span> (input)
+  <span style="color: #50a14f; font-style: italic;">"Calculate the arithmetic value and parity for the given INPUT string. Returns a hashmap."</span>
+  <span style="color: #50a14f;">"Evaluate the JavaScript arithmetic EXPRESSION and return its result as a number."</span>
+  (<span style="color: #a626a4;">let</span> ((result
+         (<span style="color: #a626a4;">thread-last</span> input shell-quote-argument (concat <span style="color: #50a14f;">"node -p "</span>) shell-command-to-string string-to-number)))
+    (map-into (list 'value result                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Construct the result as a list
+</span>                    'parity (<span style="color: #a626a4;">if</span> (<span style="color: #a626a4;">ignore-errors</span> (evenp result)) <span style="color: #50a14f;">"even"</span> <span style="color: #50a14f;">"odd"</span>))
+              'hash-table
+              )))  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Determine parity
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Example use
+</span>(compute-values (map-elt example 'input))
+
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">ert</span>)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">make-ert-test-for-yaml-file</span> (file)
+  <span style="color: #50a14f; font-style: italic;">"ERT-compatible test for a YAML FILE based on '</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">input</span><span style="color: #50a14f; font-style: italic;">' and '</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">expectations</span><span style="color: #50a14f; font-style: italic;">'."</span>
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Create a separate ert test for each YAML file
+</span>  (<span style="color: #a626a4;">let*</span> ((data (read-yaml-file file))
+         (input (gethash 'input data))
+         (expected-results (gethash 'expectations data))
+         (actual-results (compute-values input)))
+
+    (eval `(<span style="color: #a626a4;">ert-deftest</span> ,(intern (format <span style="color: #50a14f;">"e2e/%s"</span> (file-name-base file))) ()
+             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Iterate over each key in expected-results and create assertions
+</span>             (map-every-p (<span style="color: #a626a4;">lambda</span> (key expected-value)
+                            (<span style="color: #a626a4;">let</span> ((actual-value (map-elt ,actual-results key 'not-found)))
+
+                              (ert-info (`(<span style="color: #a626a4;">lambda</span> ()
+                                            (<span style="color: #a626a4;">when</span> ,(<span style="color: #a626a4;">and</span> (stringp actual-value) (stringp expected-value))
+                                              (insert-button <span style="color: #50a14f;">"Show Diff"</span>
+                                                             'action (<span style="color: #a626a4;">lambda</span> (button)
+                                                                       (show-string-diff ,expected-value ,actual-value))
+                                                             'follow-link t
+                                                             'help-echo <span style="color: #50a14f;">"Click to see the diff."</span>))
+                                            (format <span style="color: #50a14f;">" Test failed in file &#8220;%s&#8221; for key &#8220;%s&#8221;"</span> ,,file (<span style="color: #a626a4;">quote</span> ,key))))
+                                (should (equal actual-value expected-value)))))
+                          ,expected-results)))))
+
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Example use
+</span>(ert (make-ert-test-for-yaml-file  <span style="color: #50a14f;">"example.yaml"</span>))
+<span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">show-string-diff</span> (string1 string2)
+  <span style="color: #50a14f; font-style: italic;">"Show the difference between STRING1 and STRING2 using `diff` in Emacs."</span>
+  (<span style="color: #a626a4;">interactive</span> <span style="color: #50a14f;">"sEnter first string: \nsEnter second string: "</span>)
+  (<span style="color: #a626a4;">let</span> ((temp-buffer1 (get-buffer-create <span style="color: #50a14f;">"*Diff String 1*"</span>))
+        (temp-buffer2 (get-buffer-create <span style="color: #50a14f;">"*Diff String 2*"</span>)))
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Fill the first buffer with string1
+</span>    (<span style="color: #a626a4;">with-current-buffer</span> temp-buffer1
+      (erase-buffer)
+      (insert string1))
+
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Fill the second buffer with string2
+</span>    (<span style="color: #a626a4;">with-current-buffer</span> temp-buffer2
+      (erase-buffer)
+      (insert string2))
+
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Call the diff command on the two buffers
+</span>    (diff temp-buffer1 temp-buffer2)))
+<span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Example usage:
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(show-string-diff "hello world" "hello Emacs world")
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The "show diff" part is helpful since I'm working with large pieces of text, org src and its export.
+</span>
+<span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">
+</span>(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">run-e2e-tests</span> (<span style="color: #c18401;">&amp;optional</span> (directory <span style="color: #50a14f;">"."</span>))
+  (<span style="color: #a626a4;">interactive</span>)
+  <span style="color: #50a14f;">"Run all e2e tests recursively in DIRECTORY."</span>
+  (loop for file in (directory-files-recursively directory <span style="color: #50a14f;">"\\.yaml\\'"</span>)
+        do (make-ert-test-for-yaml-file file))
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Run all tests matching regex
+</span>  (ert <span style="color: #50a14f;">"e2e/.*"</span>))
+
+
+(run-e2e-tests)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(ert-delete-all-tests)
+</span>
+
+(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">update-e2e-tests</span> ()
+  (<span style="color: #a626a4;">interactive</span>)
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">update all tests
+</span>  (loop for file in (directory-files-recursively <span style="color: #50a14f;">"."</span> <span style="color: #50a14f;">"\\.yaml\\'"</span>)
+        for input = (map-elt (read-yaml-file file) 'input)
+        <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Creating an alist and not a hash-table so that ordering matters, for yaml encoding
+</span>        for actual = (list
+                      (cons 'input input)
+                      (cons 'expectations (map-into (compute-values input) 'alist)))
+        do (<span style="color: #a626a4;">with-temp-file</span> file
+             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(insert (yaml-encode actual)) ;; Nope, it does not honour new lines
+</span>             (insert (yaml-encode-alist actual))
+             (<span style="color: #a626a4;">-let</span> [format-all-formatters '((<span style="color: #50a14f;">"YAML"</span> prettier))]
+               (<span style="color: #a626a4;">use-package</span> yaml-mode) (yaml-mode) (<span style="color: #a626a4;">use-package</span> format-all) (format-all-buffer))
+             )))
+
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">yaml-encode-alist</span> (alist <span style="color: #c18401;">&amp;optional</span> indent-level)
+  <span style="color: #50a14f; font-style: italic;">"Encode an ALIST as a YAML-like string with multiline support.
+Newlines within values are formatted using `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">|-</span><span style="color: #50a14f; font-style: italic;">' style.
+Ensures a blank line before the `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">expectations</span><span style="color: #50a14f; font-style: italic;">' key if present.
+INDENT-LEVEL specifies the current indentation level, defaulting to 0."</span>
+  (<span style="color: #a626a4;">let</span> ((indent-level (<span style="color: #a626a4;">or</span> indent-level 0))
+        (first-key t))  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Track if it&#8217;s the first key
+</span>    (mapconcat
+     (<span style="color: #a626a4;">lambda</span> (pair)
+       (<span style="color: #a626a4;">let*</span> ((key (car pair))
+              (value (cdr pair))
+              (indent (make-string (* 2 indent-level) ? ))
+              (sub-indent (make-string (* 2 (1+ indent-level)) ? ))
+              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Insert a blank line before `expectations`
+</span>              (separator (<span style="color: #a626a4;">if</span> (<span style="color: #a626a4;">and</span> (eq key 'expectations) (not first-key))
+                             <span style="color: #50a14f;">"\n\n"</span> <span style="color: #50a14f;">"\n"</span>)))
+         (<span style="color: #a626a4;">setq</span> first-key nil)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">No longer the first key after first iteration
+</span>         (concat separator
+                 indent (symbol-name key) <span style="color: #50a14f;">": "</span>
+                 (<span style="color: #a626a4;">cond</span>
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Multiline strings: use `|-` style with additional indentation
+</span>                  ((<span style="color: #a626a4;">and</span> (stringp value) (string-match-p <span style="color: #50a14f;">"\n"</span> value))
+                   (concat <span style="color: #50a14f;">"|-\n"</span>
+                           sub-indent
+                           (replace-regexp-in-string <span style="color: #50a14f;">"\n"</span> (concat <span style="color: #50a14f;">"\n"</span> sub-indent) value)))
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Nested alists: recursively call yaml-encode-alist
+</span>                  ((<span style="color: #a626a4;">and</span> (listp value) (listp (car value)))
+                   (concat <span style="color: #50a14f;">"\n"</span> (yaml-encode-alist value (1+ indent-level))))
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Other values: simply output the value
+</span>                  (t
+                   (prin1-to-string value))))))
+     alist
+     <span style="color: #50a14f;">""</span>)))
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Example usage
+</span>(<span style="color: #a626a4;">let</span> ((example `((input . <span style="color: #50a14f;">"let x = 2\nlet y = 3\nx + y + z"</span>)
+                 (expectations . ((html . <span style="color: #50a14f;">"&lt;p&gt;\nlet y = 3\nx + y + z&lt;/p&gt;"</span>)
+                                  (latex . <span style="color: #50a14f;">"\\newline \n$let y = 3$ \n\\newline"</span>)
+                                  (age . 5 ))))))
+  (yaml-encode-alist example))
+
+
+<span style="color: #a0a1a7; font-weight: bold;">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Now if we just change the `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">compute-values</span><span style="color: #a0a1a7;">' method, we should be able to reuse the above logic as is.
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Let's for example, invoke `org-export-string-as` to test org-special-block-extras.
+</span>
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">compute-values</span> (input)
+  (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">hs-hide-all</span> () t) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">PROBLEM: &#8220;hiding all blocks&#8221;, is this hide-show-mode?
+</span>  (<span style="color: #a626a4;">let</span> ((html
+         (<span style="color: #a626a4;">with-temp-buffer</span>
+           (insert (org-export-string-as (format <span style="color: #50a14f;">"\n%s\n"</span> input) 'html <span style="color: #e44649;">:body-only-please</span>))
+           (<span style="color: #a626a4;">-let</span> [format-all-formatters '((<span style="color: #50a14f;">"HTML"</span> prettier))]
+             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">TODO: When all my osbe e2e tests pass, then I should remove this ignore-errors.
+</span>             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">If something doesn't format, then that means it's likely invalid and should error.
+</span>             (html-mode) (<span style="color: #a626a4;">ignore-errors</span> (format-all-buffer))) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">ignore-errors for unclosed &lt;p&gt; tags and other silly html errors
+</span>           (s-trim (buffer-string))))
+        (latex
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Try to export, if it fails then just get the err msg.
+</span>         (<span style="color: #a626a4;">condition-case</span> err
+             (<span style="color: #a626a4;">with-temp-buffer</span>
+               (insert (org-export-string-as (format <span style="color: #50a14f;">"\n%s\n"</span> input) 'latex <span style="color: #e44649;">:body-only-please</span>))
+               (<span style="color: #a626a4;">-let</span> [format-all-formatters '((<span style="color: #50a14f;">"LaTeX"</span> latexindent))] <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">!! brew install latexindent
+</span>                 (latex-mode) (format-all-buffer))
+               (s-trim (buffer-string)))
+           (<span style="font-weight: bold;">error</span> (format <span style="color: #50a14f;">"&#129760; Whoops, there seems to be an error: \n %S"</span> err)))))
+    (map-into (list 'html html 'latex latex) 'hash-table)))
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Why the new lines \n%s\n?
+</span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">With input being:
+</span><span style="color: #50a14f;">"let x = 2
+let y = 3
+x + y + z + w"</span>
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">the first line is cut off for some reason.
+</span>
+
+(update-e2e-tests)
+(run-e2e-tests)
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">(ert-delete-all-tests)
+</span><span style="color: #a0a1a7;">#+end_src
+</span>
+</pre>
+  </body>
+</html>

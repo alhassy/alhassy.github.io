@@ -1,0 +1,901 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-10-15 Thu 18:26 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Time tracking &amp; clocking</title>
+<meta name="description" content="Why track time, and how Org's clocking helps." />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style>
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+          <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+          <script type="text/javascript">
+              if (typeof jQuery == 'undefined') {
+                  document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+              }
+          </script>
+
+           <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+            <script>
+                   $(document).ready(function() {
+                       $('.tooltip').tooltipster({
+                           theme: 'tooltipster-punk',
+                           contentAsHTML: true,
+                           animation: 'grow',
+                           delay: [100,500],
+                           // trigger: 'click'
+                           trigger: 'custom',
+                           triggerOpen: {
+                               mouseenter: true
+                           },
+                           triggerClose: {
+                               originClick: true,
+                               scroll: true
+                           }
+           });
+                   });
+               </script>
+
+          <style>
+             abbr {color: red;}
+
+             .tooltip { border-bottom: 1px dotted #000;
+                        color:red;
+                        text-decoration: none;}
+          </style>
+          
+<meta name="robots" content="noindex">
+</head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">Time tracking & clocking</h1></center><center><p style="background:#fff3cd;border:1px dashed #b58900;padding:0.5em;max-width:40em;">🚧 <b>Draft</b> &mdash;unlisted while I think it over; please don't share it just yet.</p></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/unlisted-time-tracking-and-clocking.org.html"><img src="https://img.shields.io/badge/-Source-informational?logo=read-the-docs"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/alhassy.github.io/commits/master/draft/todo.org"><img src="https://img.shields.io/badge/-History-informational?logo=github"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#time-tracking">1. Time Tracking</a>
+<ul>
+<li><a href="#httpsclockifymeblogtracking-timepersonal-timekeepinghow-personal-timekeeping-helps-you-stay-on-top-of-things-clockify-blog">1.1. How personal timekeeping helps you stay on top of things – Clockify Blog</a></li>
+<li><a href="#time-tracking-benefits-for-me">1.2. Time Tracking Benefits for <i>✨me💖</i></a></li>
+<li><a href="#httpswwwbeflagrantcomblogfree-time-isn-t-free-2023-05-12free-time-isnt-free-flagrant">1.3. Free Time Isn’t Free | Flagrant</a></li>
+</ul>
+</li>
+<li><a href="#httpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-dayhttpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-day">2. https://www.fastcoexist.com/3051448/why-sweden-is-shifting-to-a-6-hour-work-day</a></li>
+<li><a href="#clocking">3. Clocking</a>
+<ul>
+<li><a href="#c-c-c-z-httpsnewsycombinatorcomitemid20780939how-to-return-to-the-flow-faster-hacker-news">3.1. C-c C-z &amp;&amp; How to return to the flow faster | Hacker News</a></li>
+<li><a href="#httpsalhassygithubioemacsdworkflowpdf">3.2. https://alhassy.github.io/emacs.d/Workflow.pdf</a></li>
+<li><a href="#httpswwwmiskatonicorg20171106clocktable">3.3. https://www.miskatonic.org/2017/11/06/clocktable/</a></li>
+<li><a href="#httpswritequitorgdenver-emacspresentations2017-04-11-time-clocking-with-orghtml">3.4. https://writequit.org/denver-emacs/presentations/2017-04-11-time-clocking-with-org.html</a></li>
+<li><a href="#sounds-like-the-org-clock-table-is-what-you-are-after">3.5. Sounds like the org clock table is what you are after</a></li>
+<li><a href="#httpswwwtimedoctorcomblogbenefits-of-time-trackingthe-top-10-benefits-of-time-tracking-and-how-to-track-time">3.6. The top 10 benefits of time tracking (and how to track time)</a></li>
+<li><a href="#httpswwwerichgrunewaldcompostshow-i-track-my-hour-balance-with-a-custom-org-mode-clock-table">3.7. https://www.erichgrunewald.com/posts/how-i-track-my-hour-balance-with-a-custom-org-mode-clock-table/</a></li>
+<li><a href="#httpsjessicastringhamnet20160101org-mode-clocking-intro">3.8. https://jessicastringham.net/2016/01/01/org-mode-clocking-intro/</a></li>
+<li><a href="#httpswwwworkflowmaxcomblog20-instant-benefits-of-using-a-time-tracking-software-in-your-business20-instant-benefits-of-using-time-tracking-software">3.9. 20 Instant Benefits of Using Time Tracking Software</a></li>
+<li><a href="#httpsmborkpl2022-07-11apoorman27semacs-jiraintegration">3.10. https://mbork.pl/2022-07-11_A_poor_man%27s_Emacs_-_Jira_integration</a></li>
+<li><a href="#httpskarl-voitat20220210lfileuomf-path-independent-links-to-local-files-via-locate">3.11. UOMF: Path-Independent Links to Local Files Via Locate</a></li>
+<li><a href="#httpskarl-voitat20180124broken-outlook-linksexternal-links-to-outlook-emails-get-broken-when-emails-are-moved">3.12. External Links to Outlook Emails Get Broken When Emails Are Moved</a></li>
+<li><a href="#httpsmborkpl2018-04-28org-mru-clockmarcin-borkowski-2018-04-28-org-mru-clock">3.13. Marcin Borkowski: 2018-04-28 org-mru-clock</a></li>
+<li><a href="#httpslistsgnuorgarchivehtmlemacs-orgmode2019-04msg00035htmlo-ann-org-conflict-add-on-timing-conflicts-detector-and-resolver-fo">3.14. [O] [ANN] org-conflict add-on: timing conflicts detector and resolver fo</a></li>
+<li><a href="#httpswwwadventuresinwhycompostorg-mode-timekeepingtimekeeping-with-emacs-and-org-mode-adventures-in-why">3.15. Timekeeping with Emacs and Org-Mode | Adventures in Why</a></li>
+<li><a href="#httpsblogtmetriccomwhy-you-need-personal-time-trackingtextagainst20distractionswhy-you-need-a-personal-time-tracking-tool">3.16. Why YOU NEED a personal time tracking tool</a></li>
+<li><a href="#httpstimelyappcomblogwhy-is-time-tracking-importantthe-importance-of-time-tracking-for-personal-growth">3.17. The Importance of Time Tracking for Personal Growth</a></li>
+<li><a href="#httpsforumasanacomttime-tracking-for-personal-productivity300092time-tracking-for-personal-productivity-2-by-marie-use-cases-asana-forum">3.18. Time tracking for personal productivity - #2 by Marie - Use Cases - Asana Forum</a></li>
+<li><a href="#httpswwwgooglecomsearchqwhyuseapersonaltimetrackeroqwhyuseapersonaltimetrackergslcrpegzjahjvbwuybggaeeuyotihcaeqirigadibcdm1odvqmgoxqaiasaiasourceidchromeieutf-8why-use-a-personal-time-tracker">3.19. why use a personal time tracker</a></li>
+<li><a href="#httpswwwyoutubecomwatchvtrxccfownzaemacs-org-mode-clock-reports-for-logging-and-timekeeping-youtube">3.20. Emacs | Org Mode Clock Reports, For Logging and Timekeeping - YouTube</a></li>
+<li><a href="#httpsgithubcomfuco1org-clock-budgetgithub-fuco1org-clock-budget-budget-your-time-with-org">3.21. GitHub - Fuco1/org-clock-budget: Budget your time with org!</a></li>
+<li><a href="#httpswwwkalzumeuscom20100320running-a-software-business-on-5-hours-a-weektime-as-an-assetdebt-running-a-software-business-on-5-hours-a-week-kalzumeus-software">3.22. Time as an asset/debt: Running A Software Business On 5 Hours A Week | Kalzumeus Software</a></li>
+<li><a href="#org-agenda">3.23. Org-agenda</a></li>
+<li><a href="#the-reason-to-clock-in-monotasking-3">3.24. The reason to clock-in: MONO<sub>TASKING</sub>! &lt;3</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+<a href="https://alhassy.com/unlisted-notes-table-of-contents">↑ All unlisted notes</a>
+</p>
+<div id="outline-container-time-tracking" class="outline-2">
+<h2 id="time-tracking"><span class="section-number-2">1.</span> <a href="#time-tracking">Time Tracking</a></h2>
+<div class="outline-text-2" id="text-time-tracking">
+</div>
+<div id="outline-container-httpsclockifymeblogtracking-timepersonal-timekeepinghow-personal-timekeeping-helps-you-stay-on-top-of-things-clockify-blog" class="outline-3">
+<h3 id="httpsclockifymeblogtracking-timepersonal-timekeepinghow-personal-timekeeping-helps-you-stay-on-top-of-things-clockify-blog"><span class="section-number-3">1.1.</span> <a href="https://clockify.me/blog/tracking-time/personal-timekeeping/">How personal timekeeping helps you stay on top of things – Clockify Blog</a></h3>
+<div class="outline-text-3" id="text-httpsclockifymeblogtracking-timepersonal-timekeepinghow-personal-timekeeping-helps-you-stay-on-top-of-things-clockify-blog">
+</div>
+</div>
+<div id="outline-container-time-tracking-benefits-for-me" class="outline-3">
+<h3 id="time-tracking-benefits-for-me"><span class="section-number-3">1.2.</span> <a href="#time-tracking-benefits-for-me">Time Tracking Benefits for <i>✨me💖</i></a></h3>
+<div class="outline-text-3" id="text-time-tracking-benefits-for-me">
+</div>
+<ol class="org-ol">
+<li><a id="creating-a-record-of-your-work"></a><a href="#creating-a-record-of-your-work">Creating a record of your work</a><br />
+<div class="outline-text-5" id="text-creating-a-record-of-your-work">
+<p>
+In addition to providing useful summary data, time tracking also creates
+a record of exactly what your team worked on. This really comes in handy
+in certain situations.
+</p>
+
+<p>
+Sometimes clients will ask for a detailed explanation of why something
+took as long as it did. They want to make sure the time they're paying
+for is being put to good use. With the right time tracking tool, all you
+have to do is generate a report and all the details are there. This data
+makes it easier to have tough discussions with clients, because you can
+show them exactly how long great work takes. You can also push back
+against any aggressive or unreasonable expectations.
+</p>
+
+<p>
+And when you work in an industry where you could be audited, tracking
+time creates a vital record of what work you did. If you're a government
+contractor, for example, an accurate record of what everyone did and how
+long it took is essential for proving that government money wasn't
+wasted.
+</p>
+</div>
+</li>
+<li><a id="improving-how-you-work"></a><a href="#improving-how-you-work">Improving how you work</a><br />
+<div class="outline-text-5" id="text-improving-how-you-work">
+<p>
+How many hours a day do you really spend in meetings? Are you spending
+more time wrangling your inbox than tackling your main priorities?
+Without hard data, it's tough to get a sense of how productive you
+really are.
+</p>
+
+<blockquote>
+<p>
+People are often surprised by what their timesheets actually tell them
+about their work habits and those of their team.
+</p>
+</blockquote>
+
+<p>
+People are often surprised by what their timesheets actually tell them
+about their work habits and those of their team. Unsurprisingly, many
+teams uncover huge inefficiencies. The upside? Once you have that data,
+you can start improving how your team works. Are meetings taking up a
+lot of your team's time? Cut down on the number of meetings, or the
+number of people in each one. Are there internal processes that are
+eating away at billable hours? Work with your team to streamline them.
+</p>
+
+<p>
+⇒ Time tracking can also empower individual people to improve how they
+⇒ work. Once people see their time recorded, they often realize they're
+⇒ switching contexts too frequently and aren't setting aside enough time
+⇒ for deep work. Or they see how they could do a better job organizing
+⇒ their day. Small improvements to individual workflows can have a big
+⇒ impact on overall efficiency in the long run.
+</p>
+</div>
+<ol class="org-ol">
+<li><a id="prevent-burnout"></a><a href="#prevent-burnout">Prevent burnout</a><br />
+<div class="outline-text-6" id="text-prevent-burnout">
+<p>
+Use data collected through time tracking to prevent burnout and
+reinforce a good work-life balance. If you notice people consistently
+going over forty hours a week, you can actively intervene and get some
+work off their plate. When people know you're using their time to have
+their back, they'll be way more likely to track time.
+</p>
+</div>
+</li>
+<li><a id="help-employees-help-themselves"></a><a href="#help-employees-help-themselves">Help employees help themselves</a><br />
+<div class="outline-text-6" id="text-help-employees-help-themselves">
+<p>
+Time tracking gives interesting insight into how you work. Do you spend
+more time checking email than working on actual deliverables? Does most
+of your time go toward your biggest priorities, or are you constantly
+distracted by smaller tasks? Time tracking data can empower people to
+improve their work habits. Let the members of your team in on this data
+to motivate them to track more accurately.
+</p>
+</div>
+</li>
+</ol>
+</li>
+<li><a id="ill-list-down-some-of-the-pros-below"></a><a href="#ill-list-down-some-of-the-pros-below">I'll list down some of the pros below.</a><br />
+<div class="outline-text-5" id="text-ill-list-down-some-of-the-pros-below">
+<ul class="org-ul">
+<li><b>It's Emacs all the way</b> Having time tracking inside my editor mean no
+switching between multiple Apps, and no new key bindings to learn. I
+can just treat my time tracker as another text file and edit anything
+on it using the same musle memory I use for any other editing.</li>
+
+<li><b>No more manual counting</b></li>
+</ul>
+
+
+<p>
+Although it's just a text file, org-mode give these features like
+real-time status, at any given time I can see the total time I've spent
+on the current task on the mini buffer.
+</p>
+
+<p>
+Note: If I wanted to keep my clocked times in their own drawer, away from
+the log notes, I could do:
+(setq org-clock-into-drawer "CLOCKED")
+</p>
+</div>
+</li>
+</ol>
+</div>
+<div id="outline-container-httpswwwbeflagrantcomblogfree-time-isn-t-free-2023-05-12free-time-isnt-free-flagrant" class="outline-3">
+<h3 id="httpswwwbeflagrantcomblogfree-time-isn-t-free-2023-05-12free-time-isnt-free-flagrant"><span class="section-number-3">1.3.</span> <a href="https://www.beflagrant.com/blog/free-time-isn-t-free-2023-05-12">Free Time Isn’t Free | Flagrant</a></h3>
+<div class="outline-text-3" id="text-httpswwwbeflagrantcomblogfree-time-isn-t-free-2023-05-12free-time-isnt-free-flagrant">
+</div>
+</div>
+</div>
+<div id="outline-container-httpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-dayhttpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-day" class="outline-2">
+<h2 id="httpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-dayhttpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-day"><span class="section-number-2">2.</span> <a href="https://www.fastcoexist.com/3051448/why-sweden-is-shifting-to-a-6-hour-work-day">https://www.fastcoexist.com/3051448/why-sweden-is-shifting-to-a-6-hour-work-day</a></h2>
+<div class="outline-text-2" id="text-httpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-dayhttpswwwfastcoexistcom3051448why-sweden-is-shifting-to-a-6-hour-work-day">
+</div>
+</div>
+<div id="outline-container-clocking" class="outline-2">
+<h2 id="clocking"><span class="section-number-2">3.</span> <a href="#clocking">Clocking</a></h2>
+<div class="outline-text-2" id="text-clocking">
+</div>
+<div id="outline-container-c-c-c-z-httpsnewsycombinatorcomitemid20780939how-to-return-to-the-flow-faster-hacker-news" class="outline-3">
+<h3 id="c-c-c-z-httpsnewsycombinatorcomitemid20780939how-to-return-to-the-flow-faster-hacker-news"><span class="section-number-3">3.1.</span> C-c C-z &amp;&amp; <a href="https://news.ycombinator.com/item?id=20780939">How to return to the flow faster | Hacker News</a></h3>
+<div class="outline-text-3" id="text-c-c-c-z-httpsnewsycombinatorcomitemid20780939how-to-return-to-the-flow-faster-hacker-news">
+</div>
+</div>
+<div id="outline-container-httpsalhassygithubioemacsdworkflowpdf" class="outline-3">
+<h3 id="httpsalhassygithubioemacsdworkflowpdf"><span class="section-number-3">3.2.</span> <a href="https://alhassy.github.io/emacs.d/Workflow.pdf">https://alhassy.github.io/emacs.d/Workflow.pdf</a></h3>
+<div class="outline-text-3" id="text-httpsalhassygithubioemacsdworkflowpdf">
+</div>
+</div>
+<div id="outline-container-httpswwwmiskatonicorg20171106clocktable" class="outline-3">
+<h3 id="httpswwwmiskatonicorg20171106clocktable"><span class="section-number-3">3.3.</span> <a href="https://www.miskatonic.org/2017/11/06/clocktable/">https://www.miskatonic.org/2017/11/06/clocktable/</a></h3>
+<div class="outline-text-3" id="text-httpswwwmiskatonicorg20171106clocktable">
+</div>
+</div>
+<div id="outline-container-httpswritequitorgdenver-emacspresentations2017-04-11-time-clocking-with-orghtml" class="outline-3">
+<h3 id="httpswritequitorgdenver-emacspresentations2017-04-11-time-clocking-with-orghtml"><span class="section-number-3">3.4.</span> <a href="https://writequit.org/denver-emacs/presentations/2017-04-11-time-clocking-with-org.html">https://writequit.org/denver-emacs/presentations/2017-04-11-time-clocking-with-org.html</a></h3>
+<div class="outline-text-3" id="text-httpswritequitorgdenver-emacspresentations2017-04-11-time-clocking-with-orghtml">
+</div>
+</div>
+<div id="outline-container-sounds-like-the-org-clock-table-is-what-you-are-after" class="outline-3">
+<h3 id="sounds-like-the-org-clock-table-is-what-you-are-after"><span class="section-number-3">3.5.</span> <a href="#sounds-like-the-org-clock-table-is-what-you-are-after">Sounds like the org clock table is what you are after</a></h3>
+<div class="outline-text-3" id="text-sounds-like-the-org-clock-table-is-what-you-are-after">
+<p>
+<a href="https://orgmode.org/manual/The-clock-table.html">https://orgmode.org/manual/The-clock-table.html</a>
+</p>
+
+<p>
+TLDR,
+</p>
+
+<p>
+M-x org-clock-report
+</p>
+</div>
+</div>
+<div id="outline-container-httpswwwtimedoctorcomblogbenefits-of-time-trackingthe-top-10-benefits-of-time-tracking-and-how-to-track-time" class="outline-3">
+<h3 id="httpswwwtimedoctorcomblogbenefits-of-time-trackingthe-top-10-benefits-of-time-tracking-and-how-to-track-time"><span class="section-number-3">3.6.</span> <a href="https://www.timedoctor.com/blog/benefits-of-time-tracking/">The top 10 benefits of time tracking (and how to track time)</a></h3>
+<div class="outline-text-3" id="text-httpswwwtimedoctorcomblogbenefits-of-time-trackingthe-top-10-benefits-of-time-tracking-and-how-to-track-time">
+</div>
+</div>
+<div id="outline-container-httpswwwerichgrunewaldcompostshow-i-track-my-hour-balance-with-a-custom-org-mode-clock-table" class="outline-3">
+<h3 id="httpswwwerichgrunewaldcompostshow-i-track-my-hour-balance-with-a-custom-org-mode-clock-table"><span class="section-number-3">3.7.</span> <a href="https://www.erichgrunewald.com/posts/how-i-track-my-hour-balance-with-a-custom-org-mode-clock-table/">https://www.erichgrunewald.com/posts/how-i-track-my-hour-balance-with-a-custom-org-mode-clock-table/</a></h3>
+<div class="outline-text-3" id="text-httpswwwerichgrunewaldcompostshow-i-track-my-hour-balance-with-a-custom-org-mode-clock-table">
+</div>
+</div>
+<div id="outline-container-httpsjessicastringhamnet20160101org-mode-clocking-intro" class="outline-3">
+<h3 id="httpsjessicastringhamnet20160101org-mode-clocking-intro"><span class="section-number-3">3.8.</span> <a href="https://jessicastringham.net/2016/01/01/org-mode-clocking-intro/">https://jessicastringham.net/2016/01/01/org-mode-clocking-intro/</a></h3>
+<div class="outline-text-3" id="text-httpsjessicastringhamnet20160101org-mode-clocking-intro">
+</div>
+</div>
+<div id="outline-container-httpswwwworkflowmaxcomblog20-instant-benefits-of-using-a-time-tracking-software-in-your-business20-instant-benefits-of-using-time-tracking-software" class="outline-3">
+<h3 id="httpswwwworkflowmaxcomblog20-instant-benefits-of-using-a-time-tracking-software-in-your-business20-instant-benefits-of-using-time-tracking-software"><span class="section-number-3">3.9.</span> <a href="https://www.workflowmax.com/blog/20-instant-benefits-of-using-a-time-tracking-software-in-your-business">20 Instant Benefits of Using Time Tracking Software</a></h3>
+<div class="outline-text-3" id="text-httpswwwworkflowmaxcomblog20-instant-benefits-of-using-a-time-tracking-software-in-your-business20-instant-benefits-of-using-time-tracking-software">
+</div>
+</div>
+<div id="outline-container-httpsmborkpl2022-07-11apoorman27semacs-jiraintegration" class="outline-3">
+<h3 id="httpsmborkpl2022-07-11apoorman27semacs-jiraintegration"><span class="section-number-3">3.10.</span> <a href="https://mbork.pl/2022-07-11_A_poor_man%27s_Emacs_-_Jira_integration">https://mbork.pl/2022-07-11_A_poor_man%27s_Emacs_-_Jira_integration</a></h3>
+<div class="outline-text-3" id="text-httpsmborkpl2022-07-11apoorman27semacs-jiraintegration">
+</div>
+</div>
+<div id="outline-container-httpskarl-voitat20220210lfileuomf-path-independent-links-to-local-files-via-locate" class="outline-3">
+<h3 id="httpskarl-voitat20220210lfileuomf-path-independent-links-to-local-files-via-locate"><span class="section-number-3">3.11.</span> <a href="https://karl-voit.at/2022/02/10/lfile/">UOMF: Path-Independent Links to Local Files Via Locate</a></h3>
+<div class="outline-text-3" id="text-httpskarl-voitat20220210lfileuomf-path-independent-links-to-local-files-via-locate">
+</div>
+</div>
+<div id="outline-container-httpskarl-voitat20180124broken-outlook-linksexternal-links-to-outlook-emails-get-broken-when-emails-are-moved" class="outline-3">
+<h3 id="httpskarl-voitat20180124broken-outlook-linksexternal-links-to-outlook-emails-get-broken-when-emails-are-moved"><span class="section-number-3">3.12.</span> <a href="https://karl-voit.at/2018/01/24/broken-outlook-links/">External Links to Outlook Emails Get Broken When Emails Are Moved</a></h3>
+<div class="outline-text-3" id="text-httpskarl-voitat20180124broken-outlook-linksexternal-links-to-outlook-emails-get-broken-when-emails-are-moved">
+</div>
+</div>
+<div id="outline-container-httpsmborkpl2018-04-28org-mru-clockmarcin-borkowski-2018-04-28-org-mru-clock" class="outline-3">
+<h3 id="httpsmborkpl2018-04-28org-mru-clockmarcin-borkowski-2018-04-28-org-mru-clock"><span class="section-number-3">3.13.</span> <a href="https://mbork.pl/2018-04-28_org-mru-clock">Marcin Borkowski: 2018-04-28 org-mru-clock</a></h3>
+<div class="outline-text-3" id="text-httpsmborkpl2018-04-28org-mru-clockmarcin-borkowski-2018-04-28-org-mru-clock">
+</div>
+</div>
+<div id="outline-container-httpslistsgnuorgarchivehtmlemacs-orgmode2019-04msg00035htmlo-ann-org-conflict-add-on-timing-conflicts-detector-and-resolver-fo" class="outline-3">
+<h3 id="httpslistsgnuorgarchivehtmlemacs-orgmode2019-04msg00035htmlo-ann-org-conflict-add-on-timing-conflicts-detector-and-resolver-fo"><span class="section-number-3">3.14.</span> <a href="https://lists.gnu.org/archive/html/emacs-orgmode/2019-04/msg00035.html">[O] [ANN] org-conflict add-on: timing conflicts detector and resolver fo</a></h3>
+<div class="outline-text-3" id="text-httpslistsgnuorgarchivehtmlemacs-orgmode2019-04msg00035htmlo-ann-org-conflict-add-on-timing-conflicts-detector-and-resolver-fo">
+</div>
+</div>
+<div id="outline-container-httpswwwadventuresinwhycompostorg-mode-timekeepingtimekeeping-with-emacs-and-org-mode-adventures-in-why" class="outline-3">
+<h3 id="httpswwwadventuresinwhycompostorg-mode-timekeepingtimekeeping-with-emacs-and-org-mode-adventures-in-why"><span class="section-number-3">3.15.</span> <a href="https://www.adventuresinwhy.com/post/org-mode-timekeeping/">Timekeeping with Emacs and Org-Mode | Adventures in Why</a></h3>
+<div class="outline-text-3" id="text-httpswwwadventuresinwhycompostorg-mode-timekeepingtimekeeping-with-emacs-and-org-mode-adventures-in-why">
+</div>
+</div>
+<div id="outline-container-httpsblogtmetriccomwhy-you-need-personal-time-trackingtextagainst20distractionswhy-you-need-a-personal-time-tracking-tool" class="outline-3">
+<h3 id="httpsblogtmetriccomwhy-you-need-personal-time-trackingtextagainst20distractionswhy-you-need-a-personal-time-tracking-tool"><span class="section-number-3">3.16.</span> <a href="https://blog.tmetric.com/why-you-need-personal-time-tracking/#:~:text=against%20distractions">Why YOU NEED a personal time tracking tool</a></h3>
+<div class="outline-text-3" id="text-httpsblogtmetriccomwhy-you-need-personal-time-trackingtextagainst20distractionswhy-you-need-a-personal-time-tracking-tool">
+</div>
+</div>
+<div id="outline-container-httpstimelyappcomblogwhy-is-time-tracking-importantthe-importance-of-time-tracking-for-personal-growth" class="outline-3">
+<h3 id="httpstimelyappcomblogwhy-is-time-tracking-importantthe-importance-of-time-tracking-for-personal-growth"><span class="section-number-3">3.17.</span> <a href="https://timelyapp.com/blog/why-is-time-tracking-important">The Importance of Time Tracking for Personal Growth</a></h3>
+<div class="outline-text-3" id="text-httpstimelyappcomblogwhy-is-time-tracking-importantthe-importance-of-time-tracking-for-personal-growth">
+</div>
+</div>
+<div id="outline-container-httpsforumasanacomttime-tracking-for-personal-productivity300092time-tracking-for-personal-productivity-2-by-marie-use-cases-asana-forum" class="outline-3">
+<h3 id="httpsforumasanacomttime-tracking-for-personal-productivity300092time-tracking-for-personal-productivity-2-by-marie-use-cases-asana-forum"><span class="section-number-3">3.18.</span> <a href="https://forum.asana.com/t/time-tracking-for-personal-productivity/30009/2">Time tracking for personal productivity - #2 by Marie - Use Cases - Asana Forum</a></h3>
+<div class="outline-text-3" id="text-httpsforumasanacomttime-tracking-for-personal-productivity300092time-tracking-for-personal-productivity-2-by-marie-use-cases-asana-forum">
+</div>
+</div>
+<div id="outline-container-httpswwwgooglecomsearchqwhyuseapersonaltimetrackeroqwhyuseapersonaltimetrackergslcrpegzjahjvbwuybggaeeuyotihcaeqirigadibcdm1odvqmgoxqaiasaiasourceidchromeieutf-8why-use-a-personal-time-tracker" class="outline-3">
+<h3 id="httpswwwgooglecomsearchqwhyuseapersonaltimetrackeroqwhyuseapersonaltimetrackergslcrpegzjahjvbwuybggaeeuyotihcaeqirigadibcdm1odvqmgoxqaiasaiasourceidchromeieutf-8why-use-a-personal-time-tracker"><span class="section-number-3">3.19.</span> <a href="https://www.google.com/search?q=why+use+a+personal+time+tracker&amp;oq=why+use+a+personal++time+tracker&amp;gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigAdIBCDM1ODVqMGoxqAIAsAIA&amp;sourceid=chrome&amp;ie=UTF-8">why use a personal time tracker</a></h3>
+<div class="outline-text-3" id="text-httpswwwgooglecomsearchqwhyuseapersonaltimetrackeroqwhyuseapersonaltimetrackergslcrpegzjahjvbwuybggaeeuyotihcaeqirigadibcdm1odvqmgoxqaiasaiasourceidchromeieutf-8why-use-a-personal-time-tracker">
+</div>
+</div>
+<div id="outline-container-httpswwwyoutubecomwatchvtrxccfownzaemacs-org-mode-clock-reports-for-logging-and-timekeeping-youtube" class="outline-3">
+<h3 id="httpswwwyoutubecomwatchvtrxccfownzaemacs-org-mode-clock-reports-for-logging-and-timekeeping-youtube"><span class="section-number-3">3.20.</span> <a href="https://www.youtube.com/watch?v=tRXccfOwNZA">Emacs | Org Mode Clock Reports, For Logging and Timekeeping - YouTube</a></h3>
+<div class="outline-text-3" id="text-httpswwwyoutubecomwatchvtrxccfownzaemacs-org-mode-clock-reports-for-logging-and-timekeeping-youtube">
+</div>
+</div>
+<div id="outline-container-httpsgithubcomfuco1org-clock-budgetgithub-fuco1org-clock-budget-budget-your-time-with-org" class="outline-3">
+<h3 id="httpsgithubcomfuco1org-clock-budgetgithub-fuco1org-clock-budget-budget-your-time-with-org"><span class="section-number-3">3.21.</span> <a href="https://github.com/Fuco1/org-clock-budget">GitHub - Fuco1/org-clock-budget: Budget your time with org!</a></h3>
+<div class="outline-text-3" id="text-httpsgithubcomfuco1org-clock-budgetgithub-fuco1org-clock-budget-budget-your-time-with-org">
+</div>
+</div>
+<div id="outline-container-httpswwwkalzumeuscom20100320running-a-software-business-on-5-hours-a-weektime-as-an-assetdebt-running-a-software-business-on-5-hours-a-week-kalzumeus-software" class="outline-3">
+<h3 id="httpswwwkalzumeuscom20100320running-a-software-business-on-5-hours-a-weektime-as-an-assetdebt-running-a-software-business-on-5-hours-a-week-kalzumeus-software"><span class="section-number-3">3.22.</span> <a href="https://www.kalzumeus.com/2010/03/20/running-a-software-business-on-5-hours-a-week/">Time as an asset/debt: Running A Software Business On 5 Hours A Week | Kalzumeus Software</a></h3>
+<div class="outline-text-3" id="text-httpswwwkalzumeuscom20100320running-a-software-business-on-5-hours-a-weektime-as-an-assetdebt-running-a-software-business-on-5-hours-a-week-kalzumeus-software">
+</div>
+</div>
+<div id="outline-container-org-agenda" class="outline-3">
+<h3 id="org-agenda"><span class="section-number-3">3.23.</span> <a href="#org-agenda">Org-agenda</a></h3>
+<div class="outline-text-3" id="text-org-agenda">
+</div>
+<div id="outline-container-enter-org-agenda-then-explore-c-h-m-all-commands" class="outline-4">
+<h4 id="enter-org-agenda-then-explore-c-h-m-all-commands"><span class="section-number-4">3.23.1.</span> <a href="#enter-org-agenda-then-explore-c-h-m-all-commands">Enter org-agenda then explore <code>C-h m</code> all commands</a></h4>
+<div class="outline-text-4" id="text-enter-org-agenda-then-explore-c-h-m-all-commands">
+</div>
+</div>
+<div id="outline-container-explore-the-full-search-options-of-m-x-org-agenda" class="outline-4">
+<h4 id="explore-the-full-search-options-of-m-x-org-agenda"><span class="section-number-4">3.23.2.</span> <a href="#explore-the-full-search-options-of-m-x-org-agenda">Explore the full search options of <code>M-x org-agenda</code></a></h4>
+<div class="outline-text-4" id="text-explore-the-full-search-options-of-m-x-org-agenda">
+</div>
+</div>
+<div id="outline-container-org-mode-configuration-for-emacs-hugo-cisneros" class="outline-4">
+<h4 id="org-mode-configuration-for-emacs-hugo-cisneros"><span class="section-number-4">3.23.3.</span> <a href="#org-mode-configuration-for-emacs-hugo-cisneros">Org-mode configuration for Emacs - Hugo Cisneros</a></h4>
+<div class="outline-text-4" id="text-org-mode-configuration-for-emacs-hugo-cisneros">
+<p>
+<a href="https://hugocisneros.com/org-config/#agen">https://hugocisneros.com/org-config/#agen</a>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-the-reason-to-clock-in-monotasking-3" class="outline-3">
+<h3 id="the-reason-to-clock-in-monotasking-3"><span class="section-number-3">3.24.</span> <a href="#the-reason-to-clock-in-monotasking-3">The reason to clock-in: MONO<sub>TASKING</sub>! &lt;3</a></h3>
+<div class="outline-text-3" id="text-the-reason-to-clock-in-monotasking-3">
+<p>
+Think of your brain as a spotlight. When you're working on a single
+task, that spotlight shines bright and clear. But when you flip between
+tasks, that light flickers, and it takes time to shine fully again with
+each switch.
+</p>
+
+<p>
+This isn't just about feeling scattered&#x2014;it's a real drain on your
+mental energy and time, leading to work that often takes longer and
+isn't up to par.
+</p>
+
+<p>
+Research backs this up, showing that when we multitask, the extra time
+needed to switch between tasks can eat up a whopping 40% of our
+productive time.<sup>[1]</sup> It's like a tax your brain pays for jumping
+around, and that “task-switching cost” adds up.
+</p>
+
+<p>
+When you try to do too much at once, you split your attention and end up
+doing nothing well. It's like trying to catch four balls at
+once&#x2014;you're going to drop one, or maybe all of them. This scattered
+focus can mean more mistakes and lower-quality work.
+</p>
+
+<p>
+<a id="cta-inline-content-assessment"></a>
+</p>
+</div>
+<div id="outline-container-how-balanced-is-your-life" class="outline-4">
+<h4 id="how-balanced-is-your-life"><span class="section-number-4">3.24.1.</span> <a href="#how-balanced-is-your-life">How Balanced is Your Life?</a></h4>
+<div class="outline-text-4" id="text-how-balanced-is-your-life">
+<p>
+Assess how balanced your life is with our Time/Life Self-Assessment and
+get a customized report for free.
+</p>
+
+<p>
+You will find out your time management strengths, uncover hidden
+opportunities, and shape your life on your terms.
+</p>
+
+
+<div class="figure">
+<p><img src="https://ce.lifehack.org/c7201f940412b3e84e00.png" alt="c7201f940412b3e84e00.png" />
+</p>
+</div>
+
+<p>
+<a href="https://g.lifehack.org/full-life-assessment?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=how+balanced&amp;utm_term=intermediary&amp;utm_content=global">Take
+the Free Assessment</a>
+</p>
+
+<p>
+So what's the solution? Lock in on one task at a time. When you
+monotask, you're committing to one thing, which means doing it better
+and faster.
+</p>
+
+<p>
+If focusing isn't your strong suit, don't worry&#x2014;we've all been there.
+And there are ways to train your brain to get better at it.
+</p>
+</div>
+</div>
+<div id="outline-container-i-love-putting-my-tasks-into-the-agenda-breaking-them-down-as-much-as" class="outline-4">
+<h4 id="i-love-putting-my-tasks-into-the-agenda-breaking-them-down-as-much-as"><span class="section-number-4">3.24.2.</span> <a href="#i-love-putting-my-tasks-into-the-agenda-breaking-them-down-as-much-as">I <i>love</i> putting my tasks into the agenda, breaking them down as much as</a></h4>
+<div class="outline-text-4" id="text-i-love-putting-my-tasks-into-the-agenda-breaking-them-down-as-much-as">
+<p>
+possible, and clocking in/out whenever I start/end working on a task.
+standup updates are so incredibly easy because I have an extremely
+granular profile of how I spent my time. I have a custom buffer I can
+access with <code>C-c b</code> that's just a dynamic <code>org-clock-report</code> block set
+to <code>yesterday</code> so I just update it with <code>C-c C-c</code> and it gives me all
+the time I spent on each task.
+</p>
+</div>
+</div>
+<div id="outline-container-save-on-clock-in-and-clock-out-maybe-not" class="outline-4">
+<h4 id="save-on-clock-in-and-clock-out-maybe-not"><span class="section-number-4">3.24.3.</span> <a href="#save-on-clock-in-and-clock-out-maybe-not">save on clock-in and clock-out &#x2013;maybe not?</a></h4>
+<div class="outline-text-4" id="text-save-on-clock-in-and-clock-out-maybe-not">
+<p>
+In order to save some keystrokes and prevent forgetting to save the time
+log, I have also added these hooks into my Emacs config:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-text">(add-hook 'org-clock-in-hook 'save-buffer)
+(add-hook 'org-clock-out-hook 'save-buffer)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-clocking-makes-the-wr-doable" class="outline-4">
+<h4 id="clocking-makes-the-wr-doable"><span class="section-number-4">3.24.4.</span> <a href="#clocking-makes-the-wr-doable">Clocking makes the WR “doable”!</a></h4>
+<div class="outline-text-4" id="text-clocking-makes-the-wr-doable">
+</div>
+<ol class="org-ol">
+<li><a id="higher-productivity"></a><a href="#higher-productivity">Higher productivity</a><br />
+<div class="outline-text-5" id="text-higher-productivity">
+<p>
+First and foremost, time tracking allows individuals and teams to be
+more productive. By knowing how much time is being spent on specific
+tasks, they can identify areas where time is being wasted and make
+adjustments to improve efficiency. This can lead to increased
+productivity and a more efficient use of resources.
+</p>
+
+<p>
+<a id="performance-can-be-tracked"></a>
+</p>
+</div>
+</li>
+<li><a id="resources-can-be-better-managed"></a><a href="#resources-can-be-better-managed">Resources can be better managed</a><br />
+<div class="outline-text-5" id="text-resources-can-be-better-managed">
+<p>
+Are you or your team always working overtime? Is a project taking way
+longer than anticipated? Time tracking can help to identify the reasons
+why. It can help you see where there are holdups, if there's a lack of
+resources, if certain people aren't pulling their weight &#x2013; or if you're
+overstaffed. Once managers know what's going on, they can put a plan in
+place to address the issues. Perhaps work needs to be distributed
+amongst the team more evenly, or longer deadlines are needed, or a
+reshuffle needs to happen. Time management can be the catalyst for other
+management, where informed decisions can be made about how to best
+allocate available resources.
+</p>
+
+<p>
+<a id="workers-become-more-accountable"></a>
+</p>
+</div>
+</li>
+<li><a id="workers-become-more-accountable"></a><a href="#workers-become-more-accountable">Workers become more accountable</a><br />
+<div class="outline-text-5" id="text-workers-become-more-accountable">
+<p>
+Knowing that their time is being logged means that employees are more
+accountable and feel more motivated to get their job done effectively,
+with a minimum amount of procrastination. They'll feel a sense of
+ownership to the project and will want to do a good job. With time
+tracking, there's no need for micromanagement (<b>shudder</b>) either &#x2013;
+bosses can clearly see their team's progress, without the need for
+constant check-ins. This is particularly relevant these days, with so
+many people working remotely.
+</p>
+</div>
+</li>
+<li><a id="this-make-sure-the-workers-progress-is-well-documented-c-c-c-z"></a><a href="#this-make-sure-the-workers-progress-is-well-documented-c-c-c-z">This:: Make sure the workers' progress is well documented: C-c C-z!</a><br />
+<div class="outline-text-5" id="text-this-make-sure-the-workers-progress-is-well-documented-c-c-c-z">
+</div>
+</li>
+<li><a id="this-increased-accountability-in-employees"></a><a href="#this-increased-accountability-in-employees">This:: Increased accountability in employees</a><br />
+<div class="outline-text-5" id="text-this-increased-accountability-in-employees">
+<p>
+The need to register time makes employees more focused as they know they
+have to report hours spent on tasks. At this point, everyone realizes
+that the clock is ticking and tries to be as much productive as
+possible. By looking at their week, employees will start to notice
+trends and patterns in their work hours and strive to minimize
+non-billable work.
+</p>
+
+<p>
+What time tracking brings to the team is the ability to reflect and
+adapt. Ask yourself
+</p>
+
+<ul class="org-ul">
+<li>Did the task work towards a broader goal? (e.g., the business mission)</li>
+<li>Was the task important enough to take up that amount of time?</li>
+<li>Could the time have been spent more effectively and beneficially?</li>
+<li>Did the task pursue a personal or career goal?</li>
+<li>Which concrete changes did the task make?</li>
+</ul>
+
+<p>
+When you've got some of these questions covered - it's time to consider
+whether something could be changed for the better, making your workflow
+more efficient and effective. Could the work be re-organized for the
+better? Does the software or hardware need an update, did you experience
+that you needed to wait for somebody, or something, in order to proceed?
+What annoyed you in the process? Change it. These are all important
+questions to ask both yourself and your team. Rank the tasks based on
+importance and allocate your time accordingly.
+</p>
+</div>
+</li>
+<li><a id="most-httpsclockifymefreelance-time-trackingfreelancers-and-httpsclockifymeconsultant-time-trackingindependent-consultants-use-time-tracking-to"></a>Most <a href="https://clockify.me/freelance-time-tracking">freelancers</a> and <a href="https://clockify.me/consultant-time-tracking">independent consultants</a> use time tracking to:<br />
+<div class="outline-text-5" id="text-most-httpsclockifymefreelance-time-trackingfreelancers-and-httpsclockifymeconsultant-time-trackingindependent-consultants-use-time-tracking-to">
+<ul class="org-ul">
+<li>Show their clients proof that they did the assigned work, usually in
+the form of reports,</li>
+<li>Record all idly spent time so they can minimize distractions and
+procrastination while working from home,</li>
+<li>Boost productivity by setting deadlines for micro-tasks within a
+project,</li>
+<li>Create better estimates for future projects by analyzing the time it
+normally takes them to finish projects, and</li>
+<li>Keep track of their billable hours so they can invoice clients and
+analyze whether they're charging enough for their work.</li>
+</ul>
+
+<p>
+Most hybrid, <a href="https://clockify.me/remote-work-team-management">remote,
+and virtual teams</a> use time tracking to:
+</p>
+
+<ul class="org-ul">
+<li>Provide proof they worked on their assignments,</li>
+</ul>
+</div>
+</li>
+<li><a id="businesses-with-flexible-working-hours-track-time-to"></a><a href="#businesses-with-flexible-working-hours-track-time-to">Businesses with flexible working hours track time to:</a><br />
+<div class="outline-text-5" id="text-businesses-with-flexible-working-hours-track-time-to">
+<ul class="org-ul">
+<li>Provide reports on when employees arrive to work, when they leave, and
+how much time they spend at the office;</li>
+<li><a href="https://clockify.me/calculating-payroll-hours-worked">Create
+accurate payroll</a>, and</li>
+<li>Record <a href="https://clockify.me/blog/managing-teams/overtime-without-pay/">overtime</a>, <a href="https://clockify.me/blog/managing-teams/pto-vs-vacation/">PTO,
+and vacation</a>.</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>
