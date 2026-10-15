@@ -35,7 +35,7 @@ Here are some notable features of my blog.
 + Articles have images and abstracts, shown as cards on the index ---§[[Images]], §[[Index]]
 + Each article links its colourised Org source and its Github history, right under its image ---§[[footers]]
 + Article titles may contain arbitrary ~@@html: ...@@~ /yet/ still render nicely in both the frame tab and page title,
-  thanks to doc:org-link/blog.
+  thanks to =blog--sanitise-title-js= ---§[[#org-linkblog-using-my-blog-styles-anywhere][the header]].
 + A reading-time clock that adjusts as you scroll ---§[[footers]]
 + Style inline code and tables ---§[[curvy-blocks]]
 + Unfurling links ---§[[unfurling]]
@@ -413,8 +413,13 @@ fixes them in the vendored copy:
    =#+options: toc:nil= would hide our Ξ table of contents.  So we axe =#+title:=,
    =#+subtitle:=, =#+author:=, =#+date:=, =#+options:=, and =#+export_file_name:=; and
    =#+toc:=, since Ξ already is one.
-3. *=blog:header= and =blog:footer=.*  A repo's own =index.html= uses them for our styling;
-   inside an article they'd print a second header.
+3. *=#+fileimage:=.* The repo declares its own article image; e.g.,
+   =#+fileimage: images/short_example.png 350 253=, which kbd:M-x_my/blogging-mode previews
+   in the repo use too.  For a URL source we re-root its path like any relative link, and
+   =blog--info-subtree= reads it from the vendored copy whenever the heading lacks an
+   =:IMAGE:= of its own; so the index, tag pages, and RSS agree with the article.  Hence
+   =blog-publish-all= vendors every redirect /before/ building the posts registry, lest
+   CI's index show the image as of our last commit.
 
 Lookalikes inside source blocks are left alone, since =org-element= only reports real
 keywords and links.
@@ -426,6 +431,11 @@ So a heading's =:LOAD:= names the package's =.el= ---a URL or a path, alongside 
 fallback, and =load= before exporting.  CI thus needs no per-package install step, though
 the package's own dependencies must already be among CI's packages.  (Loading fetched
 code is trust: whoever can push to that repo can run code in our CI.  It's our repo.)
+
+We skip the =load= when the package is already a feature, named after the =.el=;
+e.g., =holy-books.el= ↦ =holy-books=.  CI starts afresh, so it always loads; but on our
+laptop, previewing =projects.org= would otherwise clobber the working copy we're hacking
+on with the GitHub tip ---whose bugs we may have just fixed, unpushed!
 
 #+begin_src org :tangle no
 ,* Holy Books: Quran & Bible look-ups in Org-mode :emacs:
@@ -474,6 +484,12 @@ vendored for CI.  Relative path; must end with a trailing slash.")
              owner repo))
     (_ "")))
 
+(defun blog--redirect-keyword (slug key)
+  "(SLUG, KEY) ↦ the value of #+KEY: in SLUG's vendored :REDIRECT: source, or nil; e.g., (\"holy-books-in-org-mode\", \"fileimage\")."
+  (let ((file (expand-file-name (concat blog-redirects-subdir slug ".org") blog-posts-directory)))
+    (when (file-exists-p file)
+      (blog--file-keyword file key))))
+
 (defun blog--fetch-url (url file)
   "Write URL's body to FILE; an HTTP error is an error, lest we vendor a “404: Not Found” page."
   ;; Not url.el: its cache sends If-Modified-Since, and a bodiless 304 isn't an article.
@@ -487,8 +503,8 @@ vendored for CI.  Relative path; must end with a trailing slash.")
 (defun blog--prepare-redirect (file redirect)
   "Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, file:images/x.png ↦ URL-dir/images/x.png.
 
-Axes `blog--redirect-axed-keywords' and blog:header/footer links, and re-roots relative file links
-at REDIRECT's directory when it's a URL; see §“Making a source include-ready”."
+Axes `blog--redirect-axed-keywords', and re-roots relative file links and #+fileimage: at REDIRECT's
+directory when it's a URL; see §“Making a source include-ready”."
   (with-temp-buffer
     (insert-file-contents file)
     (delay-mode-hooks (org-mode))
@@ -502,8 +518,15 @@ at REDIRECT's directory when it's a URL; see §“Making a source include-ready�
           (cond
            ((member (org-element-property :key el) blog--redirect-axed-keywords)
             (delete-region beg end))
-           ((equal type "blog")
-            (delete-region beg end))
+           ((and base (equal (org-element-property :key el) "FILEIMAGE"))
+            (let* ((image (car (split-string (org-element-property :value el))))
+                   ;; Expand before searching: `url-expand-file-name' clobbers the match data.
+                   (url   (and image (not (blog--url-p image)) (not (file-name-absolute-p image))
+                               (url-expand-file-name image base))))
+              (when url
+                (goto-char beg)
+                (search-forward image end)
+                (replace-match url t t))))
            ((and base (equal type "file") (not (file-name-absolute-p path)))
             ;; Expand before searching: `url-expand-file-name' clobbers the match data.
             (let ((url (url-expand-file-name path base)))
@@ -623,10 +646,12 @@ kbd:C-c_i_i / kbd:C-c_i_s insert images.
                   (blog--assign-slugs)
                   (blog--ensure-useful-section-anchors)
                   (blog--bump-modified-stamp)
-                  (blog--refresh-posts)
-                  (blog--validate-slugs)
+                  ;; Blog-wide checks are for blog files; a slug clash in ~/blog mustn't block saving another repo's .org.
+                  (when (file-in-directory-p buffer-file-name blog-posts-directory)
+                    (blog--refresh-posts)
+                    (blog--validate-slugs))
                   (save-buffer)
-                  (if (blog--multiple-style-p) (blog-preview-subtree) (blog--preview-standalone))))
+                  (if (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))))
     (define-key m (kbd "C-RET")
                 (lambda ()
                   (interactive)
@@ -744,10 +769,12 @@ Every save, kbd:C-x_C-s, shows the final product ---image, abstract, header, foo
 styles--- in a JavaScript-capable browser /within/ Emacs; ≈WYSIWYG≈.
 
 Under =my/blogging-mode=, kbd:C-x_C-s exports with =blog= and shows the result in an xwidget to the
-right; for a multiple-article file, just the heading at point.  Outside =~/blog/=, =blog-preview= does
-the same.
+right; for a multiple-article file, just the heading at point.  It works on any Org file, blog or not
+---say, =~/holy-books/holy-books.org=--- by way of kbd:M-x_my/blogging-mode; outside =~/blog/=, we skip
+the blog-wide steps, refreshing the posts registry and validating slugs, so that a slug clash in the
+blog never blocks saving another repo's file.
 
-*** =blog-preview=: export, then show in an xwidget :details:
+*** Previews: export, then show in an xwidget :details:
 :PROPERTIES:
 :CUSTOM_ID: inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save
 :END:
@@ -793,8 +820,8 @@ Guarantees [Org source | xwidget] side-by-side layout:
 (defun blog--preview-standalone ()
   "Export the current standalone Org buffer to HTML and open it in xwidget.
 
-Called from the buffer-local after-save-hook installed by blog-preview.
-Mirrors blog-preview-subtree but for files without #+article_style: multiple."
+Called by C-x C-s under `my/blogging-mode'.
+Mirrors blog--preview-subtree but for files without #+article_style: multiple."
   ;; Under the blog, write to its root ---as CI does--- so a nested file's re-rooted links resolve.
   (let* ((root (expand-file-name blog-posts-directory))
          (html (if (file-in-directory-p buffer-file-name root)
@@ -805,54 +832,17 @@ Mirrors blog-preview-subtree but for files without #+article_style: multiple."
     (when (file-exists-p html)
       (blog--show-preview (concat "file://" html)))))
 
-(cl-defun blog-preview ()
-  "Render the current Org buffer with full blog styling in an xwidget window.
-
-Installs a buffer-local after-save-hook so that every subsequent C-x C-s
-re-exports and refreshes the preview automatically.
-
-This is the entry point for previewing *any* Org file with blog styling ---not
-just files under ~/blog.  On a file outside the blog repo all CSS and JS are
-loaded from absolute https://alhassy.com/resources/ URLs (internet required),
-metadata keywords fall back to sensible defaults (default image, empty tags,
-generic description), and the history badge links to a GitHub URL that won't
-resolve.  Everything visual still works.
-
-In ~/blog files, prefer my/blogging-mode (C-x C-s there runs the full
-preprocessing pipeline: slug assignment, modified-stamp, validation, then
-preview).  blog-preview is a no-op when my/blogging-mode is already active ---
-that mode owns the save+preview cycle directly."
-  (interactive)
-  (when (bound-and-true-p my/blogging-mode)
-    (message "blog-preview: my/blogging-mode is active; C-x C-s handles preview.")
-    (cl-return-from blog-preview))
-  ;; Kill any stale org-preview-html-mode ---it puts org-preview-html-refresh on
-  ;; after-save-hook, and that errors when --html-file is nil (our path never sets it).
-  (when (bound-and-true-p org-preview-html-mode)
-    (org-preview-html-mode -1))
-  (remove-hook 'after-save-hook #'org-preview-html-refresh t)
-  ;; Ensure no xwidget buffer lingers ---otherwise Emacs might hang on re-preview.
-  (let ((kill-buffer-query-functions nil))
-    (mapc #'kill-buffer (blog--xwidget-buffers)))
-  (if (blog--multiple-style-p)
-      ;; Multiple-style: preview heading at point on every save (buffer-local hook).
-      (add-hook 'after-save-hook #'blog-preview-subtree nil t)
-    ;; Standalone: bypass org-preview-html-mode (file:// download bug on macOS).
-    (add-hook 'after-save-hook #'blog--preview-standalone nil t)
-    (blog--preview-standalone)))
-
-(defun blog-preview-subtree ()
+(defun blog--preview-subtree ()
   "Preview the top-level heading at point as a standalone blog article.
 
 For use in multiple-style (#+article_style: multiple) files.
-Called automatically by the buffer-local after-save-hook set up by blog-preview.
+Called by C-x C-s under `my/blogging-mode'.
 
 Opens (or reuses) an xwidget window to the right of the Org source buffer,
 maintaining a stable [Org source | xwidget] side-by-side layout."
-  (interactive)
   (let ((kill-buffer-query-functions nil))
     (unless (blog--multiple-style-p)
-      (user-error "Not a multiple-style file; use blog-preview instead"))
+      (user-error "Not a multiple-style file"))
     ;; Navigate to enclosing top-level heading.
     (save-excursion
       (unless (org-at-heading-p) (outline-previous-heading))
@@ -923,8 +913,7 @@ Under `my/blogging-mode', every save, C-x C-s, live-previews the article."
                (setq desc (read-string "Article Purpose: "))
             "\n\n* Abstract :ignore: \n" desc
             "\n\n* ???")
-    (save-buffer)
-    (blog-preview)))
+    (save-buffer)))
 #+END_SRC
 
 ** blog-new-post: Insert a heading skeleton in a multiple-style container file :details:
@@ -968,10 +957,7 @@ a draft until you remove it before publishing."
      "** Abstract :ignore:\n"
      description "\n"
      "\n"
-     "** ???\n")
-    ;; Enable preview for this container if not already active.
-    (unless (member #'blog-preview-subtree after-save-hook)
-      (blog-preview))))
+     "** ???\n")))
 #+end_src
 
 ** Media insertion: images and screenshots                         :details:
@@ -1313,7 +1299,7 @@ Here are 4 example uses:
 :CUSTOM_ID: blog-article-style-blog-make-slug-utilities-for-the-multiple-article-style
 :END:
 
-=blog--article-style= reads =#+article_style:=; =blog-preview=, =blog-publish-all=, and
+=blog--article-style= reads =#+article_style:=; kbd:C-x_C-s, =blog-publish-all=, and
 =blog-new-post= dispatch on it.  A slug names both =<slug>.html= and =alhassy.com/<slug>=;
 see §[[#slug-derivation-write-back-and-global-uniqueness][slugs]].
 
@@ -1463,8 +1449,10 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              ;; description
              (description (or (org-element-property :DESCRIPTION headline-node)
                               "I learned something neat, and wanted to share!"))
-             ;; image: explicit :IMAGE: property wins; otherwise derive from tags
+             ;; image: explicit :IMAGE: property wins; then a :REDIRECT: source's own #+fileimage:; then tags
              (image (or (org-element-property :IMAGE headline-node)
+                        (and (org-element-property :REDIRECT headline-node)
+                             (blog--redirect-keyword slug "fileimage"))
                         (blog--image-for-tags heading-tags)))
              ;; tags: merge :TAGS: property with heading tags; strip structural tags
              (structural-tags '("noexport" "draft" "ignore" "details" "details_orange"
@@ -1682,36 +1670,22 @@ like =PathCat= is a long-published URL."
 :END:
 
 The pieces that turn an Org file into a blog page:
-+ =blog:header= and =blog:footer= ---Org links that give /any/ Org file the blog's CSS/JS stack.
++ =my/blogging-mode= ---kbd:C-x_C-s previews /any/ Org file, blog or not, with the blog's CSS/JS stack.
 + The =blog= export backend ---wraps each article in header, tags, image, badges, and footer.
 + Badges and footer ---Source and History badges under the article image, since nobody scrolls to
   the bottom; the license and ReadRemaining.js clock at the end.
 
 
-** org-link/blog: Using My Blog Styles Anywhere :details:
+** blog--header-html: the site nav, styles, and title atop every article :details:
 :PROPERTIES:
 :CUSTOM_ID: org-linkblog-using-my-blog-styles-anywhere
 :END:
 
-Any Org file, blog or not, gets our styling from the Org links ~blog:header~ and ~blog:footer~; they adapt
-the docstring examples of doc:org-deflink.  Outside =~/blog/=, CSS and JS load from =alhassy.com/resources/=
+Every article opens with the site nav, our CSS/JS stack, and a fancy title; =blog--inner-template= emits
+them.  To style /any/ Org file this way, blog or not, just kbd:M-x_my/blogging-mode ---there's no
+per-file incantation to remember.  Outside =~/blog/=, CSS and JS load from =alhassy.com/resources/=
 ---so we need internet--- and the History badge dangles.
 #+begin_src emacs-lisp :exports code
-(org-deflink blog
-  "Provide the styles for 'www.alhassy.com's header and footer.
-
-The use of 'blog:footer' aims to provide a clickable list of tags and an HTMLized version of the Org source.
-For details, consult the blog--footer function.
-
-Finally, I want to avoid any `@@backend:...@@' from appearing in the browser frame's title.
-We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:sanitise-title'.
-"
-      (pcase o-label
-        ("header" (blog--header-html (blog--info (buffer-file-name))))
-        ("footer" (blog--footer (buffer-file-name)))
-        ("sanitise-title" blog--sanitise-title-js)
-        (_ "")))
-
 (defconst blog--sanitise-title-js
   "<script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") </script>"
   "Strip any `@@backend:...@@' from the browser frame's title.")
@@ -1726,8 +1700,6 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use 'blog:
    "<link href=\"https://alhassy.github.io/blog-banner.css\" rel=\"stylesheet\" type=\"text/css\" />"
    (format "<br><center><h1 class=\"post-title\">%s</h1></center>" (blog--title-html (@title post)))))
 #+end_src
-
-See also: [[http://alhassy.com/org-special-block-extras/#Links][How do I make a new Org link type?]]
 
 ** The =blog= export backend: header, tags, image, badges, and footer :details:
 :PROPERTIES:
@@ -3080,6 +3052,12 @@ Dispatches on #+article_style: per file:
   (let ((blog-posts-directory   (expand-file-name blog-posts-directory))
         (blog-publish-directory (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory blog-publish-directory t)
+    ;; Vendor every :REDIRECT: first, so the posts registry reads each source's metadata ---say, its image--- fresh.
+    (dolist (f (blog--org-files))
+      (when (equal (blog--file-keyword f "article_style") "multiple")
+        (dolist (info (blog--info-multiple f))
+          (when-let ((redirect (map-elt info "redirect")))
+            (blog--vendor-one-redirect (map-elt info "slug") redirect)))))
     (blog--refresh-posts)
     (blog--validate-slugs)
     (dolist (f (seq-filter #'blog--publishable-p (blog--org-files)))
@@ -3191,9 +3169,11 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
                   (goto-char (point-max))
                   ;; Vendor afresh, so the #+include: resolves on this machine and on
                   ;; CI, and tracks the source's tip; the banner sits atop the article.
-                  ;; A package's write-up uses the package's own link types; load it first.
+                  ;; A package's write-up uses the package's own link types; load it first,
+                  ;; unless it's already loaded ---say, our working copy, mid-hack.
                   (when-let ((lib (cdr (assoc "load" info))))
-                    (load (expand-file-name (blog--vendor-one-redirect slug lib ".el") blog-posts-directory) nil t))
+                    (unless (featurep (intern (file-name-base lib)))
+                      (load (expand-file-name (blog--vendor-one-redirect slug lib ".el") blog-posts-directory) nil t)))
                   (insert (blog--redirect-banner redirect)
                           (format "#+include: \"%s\"\n"
                                   (expand-file-name
@@ -3711,7 +3691,7 @@ tree.
 14. Column Width
 
     When blogging, I see live HTML previews whenever I save thanks to
-    doc:blog-preview.  As such, I cannot have my lines being too wide. I'll settle
+    doc:my/blogging-mode.  As such, I cannot have my lines being too wide. I'll settle
     for a modest 80 columns ---set buffer-locally by =my/blogging-mode=.  Then kbd:M-q
     will format my paragraphs to wrap nicely into this 80-column width.
 
@@ -3741,7 +3721,7 @@ tree.
                                                                 )))
        (use-package org-special-block-extras)
        ;;(load-file "~/blog/AlBasmala.el")
-       ) ;; M-x blog-preview
+       )
      
      ;; Required for Github Actions; i.e., testing.
      ;; TODO Clean me!
