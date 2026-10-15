@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 # Serialise deploys so two quick master pushes don't race on the
-# gh-pages force-push.  Queue rather than cancel — every deploy lands.
+# gh-pages force-push.  Queue rather than cancel ---every deploy lands.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -31,11 +31,15 @@ jobs:
         with:
           version: 30.1
 
+      # A key unique to each run never hits exactly, so the newest elpa-…-* cache is restored
+      # (restore-keys) and, after the upgrade below, saved anew.  A fixed key would hit forever and
+      # never be re-saved, freezing our packages at whatever MELPA had when the key last changed.
       - name: Cache Emacs packages
         uses: actions/cache@v4
         with:
           path: ~/.emacs.d/elpa
-          key: elpa-${{ runner.os }}-emacs30.1-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: elpa-${{ runner.os }}-emacs30.1-${{ github.run_id }}
+          restore-keys: elpa-${{ runner.os }}-emacs30.1-
 
       - name: Install Emacs package dependencies
         run: |
@@ -43,9 +47,9 @@ jobs:
             --eval "(require 'package)" \
             --eval "(setq package-archives '((\"melpa\" . \"https://melpa.org/packages/\")))" \
             --eval "(package-initialize)" \
-            --eval "(unless (file-exists-p (expand-file-name \"archives/melpa\" package-user-dir)) (package-refresh-contents))" \
+            --eval "(package-refresh-contents)" \
             --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))" \
-            --eval "(unless (locate-library \"org-deftag\") (package-refresh-contents) (package-upgrade 'org-special-block-extras))"
+            --eval "(package-upgrade-all)"
 
       - name: Build all articles
         run: |
@@ -59,7 +63,6 @@ jobs:
             --eval "(defun not-currently-working-with (&optional _) \"\")" \
             --eval "(defun currently-working-with (&optional _) \"\")" \
             --eval "(setq org-confirm-babel-evaluate nil)" \
-            --eval "(setq org-export-with-broken-links t)" \
             --eval "(setq blog-publish-directory \"./public/\")" \
             --eval "(setq blog-posts-directory \"./\")" \
             --eval "(require 'ob-tangle)" \
