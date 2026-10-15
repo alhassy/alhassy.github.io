@@ -215,7 +215,7 @@ An evening walk with the kids ---the light was perfect.
 
 Key rules:
 - *Heading tags* → article tags, sans structural ones (=noexport=, =draft=, =ignore=, =details=, …).
-- *=:draft:=* → a draft; =blog-new-post= adds it, and we axe it when ready.
+- *=:draft:=* → a draft, unlisted; =blog-new-post= adds it, and we axe it when ready.  See §[[#drafts-published-yet-unlisted][drafts]].
 - *=:noexport:= or =COMMENT=* → skipped entirely; never exported or indexed.
 - *=:TITLE:=* → the display title and slug source, overriding a decorated heading.
 - *=:CUSTOM_ID:=* → the URL slug; see §[[#slug-derivation-write-back-and-global-uniqueness][slugs]].
@@ -235,6 +235,29 @@ By way of example, the heading =* Quick Emacs Tip: visual-line-mode= is publishe
   article ---container or standalone--- already owns, naming both.
 
 Each heading is then just another post-alist, so =blog-make-index-page= needs no special case.
+
+** Drafts: published, yet unlisted
+:PROPERTIES:
+:CUSTOM_ID: drafts-published-yet-unlisted
+:END:
+
+A draft is an article we're still mulling over: it is published at its URL, so we can read it on
+the go, yet it's unlisted ---absent from the index, the tag pages, and the RSS feeds.  An article is
+a draft when any of these hold:
+
+- its container heading is tagged =:draft:= ---as =blog-new-post= does--- or carries =:DRAFT: t=;
+- its standalone file says =#+draft: t=; or
+- its file lives under =~/blog/draft/=, by way of example =draft/half-baked-idea.org=; a container
+  there makes every one of its headings a draft.
+
+=@draft?= is the one predicate, and =blog--listed-posts= the one filter, behind the index, tag pages,
+and RSS; =blog-posts= keeps drafts, so =blog--validate-slugs= still catches a draft whose slug clashes
+with a published article.  A draft's page also opens with a banner saying so, and carries
+=<meta name="robots" content="noindex">= lest a stray link let search engines list it.
+
+Publishing is then just axing the marker ---or moving the file out of =draft/=--- and saving; the
+bumped =:MODIFIED:= makes it new on the index and in RSS that day.  Mind that unlisted isn't secret:
+the =.org= source is on GitHub, and its colourised copy is deployed beside the article.
 
 ** The <code>#+begin_abstract</code> is an Org-mode Special Block :details_orange:
 :PROPERTIES:
@@ -1087,6 +1110,10 @@ Skips hidden directories, `blog-publish-directory', and resources/ (vendored :RE
 :CUSTOM_ID: blog-info-core-helper-to-get-the-plistjson-metadata-about-each-post
 :END:
 #+begin_src emacs-lisp
+(defun blog--draft-file-p (file)
+  "FILE ↦ non-nil when it lives under ~/blog/draft/, whose every article is a draft."
+  (file-in-directory-p file (expand-file-name "draft" blog-posts-directory)))
+
 (defun blog--info (post-filename)
   "Extract the `#+BLOG_KEYWORD: VALUE` pairs from POST-FILENAME.
 
@@ -1123,6 +1150,11 @@ These are ignored for ordinary standalone files (regex yields nil, fallback appl
           (cons "file" (f-base post-filename))
           keyword-pairs)
          (cons "url" (blog--url (f-base post-filename)))
+         ;; A draft says #+draft: t, or lives under draft/; the temp file of a container draft says the former.
+         (cons "draft" (when (or (blog--draft-file-p post-filename)
+                                 (progn (goto-char (point-min))
+                                        (re-search-forward "^#\\+draft:[ ]*t[ ]*$" nil t)))
+                         "t"))
          ;; Prefer an explicit #+history_url: (injected for container sub-articles)
          ;; over the auto-derived URL based on the file basename.
          (cons "history"
@@ -1147,6 +1179,10 @@ Since "accessor" begins with 'a', and '@' looks like one, every accessor starts 
 
 ;; Extract the '#+title:' from POST-FILENAME.
 (defun @title       (json) (map-elt json "title"))
+
+(defun @draft? (json)
+  "JSON ↦ non-nil when it's a draft: published at its URL, yet unlisted; see §“Drafts”."
+  (equal "t" (map-elt json "draft")))
 
 (defun blog--title-html (title)
   "Strip Org export-snippet markers from TITLE so embedded HTML renders.
@@ -1436,7 +1472,8 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
                 (org-element-property :commentedp headline-node))
       (let* (;; draft?
              (draft? (or (member "draft" heading-tags)
-                         (equal "t" (org-element-property :DRAFT headline-node))))
+                         (equal "t" (org-element-property :DRAFT headline-node))
+                         (blog--draft-file-p container-file)))
              ;; title: :TITLE: property overrides heading text
              (title (or (org-element-property :TITLE headline-node)
                         (org-element-property :raw-value headline-node)))
@@ -1524,7 +1561,8 @@ Headings tagged :draft: are included but marked."
 
 - =blog-posts= ---every post-alist from the =.org= files under =~/blog/=, newest first; =blog-make-index-page=
   turns each into a card on the index and tag pages.
-- =blog-tags= ---the sorted, unique tags of =blog-posts=; for tag pages and completion.
+- =blog-tags= ---the sorted, unique tags of =blog--listed-posts=, which omits §[[#drafts-published-yet-unlisted][drafts]]; for tag
+  pages and completion.  Listings ---the index, tag pages, and RSS--- draw on =blog--listed-posts= too.
 
 =(blog--refresh-posts)= sets both whenever =my/blogging-mode= starts, on every save, and atop every publish.
 
@@ -1606,8 +1644,12 @@ interactively after editing :SITE_NAV: headings."
     (setq blog-posts (car result))
     (setq blog-pages (cdr result))
     (setq blog-tags
-          (sort (seq-uniq (mapcan #'@tag-list blog-posts)) #'string<))
+          (sort (seq-uniq (mapcan #'@tag-list (blog--listed-posts))) #'string<))
     (blog--rebuild-preamble)))
+
+(defun blog--listed-posts ()
+  "`blog-posts' sans drafts: what the index, tag pages, and RSS feeds list."
+  (seq-remove #'@draft? blog-posts))
 
 (defvar blog-page-preamble ""
   "HTML injected at the top of every exported page: the site nav bar.
@@ -1740,9 +1782,17 @@ That global aside, kbd:C-c_C-e_h_h on an unrelated Org file is untouched.
                    (:html-postamble nil "html-postamble" nil)
                    (:html-table-caption-above nil nil nil)
                    (:html-format-headline-function nil nil #'blog--format-headline))
+  :filters-alist '((:filter-options . blog--draft-noindex))
   :translate-alist '((headline . blog--headline)
                      (link . blog--link)
                      (inner-template . blog--inner-template)))
+
+(defun blog--draft-noindex (info _backend)
+  "INFO ↦ INFO, with a noindex robots tag in a draft's <head>, so search engines skip it."
+  (when (@draft? (blog--info (plist-get info :input-file)))
+    (plist-put info :html-head-extra
+               (concat (plist-get info :html-head-extra) "\n<meta name=\"robots\" content=\"noindex\">")))
+  info)
 
 (defvar blog--link-base-directory nil
   "Directory that relative file links resolve against; nil means the exported file's own directory.
@@ -1779,6 +1829,10 @@ the blog keep their links as written.  Radio links point at their =<<<target>>>=
          (post (blog--info file)))
     (concat
      (blog--header-html post)
+     (when (@draft? post)
+       (concat "<center><p style=\"background:#fff3cd;border:1px dashed #b58900;padding:0.5em;"
+               "max-width:40em;\">🚧 <b>Draft</b> &mdash;unlisted while I think it over; "
+               "please don't share it just yet.</p></center>"))
      blog--sanitise-title-js
      "<center>" (@tags post) "</center>"
      (@image post (blog--url "resources/"))
@@ -2833,7 +2887,7 @@ the relevant subset of blog-posts ---no copy-then-delete."
                      (with-current-buffer buf (org-export-to-file 'blog-page (org-export-output-file-name ".html")))
                    (with-current-buffer buf (set-buffer-modified-p nil))
                    (kill-buffer buf)))))
-    (export-page blog-posts
+    (export-page (blog--listed-posts)
                  (blog--greeting)
                  (concat blog-publish-directory "index.html")
                  "rss.xml")
@@ -2958,7 +3012,7 @@ O(1); the table mirrors `blog-posts' and should be rebuilt after every
 `blog--refresh-posts' call ---cheapest to just call this fresh at each
 consumer (index/RSS loops)."
   (let ((by-tag (make-hash-table :test #'equal)))
-    (dolist (p blog-posts)
+    (dolist (p (blog--listed-posts))
       (dolist (tag (@tag-list p))
         (push p (gethash tag by-tag))))
     (maphash (lambda (k v) (puthash k (nreverse v) by-tag)) by-tag)
@@ -2966,7 +3020,7 @@ consumer (index/RSS loops)."
 
 (defun blog--make-rss-feed ()
   "Emit rss.xml (all posts) plus one <tag>-rss.xml per tag."
-  (blog--make-one-rss-feed blog-posts "rss.xml")
+  (blog--make-one-rss-feed (blog--listed-posts) "rss.xml")
   (let ((by-tag (blog--posts-by-tag)))
     (dolist (tag blog-tags)
       (blog--make-one-rss-feed
