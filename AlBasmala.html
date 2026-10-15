@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-15 Thu 14:16 -->
+<!-- 2026-10-15 Thu 14:52 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -389,7 +389,7 @@
 </li>
 <li><a href="#exporting-an-article">6. Exporting an article: the <code>blog</code> backend</a>
 <ul>
-<li><a href="#org-linkblog-using-my-blog-styles-anywhere">6.1. org-link/blog: Using My Blog Styles Anywhere</a></li>
+<li><a href="#org-linkblog-using-my-blog-styles-anywhere">6.1. blog&#x2013;header-html: the site nav, styles, and title atop every article</a></li>
 <li><a href="#blog-style-setup-a-function-to-insert-org-linkblog-into-a-buffer">6.2. The <code>blog</code> export backend: header, tags, image, badges, and footer</a></li>
 <li><a href="#article-footers">6.3. Article Footer: HTMLized Source and Git History</a></li>
 <li><a href="#colourised-source-one-consistent-theme">6.4. Colourised source: one consistent theme</a></li>
@@ -453,7 +453,7 @@ Here are some notable features of my blog.
 <li>Articles have images and abstracts, shown as cards on the index &#x2014;§<a href="#Images">5.3.3</a>, §<a href="#Index">8.1</a></li>
 <li>Each article links its colourised Org source and its Github history, right under its image &#x2014;§<a href="#footers">6.3</a></li>
 <li>Article titles may contain arbitrary <code>@@html: ...@@</code> <i>yet</i> still render nicely in both the frame tab and page title,
-thanks to <abbr class="tooltip" title="Provide the styles for ’www.alhassy.com’s header and footer.<br><br>The use of ’blog:footer’ aims to provide a clickable list of tags and an HTMLized version of the Org source.<br>For details, consult the blog--footer function.<br><br>Finally, I want to avoid any ‘@@backend:...@@’ from appearing in the browser frame’s title.<br>We accomplish this with the help of some handy-dandy JavaScript: Just use ’blog:sanitise-title’.<br>">org-link/blog</abbr>.</li>
+thanks to <code>blog--sanitise-title-js</code> &#x2014;§<a href="#org-linkblog-using-my-blog-styles-anywhere">the header</a>.</li>
 <li>A reading-time clock that adjusts as you scroll &#x2014;§<a href="#footers">6.3</a></li>
 <li>Style inline code and tables &#x2014;§<a href="#curvy-blocks">7.1.5</a></li>
 <li>Unfurling links &#x2014;§<a href="#unfurling">3</a></li>
@@ -478,7 +478,7 @@ That is, this is a variation on the traditional <a href="https://en.wikipedia.or
 <ol class="org-ol">
 <li>Open an Org-mode buffer &#x2014;or call <abbr class="tooltip" title="Make a new article for my blog; prompting for the necessary ingredients.<br><br>If the filename entered already exists, we simply write to it.<br>The user notices this and picks a new name.<br><br>This sets up a new article based on existing tags and posts.<br>+ Use C-SPC to select multiple tag items<br><br>Under ‘my/blogging-mode’, every save, C-x C-s, live-previews the article.">blog-new-article</abbr> (or <abbr class="tooltip" title="Insert a new article skeleton at point in a multiple-style container file.<br><br>Prompts for title, description, and (optionally) tags.&emsp;The image is<br>selected automatically from blog-tag-image-alist based on the tags entered<br>-- no image prompt required.&emsp;It can be overridden afterwards by editing the<br>:IMAGE: property in the drawer.<br><br>The :draft: heading tag is added automatically so the article is treated as<br>a draft until you remove it before publishing.">blog-new-post</abbr>).</li>
 
-<li>Invoke <abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function BF9><br><br>C-x C-s		#<interpreted-function EFC><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr> to get live WYSIWYG in an adjacent buffer after every
+<li>Invoke <abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function 90F><br><br>C-x C-s		#<interpreted-function 9FA><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr> to get live WYSIWYG in an adjacent buffer after every
 save <abbr class="tooltip" style="border: none; text-decoration: none;" title="C-x C-s ∷ save-buffer<br>Save current buffer in visited file if modified.<br>Variations are described below.<br><br>By default, makes the previous version into a backup file<br> if previously requested or if this is the first save.<br>Prefixed with one C-u, marks this version<br> to become a backup when the next save is done.<br>Prefixed with two C-u’s,<br> makes the previous version into a backup file.<br>Prefixed with three C-u’s, marks this version<br> to become a backup when the next save is done,<br> and makes the previous version into a backup file.<br><br>With a numeric prefix argument of 0, never make the previous version<br>into a backup file.<br><br>Note that the various variables that control backups, such<br>as ‘version-control’, ‘backup-enable-predicate’, ‘vc-make-backup-files’,<br>and ‘backup-inhibited’, to name just the more popular ones, still<br>control whether a backup will actually be produced, even when you<br>invoke this command prefixed with two or three C-u’s.<br><br>If a file’s name is FOO, the names of its numbered backup versions are<br> FOO.<code>i</code> for various integers i.&emsp;A non-numbered backup file is called FOO<code>.<br>Numeric backups (rather than FOO</code>) will be made if value of<br> ‘version-control’ is not the atom ‘never’ and either there are already<br> numeric versions of the file being backed up, or ‘version-control’ is<br> non-nil.<br>We don’t want excessive versions piling up, so there are variables<br> ‘kept-old-versions’, which tells Emacs how many oldest versions to keep,<br> and ‘kept-new-versions’, which tells how many newest versions to keep.<br> Defaults are 2 old versions and 2 new.<br>‘dired-kept-versions’ controls Dired’s clean-directory (.) command.<br>If ‘delete-old-versions’ is nil, system will query user<br> before trimming versions.&emsp;Otherwise it does it silently.<br><br>If ‘vc-make-backup-files’ is nil, which is the default,<br> no backup files are made for files managed by version control.<br> (This is because the version control system itself records previous versions.)<br><br>See the subroutine ‘basic-save-buffer’ for more information.<br><br>(fn &optional ARG)"><kbd style="border-color: red">C-x C-s</kbd></abbr>.
 <ul class="org-ul">
 <li>The mode is auto-enabled in <code>~/blog/</code> via <code>.dir-locals.el</code>.</li>
@@ -952,8 +952,13 @@ friends; an included <code>#+title: holy-books</code> would be concatenated onto
 <code>#+options: toc:nil</code> would hide our Ξ table of contents.  So we axe <code>#+title:</code>,
 <code>#+subtitle:</code>, <code>#+author:</code>, <code>#+date:</code>, <code>#+options:</code>, and <code>#+export_file_name:</code>; and
 <code>#+toc:</code>, since Ξ already is one.</li>
-<li><b><code>blog:header</code> and <code>blog:footer</code>.</b>  A repo's own <code>index.html</code> uses them for our styling;
-inside an article they'd print a second header.</li>
+<li><b><code>#+fileimage:</code>.</b> The repo declares its own article image; e.g.,
+<code>#+fileimage: images/short_example.png 350 253</code>, which <kbd style="">M-x my/blogging-mode</kbd> previews
+in the repo use too.  For a URL source we re-root its path like any relative link, and
+<code>blog--info-subtree</code> reads it from the vendored copy whenever the heading lacks an
+<code>:IMAGE:</code> of its own; so the index, tag pages, and RSS agree with the article.  Hence
+<code>blog-publish-all</code> vendors every redirect <i>before</i> building the posts registry, lest
+CI's index show the image as of our last commit.</li>
 </ol>
 
 <p>
@@ -969,6 +974,13 @@ So a heading's <code>:LOAD:</code> names the package's <code>.el</code> &#x2014;
 fallback, and <code>load</code> before exporting.  CI thus needs no per-package install step, though
 the package's own dependencies must already be among CI's packages.  (Loading fetched
 code is trust: whoever can push to that repo can run code in our CI.  It's our repo.)
+</p>
+
+<p>
+We skip the <code>load</code> when the package is already a feature, named after the <code>.el</code>;
+e.g., <code>holy-books.el</code> ↦ <code>holy-books</code>.  CI starts afresh, so it always loads; but on our
+laptop, previewing <code>projects.org</code> would otherwise clobber the working copy we're hacking
+on with the GitHub tip &#x2014;whose bugs we may have just fixed, unpushed!
 </p>
 
 <div class="org-src-container">
@@ -1021,6 +1033,12 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
              owner repo))
     (_ <span style="color: #50a14f;">""</span>)))
 
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--redirect-keyword</span> (slug key)
+  <span style="color: #50a14f; font-style: italic;">"(SLUG, KEY) &#8614; the value of #+KEY: in SLUG's vendored :REDIRECT: source, or nil; e.g., (\"holy-books-in-org-mode\", \"fileimage\")."</span>
+  (<span style="color: #a626a4;">let</span> ((file (expand-file-name (concat blog-redirects-subdir slug <span style="color: #50a14f;">".org"</span>) blog-posts-directory)))
+    (<span style="color: #a626a4;">when</span> (file-exists-p file)
+      (blog--file-keyword file key))))
+
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--fetch-url</span> (url file)
   <span style="color: #50a14f; font-style: italic;">"Write URL's body to FILE; an HTTP error is an error, lest we vendor a &#8220;404: Not Found&#8221; page."</span>
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Not url.el: its cache sends If-Modified-Since, and a bodiless 304 isn't an article.
@@ -1034,8 +1052,8 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--prepare-redirect</span> (file redirect)
   <span style="color: #50a14f; font-style: italic;">"Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, file:images/x.png &#8614; URL-dir/images/x.png.
 
-Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">' and blog:header/footer links, and re-roots relative file links
-at REDIRECT's directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;."</span>
+Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">', and re-roots relative file links and #+fileimage: at REDIRECT's
+directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;."</span>
   (<span style="color: #a626a4;">with-temp-buffer</span>
     (insert-file-contents file)
     (<span style="color: #a626a4;">delay-mode-hooks</span> (org-mode))
@@ -1049,8 +1067,15 @@ at REDIRECT's directory when it's a URL; see &#167;&#8220;Making a source includ
           (<span style="color: #a626a4;">cond</span>
            ((member (org-element-property <span style="color: #e44649;">:key</span> el) blog--redirect-axed-keywords)
             (delete-region beg end))
-           ((equal type <span style="color: #50a14f;">"blog"</span>)
-            (delete-region beg end))
+           ((<span style="color: #a626a4;">and</span> base (equal (org-element-property <span style="color: #e44649;">:key</span> el) <span style="color: #50a14f;">"FILEIMAGE"</span>))
+            (<span style="color: #a626a4;">let*</span> ((image (car (split-string (org-element-property <span style="color: #e44649;">:value</span> el))))
+                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
+</span>                   (url   (<span style="color: #a626a4;">and</span> image (not (blog--url-p image)) (not (file-name-absolute-p image))
+                               (url-expand-file-name image base))))
+              (<span style="color: #a626a4;">when</span> url
+                (goto-char beg)
+                (search-forward image end)
+                (replace-match url t t))))
            ((<span style="color: #a626a4;">and</span> base (equal type <span style="color: #50a14f;">"file"</span>) (not (file-name-absolute-p path)))
             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
 </span>            (<span style="color: #a626a4;">let</span> ((url (url-expand-file-name path base)))
@@ -1181,10 +1206,12 @@ registry, validates slugs, and only then saves and previews.  <kbd style="">C-RE
 </span>                  (blog--assign-slugs)
                   (blog--ensure-useful-section-anchors)
                   (blog--bump-modified-stamp)
-                  (blog--refresh-posts)
-                  (blog--validate-slugs)
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Blog-wide checks are for blog files; a slug clash in ~/blog mustn't block saving another repo's .org.
+</span>                  (<span style="color: #a626a4;">when</span> (file-in-directory-p buffer-file-name blog-posts-directory)
+                    (blog--refresh-posts)
+                    (blog--validate-slugs))
                   (save-buffer)
-                  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p) (blog-preview-subtree) (blog--preview-standalone))))
+                  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))))
     (define-key m (kbd <span style="color: #50a14f;">"C-RET"</span>)
                 (<span style="color: #a626a4;">lambda</span> ()
                   (<span style="color: #a626a4;">interactive</span>)
@@ -1317,12 +1344,14 @@ styles&#x2014; in a JavaScript-capable browser <i>within</i> Emacs; ≈WYSIWYG�
 
 <p>
 Under <code>my/blogging-mode</code>, <abbr class="tooltip" style="border: none; text-decoration: none;" title="C-x C-s ∷ save-buffer<br>Save current buffer in visited file if modified.<br>Variations are described below.<br><br>By default, makes the previous version into a backup file<br> if previously requested or if this is the first save.<br>Prefixed with one C-u, marks this version<br> to become a backup when the next save is done.<br>Prefixed with two C-u’s,<br> makes the previous version into a backup file.<br>Prefixed with three C-u’s, marks this version<br> to become a backup when the next save is done,<br> and makes the previous version into a backup file.<br><br>With a numeric prefix argument of 0, never make the previous version<br>into a backup file.<br><br>Note that the various variables that control backups, such<br>as ‘version-control’, ‘backup-enable-predicate’, ‘vc-make-backup-files’,<br>and ‘backup-inhibited’, to name just the more popular ones, still<br>control whether a backup will actually be produced, even when you<br>invoke this command prefixed with two or three C-u’s.<br><br>If a file’s name is FOO, the names of its numbered backup versions are<br> FOO.<code>i</code> for various integers i.&emsp;A non-numbered backup file is called FOO<code>.<br>Numeric backups (rather than FOO</code>) will be made if value of<br> ‘version-control’ is not the atom ‘never’ and either there are already<br> numeric versions of the file being backed up, or ‘version-control’ is<br> non-nil.<br>We don’t want excessive versions piling up, so there are variables<br> ‘kept-old-versions’, which tells Emacs how many oldest versions to keep,<br> and ‘kept-new-versions’, which tells how many newest versions to keep.<br> Defaults are 2 old versions and 2 new.<br>‘dired-kept-versions’ controls Dired’s clean-directory (.) command.<br>If ‘delete-old-versions’ is nil, system will query user<br> before trimming versions.&emsp;Otherwise it does it silently.<br><br>If ‘vc-make-backup-files’ is nil, which is the default,<br> no backup files are made for files managed by version control.<br> (This is because the version control system itself records previous versions.)<br><br>See the subroutine ‘basic-save-buffer’ for more information.<br><br>(fn &optional ARG)"><kbd style="border-color: red">C-x C-s</kbd></abbr> exports with <code>blog</code> and shows the result in an xwidget to the
-right; for a multiple-article file, just the heading at point.  Outside <code>~/blog/</code>, <code>blog-preview</code> does
-the same.
+right; for a multiple-article file, just the heading at point.  It works on any Org file, blog or not
+&#x2014;say, <code>~/holy-books/holy-books.org</code>&#x2014; by way of <kbd style="">M-x my/blogging-mode</kbd>; outside <code>~/blog/</code>, we skip
+the blog-wide steps, refreshing the posts registry and validating slugs, so that a slug clash in the
+blog never blocks saving another repo's file.
 </p>
 </div>
 <div id="outline-container-inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save" class="outline-4">
-<h4 id="inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save"><span class="section-number-4">4.3.1.</span> <a href="#inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save"><code>blog-preview</code>: export, then show in an xwidget</a></h4>
+<h4 id="inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save"><span class="section-number-4">4.3.1.</span> <a href="#inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save">Previews: export, then show in an xwidget</a></h4>
 <div class="outline-text-4" id="text-inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save">
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
@@ -1372,8 +1401,8 @@ Guarantees [Org source | xwidget] side-by-side layout:
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--preview-standalone</span> ()
   <span style="color: #50a14f; font-style: italic;">"Export the current standalone Org buffer to HTML and open it in xwidget.
 
-Called from the buffer-local after-save-hook installed by blog-preview.
-Mirrors blog-preview-subtree but for files without #+article_style: multiple."</span>
+Called by C-x C-s under `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">'.
+Mirrors blog--preview-subtree but for files without #+article_style: multiple."</span>
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Under the blog, write to its root ---as CI does--- so a nested file's re-rooted links resolve.
 </span>  (<span style="color: #a626a4;">let*</span> ((root (expand-file-name blog-posts-directory))
          (html (<span style="color: #a626a4;">if</span> (file-in-directory-p buffer-file-name root)
@@ -1384,54 +1413,17 @@ Mirrors blog-preview-subtree but for files without #+article_style: multiple."</
     (<span style="color: #a626a4;">when</span> (file-exists-p html)
       (blog--show-preview (concat <span style="color: #50a14f;">"file://"</span> html)))))
 
-(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">blog-preview</span> ()
-  <span style="color: #50a14f; font-style: italic;">"Render the current Org buffer with full blog styling in an xwidget window.
-
-Installs a buffer-local after-save-hook so that every subsequent C-x C-s
-re-exports and refreshes the preview automatically.
-
-This is the entry point for previewing *any* Org file with blog styling ---not
-just files under ~/blog.  On a file outside the blog repo all CSS and JS are
-loaded from absolute https://alhassy.com/resources/ URLs (internet required),
-metadata keywords fall back to sensible defaults (default image, empty tags,
-generic description), and the history badge links to a GitHub URL that won't
-resolve.  Everything visual still works.
-
-In ~/blog files, prefer my/blogging-mode (C-x C-s there runs the full
-preprocessing pipeline: slug assignment, modified-stamp, validation, then
-preview).  blog-preview is a no-op when my/blogging-mode is already active ---
-that mode owns the save+preview cycle directly."</span>
-  (<span style="color: #a626a4;">interactive</span>)
-  (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">bound-and-true-p</span> my/blogging-mode)
-    (message <span style="color: #50a14f;">"blog-preview: my/blogging-mode is active; C-x C-s handles preview."</span>)
-    (<span style="color: #a626a4;">cl-return-from</span> blog-preview))
-  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Kill any stale org-preview-html-mode ---it puts org-preview-html-refresh on
-</span>  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">after-save-hook, and that errors when --html-file is nil (our path never sets it).
-</span>  (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">bound-and-true-p</span> org-preview-html-mode)
-    (org-preview-html-mode -1))
-  (remove-hook 'after-save-hook #'org-preview-html-refresh t)
-  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Ensure no xwidget buffer lingers ---otherwise Emacs might hang on re-preview.
-</span>  (<span style="color: #a626a4;">let</span> ((kill-buffer-query-functions nil))
-    (mapc #'kill-buffer (blog--xwidget-buffers)))
-  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p)
-      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Multiple-style: preview heading at point on every save (buffer-local hook).
-</span>      (add-hook 'after-save-hook #'blog-preview-subtree nil t)
-    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Standalone: bypass org-preview-html-mode (file:// download bug on macOS).
-</span>    (add-hook 'after-save-hook #'blog--preview-standalone nil t)
-    (blog--preview-standalone)))
-
-(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog-preview-subtree</span> ()
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--preview-subtree</span> ()
   <span style="color: #50a14f; font-style: italic;">"Preview the top-level heading at point as a standalone blog article.
 
 For use in multiple-style (#+article_style: multiple) files.
-Called automatically by the buffer-local after-save-hook set up by blog-preview.
+Called by C-x C-s under `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">'.
 
 Opens (or reuses) an xwidget window to the right of the Org source buffer,
 maintaining a stable [Org source | xwidget] side-by-side layout."</span>
-  (<span style="color: #a626a4;">interactive</span>)
   (<span style="color: #a626a4;">let</span> ((kill-buffer-query-functions nil))
     (<span style="color: #a626a4;">unless</span> (blog--multiple-style-p)
-      (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"Not a multiple-style file; use blog-preview instead"</span>))
+      (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"Not a multiple-style file"</span>))
     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Navigate to enclosing top-level heading.
 </span>    (<span style="color: #a626a4;">save-excursion</span>
       (<span style="color: #a626a4;">unless</span> (org-at-heading-p) (outline-previous-heading))
@@ -1510,8 +1502,7 @@ On each <abbr class="tooltip" style="border: none; text-decoration: none;" title
 <span class="linenr">37: </span>               (<span style="color: #a626a4;">setq</span> desc (read-string <span style="color: #50a14f;">"Article Purpose: "</span>))
 <span class="linenr">38: </span>            <span style="color: #50a14f;">"\n\n* Abstract :ignore: \n"</span> desc
 <span class="linenr">39: </span>            <span style="color: #50a14f;">"\n\n* ???"</span>)
-<span class="linenr">40: </span>    (save-buffer)
-<span class="linenr">41: </span>    (blog-preview)))
+<span class="linenr">40: </span>    (save-buffer)))
 </pre>
 </div>
 
@@ -1561,10 +1552,7 @@ a draft until you remove it before publishing."</span>
      <span style="color: #50a14f;">"** Abstract :ignore:\n"</span>
      description <span style="color: #50a14f;">"\n"</span>
      <span style="color: #50a14f;">"\n"</span>
-     <span style="color: #50a14f;">"** ???\n"</span>)
-    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Enable preview for this container if not already active.
-</span>    (<span style="color: #a626a4;">unless</span> (member #'blog-preview-subtree after-save-hook)
-      (blog-preview))))
+     <span style="color: #50a14f;">"** ???\n"</span>)))
 </pre>
 </div>
 
@@ -1961,7 +1949,7 @@ Here are 4 example uses:
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <p>
-<code>blog--article-style</code> reads <code>#+article_style:</code>; <code>blog-preview</code>, <code>blog-publish-all</code>, and
+<code>blog--article-style</code> reads <code>#+article_style:</code>; <abbr class="tooltip" style="border: none; text-decoration: none;" title="C-x C-s ∷ save-buffer<br>Save current buffer in visited file if modified.<br>Variations are described below.<br><br>By default, makes the previous version into a backup file<br> if previously requested or if this is the first save.<br>Prefixed with one C-u, marks this version<br> to become a backup when the next save is done.<br>Prefixed with two C-u’s,<br> makes the previous version into a backup file.<br>Prefixed with three C-u’s, marks this version<br> to become a backup when the next save is done,<br> and makes the previous version into a backup file.<br><br>With a numeric prefix argument of 0, never make the previous version<br>into a backup file.<br><br>Note that the various variables that control backups, such<br>as ‘version-control’, ‘backup-enable-predicate’, ‘vc-make-backup-files’,<br>and ‘backup-inhibited’, to name just the more popular ones, still<br>control whether a backup will actually be produced, even when you<br>invoke this command prefixed with two or three C-u’s.<br><br>If a file’s name is FOO, the names of its numbered backup versions are<br> FOO.<code>i</code> for various integers i.&emsp;A non-numbered backup file is called FOO<code>.<br>Numeric backups (rather than FOO</code>) will be made if value of<br> ‘version-control’ is not the atom ‘never’ and either there are already<br> numeric versions of the file being backed up, or ‘version-control’ is<br> non-nil.<br>We don’t want excessive versions piling up, so there are variables<br> ‘kept-old-versions’, which tells Emacs how many oldest versions to keep,<br> and ‘kept-new-versions’, which tells how many newest versions to keep.<br> Defaults are 2 old versions and 2 new.<br>‘dired-kept-versions’ controls Dired’s clean-directory (.) command.<br>If ‘delete-old-versions’ is nil, system will query user<br> before trimming versions.&emsp;Otherwise it does it silently.<br><br>If ‘vc-make-backup-files’ is nil, which is the default,<br> no backup files are made for files managed by version control.<br> (This is because the version control system itself records previous versions.)<br><br>See the subroutine ‘basic-save-buffer’ for more information.<br><br>(fn &optional ARG)"><kbd style="border-color: red">C-x C-s</kbd></abbr>, <code>blog-publish-all</code>, and
 <code>blog-new-post</code> dispatch on it.  A slug names both <code>&lt;slug&gt;.html</code> and <code>alhassy.com/&lt;slug&gt;</code>;
 see §<a href="#slug-derivation-write-back-and-global-uniqueness">slugs</a>.
 </p>
@@ -2120,8 +2108,10 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">description
 </span>             (description (<span style="color: #a626a4;">or</span> (org-element-property <span style="color: #e44649;">:DESCRIPTION</span> headline-node)
                               <span style="color: #50a14f;">"I learned something neat, and wanted to share!"</span>))
-             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">image: explicit :IMAGE: property wins; otherwise derive from tags
+             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">image: explicit :IMAGE: property wins; then a :REDIRECT: source's own #+fileimage:; then tags
 </span>             (image (<span style="color: #a626a4;">or</span> (org-element-property <span style="color: #e44649;">:IMAGE</span> headline-node)
+                        (<span style="color: #a626a4;">and</span> (org-element-property <span style="color: #e44649;">:REDIRECT</span> headline-node)
+                             (blog--redirect-keyword slug <span style="color: #50a14f;">"fileimage"</span>))
                         (blog--image-for-tags heading-tags)))
              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">tags: merge :TAGS: property with heading tags; strip structural tags
 </span>             (structural-tags '(<span style="color: #50a14f;">"noexport"</span> <span style="color: #50a14f;">"draft"</span> <span style="color: #50a14f;">"ignore"</span> <span style="color: #50a14f;">"details"</span> <span style="color: #50a14f;">"details_orange"</span>
@@ -2361,39 +2351,25 @@ like =PathCat= is a long-published URL."</span>
 The pieces that turn an Org file into a blog page:
 </p>
 <ul class="org-ul">
-<li><code>blog:header</code> and <code>blog:footer</code> &#x2014;Org links that give <i>any</i> Org file the blog's CSS/JS stack.</li>
+<li><code>my/blogging-mode</code> ---<abbr class="tooltip" style="border: none; text-decoration: none;" title="C-x C-s ∷ save-buffer<br>Save current buffer in visited file if modified.<br>Variations are described below.<br><br>By default, makes the previous version into a backup file<br> if previously requested or if this is the first save.<br>Prefixed with one C-u, marks this version<br> to become a backup when the next save is done.<br>Prefixed with two C-u’s,<br> makes the previous version into a backup file.<br>Prefixed with three C-u’s, marks this version<br> to become a backup when the next save is done,<br> and makes the previous version into a backup file.<br><br>With a numeric prefix argument of 0, never make the previous version<br>into a backup file.<br><br>Note that the various variables that control backups, such<br>as ‘version-control’, ‘backup-enable-predicate’, ‘vc-make-backup-files’,<br>and ‘backup-inhibited’, to name just the more popular ones, still<br>control whether a backup will actually be produced, even when you<br>invoke this command prefixed with two or three C-u’s.<br><br>If a file’s name is FOO, the names of its numbered backup versions are<br> FOO.<code>i</code> for various integers i.&emsp;A non-numbered backup file is called FOO<code>.<br>Numeric backups (rather than FOO</code>) will be made if value of<br> ‘version-control’ is not the atom ‘never’ and either there are already<br> numeric versions of the file being backed up, or ‘version-control’ is<br> non-nil.<br>We don’t want excessive versions piling up, so there are variables<br> ‘kept-old-versions’, which tells Emacs how many oldest versions to keep,<br> and ‘kept-new-versions’, which tells how many newest versions to keep.<br> Defaults are 2 old versions and 2 new.<br>‘dired-kept-versions’ controls Dired’s clean-directory (.) command.<br>If ‘delete-old-versions’ is nil, system will query user<br> before trimming versions.&emsp;Otherwise it does it silently.<br><br>If ‘vc-make-backup-files’ is nil, which is the default,<br> no backup files are made for files managed by version control.<br> (This is because the version control system itself records previous versions.)<br><br>See the subroutine ‘basic-save-buffer’ for more information.<br><br>(fn &optional ARG)"><kbd style="border-color: red">C-x C-s</kbd></abbr> previews <i>any</i> Org file, blog or not, with the blog's CSS/JS stack.</li>
 <li>The <code>blog</code> export backend &#x2014;wraps each article in header, tags, image, badges, and footer.</li>
 <li>Badges and footer &#x2014;Source and History badges under the article image, since nobody scrolls to
 the bottom; the license and ReadRemaining.js clock at the end.</li>
 </ul>
 </div>
 <div id="outline-container-org-linkblog-using-my-blog-styles-anywhere" class="outline-3">
-<h3 id="org-linkblog-using-my-blog-styles-anywhere"><span class="section-number-3">6.1.</span> <a href="#org-linkblog-using-my-blog-styles-anywhere">org-link/blog: Using My Blog Styles Anywhere</a></h3>
+<h3 id="org-linkblog-using-my-blog-styles-anywhere"><span class="section-number-3">6.1.</span> <a href="#org-linkblog-using-my-blog-styles-anywhere">blog&#x2013;header-html: the site nav, styles, and title atop every article</a></h3>
 <div class="outline-text-3" id="text-org-linkblog-using-my-blog-styles-anywhere">
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <p>
-Any Org file, blog or not, gets our styling from the Org links <code>blog:header</code> and <code>blog:footer</code>; they adapt
-the docstring examples of <abbr class="tooltip" title="Make a new Org-link NAME that exports using form BODY.<br><br>An optional ARGLIST may come first, naming the link’s label, description,<br>and export backend ---in that order--- for use in BODY and DISPLAY:<br><br>&emsp; (org-deflink shout (label &optional description)<br>&emsp;&emsp; ''Shout the description, else the label.''<br>&emsp;&emsp; :face =’(:weight bold)<br>&emsp;&emsp; :export (upcase (or description label)))<br><br>As a convenience, ARGLIST may be omitted; then BODY and DISPLAY refer to the<br>anaphoric names o-label, o-description, and o-backend, which are always<br>available.&emsp;An argument written (NAME DEFAULT) falls back to DEFAULT when<br>absent; e.g., (label &optional (description ''…'')).<br><br>Since Org links are essentially string-valued functions,<br>a function ‘org-link/NAME’ is created.<br><br>DOCSTRING is optional; it is visible with<br>&emsp; (documentation ’org-link/NAME)<br><br>BODY is a string-valued expression, that may make use of the names<br>o-label, o-description, o-backend. The final one refers to the export<br>backend, such as ’html or ’latex. The first two are obtained from uses:<br><br>&emsp; Y (name:o-label][o-description]]<br><br>In particular, the use case “name:o-label” means that o-description is nil.<br><br><hr><br><br>Example use:<br><br>&emsp; ;; In a Lisp buffer, press “C-x C-e” to load this definition<br>&emsp; (org-deflink shout (upcase (or o-description o-label)))<br><br>&emsp; ;; In an Org-buffer, press “C-c C-e h o” to see how this exports<br>&emsp; <shout: hello world!><br><br>&emsp; ;; Or using the bracket format<br>&emsp; [[shout:][hello world!]]<br>&emsp; [[shout: hello world!]]<br><br>&emsp; ;; or using the plain format<br>&emsp; shout:hello_world<br><br>Here is a more complex, involved, example that makes use of<br>‘:let’ for local declarations. For instance, “define:hello”<br>renders as the word “hello” with a tooltip defining the word; the<br>definition is obtained from the command line tool ‘wn’.<br><br>&emsp;(org-deflink define (word)<br>&emsp;&emsp;''Define the given word using WordNet, along with synonyms and coordinate terms.''<br>&emsp;&emsp;:let (definition (shell-command-to-string (format ''wn %s -over -synsn -coorn'' word)))<br>&emsp;&emsp;:help-echo definition<br>&emsp;&emsp;:export (--> definition<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;(s-replace-regexp ''\\\'''' ''’’'' it) ;; The presence of ‘\''’ in tooltips breaks things, so omit them.<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;(s-replace-regexp ''\n'' ''<br>'' it)<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;(format ''<abbr class=\''tooltip\'' title=\''%s\''>%s</abbr>'' it word)))<br><br>For HTML tooltips, see ‘org-ospe-html-export-preserving-whitespace’.<br><br>More generally, org-special-block-extra’s “doc” link type<br>supports, in order of precedence: User definitions, Emacs Lisp<br>documentation of functions & variables, and definitions of<br>English words. For example, “doc:existential_angst” for an entry<br>‘existential_angst’ whose associated documentation-glossary is<br>user-defined in a ‘#+documentation’ Org-block, or<br>“doc:thread-first” for the Emacs Lisp documentation of the<br>function ‘thread-first’, or “doc:user-mail-address” for the Emacs<br>Lisp documentation of the variable ‘user-mail-address’, or<br>“doc:hello” for the definition of the English word ‘hello’.<br><br>Besides :export, the following keys affect how the link is displayed in Emacs<br>Org buffers.&emsp;They are given alongside :export, as above; in the deprecated<br>style, they form a vector DISPLAY between the docstring and BODY, such as<br>[:help-echo (format ''%s'' o-label)].<br><br>+ :help-echo is a string-valued expression of the tooltip that should accompany<br>&emsp;the new link in Org buffers. It has access to o-format being one of ‘plain’,<br>&emsp;‘angle’, ‘bracket’ which indicates the format of the link, as shown above.<br>&emsp;It also has access to o-label and o-description.<br><br>&emsp;By default, the tooltip is the link name followed by the documentation<br>&emsp;of the link, and, finally, the HTML export of the link.<br>&emsp;That way, upon hover, users can visually see the link contents,<br>&emsp;know what/how the link exports, and actually see the HTML export.<br><br>&emsp;That is to say, for the ‘shout’ example above, the default display is essentially:<br>&emsp;:help-echo (org-link/shout o-label o-description ’html)<br><br>&emsp;You may want to add the following to your Emacs init file:<br><br>&emsp;&emsp;;; Nearly instantaneous display of tooltips.<br>&emsp;&emsp;(setq tooltip-delay 0)<br>&emsp;&emsp;;; Give user 30 seconds before tooltip automatically disappears.<br>&emsp;&emsp;(setq tooltip-hide-delay 300)<br><br>+ :face specifies how should these links be displayed within Emacs.<br>&emsp; It is a list-valued expression.<br>&emsp; As usual, it may make use of O-LABEL (but O-DESCRIPTION has value nil).<br>&emsp; Example:<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :face ’(:underline ''green'')<br><br>&emsp; See https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html<br><br>+ :display ’full if you do not want bracket links to be<br>&emsp;folded away in Org buffers; i.e., “[[X)” does not render as just “Y”.<br><br>+ :follow is a form that is executed when you click on such links; e.g., to open<br>&emsp; another buffer, browser, or other action. It makes use of (an implicit argument) ‘o-label’.<br>&emsp; Be aware that ‘o-label’ is a string that may contain spaces; e.g., when the action is to open<br>&emsp; a URL in a browser.<br><br>&emsp; If you are in need of providing similar, related, actions on a single link<br>&emsp; then your :follow can condition on the current prefix argument via ‘o-prefix’<br>&emsp; (which is essentially ‘current-prefix-arg’).<br>&emsp; For instance, a user presses “C-u RET” on your link to do one thing<br>&emsp; but “C-u 72 RET” to do another action.<br><br>+ :keymap is an alternating list of keys and actions to be<br>&emsp;performed when those keys are pressed while point is on the link.<br>&emsp;For example:<br>&emsp;&emsp;&emsp;:keymap (C-h (message-box ''hola''))<br><br>&emsp;By default, C-n and C-p are for moving to next and previous occruances of the same link type.<br><br>+ :let is a list of alternating variable symbol name and value, which are then used to form<br>&emsp;a concrete ‘let*’ clause. This is useful for introducing local variables for use in the DISPLAY<br>&emsp;as well as in the CONTENTS. Such local declarations may make use of O-LABEL and O-DESCRIPTION, as usual.<br><br>The preferred syntax supplies all keys — including :export for the export body — as a<br>flat top-level plist with no enclosing vector:<br><br>&emsp;(org-deflink shout<br>&emsp;&emsp;''Shout the label.''<br>&emsp;&emsp;:face '(:weight bold)<br>&emsp;&emsp;:export (upcase o-label))<br><br>(fn NAME &optional DOCSTRING DISPLAY &rest BODY)">org-deflink</abbr>.  Outside <code>~/blog/</code>, CSS and JS load from <code>alhassy.com/resources/</code>
+Every article opens with the site nav, our CSS/JS stack, and a fancy title; <code>blog--inner-template</code> emits
+them.  To style <i>any</i> Org file this way, blog or not, just <kbd style="">M-x my/blogging-mode</kbd> &#x2014;there's no
+per-file incantation to remember.  Outside <code>~/blog/</code>, CSS and JS load from <code>alhassy.com/resources/</code>
 &#x2014;so we need internet&#x2014; and the History badge dangles.
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">org-deflink</span> blog
-  <span style="color: #50a14f;">"Provide the styles for '</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">www.alhassy.com</span><span style="color: #50a14f;">'s header and footer.
-
-The use of '</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">blog:footer</span><span style="color: #50a14f;">' aims to provide a clickable list of tags and an HTMLized version of the Org source.
-For details, consult the blog--footer function.
-
-Finally, I want to avoid any `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">@@backend:...@@</span><span style="color: #50a14f;">' from appearing in the browser frame's title.
-We accomplish this with the help of some handy-dandy JavaScript: Just use '</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">blog:sanitise-title</span><span style="color: #50a14f;">'.
-"</span>
-      (<span style="color: #a626a4;">pcase</span> o-label
-        (<span style="color: #50a14f;">"header"</span> (blog--header-html (blog--info (buffer-file-name))))
-        (<span style="color: #50a14f;">"footer"</span> (blog--footer (buffer-file-name)))
-        (<span style="color: #50a14f;">"sanitise-title"</span> blog--sanitise-title-js)
-        (_ <span style="color: #50a14f;">""</span>)))
-
-(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--sanitise-title-js</span>
+<pre class="src src-emacs-lisp">(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--sanitise-title-js</span>
   <span style="color: #50a14f;">"&lt;script&gt; window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") &lt;/script&gt;"</span>
   <span style="color: #50a14f; font-style: italic;">"Strip any `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">@@backend:...@@</span><span style="color: #50a14f; font-style: italic;">' from the browser frame's title."</span>)
 
@@ -2408,10 +2384,6 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use '</spa
    (format <span style="color: #50a14f;">"&lt;br&gt;&lt;center&gt;&lt;h1 class=\"post-title\"&gt;%s&lt;/h1&gt;&lt;/center&gt;"</span> (blog--title-html (@title post)))))
 </pre>
 </div>
-
-<p>
-See also: <a href="http://alhassy.com/org-special-block-extras/#Links">How do I make a new Org link type?</a>
-</p>
 
 </details>
 </div>
@@ -4058,6 +4030,12 @@ Dispatches on #+article_style: per file:
 </span>  (<span style="color: #a626a4;">let</span> ((blog-posts-directory   (expand-file-name blog-posts-directory))
         (blog-publish-directory (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory blog-publish-directory t)
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Vendor every :REDIRECT: first, so the posts registry reads each source's metadata ---say, its image--- fresh.
+</span>    (<span style="color: #a626a4;">dolist</span> (f (blog--org-files))
+      (<span style="color: #a626a4;">when</span> (equal (blog--file-keyword f <span style="color: #50a14f;">"article_style"</span>) <span style="color: #50a14f;">"multiple"</span>)
+        (<span style="color: #a626a4;">dolist</span> (info (blog--info-multiple f))
+          (<span style="color: #a626a4;">when-let</span> ((redirect (map-elt info <span style="color: #50a14f;">"redirect"</span>)))
+            (blog--vendor-one-redirect (map-elt info <span style="color: #50a14f;">"slug"</span>) redirect)))))
     (blog--refresh-posts)
     (blog--validate-slugs)
     (<span style="color: #a626a4;">dolist</span> (f (seq-filter #'blog--publishable-p (blog--org-files)))
@@ -4176,9 +4154,11 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
                   (goto-char (point-max))
                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Vendor afresh, so the #+include: resolves on this machine and on
 </span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">CI, and tracks the source's tip; the banner sits atop the article.
-</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A package's write-up uses the package's own link types; load it first.
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A package's write-up uses the package's own link types; load it first,
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">unless it's already loaded ---say, our working copy, mid-hack.
 </span>                  (<span style="color: #a626a4;">when-let</span> ((lib (cdr (assoc <span style="color: #50a14f;">"load"</span> info))))
-                    (load (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory) nil t))
+                    (<span style="color: #a626a4;">unless</span> (<span style="color: #a626a4;">featurep</span> (intern (file-name-base lib)))
+                      (load (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory) nil t)))
                   (insert (blog--redirect-banner redirect)
                           (format <span style="color: #50a14f;">"#+include: \"%s\"\n"</span>
                                   (expand-file-name
@@ -4757,7 +4737,7 @@ blog; and move that here. Can always link to AlBasmala.html.</li>
 <li>Super simple validation: The number of blog posts can only increase.</li>
 
 <li>TODO: When I'm done, look around and ensure there are no 'TODO's; or if there
-are any, move them to my todo.org::<a href="blog::Ideas">blog::Ideas</a> section!</li>
+are any, move them to my todo.org::Blog::Ideas section!</li>
 
 <li><p>
 font for links
@@ -4797,7 +4777,7 @@ Column Width
 
 <p>
 When blogging, I see live HTML previews whenever I save thanks to
-<abbr class="tooltip" title="Render the current Org buffer with full blog styling in an xwidget window.<br><br>Installs a buffer-local after-save-hook so that every subsequent C-x C-s<br>re-exports and refreshes the preview automatically.<br><br>This is the entry point for previewing <strong>any</strong> Org file with blog styling ---not<br>just files under <code><em>blog.&emsp;On a file outside the blog repo all CSS and JS are<br>loaded from absolute https:</em>/alhassy.com/resources/ URLs (internet required),<br>metadata keywords fall back to sensible defaults (default image, empty tags,<br>generic description), and the history badge links to a GitHub URL that won’t<br>resolve.&emsp;Everything visual still works.<br><br>In </code><em>blog files, prefer my</em>blogging-mode (C-x C-s there runs the full<br>preprocessing pipeline: slug assignment, modified-stamp, validation, then<br>preview).&emsp;blog-preview is a no-op when my/blogging-mode is already active ---<br>that mode owns the save+preview cycle directly.">blog-preview</abbr>.  As such, I cannot have my lines being too wide. I'll settle
+<abbr class="tooltip" title="Buffer-local minor mode for editing blog articles in AlBasmala style.<br><br>Binds:<br>&emsp;C-x C-s&emsp;---assign :CUSTOM_ID: slugs to fresh container headings, stamp<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; section anchors, vendor :REDIRECT: sources, bump #+modified: <em><br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; :MODIFIED: to today (if present), refresh the posts registry,<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; validate slugs (kebab-case, unique), then save + live preview<br>&emsp;C-RET&emsp;&emsp;---new article </em> new post (dispatches on article style)<br>&emsp;C-c i i ---insert image from file (C-u to rename before committing)<br>&emsp;C-c i s ---take a screenshot and insert it<br><br>Publishing is not bound to a key: push your .org source to master and CI<br>runs ‘blog-publish-all’ on a fresh checkout.<br><br>On activation:<br>&emsp;- enables org-special-block-extras-mode (badges, doc: links, tooltips)<br>&emsp;- switches browse-url to xwidget-webkit for in-Emacs previews (buffer-locally)<br>&emsp;- sets fill-column to 80 (buffer-locally), to read beside the preview<br><br>On deactivation:<br>&emsp;- disables org-special-block-extras-mode<br>&emsp;- restores this buffer’s browse-url and fill-column to the global defaults<br><br>This is a minor mode.&emsp;If called interactively, toggle the ‘My/Blogging<br>mode’ mode.&emsp;If the prefix argument is positive, enable the mode, and if<br>it is zero or negative, disable the mode.<br><br>If called from Lisp, toggle the mode if ARG is ‘toggle’.&emsp;Enable the<br>mode if ARG is nil, omitted, or is a positive number.&emsp;Disable the mode<br>if ARG is a negative number.<br><br>To check whether the minor mode is enabled in the current buffer,<br>evaluate the variable ‘my/blogging-mode’.<br><br>The mode’s hook is called both when the mode is enabled and when it is<br>disabled.<br><br><br>Key&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Binding<br><hr><br>C-RET		#<interpreted-function 90F><br><br>C-x C-s		#<interpreted-function 9FA><br><br>C-c i i		blog-insert-image<br>C-c i s		blog-insert-screenshot<br>">my/blogging-mode</abbr>.  As such, I cannot have my lines being too wide. I'll settle
 for a modest 80 columns &#x2014;set buffer-locally by <code>my/blogging-mode</code>.  Then <abbr class="tooltip" style="border: none; text-decoration: none;" title="M-q ∷ org-fill-paragraph<br>Fill element at point, when applicable.<br><br>This function only applies to comment blocks, comments, example<br>blocks and paragraphs.&emsp;Also, as a special case, re-align table<br>when point is at one.<br><br>For convenience, when point is at a plain list, an item or<br>a footnote definition, try to fill the first paragraph within.<br><br>If JUSTIFY is non-nil (interactively, with prefix argument),<br>justify as well.&emsp;If ‘sentence-end-double-space’ is non-nil, then<br>period followed by one space does not end a sentence, so don’t<br>break a line there.&emsp;The variable ‘fill-column’ controls the<br>width for filling.<br><br>The REGION argument is non-nil if called interactively; in that<br>case, if Transient Mark mode is enabled and the mark is active,<br>fill each of the elements in the active region, instead of just<br>filling the current element.<br><br>(fn &optional JUSTIFY REGION)"><kbd style="border-color: red">M-q</kbd></abbr>
 will format my paragraphs to wrap nicely into this 80-column width.
 </p>

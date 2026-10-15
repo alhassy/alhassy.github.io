@@ -43,7 +43,7 @@ Here are some notable features of my blog.
 + Articles have images and abstracts, shown as cards on the index ---&#167;<span style="text-decoration: underline;"><a href="Images">Images</a></span>, &#167;<span style="text-decoration: underline;"><a href="Index">Index</a></span>
 + Each article links its colourised Org source and its Github history, right under its image ---&#167;<span style="text-decoration: underline;"><a href="footers">footers</a></span>
 + Article titles may contain arbitrary ~<span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">html:</span> ...<span style="color: #a0a1a7;">@@</span>~ <span style="font-style: italic;">/yet/</span> still render nicely in both the frame tab and page title,
-  thanks to <a href="doc:org-link/blog">doc:org-link/blog</a>.
+  thanks to =blog--sanitise-title-js= ---&#167;<span style="text-decoration: underline;"><a href="#org-linkblog-using-my-blog-styles-anywhere">the header</a></span>.
 + A reading-time clock that adjusts as you scroll ---&#167;<span style="text-decoration: underline;"><a href="footers">footers</a></span>
 + Style inline code and tables ---&#167;<span style="text-decoration: underline;"><a href="curvy-blocks">curvy-blocks</a></span>
 + Unfurling links ---&#167;<span style="text-decoration: underline;"><a href="unfurling">unfurling</a></span>
@@ -421,8 +421,13 @@ fixes them in the vendored copy:
    =#+options: toc:nil= would hide our &#926; table of contents.  So we axe =#+title:=,
    =#+subtitle:=, =#+author:=, =#+date:=, =#+options:=, and =#+export_file_name:=; and
    =#+toc:=, since &#926; already is one.
-3. <span style="font-weight: bold;">*=<a href="blog:header">blog:header</a>= and </span><span style="font-weight: bold;">=<a href="blog:footer">blog:footer</a>=</span><span style="font-weight: bold;">.*</span>  A repo's own =index.html= uses them for our styling;
-   inside an article they'd print a second header.
+3. <span style="font-weight: bold;">*=#+fileimage:=.*</span> The repo declares its own article image; e.g.,
+   =#+fileimage: images/short_example.png 350 253=, which <a href="kbd:M-x_my/blogging-mode">kbd:M-x_my/blogging-mode</a> previews
+   in the repo use too.  For a URL source we re-root its path like any relative link, and
+   =blog--info-subtree= reads it from the vendored copy whenever the heading lacks an
+   =:IMAGE:= of its own; so the index, tag pages, and RSS agree with the article.  Hence
+   =blog-publish-all= vendors every redirect <span style="font-style: italic;">/before/</span> building the posts registry, lest
+   CI's index show the image as of our last commit.
 
 Lookalikes inside source blocks are left alone, since =org-element= only reports real
 keywords and links.
@@ -434,6 +439,11 @@ So a heading's =:LOAD:= names the package's =.el= ---a URL or a path, alongside 
 fallback, and =load= before exporting.  CI thus needs no per-package install step, though
 the package's own dependencies must already be among CI's packages.  (Loading fetched
 code is trust: whoever can push to that repo can run code in our CI.  It's our repo.)
+
+We skip the =load= when the package is already a feature, named after the =.el=;
+e.g., =holy-books.el= &#8614; =holy-books=.  CI starts afresh, so it always loads; but on our
+laptop, previewing =projects.org= would otherwise clobber the working copy we're hacking
+on with the GitHub tip ---whose bugs we may have just fixed, unpushed!
 
 <span style="color: #a0a1a7;">#+begin_src org :tangle no
 </span>,* Holy Books: Quran &amp; Bible look-ups in Org-mode :emacs:
@@ -482,6 +492,12 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
              owner repo))
     (_ <span style="color: #50a14f;">""</span>)))
 
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--redirect-keyword</span> (slug key)
+  <span style="color: #50a14f; font-style: italic;">"(SLUG, KEY) &#8614; the value of #+KEY: in SLUG's vendored :REDIRECT: source, or nil; e.g., (\"holy-books-in-org-mode\", \"fileimage\")."</span>
+  (<span style="color: #a626a4;">let</span> ((file (expand-file-name (concat blog-redirects-subdir slug <span style="color: #50a14f;">".org"</span>) blog-posts-directory)))
+    (<span style="color: #a626a4;">when</span> (file-exists-p file)
+      (blog--file-keyword file key))))
+
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--fetch-url</span> (url file)
   <span style="color: #50a14f; font-style: italic;">"Write URL's body to FILE; an HTTP error is an error, lest we vendor a &#8220;404: Not Found&#8221; page."</span>
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Not url.el: its cache sends If-Modified-Since, and a bodiless 304 isn't an article.
@@ -495,8 +511,8 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--prepare-redirect</span> (file redirect)
   <span style="color: #50a14f; font-style: italic;">"Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, <a href="file:images/x.png">file:images/x.png</a> &#8614; URL-dir/images/x.png.
 
-Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">' and <a href="blog:header/footer">blog:header/footer</a> links, and re-roots relative file links
-at REDIRECT's directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;."</span>
+Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">', and re-roots relative file links and #+fileimage: at REDIRECT's
+directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;."</span>
   (<span style="color: #a626a4;">with-temp-buffer</span>
     (insert-file-contents file)
     (<span style="color: #a626a4;">delay-mode-hooks</span> (org-mode))
@@ -510,8 +526,15 @@ at REDIRECT's directory when it's a URL; see &#167;&#8220;Making a source includ
           (<span style="color: #a626a4;">cond</span>
            ((member (org-element-property <span style="color: #e44649;">:key</span> el) blog--redirect-axed-keywords)
             (delete-region beg end))
-           ((equal type <span style="color: #50a14f;">"blog"</span>)
-            (delete-region beg end))
+           ((<span style="color: #a626a4;">and</span> base (equal (org-element-property <span style="color: #e44649;">:key</span> el) <span style="color: #50a14f;">"FILEIMAGE"</span>))
+            (<span style="color: #a626a4;">let*</span> ((image (car (split-string (org-element-property <span style="color: #e44649;">:value</span> el))))
+                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
+</span>                   (url   (<span style="color: #a626a4;">and</span> image (not (blog--url-p image)) (not (file-name-absolute-p image))
+                               (url-expand-file-name image base))))
+              (<span style="color: #a626a4;">when</span> url
+                (goto-char beg)
+                (search-forward image end)
+                (replace-match url t t))))
            ((<span style="color: #a626a4;">and</span> base (equal type <span style="color: #50a14f;">"file"</span>) (not (file-name-absolute-p path)))
             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
 </span>            (<span style="color: #a626a4;">let</span> ((url (url-expand-file-name path base)))
@@ -631,10 +654,12 @@ registry, validates slugs, and only then saves and previews.  <a href="kbd:C-RET
 </span>                  (blog--assign-slugs)
                   (blog--ensure-useful-section-anchors)
                   (blog--bump-modified-stamp)
-                  (blog--refresh-posts)
-                  (blog--validate-slugs)
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Blog-wide checks are for blog files; a slug clash in ~/blog mustn't block saving another repo's .org.
+</span>                  (<span style="color: #a626a4;">when</span> (file-in-directory-p buffer-file-name blog-posts-directory)
+                    (blog--refresh-posts)
+                    (blog--validate-slugs))
                   (save-buffer)
-                  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p) (blog-preview-subtree) (blog--preview-standalone))))
+                  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p) (blog--preview-subtree) (blog--preview-standalone))))
     (define-key m (kbd <span style="color: #50a14f;">"C-RET"</span>)
                 (<span style="color: #a626a4;">lambda</span> ()
                   (<span style="color: #a626a4;">interactive</span>)
@@ -752,10 +777,12 @@ Every save, <a href="kbd:C-x_C-s">kbd:C-x_C-s</a>, shows the final product ---im
 styles--- in a JavaScript-capable browser <span style="font-style: italic;">/within/</span> Emacs; &#8776;WYSIWYG&#8776;.
 
 Under =my/blogging-mode=, <a href="kbd:C-x_C-s">kbd:C-x_C-s</a> exports with =blog= and shows the result in an xwidget to the
-right; for a multiple-article file, just the heading at point.  Outside =~/blog/=, =blog-preview= does
-the same.
+right; for a multiple-article file, just the heading at point.  It works on any Org file, blog or not
+---say, =~/holy-books/holy-books.org=--- by way of <a href="kbd:M-x_my/blogging-mode">kbd:M-x_my/blogging-mode</a>; outside =~/blog/=, we skip
+the blog-wide steps, refreshing the posts registry and validating slugs, so that a slug clash in the
+blog never blocks saving another repo's file.
 
-<span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold;">=blog-preview=</span><span style="color: #a626a4; font-weight: bold;">: export, then show in an xwidget </span><span style="color: #a626a4; font-weight: bold;">:details:</span>
+<span style="color: #a626a4; font-weight: bold;">*** Previews: export, then show in an xwidget </span><span style="color: #a626a4; font-weight: bold;">:details:</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">inserting-org-linkblog-emseamlesslyem-via-the-export-process-emthenem-preview-with-every-save</span>
 <span style="font-weight: bold;">:END:</span>
@@ -801,8 +828,8 @@ Guarantees [Org source | xwidget] side-by-side layout:
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--preview-standalone</span> ()
   <span style="color: #50a14f; font-style: italic;">"Export the current standalone Org buffer to HTML and open it in xwidget.
 
-Called from the buffer-local after-save-hook installed by blog-preview.
-Mirrors blog-preview-subtree but for files without #+article_style: multiple."</span>
+Called by C-x C-s under `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">'.
+Mirrors blog--preview-subtree but for files without #+article_style: multiple."</span>
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Under the blog, write to its root ---as CI does--- so a nested file's re-rooted links resolve.
 </span>  (<span style="color: #a626a4;">let*</span> ((root (expand-file-name blog-posts-directory))
          (html (<span style="color: #a626a4;">if</span> (file-in-directory-p buffer-file-name root)
@@ -813,54 +840,17 @@ Mirrors blog-preview-subtree but for files without #+article_style: multiple."</
     (<span style="color: #a626a4;">when</span> (file-exists-p html)
       (blog--show-preview (concat <span style="color: #50a14f;">"<a href="file://">file://</a>"</span> html)))))
 
-(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">blog-preview</span> ()
-  <span style="color: #50a14f; font-style: italic;">"Render the current Org buffer with full blog styling in an xwidget window.
-
-Installs a buffer-local after-save-hook so that every subsequent C-x C-s
-re-exports and refreshes the preview automatically.
-
-This is the entry point for previewing *any* Org file with blog styling ---not
-just files under ~/blog.  On a file outside the blog repo all CSS and JS are
-loaded from absolute <a href="https://alhassy.com/resources/">https://alhassy.com/resources/</a> URLs (internet required),
-metadata keywords fall back to sensible defaults (default image, empty tags,
-generic description), and the history badge links to a GitHub URL that won't
-resolve.  Everything visual still works.
-
-In ~/blog files, prefer my/blogging-mode (C-x C-s there runs the full
-preprocessing pipeline: slug assignment, modified-stamp, validation, then
-preview).  blog-preview is a no-op when my/blogging-mode is already active ---
-that mode owns the save+preview cycle directly."</span>
-  (<span style="color: #a626a4;">interactive</span>)
-  (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">bound-and-true-p</span> my/blogging-mode)
-    (message <span style="color: #50a14f;">"blog-preview: my/blogging-mode is active; C-x C-s handles preview."</span>)
-    (<span style="color: #a626a4;">cl-return-from</span> blog-preview))
-  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Kill any stale org-preview-html-mode ---it puts org-preview-html-refresh on
-</span>  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">after-save-hook, and that errors when --html-file is nil (our path never sets it).
-</span>  (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">bound-and-true-p</span> org-preview-html-mode)
-    (org-preview-html-mode -1))
-  (remove-hook 'after-save-hook #'org-preview-html-refresh t)
-  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Ensure no xwidget buffer lingers ---otherwise Emacs might hang on re-preview.
-</span>  (<span style="color: #a626a4;">let</span> ((kill-buffer-query-functions nil))
-    (mapc #'kill-buffer (blog--xwidget-buffers)))
-  (<span style="color: #a626a4;">if</span> (blog--multiple-style-p)
-      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Multiple-style: preview heading at point on every save (buffer-local hook).
-</span>      (add-hook 'after-save-hook #'blog-preview-subtree nil t)
-    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Standalone: bypass org-preview-html-mode (<a href="file://">file://</a> download bug on macOS).
-</span>    (add-hook 'after-save-hook #'blog--preview-standalone nil t)
-    (blog--preview-standalone)))
-
-(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog-preview-subtree</span> ()
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--preview-subtree</span> ()
   <span style="color: #50a14f; font-style: italic;">"Preview the top-level heading at point as a standalone blog article.
 
 For use in multiple-style (#+article_style: multiple) files.
-Called automatically by the buffer-local after-save-hook set up by blog-preview.
+Called by C-x C-s under `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">my/blogging-mode</span><span style="color: #50a14f; font-style: italic;">'.
 
 Opens (or reuses) an xwidget window to the right of the Org source buffer,
 maintaining a stable [Org source | xwidget] side-by-side layout."</span>
-  (<span style="color: #a626a4;">interactive</span>)
   (<span style="color: #a626a4;">let</span> ((kill-buffer-query-functions nil))
     (<span style="color: #a626a4;">unless</span> (blog--multiple-style-p)
-      (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"Not a multiple-style file; use blog-preview instead"</span>))
+      (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"Not a multiple-style file"</span>))
     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Navigate to enclosing top-level heading.
 </span>    (<span style="color: #a626a4;">save-excursion</span>
       (<span style="color: #a626a4;">unless</span> (org-at-heading-p) (outline-previous-heading))
@@ -931,8 +921,7 @@ Under `</span><span style="color: #50a14f; font-weight: bold; font-style: italic
                (<span style="color: #a626a4;">setq</span> desc (read-string <span style="color: #50a14f;">"Article Purpose: "</span>))
             <span style="color: #50a14f;">"\n\n* Abstract :ignore: \n"</span> desc
             <span style="color: #50a14f;">"\n\n* ???"</span>)
-    (save-buffer)
-    (blog-preview)))
+    (save-buffer)))
 <span style="color: #a0a1a7;">#+END_SRC
 </span>
 <span style="color: #8b4513; font-weight: bold;">** blog-new-post: Insert a heading skeleton in a multiple-style container file </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
@@ -976,10 +965,7 @@ a draft until you remove it before publishing."</span>
      <span style="color: #50a14f;">"** Abstract :ignore:\n"</span>
      description <span style="color: #50a14f;">"\n"</span>
      <span style="color: #50a14f;">"\n"</span>
-     <span style="color: #50a14f;">"** ???\n"</span>)
-    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Enable preview for this container if not already active.
-</span>    (<span style="color: #a626a4;">unless</span> (member #'blog-preview-subtree after-save-hook)
-      (blog-preview))))
+     <span style="color: #50a14f;">"** ???\n"</span>)))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 <span style="color: #8b4513; font-weight: bold;">** Media insertion: images and screenshots                         </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
@@ -1321,7 +1307,7 @@ Here are 4 example uses:
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">blog-article-style-blog-make-slug-utilities-for-the-multiple-article-style</span>
 <span style="font-weight: bold;">:END:</span>
 
-=blog--article-style= reads =#+article_style:=; =blog-preview=, =blog-publish-all=, and
+=blog--article-style= reads =#+article_style:=; <a href="kbd:C-x_C-s">kbd:C-x_C-s</a>, =blog-publish-all=, and
 =blog-new-post= dispatch on it.  A slug names both =&lt;slug&gt;.html= and =alhassy.com/&lt;slug&gt;=;
 see &#167;<span style="text-decoration: underline;"><a href="#slug-derivation-write-back-and-global-uniqueness">slugs</a></span>.
 
@@ -1471,8 +1457,10 @@ Returns an alist with the same keys as blog--info plus \"slug\" and \"container\
              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">description
 </span>             (description (<span style="color: #a626a4;">or</span> (org-element-property <span style="color: #e44649;">:DESCRIPTION</span> headline-node)
                               <span style="color: #50a14f;">"I learned something neat, and wanted to share!"</span>))
-             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">image: explicit :IMAGE: property wins; otherwise derive from tags
+             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">image: explicit :IMAGE: property wins; then a :REDIRECT: source's own #+fileimage:; then tags
 </span>             (image (<span style="color: #a626a4;">or</span> (org-element-property <span style="color: #e44649;">:IMAGE</span> headline-node)
+                        (<span style="color: #a626a4;">and</span> (org-element-property <span style="color: #e44649;">:REDIRECT</span> headline-node)
+                             (blog--redirect-keyword slug <span style="color: #50a14f;">"fileimage"</span>))
                         (blog--image-for-tags heading-tags)))
              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">tags: merge :TAGS: property with heading tags; strip structural tags
 </span>             (structural-tags '(<span style="color: #50a14f;">"noexport"</span> <span style="color: #50a14f;">"draft"</span> <span style="color: #50a14f;">"ignore"</span> <span style="color: #50a14f;">"details"</span> <span style="color: #50a14f;">"details_orange"</span>
@@ -1690,37 +1678,23 @@ like =PathCat= is a long-published URL."</span>
 <span style="font-weight: bold;">:END:</span>
 
 The pieces that turn an Org file into a blog page:
-+ =<a href="blog:header">blog:header</a>= and =<a href="blog:footer">blog:footer</a>= ---Org links that give <span style="font-style: italic;">/any/</span> Org file the blog's CSS/JS stack.
++ =my/blogging-mode= ---<a href="kbd:C-x_C-s">kbd:C-x_C-s</a> previews <span style="font-style: italic;">/any/</span> Org file, blog or not, with the blog's CSS/JS stack.
 + The =blog= export backend ---wraps each article in header, tags, image, badges, and footer.
 + Badges and footer ---Source and History badges under the article image, since nobody scrolls to
   the bottom; the license and ReadRemaining.js clock at the end.
 
 
-<span style="color: #8b4513; font-weight: bold;">** org-link/blog: Using My Blog Styles Anywhere </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
+<span style="color: #8b4513; font-weight: bold;">** blog--header-html: the site nav, styles, and title atop every article </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">org-linkblog-using-my-blog-styles-anywhere</span>
 <span style="font-weight: bold;">:END:</span>
 
-Any Org file, blog or not, gets our styling from the Org links ~<a href="blog:header">blog:header</a>~ and ~<a href="blog:footer">blog:footer</a>~; they adapt
-the docstring examples of <a href="doc:org-deflink">doc:org-deflink</a>.  Outside =~/blog/=, CSS and JS load from =alhassy.com/resources/=
+Every article opens with the site nav, our CSS/JS stack, and a fancy title; =blog--inner-template= emits
+them.  To style <span style="font-style: italic;">/any/</span> Org file this way, blog or not, just <a href="kbd:M-x_my/blogging-mode">kbd:M-x_my/blogging-mode</a> ---there's no
+per-file incantation to remember.  Outside =~/blog/=, CSS and JS load from =alhassy.com/resources/=
 ---so we need internet--- and the History badge dangles.
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp :exports code
-</span>(<span style="color: #a626a4;">org-deflink</span> blog
-  <span style="color: #50a14f;">"Provide the styles for '</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">www.alhassy.com</span><span style="color: #50a14f;">'s header and footer.
-
-The use of '</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">blog:footer</span><span style="color: #50a14f;">' aims to provide a clickable list of tags and an HTMLized version of the Org source.
-For details, consult the blog--footer function.
-
-Finally, I want to avoid any `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">@@backend:...@@</span><span style="color: #50a14f;">' from appearing in the browser frame's title.
-We accomplish this with the help of some handy-dandy JavaScript: Just use '</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">blog:sanitise-title</span><span style="color: #50a14f;">'.
-"</span>
-      (<span style="color: #a626a4;">pcase</span> o-label
-        (<span style="color: #50a14f;">"header"</span> (blog--header-html (blog--info (buffer-file-name))))
-        (<span style="color: #50a14f;">"footer"</span> (blog--footer (buffer-file-name)))
-        (<span style="color: #50a14f;">"sanitise-title"</span> blog--sanitise-title-js)
-        (_ <span style="color: #50a14f;">""</span>)))
-
-(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--sanitise-title-js</span>
+</span>(<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--sanitise-title-js</span>
   <span style="color: #50a14f;">"&lt;script&gt; window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, \"\") &lt;/script&gt;"</span>
   <span style="color: #50a14f; font-style: italic;">"Strip any `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">@@backend:...@@</span><span style="color: #50a14f; font-style: italic;">' from the browser frame's title."</span>)
 
@@ -1735,8 +1709,6 @@ We accomplish this with the help of some handy-dandy JavaScript: Just use '</spa
    (format <span style="color: #50a14f;">"&lt;br&gt;&lt;center&gt;&lt;h1 class=\"post-title\"&gt;%s&lt;/h1&gt;&lt;/center&gt;"</span> (blog--title-html (@title post)))))
 <span style="color: #a0a1a7;">#+end_src
 </span>
-See also: <span style="text-decoration: underline;"><a href="http://alhassy.com/org-special-block-extras/#Links">How do I make a new Org link type?</a></span>
-
 <span style="color: #8b4513; font-weight: bold;">** The </span><span style="color: #8b4513; font-weight: bold;">=blog=</span><span style="color: #8b4513; font-weight: bold;"> export backend: header, tags, image, badges, and footer </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">blog-style-setup-a-function-to-insert-org-linkblog-into-a-buffer</span>
@@ -3088,6 +3060,12 @@ Dispatches on #+article_style: per file:
 </span>  (<span style="color: #a626a4;">let</span> ((blog-posts-directory   (expand-file-name blog-posts-directory))
         (blog-publish-directory (file-name-as-directory (expand-file-name blog-publish-directory))))
     (make-directory blog-publish-directory t)
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Vendor every :REDIRECT: first, so the posts registry reads each source's metadata ---say, its image--- fresh.
+</span>    (<span style="color: #a626a4;">dolist</span> (f (blog--org-files))
+      (<span style="color: #a626a4;">when</span> (equal (blog--file-keyword f <span style="color: #50a14f;">"article_style"</span>) <span style="color: #50a14f;">"multiple"</span>)
+        (<span style="color: #a626a4;">dolist</span> (info (blog--info-multiple f))
+          (<span style="color: #a626a4;">when-let</span> ((redirect (map-elt info <span style="color: #50a14f;">"redirect"</span>)))
+            (blog--vendor-one-redirect (map-elt info <span style="color: #50a14f;">"slug"</span>) redirect)))))
     (blog--refresh-posts)
     (blog--validate-slugs)
     (<span style="color: #a626a4;">dolist</span> (f (seq-filter #'blog--publishable-p (blog--org-files)))
@@ -3199,9 +3177,11 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
                   (goto-char (point-max))
                   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Vendor afresh, so the #+include: resolves on this machine and on
 </span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">CI, and tracks the source's tip; the banner sits atop the article.
-</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A package's write-up uses the package's own link types; load it first.
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A package's write-up uses the package's own link types; load it first,
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">unless it's already loaded ---say, our working copy, mid-hack.
 </span>                  (<span style="color: #a626a4;">when-let</span> ((lib (cdr (assoc <span style="color: #50a14f;">"load"</span> info))))
-                    (load (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory) nil t))
+                    (<span style="color: #a626a4;">unless</span> (<span style="color: #a626a4;">featurep</span> (intern (file-name-base lib)))
+                      (load (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory) nil t)))
                   (insert (blog--redirect-banner redirect)
                           (format <span style="color: #50a14f;">"#+include: \"%s\"\n"</span>
                                   (expand-file-name
@@ -3719,7 +3699,7 @@ tree.
 14. Column Width
 
     When blogging, I see live HTML previews whenever I save thanks to
-    <a href="doc:blog-preview">doc:blog-preview</a>.  As such, I cannot have my lines being too wide. I'll settle
+    <a href="doc:my/blogging-mode">doc:my/blogging-mode</a>.  As such, I cannot have my lines being too wide. I'll settle
     for a modest 80 columns ---set buffer-locally by =my/blogging-mode=.  Then <a href="kbd:M-q">kbd:M-q</a>
     will format my paragraphs to wrap nicely into this 80-column width.
 
@@ -3749,8 +3729,8 @@ tree.
                                                                 )))
        (<span style="color: #a626a4;">use-package</span> org-special-block-extras)
        <span style="color: #a0a1a7; font-weight: bold;">;;</span><span style="color: #a0a1a7;">(load-file "~/blog/AlBasmala.el")
-</span>       ) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">M-x blog-preview
-</span>     
+</span>       )
+     
      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Required for Github Actions; i.e., testing.
 </span>     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">TODO Clean me!
 </span>     (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">quelpa-read-cache</span> ()) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Used somewhere, but not defined.
