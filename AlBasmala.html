@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-17 Sat 05:19 -->
+<!-- 2026-10-17 Sat 05:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -504,9 +504,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 0DA&gt;
+C-RET		#&lt;interpreted-function 9D5&gt;
 
-C-x C-s		#&lt;interpreted-function 070&gt;
+C-x C-s		#&lt;interpreted-function 913&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -2541,10 +2541,10 @@ Here are 3 example uses:
 #+fileimage: emacs-birthday-present.png
 #+fileimage: ../resources/emacs-birthday-present.png
 #+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300 Photo by [[https://example.com][Dora]], CC BY 2.0.
-#+fileimage: [[https://www.youtube.com/watch?v=BQdNhtJSbqk][emacs-birthday-present.png]]
+#+fileimage: https://www.youtube.com/watch?v=BQdNhtJSbqk
 
 + Notice that the third indicates explicit width and height.
-+ The fourth wraps the image in an Org link, so clicking the image visits that link rather than the image itself.
++ The fourth, a YouTube video, shows the video's thumbnail, which links to the video.
 + It also ends with an optional credit: all text after the height (and after an optional =no-border=),
   rendered as a caption beneath the image, with Org links =[[url][text]]= becoming anchors.
   Without one, the image's row in resources/credits.org, if any, is the caption.
@@ -2555,9 +2555,12 @@ Here are 3 example uses:
    This requires a slash at the end.)
 "</span>
   (<span style="color: #a626a4;">-let*</span> (((image width height . rest) (s-split <span style="color: #50a14f;">" "</span> (map-elt json <span style="color: #50a14f;">"image"</span>)))
-          ((href image) (<span style="color: #a626a4;">if</span> (string-match <span style="color: #50a14f;">"\\`\\[\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\]\\'"</span> image)
-                            (list (match-string 1 image) (match-string 2 image))
-                          (list nil image)))
+          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A YouTube URL shows the video's 4:3 thumbnail, which links to the video.
+</span>          (video-id (<span style="color: #a626a4;">and</span> (string-match <span style="color: #50a14f;">"youtu</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(?:</span><span style="color: #50a14f;">\\.be/</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">be\\.com/watch\\?v=</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[-_[:alnum:]]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">"</span> image)
+                         (match-string 1 image)))
+          (href (<span style="color: #a626a4;">and</span> video-id image))
+          (image (<span style="color: #a626a4;">if</span> video-id (format <span style="color: #50a14f;">"https://img.youtube.com/vi/%s/hqdefault.jpg"</span> video-id) image))
+          (height (<span style="color: #a626a4;">or</span> height (<span style="color: #a626a4;">and</span> video-id <span style="color: #50a14f;">"263"</span>)))
           (no-border? (equal (car rest) <span style="color: #50a14f;">"no-border"</span>))
           (credit (<span style="color: #a626a4;">or</span> (s-presence (s-join <span style="color: #50a14f;">" "</span> (<span style="color: #a626a4;">if</span> no-border? (cdr rest) rest)))
                       (blog--credit image))))
@@ -5688,9 +5691,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 0DA&gt;
+C-RET		#&lt;interpreted-function 9D5&gt;
 
-C-x C-s		#&lt;interpreted-function 070&gt;
+C-x C-s		#&lt;interpreted-function 913&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle

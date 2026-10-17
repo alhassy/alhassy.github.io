@@ -1349,10 +1349,10 @@ Here are 3 example uses:
 ,#+fileimage: emacs-birthday-present.png
 ,#+fileimage: ../resources/emacs-birthday-present.png
 ,#+fileimage: <a href="https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg">https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg</a> 350 300 Photo by <a href="https://example.com">[[https://example.com][Dora]]</a>, CC BY 2.0.
-,#+fileimage: <a href="https://www.youtube.com/watch?v=BQdNhtJSbqk">[[https://www.youtube.com/watch?v=BQdNhtJSbqk][emacs-birthday-present.png]]</a>
+,#+fileimage: <a href="https://www.youtube.com/watch?v=BQdNhtJSbqk">https://www.youtube.com/watch?v=BQdNhtJSbqk</a>
 
 + Notice that the third indicates explicit width and height.
-+ The fourth wraps the image in an Org link, so clicking the image visits that link rather than the image itself.
++ The fourth, a YouTube video, shows the video's thumbnail, which links to the video.
 + It also ends with an optional credit: all text after the height (and after an optional =no-border=),
   rendered as a caption beneath the image, with Org links =<a href="url">[[url][text]]</a>= becoming anchors.
   Without one, the image's row in resources/credits.org, if any, is the caption.
@@ -1363,9 +1363,12 @@ Here are 3 example uses:
    This requires a slash at the end.)
 "</span>
   (<span style="color: #a626a4;">-let*</span> (((image width height . rest) (s-split <span style="color: #50a14f;">" "</span> (map-elt json <span style="color: #50a14f;">"image"</span>)))
-          ((href image) (<span style="color: #a626a4;">if</span> (string-match <span style="color: #50a14f;">"\\`\\[\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\]\\'"</span> image)
-                            (list (match-string 1 image) (match-string 2 image))
-                          (list nil image)))
+          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A YouTube URL shows the video's 4:3 thumbnail, which links to the video.
+</span>          (video-id (<span style="color: #a626a4;">and</span> (string-match <span style="color: #50a14f;">"youtu</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(?:</span><span style="color: #50a14f;">\\.be/</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">be\\.com/watch\\?v=</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[-_[:alnum:]]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">"</span> image)
+                         (match-string 1 image)))
+          (href (<span style="color: #a626a4;">and</span> video-id image))
+          (image (<span style="color: #a626a4;">if</span> video-id (format <span style="color: #50a14f;">"<a href="https://img.youtube.com/vi/%s/hqdefault.jpg">https://img.youtube.com/vi/%s/hqdefault.jpg</a>"</span> video-id) image))
+          (height (<span style="color: #a626a4;">or</span> height (<span style="color: #a626a4;">and</span> video-id <span style="color: #50a14f;">"263"</span>)))
           (no-border? (equal (car rest) <span style="color: #50a14f;">"no-border"</span>))
           (credit (<span style="color: #a626a4;">or</span> (s-presence (s-join <span style="color: #50a14f;">" "</span> (<span style="color: #a626a4;">if</span> no-border? (cdr rest) rest)))
                       (blog--credit image))))
