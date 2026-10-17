@@ -2062,6 +2062,10 @@ Each =.org.html= page is htmlize's =inline-css= rendering: the file as Emacs sho
 (advice-add 'htmlize-buffer-1 :around
             (lambda (orig &rest args) (let ((inhibit-message t)) (apply orig args))))
 
+;; Faces like (:background white) name colours by symbol, which htmlize's string-match chokes on.
+(advice-add 'htmlize-color-to-rgb :filter-args
+            (lambda (args) (cons (if (and (car args) (symbolp (car args))) (symbol-name (car args)) (car args)) (cdr args))))
+
 (defun blog--source-badge (url)
   "URL ↦ the “Source” badge linking to an article's colourised Org source."
   (concat "<a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""
