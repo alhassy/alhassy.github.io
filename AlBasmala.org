@@ -3354,14 +3354,6 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
               (let ((blog--link-base-directory (file-name-directory (expand-file-name container-file))))
                 (org-export-to-file 'blog html-out))))
 
-          ;; A redirect's old home was its repo's Pages site, linked as <slug>/ ---which Pages serves
-          ;; from <slug>/index.html; so forward that to <slug>, keeping any #anchor of old deep links.
-          (when (cdr (assoc "redirect" info))
-            (let ((stub (expand-file-name (concat slug "/index.html") blog-publish-directory)))
-              (make-directory (file-name-directory stub) t)
-              (f-write-text (format "<!doctype html><meta http-equiv=\"refresh\" content=\"0; url=/%s\"><script>location.replace(\"/%s\" + location.hash)</script>\n" slug slug)
-                            'utf-8 stub)))
-
           ;; 4. Per-article colourised source: the vendored file for a redirect, else the subtree.
           (if (cdr (assoc "redirect" info))
               (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir slug ".org") blog-posts-directory))
