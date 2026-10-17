@@ -1374,7 +1374,10 @@ Here are 3 example uses:
     (s-collapse-whitespace
      (format "<center class=\"post-image\"><a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
              %s width=\"%s\" height=\"%s\" align=\"top\"/></a>%s</center>"
-             (or href image) (if (s-blank? credit) (concat "Image credit " image) (blog--org-links-to-plain credit))
+             (or href image)
+             (cond (video-id "🍿 Click me to see the video; or click the title to read the article 📚")
+                   ((s-blank? credit) (concat "Image credit " image))
+                   (t (blog--org-links-to-plain credit)))
              image no-border? width height
              (if (s-blank? credit) ""
                (format "<br><small class=\"image-credit\">%s</small>" (blog--org-links-to-html credit)))))))
