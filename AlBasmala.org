@@ -487,6 +487,46 @@ read, where it's missed.  Its History badge points at the repo's log for the fil
 =projects.org='s, and its Source badge colourises the vendored file, not the five-line
 heading.
 
+*** A REDIRECT to a container
+:PROPERTIES:
+:CUSTOM_ID: a-redirect-to-a-container
+:END:
+
+=org-special-block-extras.org= is a 9,000-line manual; as one article, it buries the block
+types under the pitch and the developer's guide under both.  So it declares
+=#+article_style: multiple=, just like =projects.org=, and each public top-level heading
+becomes its own article; its one =projects.org= heading still points at the whole file.
+
+#+begin_src org :tangle no
+,#+article_style: multiple
+,* 🧙‍♂️ /Write Once, Export Everywhere/: Say Hello to =org-special-block-extras=
+:PROPERTIES:
+:CUSTOM_ID:   org-special-block-extras
+:TITLE:       org-special-block-extras: Write Once, Export Everywhere
+:DESCRIPTION: A unified interface for special blocks and links: defblock.
+:END:
+,* Block and link types provided by this package
+:PROPERTIES:
+:CUSTOM_ID:   org-special-block-extras-blocks-and-links
+⋮
+#+end_src
+
+- *Registry.* =blog--info-multiple= swaps such a heading's info for its vendored source's
+  article infos, via =blog--redirected-container-infos=; each inherits the heading's
+  =:REDIRECT:=, =:LOAD:=, history, draft-ness, and tags, and remembers its slug as
+  ="redirect-slug"=, which names the vendored file.  An =:ignore:= heading ---say, =HTML &
+  LaTeX Setup=--- and the footnote section are never articles.
+- *Body.* An article is =#+include: "vendored.org::#slug" :only-contents t :minlevel 1=,
+  after =#+setupfile: vendored.org=, so the container's =#+macro:=s and =header-args=
+  ---notably =:eval never-export=--- still apply.
+- *Cross-article links.* =[[#Boxed-Text]]= in the pitch targets a section of another
+  article, so =blog--prepare-redirect= rewrites it to
+  =[[https://alhassy.com/org-special-block-extras-blocks-and-links#Boxed-Text][…]]=; a
+  link within its own article stays put.
+
+The first article reuses the heading's slug, so =alhassy.com/org-special-block-extras= still
+lands on the pitch.
+
 #+begin_src emacs-lisp
 (defvar blog-redirects-subdir "resources/redirects/"
   "Subdirectory of `blog-posts-directory' where :REDIRECT: sources are
@@ -538,14 +578,25 @@ vendored for CI.  Relative path; must end with a trailing slash.")
 (defun blog--prepare-redirect (file redirect)
   "Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, file:images/x.png ↦ URL-dir/images/x.png.
 
-Axes `blog--redirect-axed-keywords', and re-roots relative file links and #+fileimage: at REDIRECT's
-directory when it's a URL; see §“Making a source include-ready”."
+Axes `blog--redirect-axed-keywords', re-roots relative file links and #+fileimage: at REDIRECT's
+directory when it's a URL, and, in a container, points [[#id]] at the article holding id when
+that's another one; see §“Making a source include-ready”."
   (with-temp-buffer
     (insert-file-contents file)
     (delay-mode-hooks (org-mode))
-    (let ((base (and (blog--url-p redirect) (file-name-directory redirect))))
+    (let* ((base    (and (blog--url-p redirect) (file-name-directory redirect)))
+           (tree    (org-element-parse-buffer))
+           ;; The :CUSTOM_ID: of EL's top-level heading, i.e., its article's slug in a container.
+           (article (lambda (el) (when-let ((top (car (last (seq-filter (lambda (e) (eq 'headline (org-element-type e)))
+                                                                         (org-element-lineage el))))))
+                                   (org-element-property :CUSTOM_ID top))))
+           ;; id ↦ its heading's article, when this source is a container; e.g., "Boxed-Text" ↦ "org-special-block-extras-blocks-and-links".
+           (homes   (when (blog--multiple-style-p file)
+                      (org-element-map tree 'headline
+                        (lambda (h) (when-let ((id (org-element-property :CUSTOM_ID h)))
+                                      (cons id (if (= 1 (org-element-property :level h)) id (funcall article h)))))))))
       ;; Edit back to front, so the positions of earlier elements stay valid.
-      (dolist (el (nreverse (org-element-map (org-element-parse-buffer) '(keyword link) #'identity)))
+      (dolist (el (nreverse (org-element-map tree '(keyword link) #'identity)))
         (let ((beg  (org-element-property :begin el))
               (end  (org-element-property :end el))
               (type (org-element-property :type el))
@@ -562,6 +613,15 @@ directory when it's a URL; see §“Making a source include-ready”."
                 (goto-char beg)
                 (search-forward image end)
                 (replace-match url t t))))
+           ((and (equal type "custom-id") (map-elt homes path)
+                 (not (equal (map-elt homes path) (funcall article el))))
+            ;; Another article's section: link to that article, keeping our description or using its id.
+            (let ((desc (if (org-element-property :contents-begin el)
+                            (buffer-substring (org-element-property :contents-begin el) (org-element-property :contents-end el))
+                          path)))
+              (delete-region beg (- end (org-element-property :post-blank el)))
+              (goto-char beg)
+              (insert (format "[[%s#%s][%s]]" (blog--url (map-elt homes path)) path desc))))
            ((and base (equal type "file") (not (file-name-absolute-p path)))
             ;; Expand before searching: `url-expand-file-name' clobbers the match data.
             (let ((url (url-expand-file-name path base)))
@@ -1551,12 +1611,15 @@ Priority:
 (defun blog--info-subtree (headline-node container-file slug)
   "Extract post metadata for HEADLINE-NODE from CONTAINER-FILE with SLUG.
 
-Returns nil when the headline carries a :noexport: tag or the COMMENT keyword.
+Returns nil when the headline carries a :noexport: or :ignore: tag, the COMMENT keyword,
+or is the footnote section: none of these is an article.
 Returns an alist with the same keys as blog--info plus \"slug\" and \"container\"."
   (let* ((heading-tags (mapcar #'downcase
                                (org-element-property :tags headline-node))))
     (unless (or (member "noexport" heading-tags)
-                (org-element-property :commentedp headline-node))
+                (member "ignore" heading-tags)
+                (org-element-property :commentedp headline-node)
+                (org-element-property :footnote-section-p headline-node))
       (let* (;; draft?
              (draft? (or (member "draft" heading-tags)
                          (equal "t" (org-element-property :DRAFT headline-node))
@@ -1634,10 +1697,28 @@ Headings tagged :draft: are included but marked."
                           (blog--make-slug (or (org-element-property :TITLE h)
                                                (org-element-property :raw-value h)))))
                     top-headings)))
-      ;; Build alists, skipping noexport/COMMENT headings (blog--info-subtree returns nil for them)
-      (delq nil
-            (cl-mapcar (lambda (h slug) (blog--info-subtree h container-file slug))
-                       top-headings slugs)))))
+      ;; Build alists, skipping noexport/COMMENT headings (blog--info-subtree returns nil for them);
+      ;; a :REDIRECT: to a container becomes that container's articles.
+      (mapcan #'blog--redirected-container-infos
+              (delq nil
+                    (cl-mapcar (lambda (h slug) (blog--info-subtree h container-file slug))
+                               top-headings slugs))))))
+
+(defun blog--redirected-container-infos (info)
+  "INFO ↦ (INFO), or the infos of its vendored :REDIRECT: source's articles when that's a container.
+
+Each inherits INFO's redirect, load, history, draft, and tags, and remembers INFO's slug as
+\"redirect-slug\", which names the vendored file; see §“A REDIRECT to a container”."
+  (let ((vendored (and (map-elt info "redirect")
+                       (expand-file-name (concat blog-redirects-subdir (@slug info) ".org") blog-posts-directory))))
+    (if (not (and vendored (file-exists-p vendored) (blog--multiple-style-p vendored)))
+        (list info)
+      (mapcar (lambda (article)
+                (append (list (cons "redirect-slug" (@slug info))
+                              (cons "tags" (s-join " " (seq-uniq (s-split " " (concat (map-elt info "tags") " " (map-elt article "tags")) t)))))
+                        (map-filter (lambda (key _) (member key '("redirect" "load" "history" "draft"))) info)
+                        article))
+              (blog--info-multiple vendored)))))
 
 #+end_src
 
@@ -3256,7 +3337,7 @@ Dispatches on #+article_style: per file:
       (when (equal (blog--file-keyword f "article_style") "multiple")
         (dolist (info (blog--info-multiple f))
           (when-let ((redirect (map-elt info "redirect")))
-            (blog--vendor-one-redirect (map-elt info "slug") redirect)))))
+            (blog--vendor-one-redirect (or (map-elt info "redirect-slug") (map-elt info "slug")) redirect)))))
     (blog--refresh-posts)
     (blog--validate-slugs)
     (dolist (f (seq-filter #'blog--publishable-p (blog--org-files)))
@@ -3362,7 +3443,8 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
           ;;      * Article Title        (deleted)
           ;;      ** Abstract :ignore:   * Abstract :ignore:
           ;;      ** Introduction ...    * Introduction ...
-          (let ((redirect (cdr (assoc "redirect" info))))
+          (let ((redirect      (cdr (assoc "redirect" info)))
+                (redirect-slug (or (cdr (assoc "redirect-slug" info)) slug)))
             (if redirect
                 (with-current-buffer tmp-buf
                   (goto-char (point-max))
@@ -3372,12 +3454,15 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
                   ;; unless it's already loaded ---say, our working copy, mid-hack.
                   (when-let ((lib (cdr (assoc "load" info))))
                     (unless (featurep (intern (file-name-base lib)))
-                      (load (blog--redirect-load-file slug redirect lib) nil t)))
-                  (insert (blog--redirect-banner redirect)
-                          (format "#+include: \"%s\"\n"
-                                  (expand-file-name
-                                   (blog--vendor-one-redirect slug redirect)
-                                   blog-posts-directory)))
+                      (load (blog--redirect-load-file redirect-slug redirect lib) nil t)))
+                  ;; An article of a redirected container is its heading's contents, read with the
+                  ;; container's file-level keywords ---say, its #+macro:s and header-args.
+                  (let ((vendored (expand-file-name (blog--vendor-one-redirect redirect-slug redirect) blog-posts-directory)))
+                    (insert (blog--redirect-banner redirect)
+                            (if (assoc "redirect-slug" info)
+                                (format "#+setupfile: %s\n#+include: \"%s::#%s\" :only-contents t :minlevel 1\n"
+                                        vendored vendored slug)
+                              (format "#+include: \"%s\"\n" vendored))))
                   (save-buffer))
               (save-excursion
                 (goto-char heading-point)
@@ -3401,7 +3486,8 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
 
           ;; 4. Per-article colourised source: the vendored file for a redirect, else the subtree.
           (if (cdr (assoc "redirect" info))
-              (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir slug ".org") blog-posts-directory))
+              (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir (or (cdr (assoc "redirect-slug" info)) slug) ".org")
+                                                    blog-posts-directory))
             (blog--htmlize-subtree heading-point slug)))
 
       ;; Cleanup temp files regardless of errors.
@@ -3423,8 +3509,9 @@ publishes are stable even if the heading title changes.
 
 Returns the list of slugs that were published."
   (let* ((all-infos (blog--info-multiple container-file))
+         ;; A heading's infos are usually just its own; a :REDIRECT: to a container yields its articles.
          (by-slug   (let ((h (make-hash-table :test #'equal)))
-                      (dolist (i all-infos) (puthash (@slug i) i h))
+                      (dolist (i (reverse all-infos)) (push i (gethash (or (map-elt i "redirect-slug") (@slug i)) h)))
                       h))
          (results   '()))
     (with-current-buffer (find-file-noselect container-file)
@@ -3440,10 +3527,10 @@ Returns the list of slugs that were published."
               (unless slug
                 (user-error "Container heading %S in %s has no :CUSTOM_ID: property ---run C-x C-s on the source first"
                             title (f-filename container-file)))
-              (let ((info (gethash slug by-slug)))
-                (message "=> Publishing subtree: %s (%s)..." title slug)
+              (dolist (info (gethash slug by-slug))
+                (message "=> Publishing subtree: %s (%s)..." (@title info) (@slug info))
                 (blog--publish-single-subtree (point) container-file info)
-                (push slug results))))
+                (push (@slug info) results))))
           (org-end-of-subtree t t))))
     (nreverse results)))
 
