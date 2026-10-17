@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-17 Sat 05:02 -->
+<!-- 2026-10-17 Sat 05:19 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -504,9 +504,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 8AB&gt;
+C-RET		#&lt;interpreted-function 0DA&gt;
 
-C-x C-s		#&lt;interpreted-function F68&gt;
+C-x C-s		#&lt;interpreted-function 070&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -2541,8 +2541,10 @@ Here are 3 example uses:
 #+fileimage: emacs-birthday-present.png
 #+fileimage: ../resources/emacs-birthday-present.png
 #+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300 Photo by [[https://example.com][Dora]], CC BY 2.0.
+#+fileimage: [[https://www.youtube.com/watch?v=BQdNhtJSbqk][emacs-birthday-present.png]]
 
 + Notice that the third indicates explicit width and height.
++ The fourth wraps the image in an Org link, so clicking the image visits that link rather than the image itself.
 + It also ends with an optional credit: all text after the height (and after an optional =no-border=),
   rendered as a caption beneath the image, with Org links =[[url][text]]= becoming anchors.
   Without one, the image's row in resources/credits.org, if any, is the caption.
@@ -2553,6 +2555,9 @@ Here are 3 example uses:
    This requires a slash at the end.)
 "</span>
   (<span style="color: #a626a4;">-let*</span> (((image width height . rest) (s-split <span style="color: #50a14f;">" "</span> (map-elt json <span style="color: #50a14f;">"image"</span>)))
+          ((href image) (<span style="color: #a626a4;">if</span> (string-match <span style="color: #50a14f;">"\\`\\[\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\]\\'"</span> image)
+                            (list (match-string 1 image) (match-string 2 image))
+                          (list nil image)))
           (no-border? (equal (car rest) <span style="color: #50a14f;">"no-border"</span>))
           (credit (<span style="color: #a626a4;">or</span> (s-presence (s-join <span style="color: #50a14f;">" "</span> (<span style="color: #a626a4;">if</span> no-border? (cdr rest) rest)))
                       (blog--credit image))))
@@ -2566,7 +2571,7 @@ Here are 3 example uses:
     (s-collapse-whitespace
      (format <span style="color: #50a14f;">"&lt;center class=\"post-image\"&gt;&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
              %s width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;%s&lt;/center&gt;"</span>
-             image (<span style="color: #a626a4;">if</span> (s-blank? credit) (concat <span style="color: #50a14f;">"Image credit "</span> image) (blog--org-links-to-plain credit))
+             (<span style="color: #a626a4;">or</span> href image) (<span style="color: #a626a4;">if</span> (s-blank? credit) (concat <span style="color: #50a14f;">"Image credit "</span> image) (blog--org-links-to-plain credit))
              image no-border? width height
              (<span style="color: #a626a4;">if</span> (s-blank? credit) <span style="color: #50a14f;">""</span>
                (format <span style="color: #50a14f;">"&lt;br&gt;&lt;small class=\"image-credit\"&gt;%s&lt;/small&gt;"</span> (blog--org-links-to-html credit)))))))
@@ -5683,9 +5688,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 8AB&gt;
+C-RET		#&lt;interpreted-function 0DA&gt;
 
-C-x C-s		#&lt;interpreted-function F68&gt;
+C-x C-s		#&lt;interpreted-function 070&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle
