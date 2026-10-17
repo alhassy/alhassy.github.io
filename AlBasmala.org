@@ -476,10 +476,11 @@ A single =.el= isn't always enough.  =org-special-block-extras.org= shows =osbe-
 an =org-defblock= in =tests/examples/README.el= that reads =tests/examples/box.el= beside it
 and scans the repo's =*.el= for =box='s definition; fetched alone, it finds neither.  So a
 =:LOAD:= that's neither a URL nor an absolute path is relative to the =:REDIRECT:='s GitHub
-repo, which we shallow-clone to the git-ignored =resources/redirects/clones/<repo>/=
----refetched each publish, with last time's clone as the offline fallback--- and load from
-there; e.g., =:LOAD: tests/examples/README.el=.  One-off link types thus stay with their
-article, rather than piling up in AlBasmala.org.
+repo, which we shallow-clone to the git-ignored =.redirect-clones/<repo>/= ---refetched each
+publish, with last time's clone as the offline fallback--- and load from there; e.g.,
+=:LOAD: tests/examples/README.el=.  The directory is hidden, so it's neither scanned for
+articles nor copied to the site, where a nested =.git= would break GitHub Pages.  One-off
+link types thus stay with their article, rather than piling up in AlBasmala.org.
 
 Finally, a redirected article on GitHub opens with a banner inviting readers to star the
 repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
@@ -659,12 +660,12 @@ keep last time's copy, and only signal an error when there is none."
     vendored))
 
 (defun blog--clone-redirect-repo (redirect)
-  "REDIRECT ↦ the directory of a fresh shallow clone of its GitHub repo, `blog-redirects-subdir'clones/REPO/.
+  "REDIRECT ↦ the directory of a fresh shallow clone of its GitHub repo, .redirect-clones/REPO/.
 
 When the fetch fails ---say, no network--- we keep last time's clone, and only signal an error when there is none."
   (pcase-let* ((`(,owner ,repo ,branch ,_) (or (blog--github-raw-parts redirect)
                                                (user-error "A repo-relative :LOAD: needs a GitHub :REDIRECT:, not %s" redirect)))
-               (dir (file-name-as-directory (expand-file-name (concat blog-redirects-subdir "clones/" repo) blog-posts-directory)))
+               (dir (file-name-as-directory (expand-file-name (concat ".redirect-clones/" repo) blog-posts-directory)))
                (url (format "https://github.com/%s/%s.git" owner repo))
                (git (lambda (&rest args) (zerop (apply #'call-process "git" nil nil nil args)))))
     (cond
