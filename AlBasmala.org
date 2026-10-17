@@ -1341,10 +1341,10 @@ Here are 3 example uses:
 ,#+fileimage: emacs-birthday-present.png
 ,#+fileimage: ../resources/emacs-birthday-present.png
 ,#+fileimage: https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg 350 300 Photo by [[https://example.com][Dora]], CC BY 2.0.
-,#+fileimage: [[https://www.youtube.com/watch?v=BQdNhtJSbqk][emacs-birthday-present.png]]
+,#+fileimage: https://www.youtube.com/watch?v=BQdNhtJSbqk
 
 + Notice that the third indicates explicit width and height.
-+ The fourth wraps the image in an Org link, so clicking the image visits that link rather than the image itself.
++ The fourth, a YouTube video, shows the video's thumbnail, which links to the video.
 + It also ends with an optional credit: all text after the height (and after an optional =no-border=),
   rendered as a caption beneath the image, with Org links =[[url][text]]= becoming anchors.
   Without one, the image's row in resources/credits.org, if any, is the caption.
@@ -1355,9 +1355,12 @@ Here are 3 example uses:
    This requires a slash at the end.)
 "
   (-let* (((image width height . rest) (s-split " " (map-elt json "image")))
-          ((href image) (if (string-match "\\`\\[\\[\\(.+\\)\\]\\[\\(.+\\)\\]\\]\\'" image)
-                            (list (match-string 1 image) (match-string 2 image))
-                          (list nil image)))
+          ;; A YouTube URL shows the video's 4:3 thumbnail, which links to the video.
+          (video-id (and (string-match "youtu\\(?:\\.be/\\|be\\.com/watch\\?v=\\)\\([-_[:alnum:]]+\\)" image)
+                         (match-string 1 image)))
+          (href (and video-id image))
+          (image (if video-id (format "https://img.youtube.com/vi/%s/hqdefault.jpg" video-id) image))
+          (height (or height (and video-id "263")))
           (no-border? (equal (car rest) "no-border"))
           (credit (or (s-presence (s-join " " (if no-border? (cdr rest) rest)))
                       (blog--credit image))))
