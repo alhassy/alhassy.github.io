@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-17 Sat 06:07 -->
+<!-- 2026-10-17 Sat 06:18 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -504,9 +504,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 1AF&gt;
+C-RET		#&lt;interpreted-function CD8&gt;
 
-C-x C-s		#&lt;interpreted-function E11&gt;
+C-x C-s		#&lt;interpreted-function A98&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -1400,10 +1400,11 @@ A single <code>.el</code> isn't always enough.  <code>org-special-block-extras.o
 an <code>org-defblock</code> in <code>tests/examples/README.el</code> that reads <code>tests/examples/box.el</code> beside it
 and scans the repo's <code>*.el</code> for <code>box</code>'s definition; fetched alone, it finds neither.  So a
 <code>:LOAD:</code> that's neither a URL nor an absolute path is relative to the <code>:REDIRECT:</code>'s GitHub
-repo, which we shallow-clone to the git-ignored <code>resources/redirects/clones/&lt;repo&gt;/</code>
-&mdash;refetched each publish, with last time's clone as the offline fallback&mdash; and load from
-there; e.g., <code>:LOAD: tests/examples/README.el</code>.  One-off link types thus stay with their
-article, rather than piling up in AlBasmala.org.
+repo, which we shallow-clone to the git-ignored <code>.redirect-clones/&lt;repo&gt;/</code> &mdash;refetched each
+publish, with last time's clone as the offline fallback&mdash; and load from there; e.g.,
+<code>:LOAD: tests/examples/README.el</code>.  The directory is hidden, so it's neither scanned for
+articles nor copied to the site, where a nested <code>.git</code> would break GitHub Pages.  One-off
+link types thus stay with their article, rather than piling up in AlBasmala.org.
 </p>
 
 <p>
@@ -1592,12 +1593,12 @@ keep last time's copy, and only signal an error when there is none."</span>
     vendored))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--clone-redirect-repo</span> (redirect)
-  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; the directory of a fresh shallow clone of its GitHub repo, `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'clones/REPO/.
+  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; the directory of a fresh shallow clone of its GitHub repo, .redirect-clones/REPO/.
 
 When the fetch fails ---say, no network--- we keep last time's clone, and only signal an error when there is none."</span>
   (<span style="color: #a626a4;">pcase-let*</span> ((`(,owner ,repo ,branch ,_) (<span style="color: #a626a4;">or</span> (blog--github-raw-parts redirect)
                                                (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"A repo-relative :LOAD: needs a GitHub :REDIRECT:, not %s"</span> redirect)))
-               (dir (file-name-as-directory (expand-file-name (concat blog-redirects-subdir <span style="color: #50a14f;">"clones/"</span> repo) blog-posts-directory)))
+               (dir (file-name-as-directory (expand-file-name (concat <span style="color: #50a14f;">".redirect-clones/"</span> repo) blog-posts-directory)))
                (url (format <span style="color: #50a14f;">"https://github.com/%s/%s.git"</span> owner repo))
                (git (<span style="color: #a626a4;">lambda</span> (<span style="color: #c18401;">&amp;rest</span> args) (zerop (apply #'call-process <span style="color: #50a14f;">"git"</span> nil nil nil args)))))
     (<span style="color: #a626a4;">cond</span>
@@ -5827,9 +5828,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 1AF&gt;
+C-RET		#&lt;interpreted-function CD8&gt;
 
-C-x C-s		#&lt;interpreted-function E11&gt;
+C-x C-s		#&lt;interpreted-function A98&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle

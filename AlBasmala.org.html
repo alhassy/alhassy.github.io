@@ -484,10 +484,11 @@ A single =.el= isn't always enough.  =org-special-block-extras.org= shows =osbe-
 an =org-defblock= in =tests/examples/README.el= that reads =tests/examples/box.el= beside it
 and scans the repo's =*.el= for =box='s definition; fetched alone, it finds neither.  So a
 =:LOAD:= that's neither a URL nor an absolute path is relative to the =:REDIRECT:='s GitHub
-repo, which we shallow-clone to the git-ignored =resources/redirects/clones/&lt;repo&gt;/=
----refetched each publish, with last time's clone as the offline fallback--- and load from
-there; e.g., =:LOAD: tests/examples/README.el=.  One-off link types thus stay with their
-article, rather than piling up in AlBasmala.org.
+repo, which we shallow-clone to the git-ignored =.redirect-clones/&lt;repo&gt;/= ---refetched each
+publish, with last time's clone as the offline fallback--- and load from there; e.g.,
+=:LOAD: tests/examples/README.el=.  The directory is hidden, so it's neither scanned for
+articles nor copied to the site, where a nested =.git= would break GitHub Pages.  One-off
+link types thus stay with their article, rather than piling up in AlBasmala.org.
 
 Finally, a redirected article on GitHub opens with a banner inviting readers to star the
 repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
@@ -667,12 +668,12 @@ keep last time's copy, and only signal an error when there is none."</span>
     vendored))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--clone-redirect-repo</span> (redirect)
-  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; the directory of a fresh shallow clone of its GitHub repo, `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'clones/REPO/.
+  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; the directory of a fresh shallow clone of its GitHub repo, .redirect-clones/REPO/.
 
 When the fetch fails ---say, no network--- we keep last time's clone, and only signal an error when there is none."</span>
   (<span style="color: #a626a4;">pcase-let*</span> ((`(,owner ,repo ,branch ,_) (<span style="color: #a626a4;">or</span> (blog--github-raw-parts redirect)
                                                (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"A repo-relative :LOAD: needs a GitHub :REDIRECT:, not %s"</span> redirect)))
-               (dir (file-name-as-directory (expand-file-name (concat blog-redirects-subdir <span style="color: #50a14f;">"clones/"</span> repo) blog-posts-directory)))
+               (dir (file-name-as-directory (expand-file-name (concat <span style="color: #50a14f;">".redirect-clones/"</span> repo) blog-posts-directory)))
                (url (format <span style="color: #50a14f;">"<a href="https://github.com/%s/%s.git">https://github.com/%s/%s.git</a>"</span> owner repo))
                (git (<span style="color: #a626a4;">lambda</span> (<span style="color: #c18401;">&amp;rest</span> args) (zerop (apply #'call-process <span style="color: #50a14f;">"git"</span> nil nil nil args)))))
     (<span style="color: #a626a4;">cond</span>
