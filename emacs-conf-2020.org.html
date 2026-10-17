@@ -1,0 +1,734 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>emacs-conf-2020.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #a0a1a7;">#+DESCRIPTION: A modular interface for special blocks and links: defblock</span>
+
+#+EMAIL: alhassy@gmail.com
+<span style="color: #a0a1a7;">#+PROPERTY: header-args:agda2 :tangle aim-2020.agda</span>
+
+<span style="color: #a0a1a7;"># +TITLE: @@html:&lt;div style="<a href="color:green">color:green</a>; font-size: 70px"&gt;@@Unbundling &#160;&#160;on &#160;&#160;the &#160;&#160;fly &#160;&#160;and &#160;&#160;mechanically &#160;&#160;obtaining &#160;&#160;termtypes &#160;&#160;from &#160;&#160;theories@@html:&lt;/div&gt;@@</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp :exports none
+</span>(make-local-variable 'org-reveal-title-slide)
+(<span style="color: #a626a4;">setq</span> org-reveal-title-slide <span style="color: #50a14f;">"&lt;h2&gt;%t&lt;/h2&gt;
+&lt;h3 style=\"color: green\"&gt;A &lt;em&gt;modular&lt;/em&gt; interface &lt;br&gt; for special blocks and links&lt;/h3&gt;
+&lt;br&gt;&lt;br&gt;
+&lt;h4 style=\"color: rose\"&gt;&lt;emph&gt;Emacs-Conf-2020&lt;/emph&gt;&lt;/h4&gt;
+&lt;br&gt;
+&lt;h&gt;%a&lt;/h3&gt;
+&lt;br&gt;
+&lt;font size=\"1\"&gt;
+&lt;a href=\"?print-pdf&amp;showNotes=true\"&gt;
+&#10218; &lt;strong&gt;Flattened View&lt;/strong&gt; ; Press &lt;code&gt;?&lt;/code&gt; for Help &#10219;
+&lt;/a&gt;
+&lt;/font&gt;
+&lt;br&gt;
+
+&lt;small&gt;
+&lt;center&gt;
+&lt;a href=\"<a href="https://www.gnu.org/software/emacs">https://www.gnu.org/software/emacs</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/Emacs-23%%2F26%%2F27%%2F28-green?logo=gnu-emacs">https://img.shields.io/badge/Emacs-23%%2F26%%2F27%%2F28-green?logo=gnu-emacs</a>\"&gt;&lt;/a&gt;
+&lt;a href=\"<a href="https://orgmode.org">https://orgmode.org</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/Org-9.4-blue?logo=gnu">https://img.shields.io/badge/Org-9.4-blue?logo=gnu</a>\"&gt;&lt;/a&gt;
+&lt;a href=\"<a href="https://github.com/alhassy/org-special-block-extras">https://github.com/alhassy/org-special-block-extras</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/org--special--block--extras-1.9-informational?logo=Gnu-Emacs">https://img.shields.io/badge/org--special--block--extras-1.9-informational?logo=Gnu-Emacs</a>\"&gt;&lt;/a&gt;
+&lt;br&gt;
+&lt;a href=\"<a href="https://melpa.org/#/org-special-block-extras">https://melpa.org/#/org-special-block-extras</a>\"&gt;&lt;img alt=\"MELPA\" src=\"<a href="https://melpa.org/packages/org-special-block-extras-badge.svg\&quot;/">https://melpa.org/packages/org-special-block-extras-badge.svg\"/</a>&gt;&lt;/a&gt;
+&lt;a href=\"<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">https://www.gnu.org/licenses/gpl-3.0.en.html</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/license-GNU_3-informational?logo=read-the-docs">https://img.shields.io/badge/license-GNU_3-informational?logo=read-the-docs</a>\"&gt;&lt;/a&gt;
+&lt;a href=\"<a href="https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like">https://github.com/alhassy/emacs.d#what-does-literate-programming-look-like</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/docs-literate-success?logo=read-the-docs">https://img.shields.io/badge/docs-literate-success?logo=read-the-docs</a>\"&gt;&lt;/a&gt;
+&lt;br&gt;
+&lt;a href=\"<a href="https://twitter.com/intent/tweet?text=This%%20looks%%20super%%20neat%%20%%28%%E2%%80%%A2%%CC%%80%%E1%%B4%%97%%E2%%80%%A2%%CC%%81%%29%%D9%%88%%3A:&amp;url=https://github.com/alhassy/org-special-block-extras">https://twitter.com/intent/tweet?text=This%%20looks%%20super%%20neat%%20%%28%%E2%%80%%A2%%CC%%80%%E1%%B4%%97%%E2%%80%%A2%%CC%%81%%29%%D9%%88%%3A:&amp;url=https://github.com/alhassy/org-special-block-extras</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/twitter/url?url=https://github.com/alhassy/org-special-block-extras">https://img.shields.io/twitter/url?url=https://github.com/alhassy/org-special-block-extras</a>\"&gt;&lt;/a&gt;
+&lt;a href=\"<a href="https://github.com/alhassy/org-special-block-extras/issues">https://github.com/alhassy/org-special-block-extras/issues</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/contributions-welcome-green">https://img.shields.io/badge/contributions-welcome-green</a>\"&gt;&lt;/a&gt;
+&lt;a href=\"<a href="https://alhassy.github.io/">https://alhassy.github.io/</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/author-musa_al--hassy-purple?logo=nintendo-3ds">https://img.shields.io/badge/author-musa_al--hassy-purple?logo=nintendo-3ds</a>\"&gt;&lt;/a&gt;
+&lt;br&gt;
+&lt;a href=\"<a href="https://www.buymeacoffee.com/alhassy">https://www.buymeacoffee.com/alhassy</a>\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/-buy_me_a%%C2%%A0coffee-gray?logo=buy-me-a-coffee">https://img.shields.io/badge/-buy_me_a%%C2%%A0coffee-gray?logo=buy-me-a-coffee</a>\"&gt;&lt;/a&gt;
+&lt;/center&gt; &lt;/small&gt;
+"</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;"># OPTIONS: reveal_width:1200 reveal_height:800</span>
+<span style="color: #a0a1a7;">#+REVEAL_MARGIN: 0.1</span>
+<span style="color: #a0a1a7;">#+REVEAL_MIN_SCALE: 0.5</span>
+<span style="color: #a0a1a7;">#+REVEAL_MAX_SCALE: 2.5</span>
+
+<span style="color: #a0a1a7;"># Available transitions are: default|cube|page|concave|zoom|linear|fade|none.</span>
+<span style="color: #a0a1a7;">#+REVEAL_TRANS: fade</span>
+<span style="color: #a0a1a7;"># Available transitions are: default(black)|white|league|sky|beige|simple|serif|blood|night|moon|solarized</span>
+<span style="color: #a0a1a7;">#+REVEAL_THEME: sky</span>
+<span style="color: #a0a1a7;"># REVEAL_THEME: blood</span>
+
+<span style="color: #a0a1a7;">#+REVEAL_HLEVEL: 2</span>
+<span style="color: #a0a1a7;"># REVEAL_HEAD_PREAMBLE: &lt;meta name="description" content="Org-Reveal Introduction."&gt;</span>
+<span style="color: #a0a1a7;">#+REVEAL_POSTAMBLE:</span>
+<span style="color: #a0a1a7;">#+REVEAL_PLUGINS: (markdown notes)</span>
+<span style="color: #a0a1a7;">#+REVEAL_EXTRA_CSS: ./local.css</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># See here for examples of how fragments look</span>
+<span style="color: #a0a1a7;"># <a href="https://revealjs.com/#/fragments">https://revealjs.com/#/fragments</a></span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># Here for what themes look like</span>
+<span style="color: #a0a1a7;"># <a href="https://revealjs.com/#/themes">https://revealjs.com/#/themes</a></span>
+
+<span style="color: #a0a1a7;">#+MACRO: myfrag  #+ATTR_REVEAL: :frag (appear)</span>
+
+<span style="color: #a0a1a7;">#+MACRO: begin-columns  #+REVEAL_HTML: &lt;div style="width:50%;float:left"&gt;</span>
+<span style="color: #a0a1a7;">#+MACRO: break-columns  #+REVEAL_HTML: &lt;/div&gt; &lt;div style="width:50%;float: left"&gt;</span>
+<span style="color: #a0a1a7;">#+MACRO: end-columns #+REVEAL_HTML: &lt;/div&gt;</span>
+
+<span style="color: #a0a1a7;"># Place item in a 1&#215;1 table then center the table.</span>
+<span style="color: #a0a1a7;"># This works nicely for preformatted code whose indentation is important.</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;">#+MACRO: begin-center #+REVEAL_HTML: &lt;center&gt;&lt;table width="50%" border="0""&gt;&lt;tr&gt;&lt;td&gt;</span>
+<span style="color: #a0a1a7;">#+MACRO: end-center  #+REVEAL_HTML: &lt;/td&gt;&lt;tr&gt;&lt;/table&gt;&lt;/center&gt;</span>
+
+<span style="color: #0184bc; font-weight: bold;">* css </span><span style="color: #0184bc; font-weight: bold;">:ignore:</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">css</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># For the most part, I &#8220;view page source&#8221; to inspect what div or whatever it is I want</span>
+<span style="color: #a0a1a7;"># to alter, then I lookup the css to do so and that gives me the following ^_^</span>
+
+<span style="color: #a0a1a7;"># Bigger &amp; redish (ff2d00) page numbers; max vertical and  horizontal size</span>
+<span style="color: #a0a1a7;"># Also reasonable ?print-pdf url extension ^_^</span>
+<span style="color: #a0a1a7;">#+BEGIN_EXPORT html
+</span>&lt;<span style="color: #0184bc;">style</span>&gt;
+
+.reveal .slide-number {
+  font-size: 34pt;
+  color: #ff2D00; }
+
+.reveal .slides {
+  height: 100%;
+  width: 100% !important ;
+  top: 0;
+  margin-top: 0;
+}
+
+.reveal .slides&gt;section {
+  min-height: 90%;
+  min-width:  90%;
+}
+
+.reveal .slides&gt;section&gt;section {
+  min-height: 100%;
+}
+
+.print-pdf .reveal .slides &gt; section.present, .print-pdf .reveal .slides &gt; section &gt; section.present {
+  min-height: 770px !important;
+  position: relative !important;
+}
+
+.reveal table th, .reveal table td {
+    text-align: left;
+    border: none;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+}
+<span style="color: #a0a1a7;">#+END_EXPORT
+</span><span style="color: #a0a1a7;"># Last one above is so that tables have no border; c.f. {{{begin-center}}}</span>
+<span style="color: #a0a1a7;"># border:none &#8658; no bottom, top, inner borders</span>
+<span style="color: #a0a1a7;"># border-left/right transparent &#8658; no &#8220;edge&#8221; borders</span>
+
+<span style="color: #a0a1a7;"># Increase vertical spacing between reveal's unnumbered &amp; ordered listings; also definition listings, &#8220;p&#8221;aragraphs, and &#8220;pre&#8221;formatted code blocks.</span>
+<span style="color: #a0a1a7;"># Also the preformatted code blocks needn't have a border.</span>
+<span style="color: #a0a1a7;">#+BEGIN_EXPORT html
+</span>.reveal ul {
+    line-height: 200%
+}
+
+.reveal ol {
+    line-height: 200%
+}
+
+.reveal dl {
+    line-height: 200%
+}
+
+.reveal p {
+    line-height: 200%
+}
+
+.reveal pre {
+    font-size: 1em;
+    box-shadow:none;
+}
+
+&lt;/<span style="color: #0184bc;">style</span>&gt;
+<span style="color: #a0a1a7;">#+END_EXPORT
+</span>
+<span style="color: #a0a1a7;">#</span>
+<span style="color: #a0a1a7;"># !important everywhere forces my suggestions.</span>
+<span style="color: #a0a1a7;">#</span>
+
+<span style="color: #0184bc; font-weight: bold;">* Overview</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Overview</span>
+  <span style="font-weight: bold;">:END:</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+With a bit of Lisp ---and a lot of time--- we obtain
+
+<span style="color: #a0a1a7;">#+html: &lt;small&gt;</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+1. a uniform, and <span style="font-weight: bold;">*practical*</span>, syntax for both <span style="font-style: italic;">/special blocks/</span> and <span style="font-style: italic;">/link types/</span>
+<span style="color: #a0a1a7;">      #+html: &lt;br&gt;</span>
+2. reusing the Org ~src~ interface ---including arguments for blocks
+   and <span style="font-weight: bold;">*global header arguments*</span> for links
+<span style="color: #a0a1a7;">   #+html: &lt;br&gt;</span>
+3. <span style="font-weight: bold;">*&#8220;write once, generate many&#8221;*</span>: Write markup in Org and have
+   it exported to other backends!
+<span style="color: #a0a1a7;">      #+html: &lt;br&gt;</span>
+
+<span style="color: #a0a1a7;">#+begin_details (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;
+</span>| Idea                   | Documentation                   | Link only?          |
+|------------------------+---------------------------------+---------------------|
+| Colours                | <a href="doc:org-special-block-extras--latex-definitions">latex-definitions</a>, <a href="doc:org-special-block-extras--color">color</a>        |                     |
+| Parallel               | <a href="doc:org-special-block-extras--parallel">parallel</a>                        |                     |
+| Editorial Remarks      | <a href="doc:org-special-block-extras--remark">remark</a>                          |                     |
+| Folded Details         | <a href="doc:org-special-block-extras--details">details</a> ,  <a href="doc:org-special-block-extras--box">box</a>                  |                     |
+| Keystrokes             | &#12308;<a href="kbd:C-c_C-e">C-c</a> <a href="kbd:C-c_C-e">C-</a>e&#12309;                     | ~kbd~                 |
+| OctoIcons &amp; Link Here  | <a href="octoicon:report">octoicon:repor</a><a href="octoicon:report">t</a> <a href="link-here:Overview">link-here:Overvie</a><a href="link-here:Overview">w</a>      | ~octoicon~, ~link-here~ |
+| Documentation-Glossary | <a href="doc:org-special-block-extras--documentation">documentation</a>                   | ~doc~                 |
+
+Other fun stuff: <a href="doc:org-special-block-extras--solution">solution</a>, <a href="doc:org-special-block-extras--org-demo">org-demo</a>, <a href="doc:org-special-block-extras--stutter">stutter</a>, <a href="doc:org-special-block-extras--rename">rename</a>, <a href="doc:org-special-block-extras--spoiler">spoiler</a> (&#9472;&#8255;&#8255;&#9472;)
+<span style="color: #a0a1a7;">#+end_details
+</span><span style="color: #a0a1a7;">#+begin_box Incidentally
+</span>&#128514; The setup joyously works for org-reveal &#128569;
+
+&#129392; &#127853; &#129412; &#128518;
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+html: &lt;/small&gt;</span>
+<span style="color: #0184bc; font-weight: bold;">* Motivation</span>
+
+See an <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:">aesthetically pleasing style</a></span><span style="font-weight: bold;">*</span> online and seek to reproduce it &#8230;
+<span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
+
+<span style="color: #a0a1a7;">#+html_head: &lt;style&gt;</span>
+<span style="color: #a0a1a7;">#+html_head: .spoiler {color: pink; background-<a href="color:pink">color:pink</a>;}</span>
+<span style="color: #a0a1a7;">#+html_head: .<a href="spoiler:hover">spoiler:hover</a> {color: black; background-<a href="color:white">color:white</a>;}</span>
+<span style="color: #a0a1a7;">#+html_head: &lt;style&gt;</span>
+<span style="color: #a0a1a7;"># Example use: &lt;span class="spoiler"&gt; test &lt;/span&gt;</span>
+
+<span style="color: #a0a1a7;">#+begin_spoiler
+</span>#+ATTR_REVEAL: :frag (appear)
+&#8644; The author wrote raw HTML
+
+((Obscures my source with styling information!))
+
+#+ATTR_REVEAL: :frag (appear)
+&#8644; The author wraps the HTML in an ~<span style="text-decoration: underline;">{{{Org-macro}}}</span>~
+
+((Not useful if I want to export to PDF!))
+
+#+ATTR_REVEAL: :frag (appear)
+&#8644; <span style="color: #ff0000;"><a href="red:">The author doesn't even provide the source!</a></span>
+
+((Time to &#8216;View Page Source&#8217; and do a lot of reading!))
+
+#+ATTR_REVEAL: :frag (appear)
+&#8649; We want <span style="font-weight: bold;">**</span><span style="color: #ff00ff; font-weight: bold;"><a href="magenta:">Org users</a></span><span style="font-weight: bold;">**</span> to have <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:numerous">green:numerous</a></span><span style="font-weight: bold;">*</span> styles available
+and an <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:extensible">green:extensible</a></span><span style="font-weight: bold;">*</span> mechanism to add more! &#8647;
+<span style="color: #a0a1a7;">#+end_spoiler
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Once upon a time</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Once-upon-a-time</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Three friends ---<span style="color: #00ff00;"><a href="green:Amin">green:Amin</a></span>, <span style="color: #ff0000;"><a href="red:Sacha">red:Sacha</a></span>, and <span style="color: #0000ff;"><a href="blue:Corwin---">blue:Corwin---</a></span> were organising a conference
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+... <span style="font-weight: bold;">*</span><span style="color: #ffa500; font-weight: bold;"><a href="orange:EmacsConf2020">orange:EmacsConf2020</a></span><span style="font-weight: bold;">!*</span>
+
+<span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Sacha wrote an Org file and wanted some <span style="font-weight: bold;">*feedback*</span>
+
+<span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
+<span style="color: #a0a1a7;">#+begin_details Source for this slide!
+</span>#+begin_src org
+,#+ATTR_REVEAL: :frag (appear)
+Three friends ---<span style="color: #00ff00;"><a href="green:Amin">green:Amin</a></span>, <span style="color: #ff0000;"><a href="red:Sacha">red:Sacha</a></span>,
+and <span style="color: #0000ff;"><a href="blue:Corwin---">blue:Corwin---</a></span> were organising a conference
+
+,#+ATTR_REVEAL: :frag (appear)
+... <span style="font-weight: bold;">*</span><span style="color: #ffa500; font-weight: bold;"><a href="orange:EmacsConf2020">orange:EmacsConf2020</a></span><span style="font-weight: bold;">!*</span>
+
+,#+html: &lt;br&gt;
+,#+ATTR_REVEAL: :frag (appear)
+Sacha wrote an Org file and wanted some <span style="font-weight: bold;">*feedback*</span>
+#+end_src
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #8b4513; font-weight: bold;">** What </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/kind/</span><span style="color: #8b4513; font-weight: bold;"> of feedback?</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+- top-level <a href="doc:org-special-block-extras--remark">remarks</a> <span style="font-style: italic;">/visible in the export/</span>
+
+<span style="color: #a0a1a7;">  #+ATTR_REVEAL: :frag (appear)</span>
+  &#8230; suggest <span style="color: #ff0000;"><a href="red:replacement">red:replacement</a></span> text
+
+<span style="color: #a0a1a7;">  #+ATTR_REVEAL: :frag (appear)</span>
+  &#8230; this is not possible, <span style="color: #00ff00;"><a href="green:elegantly">green:elegantly</a></span>, with raw HTML!
+
+<span style="color: #a0a1a7;">  #+html: &lt;br&gt;</span>
+
+- <a href="doc:org-special-block-extras--rename">translate</a> in the export
+
+<span style="color: #a0a1a7;">  #+ATTR_REVEAL: :frag (appear)</span>
+  &#8230; everyone speaks different languages!
+
+<span style="color: #a0a1a7;">  #+ATTR_REVEAL: :frag (appear)</span>
+  &#8230; or suggest a rewrite, without altering the other person's
+  text
+
+<span style="color: #a0a1a7;">  #+ATTR_REVEAL: :frag (appear)</span>
+  &#8230; this is not possible with raw HTML <span style="color: #ff0000;"><a href="red:">at all</a></span>!
+
+<span style="color: #8b4513; font-weight: bold;">** Example &#128147; Text and Feedback</span>
+
+Sacha &#8230;
+<span style="color: #a0a1a7;">#+begin_org-demo :source "Writes" :result "Sees"
+</span>Let's begin at $\sqrt{3 + \sum_{i = 0}^{12} i}$ in the <span style="font-weight: bold;">*morning*</span>.
+<span style="color: #a0a1a7;">#+end_org-demo
+</span>
+She gets feedback &#8230;
+
+<span style="color: #a0a1a7;">#+begin_parallel
+</span>#+html: &lt;small&gt;
+#+begin_remark Amin
+How about
+
+src_<span style="color: #a0a1a7;">emacs-lisp</span>[:exports code]{(sqrt (apply '+ 3 (number-sequence 0 12)))} ;-)
+#+end_remark
+#+html: &lt;/small&gt;
+
+#+html: &lt;hr&gt;
+
+#+html: &lt;small&gt;
+#+begin_remark Corwin
+C'mon guys, let's just say <span style="font-weight: bold;">*9 am*</span>!
+#+end_remark
+#+html: &lt;/small&gt;
+<span style="color: #a0a1a7;">#+end_parallel
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Amin &#10084;&#65039; LaTeX</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Amin-&#65039;-LaTeX</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_box
+</span>Amin likes to export to PDF, so he wrote top-level
+remarks using LaTeX
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+latex: {\color{green} \fbox{[Amin:}}
+  Please change &#8230;
+,#+latex:  \fbox{]}
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_remark Amin :color green
+</span>Please change &#8230;
+<span style="color: #a0a1a7;">#+end_remark
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Sacha &#128148; PDF</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Sacha-PDF</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_box :background-color pink
+</span>#+ATTR_REVEAL: :frag (appear)
+But Sacha likes to look at the resulting <span style="color: #00ff00;"><a href="green:HTML">green:HTML</a></span>! &#8230; not PDFs!
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color blue
+</span>#+ATTR_REVEAL: :frag (appear)
+So, she <span style="font-style: italic;">/may/</span> <span style="color: #ff0000;"><a href="red:not">red:not</a></span> see his top-level feedback
+and she <span style="font-style: italic;">/may/</span> <span style="color: #ff0000;"><a href="red:forgot">red:forgot</a></span> to look at the Org source
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color green
+</span>#+ATTR_REVEAL: :frag (appear)
+Happily, she thinks things are <span style="color: #ff0000;"><a href="red:all">red:all</a></span> <span style="color: #ff0000;"><a href="red:good">red:good</a></span> ...!
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Amin &#128162; HTML</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Amin-HTML</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Sacha may write top-level feedback &#8230;
+
+<span style="color: #a0a1a7;">#+begin_box :background-color custard
+</span>#+ATTR_REVEAL: :frag (appear)
+#+begin_src org
+,#+html: &lt;strong&gt; [Sacha Speculates: &lt;/strong&gt;
+
+I think that maybe we could try &#8230;
+
+,#+html: &lt;strong&gt; End of speculations] &lt;/strong&gt;
+#+end_src
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_remark Sacha Speculates :signoff "&lt;strong&gt; End of speculations&lt;/strong&gt;"
+</span>I think that maybe we could try &#8230;
+<span style="color: #a0a1a7;">#+end_remark
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color green
+</span>#+ATTR_REVEAL: :frag (appear)
+Now Amin exports to PDF; take a quick glance and
+not notice anything standing out; thinks <span style="color: #ff0000;"><a href="red:"> /it's all OK/</a></span>
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">**   &#128165; &#128551; &#128173;  &#128214;</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="font-weight: bold;">:CUSTOM_ID:</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Corwin <span style="color: #00ffff;"><a href="cyan:actually">cyan:actually</a></span> reads an exported result, and is worried at what he sees.
+
+<span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Amin &amp; Sacha agree to read up and make <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:">a uniform Org interface that
+exports to both HTML &amp; PDF</a></span><span style="font-weight: bold;">*</span>
+
+<span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+They use Org <span style="font-style: italic;">/&#8220;special blocks&#8221;/</span>!
+
+<span style="color: #8b4513; font-weight: bold;">** How to set up special blocks?</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">How-to-set-up-special-blocks</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+They agree to figure out the necessary <span style="color: #ff00ff;"><a href="magenta:Lisp">magenta:Lisp</a></span>,
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="color: #00ffff;"><a href="cyan:hooks">cyan:hooks</a></span>, <span style="color: #0000ff;"><a href="blue:advice">blue:advice</a></span>, and <span style="color: #ee82ee;"><a href="violet:macros">violet:macros</a></span> needed to form a
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+special custom block that outputs <span style="font-weight: bold;">*both*</span> HTML and PDF, <span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">html:</span>&lt;br&gt;<span style="color: #a0a1a7;">@@</span> <span style="color: #00ff00;"><a href="green:but">green:but</a></span>
+uses Org as interface.
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+So much work, but it's worth it!
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="color: #ff0000;"><a href="red:">...!?</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** Corwin  &#129398; &#129300; &#129354; </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/Terse!/</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Corwin-Terse</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Corwin likes to provide <span style="color: #0000ff;"><a href="blue:terse">blue:terse</a></span>, <span style="font-style: italic;">/right to the point/</span>, feedback
+and thinks blocks are overkill.
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+The team decides to incorporate an <span style="color: #ff0000;"><a href="red:Org-link">red:Org-link</a></span> <span style="color: #ff0000;"><a href="red:type">red:type</a></span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+and <span style="color: #00ff00;"><a href="color:green">---to avoid duplication of code!---</a></span> they have the link
+type reuse the core code of the block type.
+
+<span style="color: #8b4513; font-weight: bold;">** How to setup Org links?</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">How-to-setup-Org-links</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+They have their <span style="color: #ffc0cb;"><a href="pink:">own interface</a></span>...!
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="color: #bebebe;"><a href="gray:Need">gray:Need</a></span>
+<span style="color: #ee82ee;"><a href="violet:to">violet:to</a></span>
+<span style="color: #ff00ff;"><a href="magenta:learn">magenta:learn</a></span>
+a
+<span style="color: #ff0000;"><a href="red:little">red:little</a></span>
+<span style="color: #0000ff;"><a href="blue:about">blue:about</a></span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="font-weight: bold;">*</span><span style="color: teal; font-weight: bold;"><a href="teal:font">teal:font</a></span><span style="font-weight: bold;">*</span>,
+<span style="color: #ffa500;"><a href="orange:follow">orange:follow</a></span>
+<span style="color: #00ffff;"><a href="cyan:links">cyan:links</a></span>,
+<span style="color: #a020f0;"><a href="purple:export">purple:export</a></span>
+<span style="color: #ffc0cb;"><a href="pink:handles">pink:handles</a></span>.
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Eek
+<span style="color: #00ff00;"><a href="green:">...!</a></span>
+
+<span style="color: #8b4513; font-weight: bold;">** The friends learn a lot!</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">The-friends-learn-a-lot</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+- <a href="doc:defun">doc:defun</a>, for making <span style="color: #ff0000;"><a href="red:functions">red:functions</a></span> to format their blocks!
+- <a href="doc:advice-add">doc:advice-add</a>, for advising Emacs utilities
+  to <span style="color: #0000ff;"><a href="blue:handle">blue:handle</a></span> their new special blocks
+- <a href="doc:-let">doc:-let</a>, pattern matching / <span style="color: olive;"><a href="olive:">&#8220;destructuring lets&#8221;</a></span>
+- <a href="doc:org-special-block-extras--extract-arguments">extract-arguments</a>, an <span style="font-weight: bold;">*</span><span style="color: #ff0000; font-weight: bold;"><a href="red:ad-hoc">red:ad-hoc</a></span><span style="font-weight: bold;">*</span> mechanism to <span style="color: #00ffff;"><a href="cyan:simulate">cyan:simulate</a></span> arguments with special
+  blocks
+- <a href="doc:org-link-set-parameters">doc:org-link-set-parameters</a>, to make new link types
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="color: #00ff00;"><a href="green:Of">green:Of</a></span> <span style="color: #00ff00;"><a href="green:course">green:course</a></span> to actually write the formatting function they need <a href="doc:loop">doc:loop</a>,
+<a href="doc:s-replace">doc:s-replace</a>, <a href="doc:mapcar">doc:mapcar</a>, <a href="doc:or">doc:or</a>, <a href="doc:s-match">doc:s-match</a>, and much more!
+
+<span style="color: #a0a1a7;">#+html: &lt;small&gt;</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="color: #ffc0cb;"><a href="pink:">Such a pain!</a></span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+| &#8658; It's probably not worth it!     |
+| &#8220;Just do enough to make it work!&#8221; |
+| &#8220;We're in a rush!&#8221;                |
+<span style="color: #a0a1a7;">#+html: &lt;/small&gt;</span>
+
+<span style="color: #0184bc; font-weight: bold;">* Goals</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Goals</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_box &#8220;Squad goals&#8221; :background-color custard
+</span>A <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:modular">green:modular</a></span><span style="font-weight: bold;">*</span> and <span style="font-weight: bold;">*</span><span style="color: #0000ff; font-weight: bold;"><a href="blue:unified">blue:unified</a></span><span style="font-weight: bold;">*</span> interface for producing new special blocks and
+link types, <span style="font-weight: bold;">*</span><span style="color: olive; font-weight: bold;"><a href="olive:simultaneously">olive:simultaneously</a></span><span style="font-weight: bold;">*</span>, with roughly the same interface as a
+<a href="doc:defun">doc:defun</a>!
+
+#+html: &lt;br&gt;
+#+ATTR_REVEAL: :frag (appear)
+| &#8658; <a href="doc:org-special-block-extras--defblock">defblock</a> &#8656; |
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Solving the friend's trilemma</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Solving-the-friend's-trilemma</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;"># (org-special-block-extras-short-names)</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
+            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+          color who contents))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Huh?
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+There are 3 main parts &#8230;
+
+<span style="color: #8b4513; font-weight: bold;">** Line 1: </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/Declare/</span><span style="color: #8b4513; font-weight: bold;"> a block</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Line-1-Declare-a-block</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp -r -n
+</span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)    (ref:here1)
+  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
+            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+          color who contents))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color custard
+</span><span style="font-weight: bold;">*Line </span><span style="font-weight: bold; text-decoration: underline;"><a href="(here1)">(here1)</a></span><span style="font-weight: bold;">*</span>: <span style="font-weight: bold;">*</span><span style="color: olive; font-weight: bold;"><a href="olive:">def</a></span><span style="font-weight: bold;">-ine a new </span><span style="color: olive; font-weight: bold;"><a href="olive:block">olive:block</a></span><span style="font-weight: bold;">*</span> named <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:feedback">green:feedback</a></span><span style="font-weight: bold;">*</span> whose
+   main argument is <span style="font-weight: bold;">*</span><span style="color: #0000ff; font-weight: bold;"><a href="blue:who">blue:who</a></span><span style="font-weight: bold;">*</span> wrote the feedback,
+   and optionally a <span style="font-weight: bold;">*</span><span style="color: #ff0000; font-weight: bold;"><a href="red:color">red:color</a></span><span style="font-weight: bold;">*</span> ---which is red by default.
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Line 2: </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/Document/</span><span style="color: #8b4513; font-weight: bold;"> the block</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Line-2-Document-the-block</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp -r -n
+</span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span> (ref:here2)
+  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
+            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+          color who contents))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color custard
+</span><span style="font-weight: bold;">*Line </span><span style="font-weight: bold; text-decoration: underline;"><a href="(here2)">(here2)</a></span><span style="font-weight: bold;">*</span>:
+Just as when you write a function, <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:you">green:you</a></span><span style="font-weight: bold;">*</span> write what it does.
+
+#+ATTR_REVEAL: :frag (appear)
+Moreover, this documentation is used as a <span style="color: olive;"><a href="olive:tooltip">olive:tooltip</a></span>
+for the Org link form of <span style="color: #ff00ff;"><a href="magenta:feedback">magenta:feedback</a></span> ---for <span style="color: #0000ff;"><a href="blue:Corwin---">blue:Corwin---</a></span>
+<span style="font-style: italic;">/within Emacs!/</span>
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Lines 3-6: </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/Do the thing!/</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Lines-3-6-Do-the-thing</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp -r -n
+</span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)  (ref:here3)
+            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+          color who contents))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color custard
+</span><span style="font-weight: bold;">*Line </span><span style="font-weight: bold; text-decoration: underline;"><a href="(here3)">(here3)</a></span><span style="font-weight: bold;">*</span>: Depending on whether we're exporting
+to HTML ---for <span style="color: #ff0000;"><a href="red:Sacha---">red:Sacha---</a></span> or to PDF ---for <span style="color: #00ff00;"><a href="green:Amin---">green:Amin---</a></span>
+we use HTML divs or LaTeX macros.
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/Anaphoric?/</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Anaphoric</span>
+   <span style="font-weight: bold;">:END:</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp -r -n
+</span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)  (ref:anaB)
+            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+          color who contents))  <span style="font-weight: bold;">(ref:anaC)</span>
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color custard
+</span>Lines <span style="text-decoration: underline;"><a href="(anaB)">(anaB)</a></span> and  <span style="text-decoration: underline;"><a href="(anaC)">(anaC)</a></span>
+let the user refer to the current export <span style="font-weight: bold;">*</span><span style="color: olive; font-weight: bold;"><a href="olive:backend">olive:backend</a></span><span style="font-weight: bold;">*</span>
+and to the <span style="font-weight: bold;">*</span><span style="color: olive; font-weight: bold;"><a href="olive:contents">olive:contents</a></span><span style="font-weight: bold;">*</span> of the special block / link.
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/How do the feedback?/</span>
+   <span style="font-weight: bold;">:PROPERTIES:</span>
+   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">How-do-the-feedback</span>
+   <span style="font-weight: bold;">:END:</span>
+
+
+<span style="color: #a0a1a7;">#+begin_box :background-color pink
+</span>#+ATTR_REVEAL: :frag (appear)
+<span style="font-weight: bold;">*Sacha &#128525; Org/HTML*</span>
+
+#+begin_parallel 2 :bar yes
+#+ATTR_REVEAL: :frag (appear)
+#+begin_src org
+,#+begin_feedback Sacha Speculates
+I think we should do &#8230;
+,#+end_feedback
+#+end_src
+
+#+html: &lt;hr&gt;
+
+#+begin_remark Sacha Speculates
+I think we should do &#8230;
+#+end_remark
+
+#+end_parallel
+
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color green
+</span>#+ATTR_REVEAL: :frag (appear)
+<span style="font-weight: bold;">*Amin &#128571; Org/PDF*</span>
+#+begin_parallel 2 :bar yes
+#+ATTR_REVEAL: :frag (appear)
+#+begin_src org
+,#+begin_feedback Amin :color green
+I think we should do &#8230;
+,#+end_feedback
+#+end_src
+
+#+html: &lt;hr&gt;
+#+begin_remark Amin :color green
+I think we should do &#8230;
+#+end_remark
+#+end_parallel
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_box :background-color blue
+</span>#+ATTR_REVEAL: :frag (appear)
+<span style="font-weight: bold;">*Corwin &#128140; Org/Terse*</span>
+#+begin_parallel 2 :bar yes
+#+ATTR_REVEAL: :frag (appear)
+~<span style="text-decoration: underline;"><a href="feedback:Corwin">[[feedback:Corwin][Guys, let's wrap up already!]]</a></span>~
+
+#+html: &lt;hr&gt;
+<span style="color: #ff0000; font-weight: bold;"><a href="remark:Corwin">Guys, let's wrap up already!</a></span>
+#+end_parallel
+<span style="color: #a0a1a7;">#+end_box
+</span><span style="color: #0184bc; font-weight: bold;">* More Blocks!</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">More-Blocks</span>
+  <span style="font-weight: bold;">:END:</span>
+
+Using a few lines of Lisp &#8230;
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+- write text in <a href="doc:org-special-block-extras--parallel">parallel</a> columns
+
+  &#8230; to save on vertical whitespace
+
+- hide away technical <a href="doc:org-special-block-extras--details">details</a> for the interested reader only
+
+- enclose text in a pretty <a href="doc:org-special-block-extras--box">box</a>
+
+- Educational material blocks: <a href="doc:org-special-block-extras--spoiler">spolier</a>, <a href="doc:org-special-block-extras--solution">solution</a>, and <a href="doc:org-special-block-extras--org-demo">org-demo</a>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Finally,
+<span style="font-weight: bold;">*</span><span style="color: #0000ff; font-weight: bold;"><a href="blue:">blocks compose:</a></span><span style="font-weight: bold;">*</span>
+<span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:">They're building blocks for new and better ideas!</a></span><span style="font-weight: bold;">*</span>
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+<span style="font-style: italic;">/More details and examples at/</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+| <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras">https://alhassy.com/org-special-block-extra</a><a href="https://alhassy.com/org-special-block-extras">s</a></span> |
+
+<span style="color: #0184bc; font-weight: bold;">* Bye!</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Bye</span>
+  <span style="font-weight: bold;">:END:</span>
+
+<span style="font-style: italic;">/Thanks for listening in!/</span>
+
+<span style="color: #a0a1a7;">#+html:&lt;small&gt;</span>
+- The <span style="font-weight: bold;">*</span><span style="color: olive; font-weight: bold;"><a href="olive:org-special-block-extras">olive:org-special-block-extras</a></span><span style="font-weight: bold;">*</span> Library:
+
+  <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras">https://alhassy.com/org-special-block-extras</a></span>
+
+  &#8230; has examples, tutorial, and is a <span style="font-style: italic;">/literate program/</span>! (&#8226;&#768;&#7447;&#8226;&#769;)&#1608;
+
+- <span style="font-weight: bold;">*</span><span style="color: #00ff00; font-weight: bold;"><a href="green:">A 5-page PDF covering ELisp fundamentals</a></span><span style="font-weight: bold;">*</span>:
+
+  <span style="text-decoration: underline;"><a href="https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf">https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf</a></span>
+
+- <span style="color: #ee82ee;"><a href="violet:">These slides</a></span>:
+
+    <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/emacs-conf-2020.org">https://github.com/alhassy/org-special-block-extras/blob/master/emacs-conf-2020.org</a></span>
+<span style="color: #a0a1a7;">#+html:&lt;/small&gt;</span>
+
+<span style="color: #a0a1a7;">#+begin_export html
+</span>&lt;<span style="color: #0184bc;">p</span>&gt;
+&lt;<span style="color: #0184bc;">img</span> <span style="color: #8b4513;">src</span>=<span style="color: #50a14f;">"<a href="https://img.shields.io/badge/thanks-for_reading-nil">https://img.shields.io/badge/thanks-for_reading-nil</a>"</span>&gt;
+&lt;<span style="color: #0184bc;">a</span> <span style="color: #8b4513;">href</span>=<span style="color: #50a14f;">"<a href="https://twitter.com/intent/tweet?text=This%20looks%20super%20neat%20%28%E2%80%A2%CC%80%E1%B4%97%E2%80%A2%CC%81%29%D9%88%3A:&amp;url=https://github.com/alhassy/org-special-block-extras">https://twitter.com/intent/tweet?text=This%20looks%20super%20neat%20%28%E2%80%A2%CC%80%E1%B4%97%E2%80%A2%CC%81%29%D9%88%3A:&amp;url=https://github.com/alhassy/org-special-block-extras</a>"</span>&gt;&lt;<span style="color: #0184bc;">img</span> <span style="color: #8b4513;">src</span>=<span style="color: #50a14f;">"<a href="https://img.shields.io/twitter/url?url=https://github.com/alhassy/org-special-block-extras">https://img.shields.io/twitter/url?url=https://github.com/alhassy/org-special-block-extras</a>"</span>&gt;&lt;/<span style="color: #0184bc;">a</span>&gt;
+&lt;<span style="color: #0184bc;">a</span> <span style="color: #8b4513;">href</span>=<span style="color: #50a14f;">"<a href="https://www.buymeacoffee.com/alhassy">https://www.buymeacoffee.com/alhassy</a>"</span>&gt;&lt;<span style="color: #0184bc;">img</span> <span style="color: #8b4513;">src</span>=<span style="color: #50a14f;">"<a href="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee">https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee</a>"</span>&gt;&lt;/<span style="color: #0184bc;">a</span>&gt;
+&lt;/<span style="color: #0184bc;">p</span>&gt;
+<span style="color: #a0a1a7;">#+end_export
+</span></pre>
+  </body>
+</html>

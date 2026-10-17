@@ -1,0 +1,2224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-10-17 Sat 04:57 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>org-special-block-extras: custom Org blocks and links</title>
+<meta name="description" content="A unified interface for special blocks and links: defblock." />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-c:before { content: 'C'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'JavaScript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+<link href="https://alhassy.github.io/next-700-module-systems/prototype/org-notes-style.css" rel="stylesheet" type="text/css" />
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<style>
+</style>
+<script>
+</script>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style></head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+  <br/><a href="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml"><img style="vertical-align:middle" alt="build status" src="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml/badge.svg?branch=master"></a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">org-special-block-extras: custom Org blocks and links</h1></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/org-special-block-extras.org.html"><img src="https://alhassy.com/resources/badge-source.svg"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/org-special-block-extras/commits/master/org-special-block-extras.org"><img src="https://alhassy.com/resources/badge-history.svg"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://alhassy.com/resources/badge-buy-me-a-coffee.svg"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#️-write-once-export-everywhere-say-hello-to-org-special-block-extras">1. 🧙‍♂️ <i>Write Once, Export Everywhere</i>: Say Hello to <code>org-special-block-extras</code></a>
+<ul>
+<li><a href="#what-does-it-do">1.1. 🎁  What Does It Do?</a></li>
+<li><a href="#at-a-glance">1.2. 🗺 The package at a glance</a></li>
+</ul>
+</li>
+<li><a href="#block-and-link-types-provided-by-this-package">2. Block and link types provided by this package</a>
+<ul>
+<li><a href="#Boxed-Text">2.1. Boxed Text —Calling out super duper info</a></li>
+<li><a href="#Folded-Details">2.2. Folded Details &mdash;Let the user see stuff only if they're interested</a></li>
+<li><a href="#nice-keystroke-renditions">2.3. Nice Keystroke Renditions: kbd:C-h_t</a></li>
+<li><a href="#tooltip">2.4. Remark —Inline footnotes, viz HTML tooltips and LaTeX notes in the margin</a></li>
+<li><a href="#Glossaries">2.5. Glossaries &mdash;Define a term once, cite it with <code>doc:𝒳</code></a></li>
+<li><a href="#Parallel">2.6. Parallel ---<i>Place ideas side-by-side, possibly with a separator</i></a></li>
+<li><a href="#Aligned-equations">2.7. Aligned equations ---<code>#+begin_align</code>, cited by <code>eqref:𝒳</code></a></li>
+<li><a href="#latex-definitions-for-hiding-LaTeX-declarations-in-HTML">2.8.   <code>latex-definitions</code> for hiding LaTeX declarations in HTML</a></li>
+<li><a href="#Graphs">2.9. Graphs ---<i>Org lists, drawn by Graphviz</i></a></li>
+<li><a href="#Switches-for-every-block">2.10. Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></li>
+<li><a href="#Callouts">2.11. Callouts &mdash;Note, tip, important, warning, caution</a></li>
+<li><a href="#Colours-links">2.12. Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></li>
+<li><a href="#quote-citations">2.13. Quotations, cited ---<code>#+begin_quote KEY</code></a></li>
+<li><a href="#Highlights">2.14. Highlights &mdash;Colour the background, not the text</a></li>
+<li><a href="#style-block">2.15. Page-wide CSS with <code>style</code></a></li>
+<li><a href="#Markdown-export">2.16. Markdown export &mdash;What survives GitHub, and how to change it</a></li>
+<li><a href="#latex-packages">2.17. PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></li>
+</ul>
+</li>
+<li><a href="#Developers-guide">3. Make your own blocks and links &mdash;A developer's guide</a>
+<ul>
+<li><a href="#Make-your-own-blocks">3.1. Make your own blocks with <code>org-defblock</code></a></li>
+<li><a href="#Make-your-own-links">3.2. Make your own links with <code>org-deflink</code></a></li>
+<li><a href="#tags-are-functions-of-org-sections">3.3. Tags are functions of Org sections: <code>org-deftag</code></a></li>
+<li><a href="#C-c-C-c-for-your-own-blocks">3.4. <code>C-c C-c</code> for your own blocks</a></li>
+<li><a href="#C-c-quote-for-your-own-blocks">3.5. <code>C-c '</code> to edit a block in its own buffer</a></li>
+<li><a href="#C-c-C-v-C-d-to-split-a-block">3.6. <code>C-c C-v C-d</code> to split a block in two</a></li>
+<li><a href="#eldoc-for-blocks-and-links">3.7. Hover for a block's arguments: <code>eldoc</code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="org-center">
+<p>
+⭐ The code lives at <a href="https://github.com/alhassy/org-special-block-extras">github.com/alhassy/org-special-block-extras</a> &mdash;star it, or <a href="https://github.com/alhassy/org-special-block-extras/issues">discuss it there</a>! <a href="https://github.com/alhassy/org-special-block-extras"><img src="https://img.shields.io/github/stars/alhassy/org-special-block-extras?style=social"></a>
+</p>
+</div>
+<style>
+/* Using source blocks “C” as alias for Org */
+pre.src-C:before { content: 'Org-mode Example!'; }
+/* Execute this for alias: (add-to-list 'org-src-lang-modes '("org" . C)) */
+</style>
+<div id="outline-container-️-write-once-export-everywhere-say-hello-to-org-special-block-extras" class="outline-2">
+<h2 id="️-write-once-export-everywhere-say-hello-to-org-special-block-extras"><span class="section-number-2">1.</span> <a href="#️-write-once-export-everywhere-say-hello-to-org-special-block-extras">🧙‍♂️ <i>Write Once, Export Everywhere</i>: Say Hello to <code>org-special-block-extras</code></a></h2>
+<div class="outline-text-2" id="text-️-write-once-export-everywhere-say-hello-to-org-special-block-extras">
+<p>
+<b>Tired of repeating yourself when writing in Org-mode for LaTeX and HTML
+exports?</b> <code>org-special-block-extras</code> is your magical toolkit for
+creating <i>custom Org-mode blocks</i> and <i>links</i> that work seamlessly
+across backends &mdash;without diving into the dark arts of raw HTML or
+LaTeX!
+</p>
+
+<p>
+Reading in glare?  <button onclick="let p = this.nextElementSibling; p.style.display = p.style.display === 'none' ? 'block' : 'none';">Pick a background</button><div style="display: none"><button style="background-color: snow" onclick="document.body.style.background = 'snow'">snow</button><button style="background-color: ghostwhite" onclick="document.body.style.background = 'ghostwhite'">ghostwhite</button><button style="background-color: whitesmoke" onclick="document.body.style.background = 'whitesmoke'">whitesmoke</button><button style="background-color: floralwhite" onclick="document.body.style.background = 'floralwhite'">floralwhite</button><button style="background-color: oldlace" onclick="document.body.style.background = 'oldlace'">oldlace</button><button style="background-color: linen" onclick="document.body.style.background = 'linen'">linen</button><button style="background-color: antiquewhite" onclick="document.body.style.background = 'antiquewhite'">antiquewhite</button><button style="background-color: papayawhip" onclick="document.body.style.background = 'papayawhip'">papayawhip</button><button style="background-color: blanchedalmond" onclick="document.body.style.background = 'blanchedalmond'">blanchedalmond</button><button style="background-color: bisque" onclick="document.body.style.background = 'bisque'">bisque</button><button style="background-color: cornsilk" onclick="document.body.style.background = 'cornsilk'">cornsilk</button><button style="background-color: ivory" onclick="document.body.style.background = 'ivory'">ivory</button><button style="background-color: lemonchiffon" onclick="document.body.style.background = 'lemonchiffon'">lemonchiffon</button><button style="background-color: seashell" onclick="document.body.style.background = 'seashell'">seashell</button><button style="background-color: honeydew" onclick="document.body.style.background = 'honeydew'">honeydew</button><button style="background-color: mintcream" onclick="document.body.style.background = 'mintcream'">mintcream</button><button style="background-color: azure" onclick="document.body.style.background = 'azure'">azure</button><button style="background-color: aliceblue" onclick="document.body.style.background = 'aliceblue'">aliceblue</button><button style="background-color: lavender" onclick="document.body.style.background = 'lavender'">lavender</button><button style="background-color: lavenderblush" onclick="document.body.style.background = 'lavenderblush'">lavenderblush</button><button style="background-color: mistyrose" onclick="document.body.style.background = 'mistyrose'">mistyrose</button><button style="background-color: beige" onclick="document.body.style.background = 'beige'">beige</button><button style="background-color: lightyellow" onclick="document.body.style.background = 'lightyellow'">lightyellow</button><button style="background-color: lightcyan" onclick="document.body.style.background = 'lightcyan'">lightcyan</button><button style="background-color: white" onclick="document.body.style.background = 'white'">white</button></div> &mdash;a pale colour soothes the eyes.
+</p>
+</div>
+<div id="outline-container-what-does-it-do" class="outline-3">
+<h3 id="what-does-it-do"><span class="section-number-3">1.1.</span> <a href="#what-does-it-do">🎁  What Does It Do?</a></h3>
+<div class="outline-text-3" id="text-what-does-it-do">
+<ul class="org-ul">
+<li><b>🎨 Style with ease</b> &mdash; add colors, badges, tooltips (from a dictionary, Emacs
+Help, or custom file), keystroke notations, inline editorial comments, or even
+colourful ASCII cows with fortune cookies.</li>
+<li><b>📚 Glossary support</b> &mdash; embed hoverable documentation with <code>doc:</code> links and auto-generated glossaries.</li>
+<li><b>📦 Add interactive content</b>: from collapsible detail sections and parallel columns to spoiler tags and equational proofs.</li>
+<li><b>🎛 Switch any block</b>: <code>:when (eq backend 'html)</code>, <code>:noexport t</code>, <code>:let (N 7)</code>, <code>:boxed "Title"</code>, <code>:folded t</code>, and
+<code>:verbatim t</code>, and <code>:C-c_C-c ACTION</code> work on every block &mdash;ours, yours, or Org's own src and quote blocks; see
+<a href="#Switches-for-every-block">switches</a>.</li>
+<li><img src="https://img.shields.io/badge/Hello-World-green"> Use <b>badge-style links</b> to embed GitHub stars, Reddit subs, or custom  project metadata via <code>shields.io</code>.</li>
+<li><b>🛠 Use <code>org-defblock</code>, <code>org-deflink</code> and <code>org-deftag</code></b> &mdash;Org, extended as one extends Lisp:
+each is declared like a <code>cl-defun</code>, with <code>&amp;optional</code> and <code>&amp;key</code> arguments; or, for the
+terse-minded, with a flattened arglist.
+<ul class="org-ul">
+<li>Create powerful custom blocks with <code>org-defblock</code>: Define a block once and export to
+LaTeX <i>and</i> HTML effortlessly. With <i>header-args</i> support like
+<code>:color red :signoff "Thanks!"</code> for locally customised exports. Each block is also a
+link and a tag, for free; and <code>:fontify</code> says how it looks in the buffer.</li>
+<li>Use <code>org-deflink</code> to create custom links, as functions of their label and description.</li>
+<li>Use <code>org-deftag</code> to create custom tags, as functions of the Org sections they tag.</li>
+</ul></li>
+</ul>
+
+<hr />
+
+<p>
+<b>🧱 Ready-to-Use Custom Blocks</b>
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Block</th>
+<th scope="col" class="org-left">Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>details</code></td>
+<td class="org-left">Foldable sections &mdash; perfect for hiding spoilers, proofs, or long explanations.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>parallel</code></td>
+<td class="org-left">Display content in multiple columns &mdash; great for comparisons or saving space.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>margin</code></td>
+<td class="org-left">Add subtle explanatory tooltips or side remarks &mdash; delightful for scholarly writing.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>box</code></td>
+<td class="org-left">Emphasize content with nicely styled borders &mdash; great for callouts or side notes.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>spoiler</code></td>
+<td class="org-left">Hide content visually until the reader chooses to see it &mdash; useful in teaching.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>tree</code></td>
+<td class="org-left">Display proof trees and logical derivations &mdash; fantastic for formal logic.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>rename</code></td>
+<td class="org-left">Automated text substitution &mdash; great for translation or glossary effects.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>stutter</code></td>
+<td class="org-left">Repeat content multiple times &mdash; e.g., for emphasis or stylistic flair.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>solution</code></td>
+<td class="org-left">Reveal answers in stages &mdash; perfect for educational content.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>org-demo</code></td>
+<td class="org-left">Show Org markup alongside its rendered result &mdash; ideal for tutorials.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>latex-definitions</code></td>
+<td class="org-left">Hide LaTeX-only declarations from HTML &mdash; keep your source clean.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>calc</code></td>
+<td class="org-left">Step-by-step equational reasoning &mdash; beautiful for math walkthroughs.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>graph</code></td>
+<td class="org-left">Draw nested Org lists as Graphviz diagrams &mdash; <code>C-c C-c</code> renders a PNG in place.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>note</code>, <code>tip</code>, <code>warning</code>, …</td>
+<td class="org-left">GitHub-style callouts &mdash;a coloured rule and a titled heading.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>highlight</code></td>
+<td class="org-left">Colour a paragraph's background, rather than its text.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>package-docs</code></td>
+<td class="org-left">A table of a package's public API, each name a <code>doc:</code> tooltip.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>style</code></td>
+<td class="org-left">Page-wide CSS, verbatim; nothing outside HTML.</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<p>
+<b>Ready-to-Use Custom Links</b>
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Link</th>
+<th scope="col" class="org-left">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>doc:label</code></td>
+<td class="org-left">Glossary tooltips &mdash;e.g., <abbr class="tooltip" tabindex="0">cl-loop<template><pre>The Common Lisp ‘loop’ macro.
+Valid clauses include:
+  For clauses:
+    for VAR from/upfrom/downfrom EXPR1 to/upto/downto/above/below EXPR2
+        [by EXPR3]
+    for VAR = EXPR1 then EXPR2
+    for VAR in/on/in-ref LIST [by FUNC]
+    for VAR across/across-ref ARRAY
+    for VAR being:
+      the elements of/of-ref SEQUENCE [using (index VAR2)]
+      the symbols [of OBARRAY]
+      the hash-keys/hash-values of HASH-TABLE [using (hash-values/hash-keys V2)]
+      the key-codes/key-bindings/key-seqs of KEYMAP [using (key-bindings VAR2)]
+      the overlays/intervals [of BUFFER] [from POS1] [to POS2]
+      the frames/buffers
+      the windows [of FRAME]
+  Iteration clauses:
+    repeat INTEGER
+    while/until/always/never/thereis CONDITION
+  Accumulation clauses:
+    collect/append/nconc/concat/vconcat/count/sum/maximize/minimize FORM
+      [into VAR]
+  Miscellaneous clauses:
+    with VAR = INIT
+    if/when/unless COND CLAUSE [and CLAUSE]... else CLAUSE [and CLAUSE...]
+    named NAME
+    initially/finally [do] EXPRS...
+    do EXPRS...
+    [finally] return EXPR
+
+For more details, see Info node ‘(cl)Loop Facility’.
+
+(fn CLAUSE...)</pre></template></abbr>; our own terms, even <code>&lt;&lt;&lt;radio targets&gt;&gt;&gt;</code>, too</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>kbd:</code></td>
+<td class="org-left">Stylized keybindings with tooltips &mdash; e.g., <code>kbd:C-x_C-e</code>; in Emacs, 〔C-x C-e〕, click to run</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>color:</code> or <code>red:</code></td>
+<td class="org-left">Inline text colouring &mdash; supports both names and hex codes.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>highlight:</code></td>
+<td class="org-left">Colour the background instead &mdash;so highlighted in Emacs too.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>palette:</code></td>
+<td class="org-left">A button for readers to pick the page's background colour.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>toggle-details:</code></td>
+<td class="org-left">A button to unfold, or fold, every <code>details</code> block at once.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>html-export-style:</code></td>
+<td class="org-left">Pick a visual theme for HTML exports &mdash; one click, new style.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>badge:</code></td>
+<td class="org-left">Embed project badges &mdash; e.g., GitHub stars, Reddit subs, versioning.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>fortune:</code></td>
+<td class="org-left">Insert ASCII animals saying jokes or phrases &mdash; joy in your docs!</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>octoicon:</code></td>
+<td class="org-left">GitHub-style icons &mdash; for styling and linking like a pro.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>link-here:</code></td>
+<td class="org-left">Local anchors &mdash; create navigable sections anywhere.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>show:</code></td>
+<td class="org-left">Show a variable value &mdash; dynamically insert content like your name or version.</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>elisp:</code></td>
+<td class="org-left">Make clickable actions &mdash; buttons that run Emacs Lisp.</td>
+</tr>
+</tbody>
+</table>
+
+
+<hr />
+
+<p>
+💡 Ideal For
+</p>
+<ul class="org-ul">
+<li>🧑‍🏫 Educators building interactive lessons and glossaries</li>
+<li>🧑‍💻 Developers documenting APIs with style</li>
+<li>📚 Writers crafting scholarly or explorable documents</li>
+<li>✨ Emacsers who want rich export without leaving Org-mode</li>
+<li>✏️ Bloggers wanting powerful interactivity
+<ul class="org-ul">
+<li>This is <i>the</i> reason I made this package.</li>
+</ul></li>
+<li>1️⃣ Anyone who wants to keep Org-mode as the single source of truth for <span style="color:pink;">rich</span>
+exports</li>
+</ul>
+
+
+<p>
+🪄 <b>Just load the package, write in Org, and let <code>defblock</code> handle the
+rest.</b> Now your Org-mode documents are not just structured &mdash;they're
+<i>spectacular</i>.
+</p>
+
+<hr />
+
+
+<p>
+<b>Write rich Org-mode documents &mdash; one source, many formats.</b>
+The <code>org-special-block-extras</code> package empowers you to define and use
+<i>custom blocks</i> and <i>links</i> that make your Org files export beautifully
+to both <b>HTML and LaTeX</b>, <i>without ever writing raw HTML or LaTeX
+again</i>.
+</p>
+</div>
+</div>
+<div id="outline-container-at-a-glance" class="outline-3">
+<h3 id="at-a-glance"><span class="section-number-3">1.2.</span> <a href="#at-a-glance">🗺 The package at a glance</a></h3>
+<div class="outline-text-3" id="text-at-a-glance">
+<p>
+Every node below leads to its section; hover, or tap, one for its gist. The map is itself a <a href="#Graphs">graph</a>
+block &mdash;an Org list, coloured by <code>#+name:</code> tables folded in its <code>:TEMPLATES:</code> drawer, and laid out radially by <code>:layout twopi</code>.
+</p>
+
+<div class="graph">
+<ul class="org-ul">
+<li><a id="osbe"></a> <a href="https://github.com/alhassy/org-special-block-extras"><b>org-special-block-extras</b></a> <sup><abbr class="tooltip" tabindex="0" id="fnr.1">1<template>Blocks, links, and switches for Org, exported alike to HTML, LaTeX, and Markdown.</template></abbr></sup>
+<ul class="org-ul">
+<li>Blocks to write :glance<sub>write</sub>:
+<ul class="org-ul">
+<li><a href="#Callouts">Callouts</a> \\ note · tip · important · warning · caution <sup><abbr class="tooltip" tabindex="0" id="fnr.2">2<template>GitHub's alerts: a coloured rule and a titled heading; Markdown gets the alerts themselves.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="#Boxed-Text">Folding &amp; framing</a> \\ box · details · solution · spoiler · parallel <sup><abbr class="tooltip" tabindex="0" id="fnr.3">3<template>Draw attention to text, fold it away, or set ideas side by side.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="#tooltip">Remarks</a> \\ margin · tooltip · remark <sup><abbr class="tooltip" tabindex="0" id="fnr.4">4<template>Notes that stay out of the reader's way: in the margin in LaTeX, hovered or tapped in HTML. Org's own footnotes join them.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="#Highlights">Colour</a> \\ red · blue · … · highlight <sup><abbr class="tooltip" tabindex="0" id="fnr.5">5<template>19 named colours, each a block and a link, and a highlight that colours the background.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="#Aligned-equations">Maths &amp; proofs</a> \\ align · calc · tree · latex-definitions <sup><abbr class="tooltip" tabindex="0" id="fnr.6">6<template>Aligned equations, with coloured tags that <code>eqref:𝒳</code> cites; equational proofs and proof trees, as Org lists.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="#Graphs">Graphs</a> \\ graph <sup><abbr class="tooltip" tabindex="0" id="fnr.7">7<template>Org lists drawn by Graphviz; this very map is one.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="#Glossaries">Glossaries</a> \\ documentation <sup><abbr class="tooltip" tabindex="0" id="fnr.8">8<template>Define a term once, cite it everywhere with <code>doc:𝒳</code>; <code>show:GLOSSARY</code> lists every citation.</template></abbr></sup> :glance<sub>write</sub>:</li>
+</ul></li>
+<li>Links to cite :glance<sub>read</sub>:
+<ul class="org-ul">
+<li><a href="#Glossaries"><code>doc:𝒳</code></a> \\ <code>show:𝒳</code> <sup><abbr class="tooltip" tabindex="0" id="fnr.9">9<template>A term's definition as a tooltip; or a Lisp expression's value, inline.</template></abbr></sup> :glance<sub>read</sub>:</li>
+<li><a href="#nice-keystroke-renditions"><code>kbd:C-x_C-s</code></a> <sup><abbr class="tooltip" tabindex="0" id="fnr.10">10<template>Keys as keycaps, their command's documentation as a tooltip; click one in Emacs to run it.</template></abbr></sup> :glance<sub>read</sub>:</li>
+<li><abbr class="tooltip" tabindex="0">Badges<template><pre>Make a link NAME whose export is presented as an SVG badge.
+
+If the link is intend to be a social badge, then, adhering to
+shield.io conventions, the appropriate SOCIAL-SHIELDS-NAME must
+be given.
+
+The SOCIAL-URL is a URL that the badge points to and it should
+have a single ‘%s’ where the link label argument will go.
+
+Some social badges have a uniform URL, but otherwise, such as
+twitter, deviate and so need their own SOCIAL-SHIELDS-URL,
+which has a single ‘%s’ for the link’s label argument.
+
+----------------------------------------------------------------------
+
+E.g., to create a badge named “go”:
+
+     (org-make-badge "go")
+
+Then the following exports nicely from an Org file:
+
+     go:key|value|blue|here|gnu-emacs
+
+(fn NAME &amp;optional SOCIAL-SHIELDS-NAME SOCIAL-URL SOCIAL-SHIELDS-URL)</pre></template></abbr> \\ badge · melpa · github-* <sup><abbr class="tooltip" tabindex="0" id="fnr.11">11<template>Shields.io badges, for a project's README.</template></abbr></sup> :glance<sub>read</sub>:</li>
+<li>Every block, as a link <sup><abbr class="tooltip" tabindex="0" id="fnr.12">12<template><code>red:𝒳</code>, <code>[[box:Title][…]]</code>, and the like: a block's one-line form.</template></abbr></sup> :glance<sub>read</sub>:</li>
+</ul></li>
+<li>Switches on any block :glance<sub>act</sub>:
+<ul class="org-ul">
+<li><a href="#Switches-for-every-block">:when · :noexport</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.13">13<template>Export a block only for some backends, or never.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="#Switches-for-every-block">:let · :ignore</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.14">14<template>Substitute variables beforehand; or drop the block's behaviour, keeping its text.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="#Switches-for-every-block">:boxed · :folded</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.15">15<template>Box the result, or fold it away; on src and quote blocks too.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="#Switches-for-every-block">:verbatim</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.16">16<template>Show the block's source; with demo, beside its result.</template></abbr></sup> :glance<sub>act</sub>:</li>
+</ul></li>
+<li>Keys in Emacs :glance<sub>act</sub>:
+<ul class="org-ul">
+<li><a href="#C-c-C-c-for-your-own-blocks">C-c C-c</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.17">17<template>A block's action: render a graph, run a :C-c<sub>C</sub>-c form.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="#C-c-quote-for-your-own-blocks">C-c '</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.18">18<template>Edit any special block's contents in a buffer of their own.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="#C-c-C-v-C-d-to-split-a-block">C-c C-v C-d</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.19">19<template>Split any special block in two at point.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="#eldoc-for-blocks-and-links">eldoc</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.20">20<template>Hover a #+begin_ line, or a link, for its arguments and gist.</template></abbr></sup> :glance<sub>act</sub>:</li>
+</ul></li>
+<li>Make your own :glance<sub>make</sub>:
+<ul class="org-ul">
+<li><a href="#Make-your-own-blocks">org-defblock</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.21">21<template>A block, its link, and its tag, from one cl-defun-style definition.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li><a href="#Make-your-own-links">org-deflink</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.22">22<template>A link type: how it looks in Emacs and how it exports.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li><a href="#tags-are-functions-of-org-sections">org-deftag</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.23">23<template>A heading tag as a function of its section.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li><abbr class="tooltip" tabindex="0">org-thread-blockcall<template><pre>(BODY, (b₁ a₁ …), …, (bₙ aₙ …)) ↦ BODY in block b₁, that in b₂, …, that in bₙ.
+
+(fn BODY &amp;rest FORMS)</pre></template></abbr> <sup><abbr class="tooltip" tabindex="0" id="fnr.24">24<template>Compose blocks: solution is details of a box of details.</template></abbr></sup> :glance<sub>make</sub>:</li>
+</ul></li>
+<li>Options :glance<sub>make</sub>:
+<ul class="org-ul">
+<li>org-defblock-evaluate-switches <sup><abbr class="tooltip" tabindex="0" id="fnr.25">25<template>May a document's :when, :let, and :C-c<sub>C</sub>-c run Lisp? Ask, by default.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li>org-special-block-add-html-extra <sup><abbr class="tooltip" tabindex="0" id="fnr.26">26<template>Inline the tooltips' CSS and JS in HTML exports; on, by default.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li>org-docs-libraries <sup><abbr class="tooltip" tabindex="0" id="fnr.27">27<template>Org files whose glossary entries every document may cite.</template></abbr></sup> :glance<sub>make</sub>:</li>
+</ul></li>
+</ul></li>
+</ul>
+
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-block-and-link-types-provided-by-this-package" class="outline-2">
+<h2 id="block-and-link-types-provided-by-this-package"><span class="section-number-2">2.</span> <a href="#block-and-link-types-provided-by-this-package">Block and link types provided by this package</a></h2>
+<div class="outline-text-2" id="text-block-and-link-types-provided-by-this-package">
+</div>
+<div id="outline-container-Boxed-Text" class="outline-3">
+<h3 id="Boxed-Text"><span class="section-number-3">2.1.</span> <a href="#Boxed-Text">Boxed Text —Calling out super duper info</a></h3>
+<div class="outline-text-3" id="text-Boxed-Text">
+<p>
+osbe-example:box
+</p>
+</div>
+</div>
+<div id="outline-container-Folded-Details" class="outline-3">
+<h3 id="Folded-Details"><span class="section-number-3">2.2.</span> <a href="#Folded-Details">Folded Details &mdash;Let the user see stuff only if they're interested</a></h3>
+<div class="outline-text-3" id="text-Folded-Details">
+<p>
+osbe-example:details
+</p>
+
+<p>
+Src blocks fold too: the header argument <code>:folded t</code> exports a src block, exactly as Org
+otherwise would, inside a <code>details</code> block titled by its language; <code>:folded "TITLE"</code> picks
+the title.
+</p>
+<pre class="example">
+#+begin_src emacs-lisp :folded "How is it done?"
+(org-defblock details …)
+#+end_src
+</pre>
+
+<p>
+A page with many folded blocks may offer a button to unfold them all at once:
+<code>[[toggle-details:][Show me everything]]</code> is that button; pressed again, it folds them
+all. Without a description, it reads “Unfold all details”.
+</p>
+</div>
+</div>
+<div id="outline-container-nice-keystroke-renditions" class="outline-3">
+<h3 id="nice-keystroke-renditions"><span class="section-number-3">2.3.</span> <a href="#nice-keystroke-renditions">Nice Keystroke Renditions: <kbd style="">C-h t</kbd></a></h3>
+<div class="outline-text-3" id="text-nice-keystroke-renditions">
+<p>
+Anyone who writes <i>about</i> Emacs will likely want to mention keystrokes in an
+aesthetically pleasing way, such as <kbd style="">C-u 80 -</kbd> to insert 80 dashes,
+or <kbd style="">C-c C-e h o</kbd> to export an Org-mode file to HTML,
+or the useful <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">M-s h .</kbd><template><pre>M-s h . ∷ highlight-symbol-at-point
+Highlight each instance of the symbol at point.
+Uses the next face from ‘hi-lock-face-defaults’ without prompting,
+unless you use a prefix argument.
+Uses ‘find-tag-default-as-symbol-regexp’ to retrieve the symbol at point.
+
+If REGEXP contains upper case characters (excluding those preceded by ‘\’)
+and ‘search-upper-case’ is non-nil, the matching is case-sensitive.
+
+This uses Font lock mode if it is enabled; otherwise it uses overlays,
+in which case the highlighting will not update as you type.  The Font
+Lock mode is considered "enabled" in a buffer if its ‘major-mode’
+causes ‘font-lock-specified-p’ to return non-nil, which means
+the major mode specifies support for Font Lock.</pre></template></abbr>.
+</p>
+
+<ul class="org-ul">
+<li><p>
+<code>kbd:𝒳</code> will show a tooltip defining 𝒳, as an Emacs Lisp function, if possible.
+For example, <code>kbd:C-h_t</code> is <kbd style="">C-h t</kbd>; and likewise <code>&lt;kbd:M-s h .&gt;</code> is <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">M-s h.</kbd><template><pre>M-s h. ∷ highlight-symbol-at-point
+Highlight each instance of the symbol at point.
+Uses the next face from ‘hi-lock-face-defaults’ without prompting,
+unless you use a prefix argument.
+Uses ‘find-tag-default-as-symbol-regexp’ to retrieve the symbol at point.
+
+If REGEXP contains upper case characters (excluding those preceded by ‘\’)
+and ‘search-upper-case’ is non-nil, the matching is case-sensitive.
+
+This uses Font lock mode if it is enabled; otherwise it uses overlays,
+in which case the highlighting will not update as you type.  The Font
+Lock mode is considered "enabled" in a buffer if its ‘major-mode’
+causes ‘font-lock-specified-p’ to return non-nil, which means
+the major mode specifies support for Font Lock.</pre></template></abbr> (we need to use <code>&lt;...&gt;</code> since punctuation is not picked up as part of link
+labels).  In contrast, <code>kbd:nope</code> renders as <kbd style="">nope</kbd> <i>without</i> a tooltip (nor a
+red border).
+</p>
+
+<p>
+You can also supply explicit tooltip description: <code>[[kbd:key
+  sequence][description]]</code> will show as <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">key sequence</kbd><template><pre>key sequence ∷ 
+description</pre></template></abbr>; i.e.,
+the key sequence in nice key font along with a tooltip explaining it.
+</p></li>
+
+<li>In Emacs itself, each of these displays as 〔C-x C-s〕: the <code>kbd:</code> markup becomes the
+brackets and each <code>_</code> a space. Only the markup is displayed differently, so the keys
+stay editable as ever. Moreover, clicking one runs its keys &mdash;after asking, as <code>elisp:</code>
+links do&mdash; so readers may try them on the spot.</li>
+</ul>
+
+
+
+<div class="figure">
+<p><img src="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/kbd.png" alt="kbd.png" width="80%" height="80%s" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-tooltip" class="outline-3">
+<h3 id="tooltip"><span class="section-number-3">2.4.</span> <a href="#tooltip">Remark —Inline footnotes, viz HTML tooltips and LaTeX notes in the margin</a></h3>
+<div class="outline-text-3" id="text-tooltip">
+<p>
+Sometimes you want to remark on <abbr class="tooltip" tabindex="0">details<template><pre>Enclose contents in a folded up box, for HTML.
+
+For LaTeX, this is just a boring, but centered, box.
+
+By default, the TITLE of such blocks is “Details”,
+its TITLE-COLOR is green, and BACKGROUND-COLOR is “#e5f5e5”.
+
+In HTML, we show folded, details, regions with a nice greenish colour.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_details
+     Hello, world
+     #+end_details
+
+ is rewritten to the result of the call
+
+     (org-block/details ‘latex "Hello, world")</pre></template></abbr> without drawing too much
+attention, and so a tooltip via <abbr class="tooltip" tabindex="0">remark<template><pre>Format CONTENTS as a first-class editor comment according to BACKEND.
+
+The CONTENTS string has an optional switch: If it contains a line
+with having only ‘#+replacewith:’, then the text preceding this
+clause should be replaced by the text after it; i.e., this is
+what the EDITOR (the person editing) intends and so we format the
+replacement instruction (to the author) as such.
+
+In Emacs, as links, editor remarks are shown with a bold red; but
+the exported COLOR of a remark is black by default and it is not
+STRONG ---i.e., bold---. There is an optional SIGNOFF message
+that is appended to the remark.
+
+Remarks are hidden from the export when ‘org-hide-editor-comments’ is
+non-nil.  For just one file, write “#+bind: org-hide-editor-comments t”
+in it; that needs ‘org-export-allow-bind-keywords’ set to t, which we
+leave to you, since #+bind lets a document set any variable.
+
+In Markdown, a remark block is GitHub’s “&gt; [!NOTE]” alert, titled EDITOR; as a link, it stays HTML.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_remark
+     Hello, world
+     #+end_remark
+
+ is rewritten to the result of the call
+
+     (org-block/remark ‘latex "Hello, world")</pre></template></abbr> suffices.
+</p>
+
+<p>
+osbe-example:tooltip
+</p>
+
+<p>
+A tooltip opens when its word is hovered with a mouse, or tapped on a phone; it closes when we
+leave both, tap elsewhere, or press <code>Escape</code>. Its text is Org, exported as Org, so it may hold
+links &mdash;clickable, since moving into the tooltip keeps it open&mdash; and any other markup; an
+Elisp docstring is shown just as it is written. The machinery is <a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/tooltips.js">tooltips.js</a>, about eighty
+lines with no dependencies, in the look of <a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/tooltips.css">tooltips.css</a>; both are inlined into each exported
+page, which so fetches nothing for them.
+</p>
+
+<p>
+Org's own footnotes are such remarks too: in HTML, each footnote's number is a tooltip of its
+definition, the footnotes section staying below, for print; in LaTeX, each is a margin note, as
+the <abbr class="tooltip" tabindex="0">margin<template><pre>Produce an HTML tooltip or a LaTeX margin note.
+
+The ‘margin’ block is intended for “one-off” (mostly optional) remarks.
+
+It is essentially “inline footnotes”.
+
+For notes that you want to use repeatedly, in multiple articles
+or in multiple locations in the same article, consider using
+‘documentation’ to declare them and ‘doc’ to invoke them.
+
+For LaTeX, place ‘#+resize:’ to have the remainder of a block be
+resized, for now 1.3 the margin width ---requires \usepackage{adjustbox}.
+
+----------------------------------------------------------------------
+
+WIDTH, COUNTER, and COLOR are LaTeX specific.
+
+When no label, marker, is used for a marginal note, we rely
+on a COUNTER, such as ‘footnote’ (default) or ‘sidenote.’
+Since HTML has no margin per se, we use “∘” as default marker:
+Users hover over it to read the marginal note.
+
+Marginal notes have their labels, markers, in black
+and the notes themselves have COLOR being grey!80.
+In Emacs, margin links appear grey with an orange tinted border.
+
+Regarding LaTeX, since verbatim environments do not in general work well
+as arguments to other commands, such as ‘\marginpar’, we save the contents
+of the special block in a ‘minipage’ within a LaTeX ‘box’; then we can unfold such
+a box in the margin. Hence, ‘src’ blocks can appear within ‘margin’ blocks (•̀ᴗ•́)و
+
+The WIDTH argument is the width of the margin; i.e., the width of the underlying
+minipage.
+
+One could use \maxsizebox{.25\textwidth}{\textheight}{ ... }
+which only resizes the content if its natural size is larger than
+the given 〈width〉 or 〈height〉.  We don’t use this, since
+maxsizebox does not natively allow linebreaks
+(e.g., one would wrap contents in a tabular environment then use
+‘\\’, two backslashes, to request a line break; but this
+crashes if one wants to also use verbatim environments.)
+
+In LaTeX, it may be useful to invoke ‘\dotfill’.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_margin
+     Hello, world
+     #+end_margin
+
+ is rewritten to the result of the call
+
+     (org-block/margin ‘latex "Hello, world")</pre></template></abbr> block's are, numbered as footnotes are. All three of Org's spellings serve: an
+anonymous <code>[fn::…]</code>, a named <code>[fn:NAME]</code> defined elsewhere, and a named inline <code>[fn:NAME: …]</code>, which
+later <code>[fn:NAME]</code> references share.
+</p>
+
+<p>
+osbe-example:footnote
+</p>
+</div>
+</div>
+<div id="outline-container-Glossaries" class="outline-3">
+<h3 id="Glossaries"><span class="section-number-3">2.5.</span> <a href="#Glossaries">Glossaries &mdash;Define a term once, cite it with <code>doc:𝒳</code></a></h3>
+<div class="outline-text-3" id="text-Glossaries">
+<p>
+A <code>doc:𝒳</code> link shows the documentation of 𝒳 as a tooltip in HTML, and as a glossary
+reference in LaTeX. Here 𝒳 is an Emacs Lisp function or variable, a word in the English
+dictionary &mdash;via <a href="https://wordnet.princeton.edu">WordNet</a>'s <code>wn</code>, should we have it&mdash; or, best of all, a term of our own.
+</p>
+
+<p>
+osbe-example:doc
+</p>
+
+<p>
+Our own terms are <i>data</i> in an Org file: an entry is either a <code>documentation</code> block, which
+exports nothing, or a heading tagged <code>:documentation:</code>, which exports as an ordinary
+section. The heading's title is the term's name, its <code>:DOC_KEYS:</code> property lists the labels
+by which we cite it, and its own text is the definition. Either way, the name with
+underscores in lieu of spaces is a label too; e.g., <code>doc:Category_Theory</code>. Moreover,
+<code>show:GLOSSARY</code> lists every term the page cites, wherever it sits.
+</p>
+
+<p>
+osbe-example:documentation
+</p>
+
+<p>
+Terms we cite across many files go in a library: a list of Org files in
+<code>org-docs-libraries</code>, whose entries &mdash;blocks and headings alike&mdash; every <code>doc:𝒳</code> link may
+cite. The files are read, not exported, so loading them is quick; <code>M-x
+  org-docs-load-libraries</code> reloads them after an edit, and <code>M-x org-docs-insert</code> inserts a
+<code>doc:𝒳</code> link by searching all the terms we have.
+</p>
+
+<p>
+A radio target is a term too: in <code>A &lt;&lt;&lt;monoid&gt;&gt;&gt; is a set with an associative operation
+  and a unit.</code>, the target names the term and its paragraph defines it; so <code>doc:monoid</code>
+cites it, in the same file or, from a library, in any other.
+</p>
+
+<p>
+Finally, a package's whole API makes a glossary of its own: the <code>package-docs</code> block
+exports a table of the public functions, macros, and variables that a feature defines,
+each name a <code>doc:𝒳</code> link whose tooltip is its documentation.
+</p>
+<pre class="example">
+#+begin_package-docs org-deflink
+#+end_package-docs
+</pre>
+</div>
+</div>
+<div id="outline-container-Parallel" class="outline-3">
+<h3 id="Parallel"><span class="section-number-3">2.6.</span> <a href="#Parallel">Parallel ---<i>Place ideas side-by-side, possibly with a separator</i></a></h3>
+<div class="outline-text-3" id="text-Parallel">
+<p>
+osbe-example:parallel
+</p>
+</div>
+</div>
+<div id="outline-container-Aligned-equations" class="outline-3">
+<h3 id="Aligned-equations"><span class="section-number-3">2.7.</span> <a href="#Aligned-equations">Aligned equations ---<code>#+begin_align</code>, cited by <code>eqref:𝒳</code></a></h3>
+<div class="outline-text-3" id="text-Aligned-equations">
+<p>
+An <abbr class="tooltip" tabindex="0">align<template><pre>Equations aligned at each &amp;, numbered when NUMBERED; a line may end in a coloured tag, “:tag-blue: Name”.
+
+  #+begin_align :let (-&gt; "\\Rightarrow" == "\\equiv")
+  p -&gt; q &amp;== \neg p \lor q          :tag-blue: Implication
+  p \land q &amp;== p == q == p \lor q  :tag-orange: Golden Rule
+  #+end_align
+
+Then [[eqref:Golden Rule]] refers to the second line, as (Golden Rule) in orange; following that
+link in Emacs visits the line.
+
++ The contents are LaTeX, not Org markup; as in LaTeX, a line sans a tag ends in \\.
++ “:tag-COLOUR: NAME” ≈ “\tag{$\color{COLOUR}{\text{NAME}}$} \label{NAME} \\”, for any xcolor COLOUR.
++ Shorthands, such as -&gt; above, come from the :let switch, which every block has; :let NAME shares them, from
+  the table #+name: NAME or the variable NAME.
++ In Markdown, the equations are a fenced math block.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_align
+     Hello, world
+     #+end_align
+
+ is rewritten to the result of the call
+
+     (org-block/align ‘latex "Hello, world")</pre></template></abbr> block's contents are LaTeX, aligned at each <code>&amp;</code>; as in LaTeX, a line ends in
+<code>\\</code>, unless it ends in a tag <code>:tag-COLOUR: NAME</code>, which is <code>NAME</code> in that colour and is what
+<code>[[eqref:NAME]]</code> cites. Following such a link in Emacs visits the line; failing that, any
+<code>\tag{…NAME…}</code>. An <code>align :numbered t</code> numbers its untagged lines too. Since the contents are
+LaTeX, shorthands are welcome: the <a href="#Switches-for-every-block">:let switch</a> gives them, as below.
+</p>
+
+<p>
+osbe-example:align
+</p>
+
+<p>
+To share shorthands among many blocks, name them once, in a table that need not itself export:
+</p>
+<pre class="example">
+#+begin_align :let logic
+p -&gt; q &amp;== \neg p \lor q
+#+end_align
+
+* Shorthands :noexport:
+#+name: logic
+| Variable | Value       |
+|----------+-------------|
+| -&gt;       | \Rightarrow |
+| ==       | \equiv      |
+</pre>
+<p>
+The rows above the rule are a header, and are skipped. A Lisp variable serves too, across
+documents: <code>(setq logic '(-&gt; "\\Rightarrow"))</code> and then <code>:let logic</code>.
+</p>
+</div>
+</div>
+<div id="outline-container-latex-definitions-for-hiding-LaTeX-declarations-in-HTML" class="outline-3">
+<h3 id="latex-definitions-for-hiding-LaTeX-declarations-in-HTML"><span class="section-number-3">2.8.</span> <a href="#latex-definitions-for-hiding-LaTeX-declarations-in-HTML">  <code>latex-definitions</code> for hiding LaTeX declarations in HTML</a></h3>
+<div class="outline-text-3" id="text-latex-definitions-for-hiding-LaTeX-declarations-in-HTML">
+<p>
+To present mathematical formulae in HTML export, we may use
+LaTeX-style commands such as <code>{\color{red} x}</code> by enclosing them in
+<code>$</code>-symbols to obtain \({\color{red}x}\).  This is known as the MathJax
+tool &mdash;Emacs' default HTML export includes it.  (Unfortunately,
+MathJax does not directly support arbitrary HTML elements to occur
+within the <code>$</code>-delimiters.)
+</p>
+
+<p>
+It is common to declare LaTeX definitions for convenience, but such
+declarations occur within <code>$</code>-delimiters and thereby produce
+undesirable extra whitespace. See the superflous vertical whitespace
+in the <code>Result</code> side below. 
+</p>
+
+<div style="column-count: 2;">
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
+<div ><pre class="src src-org">Hello, in this blog post I'd like to talk about quantifiers.
+# First, I'll define some helpers that I use multiple times...
+  $$
+ \def\Plus{\color{teal}\bigoplus}
+ \def\plus{\;\color{teal}\oplus\;}
+ \def\f#1{{\color{brown}f}{\color{violet}(#1)}}
+ \def\xstart{\color{red} a}
+ \def\xend{\color{cyan} b}
+ $$
+ 
+ Anyhow, let's talk about quantifiers...
+ $$
+ \Plus_{{\color{violet} x} = \xstart}^{\xend} \f{x}
+ \; = \;
+ \f{{\xstart}} \plus \f{a+1} \plus \f{a+2} \plus \cdots \plus \f{{\xend}}
+ $$
+
+ The above “quantification” means [[teal:Loop sequentially with]]
+ [[brown:loop-bodies f(x)]] [[teal:fused using ⊕]], using [[violet:x as the
+ name of the current element]], [[red:starting at a]] and [[cyan:ending at b]].</pre></div>
+</div>
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<p>
+Hello, in this blog post I'd like to talk about quantifiers.
+</p>
+
+<p>
+\[
+    \def\Plus{\color{teal}\bigoplus}
+    \def\plus{\;\color{teal}\oplus\;}
+    \def\f#1{{\color{brown}f}{\color{violet}(#1)}}
+    \def\xstart{\color{red} a}
+    \def\xend{\color{cyan} b}
+    \]
+</p>
+
+<p>
+Anyhow, let's talk about quantifiers&hellip;
+\[
+    \Plus_{{\color{violet} x} = \xstart}^{\xend} \f{x}
+    \; = \;
+    \f{{\xstart}} \plus \f{a+1} \plus \f{a+2} \plus \cdots \plus \f{{\xend}}
+    \]
+</p>
+
+<p>
+The above “quantification” means <span style="color:teal;">Loop sequentially with</span>
+<span style="color:brown;">loop-bodies f(x)</span> <span style="color:teal;">fused using ⊕</span>, using <span style="color:violet;">x as the name of the current element</span>, <span style="color:red;">starting at a</span> and <span style="color:cyan;">ending at b</span>.
+</p>
+</div>
+</div>
+<p>
+As such, we declare the <abbr class="tooltip" tabindex="0">latex-definitions<template><pre>Declare but do not display the CONTENTS according to the BACKEND.
+In LaTeX, they are declarations, so they go to the preamble, as #+latex_header: lines; within a beamer frame, which
+is read into a definition of its own, a macro’s #1 would otherwise be an error.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_latex-definitions
+     Hello, world
+     #+end_latex-definitions
+
+ is rewritten to the result of the call
+
+     (org-block/latex-definitions ‘latex "Hello, world")</pre></template></abbr> block type which avoids
+displaying such extra whitespace in the resulting HTML.
+</p>
+
+<p>
+osbe-example:latex-definitions
+</p>
+</div>
+</div>
+<div id="outline-container-Graphs" class="outline-3">
+<h3 id="Graphs"><span class="section-number-3">2.9.</span> <a href="#Graphs">Graphs ---<i>Org lists, drawn by Graphviz</i></a></h3>
+<div class="outline-text-3" id="text-Graphs">
+<p>
+osbe-example:graph
+</p>
+
+<p>
+The <abbr class="tooltip" tabindex="0">graph<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> block is opt-in, so we load it separately with
+<code>(require 'org-graph-block)</code>. Rendering needs the <code>dot</code> executable from <a href="https://graphviz.org">Graphviz</a>:
+HTML export embeds a PNG &mdash;or an inline SVG, with tooltips intact, via <code>:svg t</code>&mdash; whereas
+other backends receive the dot source. Inside the block, <code>#+graph:</code>, <code>#+node:</code> and <code>#+edge:</code>
+tables set Graphviz's defaults; <code>C-h o org-block/graph</code> documents every option.
+</p>
+</div>
+</div>
+<div id="outline-container-Switches-for-every-block" class="outline-3">
+<h3 id="Switches-for-every-block"><span class="section-number-3">2.10.</span> <a href="#Switches-for-every-block">Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></h3>
+<div class="outline-text-3" id="text-Switches-for-every-block">
+<p>
+Just as every src block understands <code>:exports</code> and <code>:results</code>, every block understands these
+header arguments &mdash;ours, those made with <code>org-defblock</code>, Org's own src, example, quote, verse,
+and center blocks, and any <code>#+begin_𝒳</code> at all, no declaration needed:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Switch</th>
+<th scope="col" class="org-left">Effect upon export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>:noexport t</code></td>
+<td class="org-left">Nothing at all; e.g., notes to self</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:when FORM</code></td>
+<td class="org-left">Nothing at all, unless the Lisp <code>FORM</code> is non-nil; it may mention <code>backend</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:let (VAR VAL …)</code></td>
+<td class="org-left">Each whole-word <code>VAR</code>, or operator such as <code>-&gt;</code>, in the contents becomes its value, beforehand</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:let NAME</code></td>
+<td class="org-left">Likewise, for the <code>VAR</code> and <code>VAL</code> of each row of the table <code>#+name: NAME</code>, else of the variable <code>NAME</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:ignore t</code></td>
+<td class="org-left">The contents, as plain Org; i.e., the block's own behaviour is bypassed</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:boxed TITLE</code></td>
+<td class="org-left">The result, within a <abbr class="tooltip" tabindex="0">box<template><pre>Enclose text in a box, possibly with a TITLE.
+
+By default, the box’s BACKGROUND-COLOR is green for HTML and red for LaTeX;
+for LaTeX, there are also FRAME-COLOR and TITLE-BACKGROUND-COLOR.
+
+SHADOW is an alternate style of boxing: It shows the contents in a centred
+box with a shadow colour being the given non-nil value of SHADOW.
+If SHADOW is a hexadecimal colour, it should be a string enclosed in double quotes.
+More accurately, the following are all valid uses:
+
+    #+begin_box title :shadow t
+    #+begin_box title :shadow inset
+
+    #+begin_box title :shadow "pink"
+    #+begin_box title :shadow pink
+
+    #+begin_box title :shadow (cyan pink orange yellow)
+    #+begin_box title :shadow (cyan "inset pink" orange)
+    #+begin_box title :shadow (:left cyan :right pink :deep-right orange :deep-left yellow)
+
+Notice that prefixing colours with ‘inset’ causes the colour to be within the box,
+rather than spread, with blur, around the box. The use of ‘inset’ swaps left and right.
+
+The HTML export uses a padded div, whereas the LaTeX export
+requires the tcolorbox package; Markdown, sans colours, gets a quote opening with TITLE in bold.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_box
+     Hello, world
+     #+end_box
+
+ is rewritten to the result of the call
+
+     (org-block/box ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for untitled</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:folded TITLE</code></td>
+<td class="org-left">The result, folded within <abbr class="tooltip" tabindex="0">details<template><pre>Enclose contents in a folded up box, for HTML.
+
+For LaTeX, this is just a boring, but centered, box.
+
+By default, the TITLE of such blocks is “Details”,
+its TITLE-COLOR is green, and BACKGROUND-COLOR is “#e5f5e5”.
+
+In HTML, we show folded, details, regions with a nice greenish colour.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_details
+     Hello, world
+     #+end_details
+
+ is rewritten to the result of the call
+
+     (org-block/details ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for the block's name</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:verbatim t</code></td>
+<td class="org-left">The block as written, sans its switches, shown as Org source</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:verbatim demo</code></td>
+<td class="org-left">That source beside what it exports to, as with <abbr class="tooltip" tabindex="0">org-demo<template><pre>Output the CONTENTS of the block as both parsed Org and unparsed.
+
+Label the source text by SOURCE and the result text by RESULT
+
+finally, the source-result fragments can be shown in a STYLE
+that is either “parallel” (default) or “sequential”.
+
+SEP is the separator; e.g., a rule ‘&lt;hr&gt;’.
+
+In Markdown, the source is a fenced org block above its result, each under its label in bold.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_org-demo
+     Hello, world
+     #+end_org-demo
+
+ is rewritten to the result of the call
+
+     (org-block/org-demo ‘latex "Hello, world")</pre></template></abbr></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+osbe-example:switches
+</p>
+
+<p>
+A src block's <code>:folded t</code> is titled by its language, and its code is still exported by Org,
+as ever. Switches apply before Babel runs, so a src block's <code>:let</code> changes the code it runs,
+<code>:noexport</code> keeps it from running at all, and <code>:folded</code> folds away its results too. Other
+switches then apply to a <code>:verbatim</code> showing; e.g., <code>:verbatim demo :folded t</code> folds away a
+block's source and result alike.
+</p>
+
+<p>
+Moreover, <code>:C-c_C-c ACTION</code> gives a block an action in Emacs: pressing <code>C-c C-c</code> within it
+calls <code>ACTION</code> when it names a function, else evaluates it as a Lisp form; see <a href="#C-c-C-c-for-your-own-blocks">C-c C-c for
+your own blocks</a>.
+</p>
+
+<p>
+Switches are inherited as a src block's header-args are; e.g., <code>:header-args:red: :let (N 3)</code>
+in a heading's drawer gives every <code>red</code> block of its subtree that <code>:let</code>.
+</p>
+
+<p>
+A block that declares a keyword of the same name keeps it for itself; e.g., a block with
+its own <code>folded</code> argument receives <code>:folded</code> as usual. Since <code>:when</code>, <code>:let</code> and <code>:C-c_C-c</code>
+run Lisp written in the document, Emacs asks once before running each distinct form;
+<code>org-defblock-evaluate-switches</code> may instead allow them freely, or never.
+</p>
+</div>
+</div>
+<div id="outline-container-Callouts" class="outline-3">
+<h3 id="Callouts"><span class="section-number-3">2.11.</span> <a href="#Callouts">Callouts &mdash;Note, tip, important, warning, caution</a></h3>
+<div class="outline-text-3" id="text-Callouts">
+<p>
+Five blocks, after GitHub's alerts, call out a paragraph with a coloured rule down its
+left under a titled heading; the title defaults to the block's name.
+</p>
+
+<p>
+osbe-example:callout
+</p>
+
+<p>
+The colours, icons, and intended uses live in <code>org-callouts</code>. Since a heading tagged
+<code>:note:</code> is common enough to mean something else entirely, callouts claim neither tags nor
+link types.
+</p>
+
+<p>
+Exported to Markdown (<code>ox-md</code> or <code>ox-gfm</code>), a callout becomes GitHub's own alert,
+<code>&gt; [!WARNING]</code>; since alerts are untitled, a custom title becomes its bold first paragraph.
+See <a href="#Markdown-export">Markdown export</a> for what the other blocks become.
+</p>
+</div>
+</div>
+<div id="outline-container-Colours-links" class="outline-3">
+<h3 id="Colours-links"><span class="section-number-3">2.12.</span> <a href="#Colours-links">Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></h3>
+<div class="outline-text-3" id="text-Colours-links">
+<p>
+Each of the 19 colours that HTML and LaTeX's <code>xcolor</code> share &mdash;black, blue, brown, cyan, darkgray, gray,
+green, lightgray, lime, magenta, olive, orange, pink, purple, red, teal, violet, white, and yellow&mdash; is a
+block, a link, and a tag; <code>color</code> takes any other, by name or hex code. In Emacs, too, each such link
+shows its text in its colour, as soon as <code>org-special-block-extras-mode</code> is on.
+</p>
+
+<p>
+osbe-example:colors
+</p>
+</div>
+</div>
+<div id="outline-container-quote-citations" class="outline-3">
+<h3 id="quote-citations"><span class="section-number-3">2.13.</span> <a href="#quote-citations">Quotations, cited ---<code>#+begin_quote KEY</code></a></h3>
+<div class="outline-text-3" id="text-quote-citations">
+<p>
+Org's own quote block, given a bibliography key, cites it, at its pages &mdash;the key given as the
+main argument, or as <code>:key</code>:
+</p>
+<pre class="example">
+#+begin_quote zermelo1908 :pages 20-22
+Set theory is that branch of mathematics whose task is to investigate
+the fundamental notions of number, order, and function.
+#+end_quote
+</pre>
+<p>
+In LaTeX, and so in beamer, this is csquotes' <code>\blockcquote[20-22]{zermelo1908}{…}</code>, cited by
+our bibliography &mdash;biblatex's <code>\addbibresource</code>, BibTeX's <code>\bibliography</code>, or org-cite&mdash;
+which is ours to give; csquotes itself is loaded for us, unless we load it ourselves. In HTML, it is a <code>&lt;blockquote&gt;</code> closed by
+“&mdash; <i>zermelo1908</i>, 20-22”; in Markdown, a quote closed likewise. A quote sans arguments is
+Org's own, as ever.
+</p>
+
+<p>
+The quoted text hugs its braces, <code>\blockcquote[20-22]{zermelo1908}{Set theory …function.}</code>, sans
+the stray spaces LaTeX would read from its newlines; so does the <code>contents</code> of any block of ours
+whose LaTeX wraps it in braces, say <code>(format "\\textbf{%s}" contents)</code>.
+</p>
+
+<p>
+As a link, a quote is inline: <code>[[quote:zermelo1908][set theory is …]]</code> is csquotes'
+<code>\textcquote{zermelo1908}{…}</code>, and <code>[[quote:][to be]]</code> is just “to be”. A section tagged
+<code>:quote:</code> is a quote of its text.
+</p>
+</div>
+</div>
+<div id="outline-container-Highlights" class="outline-3">
+<h3 id="Highlights"><span class="section-number-3">2.14.</span> <a href="#Highlights">Highlights &mdash;Colour the background, not the text</a></h3>
+<div class="outline-text-3" id="text-Highlights">
+<p>
+Where <code>red:𝒳</code> colours text, <code>[[highlight:pink][𝒳]]</code> colours its background; the colour
+defaults to yellow, and the link shows so highlighted in Emacs too.
+</p>
+
+<p>
+osbe-example:highlight
+</p>
+
+<p>
+For the reader who would rather pick the page's background colour themself,
+<code>[[palette:][Pick a background]]</code> is a button that unfolds a palette of pale colours,
+<code>org-palette-colors</code>; clicking one makes it the background &mdash;try it: <button onclick="let p = this.nextElementSibling; p.style.display = p.style.display === 'none' ? 'block' : 'none';">Pick a background</button><div style="display: none"><button style="background-color: snow" onclick="document.body.style.background = 'snow'">snow</button><button style="background-color: ghostwhite" onclick="document.body.style.background = 'ghostwhite'">ghostwhite</button><button style="background-color: whitesmoke" onclick="document.body.style.background = 'whitesmoke'">whitesmoke</button><button style="background-color: floralwhite" onclick="document.body.style.background = 'floralwhite'">floralwhite</button><button style="background-color: oldlace" onclick="document.body.style.background = 'oldlace'">oldlace</button><button style="background-color: linen" onclick="document.body.style.background = 'linen'">linen</button><button style="background-color: antiquewhite" onclick="document.body.style.background = 'antiquewhite'">antiquewhite</button><button style="background-color: papayawhip" onclick="document.body.style.background = 'papayawhip'">papayawhip</button><button style="background-color: blanchedalmond" onclick="document.body.style.background = 'blanchedalmond'">blanchedalmond</button><button style="background-color: bisque" onclick="document.body.style.background = 'bisque'">bisque</button><button style="background-color: cornsilk" onclick="document.body.style.background = 'cornsilk'">cornsilk</button><button style="background-color: ivory" onclick="document.body.style.background = 'ivory'">ivory</button><button style="background-color: lemonchiffon" onclick="document.body.style.background = 'lemonchiffon'">lemonchiffon</button><button style="background-color: seashell" onclick="document.body.style.background = 'seashell'">seashell</button><button style="background-color: honeydew" onclick="document.body.style.background = 'honeydew'">honeydew</button><button style="background-color: mintcream" onclick="document.body.style.background = 'mintcream'">mintcream</button><button style="background-color: azure" onclick="document.body.style.background = 'azure'">azure</button><button style="background-color: aliceblue" onclick="document.body.style.background = 'aliceblue'">aliceblue</button><button style="background-color: lavender" onclick="document.body.style.background = 'lavender'">lavender</button><button style="background-color: lavenderblush" onclick="document.body.style.background = 'lavenderblush'">lavenderblush</button><button style="background-color: mistyrose" onclick="document.body.style.background = 'mistyrose'">mistyrose</button><button style="background-color: beige" onclick="document.body.style.background = 'beige'">beige</button><button style="background-color: lightyellow" onclick="document.body.style.background = 'lightyellow'">lightyellow</button><button style="background-color: lightcyan" onclick="document.body.style.background = 'lightcyan'">lightcyan</button><button style="background-color: white" onclick="document.body.style.background = 'white'">white</button></div>.
+</p>
+</div>
+</div>
+<div id="outline-container-style-block" class="outline-3">
+<h3 id="style-block"><span class="section-number-3">2.15.</span> <a href="#style-block">Page-wide CSS with <code>style</code></a></h3>
+<div class="outline-text-3" id="text-style-block">
+<p>
+A <code>style</code> block is the page's CSS, taken verbatim; it exports to nothing but HTML.
+</p>
+<pre class="example">
+#+begin_style
+h2 { color: teal; }
+#+end_style
+</pre>
+</div>
+</div>
+<div id="outline-container-Markdown-export" class="outline-3">
+<h3 id="Markdown-export"><span class="section-number-3">2.16.</span> <a href="#Markdown-export">Markdown export &mdash;What survives GitHub, and how to change it</a></h3>
+<div class="outline-text-3" id="text-Markdown-export">
+<p>
+Exporting to Markdown, with <code>ox-md</code> or <code>ox-gfm</code>, our blocks see <code>backend</code> as <code>html</code>, since <code>md</code>
+derives from it; <code>(org-export-markdown-p)</code> tells the two apart. A Markdown renderer, such as
+GitHub's, keeps only some HTML: it strips every <code>style</code>, <code>class</code>, <code>&lt;style&gt;</code>, and <code>&lt;font&gt;</code>, yet
+keeps <code>&lt;details&gt;</code>, <code>&lt;kbd&gt;</code>, <code>&lt;mark&gt;</code>, <code>&lt;ins&gt;</code>, <code>&lt;abbr title&gt;</code>, <code>&lt;img&gt;</code>, and <code>$$</code> maths.
+</p>
+
+<dl class="org-dl">
+<dt>Work as-is</dt><dd><code>badge</code>, <code>melpa</code>, <code>kbd</code>, <code>details</code>, <code>solution</code>, <code>rename</code>, and <code>show</code> export
+just as they do to HTML, and so render on GitHub &mdash;sans colours.</dd>
+
+<dt>Markdown of their own</dt><dd><p>
+these blocks export to Markdown idioms, rather than HTML.
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Block</th>
+<th scope="col" class="org-left">Markdown export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>note</code>, <code>tip</code>, …</td>
+<td class="org-left">GitHub's own alert, <code>&gt; [!TIP]</code>; a custom title is a bold line</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>box</code></td>
+<td class="org-left">a quote, opening with its title in bold</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>remark</code></td>
+<td class="org-left">a <code>&gt; [!NOTE]</code> alert, titled by its editor</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>highlight</code></td>
+<td class="org-left"><code>&lt;mark&gt;</code>, which GitHub shows yellow, whatever the colour</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>spoiler</code></td>
+<td class="org-left">numbered blanks, with the answers folded away beneath</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>tree</code></td>
+<td class="org-left"><code>$$…$$</code> displays, as GitHub's maths knows no <code>\[…\]</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>org-demo</code></td>
+<td class="org-left">the source as a code block, then its result</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>doc</code>, <code>tooltip</code>, <code>kbd</code></td>
+<td class="org-left"><code>&lt;abbr&gt;</code> with a plain-text <code>title</code>, as there is no tooltipster</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>latex-definitions</code></td>
+<td class="org-left">nothing, lest its definitions show</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>graph</code></td>
+<td class="org-left">its image, written to its <code>:file</code> (else <code>graph-HASH.png</code>), linked</td>
+</tr>
+</tbody>
+</table></dd>
+
+<dt>Plain HTML</dt><dd>every other block emits the HTML it always does, which a given Markdown
+renderer may not honour; e.g., on GitHub, colours ---<code>red:𝒳</code>, <code>#+begin_color</code>&mdash; and
+<code>parallel</code>'s columns are stripped, leaving plain, stacked text. Then there are <code>style</code>,
+<code>palette</code>, <code>html-export-style</code>, and <code>toggle-details</code>, which are HTML-only by design: they
+dress the page itself, and Markdown has no say over the page.</dd>
+</dl>
+
+<p>
+Dislike how a block B exports to Markdown? Advise <code>org-block/B</code> on your own machine; its
+result is Org, so the export makes of it whatever it does of any Org. By way of example,
+boxes between horizontal rules:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(advice-add 'org-block/box <span style="color: #e44649;">:around</span>
+            (<span style="color: #a626a4;">lambda</span> (box backend raw-contents <span style="color: #c18401;">&amp;rest</span> args)
+              <span style="color: #50a14f; font-style: italic;">"In Markdown, a box is its bold title and text, between rules; elsewhere, as before."</span>
+              (<span style="color: #a626a4;">if</span> (org-export-markdown-p)
+                  (format <span style="color: #50a14f;">"-----\n*%s*\n\n%s\n-----"</span> (car args) raw-contents)
+                (apply box backend raw-contents args))))
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-latex-packages" class="outline-3">
+<h3 id="latex-packages"><span class="section-number-3">2.17.</span> <a href="#latex-packages">PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></h3>
+<div class="outline-text-3" id="text-latex-packages">
+<p>
+Each block names the LaTeX packages it needs &mdash;a box, <code>xcolor</code> and <code>tcolorbox</code>; a cited quote,
+<code>csquotes</code>&mdash; and a LaTeX export that uses the block, or its link, loads them just before
+<code>\begin{document}</code>. So we declare none ourselves; a package we do load, options and all, is left be.
+To see what a block needs, read the <code>:latex-head</code> of its definition, or evaluate
+<code>(get 'org-block/box 'org-latex-head)</code> ⇒ <code>("xcolor" "tcolorbox")</code>.
+</p>
+
+<p>
+A test, <a href="https://github.com/alhassy/org-special-block-extras/blob/master/tests/org-pdf-export-tests.el">tests/org-pdf-export-tests.el</a>, keeps this honest: it compiles every example of this manual to a
+PDF, and to beamer slides, declaring no packages at all. It uses LuaLaTeX, which reads Unicode such
+as 𝒳 and ⇒ as is; pdflatex instead needs a <code>\newunicodechar</code> for each such character. Slides have no
+margins, so there our margin notes, tooltips, and Org's footnotes are beamer's own footnotes.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-Developers-guide" class="outline-2">
+<h2 id="Developers-guide"><span class="section-number-2">3.</span> <a href="#Developers-guide">Make your own blocks and links &mdash;A developer's guide</a></h2>
+<div class="outline-text-2" id="text-Developers-guide">
+<p>
+Every block and link above is made with the very tools below, so a new one of our own is a
+<code>defun</code> away.
+</p>
+</div>
+<div id="outline-container-Make-your-own-blocks" class="outline-3">
+<h3 id="Make-your-own-blocks"><span class="section-number-3">3.1.</span> <a href="#Make-your-own-blocks">Make your own blocks with <code>org-defblock</code></a></h3>
+<div class="outline-text-3" id="text-Make-your-own-blocks">
+<p>
+We declare a block just as we declare a function with <code>cl-defun</code>: the block's main
+argument &mdash;written right after <code>#+begin_NAME</code>&mdash; is its <code>&amp;optional</code> argument, and its
+header arguments are its <code>&amp;key</code> arguments. In the body, <code>backend</code> names the current
+export backend and <code>contents</code> the block's Org-parsed contents.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> note (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"teal"</span>))
+  <span style="color: #50a14f;">"Call out CONTENTS under TITLE, tinted COLOR."</span>
+  (<span style="color: #a626a4;">pcase</span> backend
+    ('html (format <span style="color: #50a14f;">"&lt;div style=\"border-left: 4px solid %s; padding-left: 1em\"&gt;&lt;b&gt;%s&lt;/b&gt;%s&lt;/div&gt;"</span>
+                   color title contents))
+    (_     (format <span style="color: #50a14f;">"\\textbf{\\color{%s}%s} %s"</span> color title contents))))
+</code></pre>
+</div>
+
+<p>
+Now the following binds <code>title</code> to <code>"Heads up"</code> and <code>color</code> to <code>red</code>; omit either, and
+its default is used. The main argument may also be given by its name, as a keyword:
+<code>#+begin_note :title "Heads up"</code> is the same block.
+</p>
+<pre class="example">
+#+begin_note "Heads up" :color red
+Mind the gap.
+#+end_note
+</pre>
+
+<p>
+For any backend derived from HTML or LaTeX &mdash;org-reveal's, ox-hugo's, ox-gfm's, beamer's, or
+our own&mdash; <code>backend</code> is <code>html</code> or <code>latex</code>, so one rendering serves them all. To single one out,
+we ask Org's own <code>org-export-current-backend</code>; by way of example, a docsy alert in Hugo:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> noteblock (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"primary"</span>))
+  <span style="color: #50a14f;">"A note: a docsy alert in Hugo, a noteblock environment in LaTeX, a box elsewhere in HTML."</span>
+  (<span style="color: #a626a4;">cond</span> ((org-export-derived-backend-p org-export-current-backend 'hugo)
+         (format <span style="color: #50a14f;">"{{%% alert title=\"%s\" color=\"%s\" %%}}\n%s\n{{%% /alert %%}}"</span> title color raw-contents))
+        ((equal backend 'latex) (format <span style="color: #50a14f;">"\\begin{noteblock}\n%s\n\\end{noteblock}"</span> contents))
+        (t (format <span style="color: #50a14f;">"&lt;div class=\"note\"&gt;%s&lt;/div&gt;"</span> contents))))
+</code></pre>
+</div>
+<p>
+In similar spirit, <code>(org-export-markdown-p)</code> and <code>(org-export-beamer-p)</code> single out Markdown and
+beamer.
+</p>
+
+<p>
+Every block is also a link, with the label as main argument and the description as
+contents: <code>[[note:Heads up][Mind the gap.]]</code>.
+</p>
+
+<p>
+A block names what its document's head needs, added once, by <code>:latex-head</code> and <code>:html-head</code>; say,
+<code>(org-defblock thm (&amp;optional title :latex-head ("amsthm" "\\newtheorem{theorem}{Theorem}")) …)</code>. A
+LaTeX item is a package name or any preamble line; an HTML item is HTML, a symbol holding it, or
+<code>mathjax</code>. An export that uses the block adds each item its head lacks; one that does not, adds none.
+The lists go unquoted; e.g., <code>:html-head (mathjax my-html-head "&lt;style&gt;.aside {color: gray}&lt;/style&gt;")</code>.
+</p>
+
+<p>
+Name a package, <code>"amsthm"</code>, rather than write <code>"\\usepackage{amsthm}"</code>: a name is left be when the
+document loads it already, options and all &mdash;say, <code>\usepackage[thmmarks]{amsthm}</code>&mdash; whereas a line
+is left be only when the document has that very line; else the package loads twice, and differing
+options clash.
+</p>
+
+<p>
+Even Org's own blocks ---<code>quote</code>, <code>verse</code>, <code>center</code>, <code>example</code>, <code>src</code>, <code>export</code>, and <code>comment</code>&mdash;
+are fair game: an <code>(org-defblock verse …)</code> overrides every <code>#+begin_verse</code>, saying so in
+<code>*Messages*</code>. To leave some to Org, a handler hands them back; by way of example, a verse
+signed by its poet, else Org's own:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> verse (<span style="color: #c18401;">&amp;optional</span> poet)
+  <span style="color: #50a14f;">"A verse, signed by POET; sans one, Org's own verse."</span>
+  (<span style="color: #a626a4;">if</span> (org-string-nw-p poet)
+      (format <span style="color: #50a14f;">"\\begin{verse}\n%s\n\\end{verse}\n--- %s"</span> contents poet)
+    (org-parse (org-builtin-block <span style="color: #50a14f;">"verse"</span> raw-contents))))
+</code></pre>
+</div>
+<p>
+Our own <code>quote</code> does just this: given a citation, it is ours; else, Org's own. Moreover, defaults may change long after the
+block is defined, just as a src block's header-args do &mdash;there is nothing new to learn. A
+<code>NAME</code> block reads them as a src block of language <code>NAME</code> would; from weakest to strongest:
+<code>(setq org-babel-default-header-args:note '((:color . "orange")))</code>, then
+<code>#+property: header-args:note :color orange</code> for the whole file, then <code>:header-args:note:</code> in
+a heading's drawer for its subtree ---<code>:header-args:note+:</code> adds to it&mdash; then <code>#+header:</code>
+lines just above the block, and finally the block's own line. By way of example, every note
+in this section is orange, and the second is boxed too:
+</p>
+<pre class="example">
+* Exercises
+:PROPERTIES:
+:header-args:note: :color orange
+:END:
+
+#+begin_note Hint
+Try induction.
+#+end_note
+
+#+header: :boxed t
+#+begin_note Answer
+By induction on n.
+#+end_note
+</pre>
+<p>
+A main argument is given by its name, as in <code>:title Hint</code>; and <a href="#Switches-for-every-block">switches</a>, such as <code>:let</code> and
+<code>:folded</code>, are inherited alike &mdash;a src block of language <code>LANG</code> even takes them from Babel's
+own <code>header-args:LANG</code>. See <code>C-h f org--block-header-args</code>.
+</p>
+
+<p>
+One definition gives three uses: a block, a link, and a tag. A section tagged <code>:note:</code>
+exports as a <code>note</code> block around its own text, up to the next heading; the tag's
+underscore-separated items form the main argument &mdash;tags cannot hold spaces&mdash; and the
+section's properties supply keyword arguments by name. So all three of these agree:
+</p>
+<pre class="example">
+#+begin_note "Heads up" :color red
+Mind the gap.
+#+end_note
+
+[[note:Heads up][Mind the gap.]]
+
+* Why bother?        :note_Heads_up:
+:PROPERTIES:
+:COLOR: red
+:END:
+Mind the gap.
+</pre>
+<p>
+Likewise, the package's own blocks are links and tags too; e.g., <code>:details_Hint:</code> folds a
+section's text away under the title <i>Hint</i>. Try tagging a heading <code>:red:</code> &mdash;or <code>:blue:</code>,
+<code>:teal:</code>, … any of the 19 colours&mdash; and its text exports in that colour.
+</p>
+
+<p>
+Should we not want all three, the options <code>:link nil</code> and <code>:tag nil</code> decline the link and
+the tag, whereas <code>:block nil</code> keeps only the link and tag &mdash;e.g.,
+<code>(org-defblock note (&amp;optional (title "Note") :tag nil) …)</code>. The variable
+<code>org-defblock-links-and-tags</code> sets whether blocks come with links and tags by default; its
+documentation weighs the trade-off &mdash;chiefly namespacing: every block claims the link type
+<code>NAME:</code> and the tag <code>:NAME:</code>. So, should <code>:red:</code> already mean something else in our
+headings, we set <code>org-defblock-links-and-tags</code> to nil before loading this package. For just a
+link, or just a tag, there are <code>org-deflink</code> and <code>org-deftag</code>, below.
+</p>
+
+<p>
+A tag wraps only its section's own text, since a block cannot hold a heading. By way of
+example, in <code>* Abstract :abstract:</code> with a <code>** Aside</code> beneath it, the aside stays outside
+the box. Declaring <code>:tag [:subsections MODE]</code> picks what becomes of subsections:
+</p>
+<ul class="org-ul">
+<li><code>ignore</code> &mdash;the default, as with <code>:tag t</code>&mdash; leaves them outside the block;</li>
+<li><code>error</code> refuses a tagged section that has any, naming both headings; and</li>
+<li><code>recurse</code> wraps each subsection's own text in a block of its own, with the same
+arguments, unless the subsection carries the tag itself.</li>
+</ul>
+
+<p>
+A block may also say how it looks in our Org buffers, via the option <code>:fontify</code>: below,
+<code>#+begin_proof</code> shows as <i>Proof.</i>, <code>#+end_proof</code> as ⏹, and the contents in italics too.
+Each part is optional; the text itself is untouched, only displayed differently.
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> proof (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #e44649;">:fontify</span> [<span style="color: #e44649;">:begin</span> <span style="color: #50a14f;">"Proof."</span> <span style="color: #e44649;">:end</span> <span style="color: #50a14f;">"&#9209;"</span> <span style="color: #e44649;">:face</span> 'italic]) &#8230;)
+</code></pre>
+</div>
+<p>
+Moreover, <code>:keywords</code> shows patterns within the contents in a face of their choosing; e.g.,
+an <a href="#Aligned-equations">align</a> block shows each <code>:tag-blue:</code> as a tag, in blue, by
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span style="color: #e44649;">:fontify</span> [<span style="color: #e44649;">:keywords</span> '((<span style="color: #50a14f;">":tag-</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">: \t\n]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">:"</span> 0 org--align-tag-face))]
+</code></pre>
+</div>
+<p>
+where a face that is a function is called, with the match data at hand, for the face.
+</p>
+
+<p>
+<i>Convenience:</i> For the terse-minded, the arglist may be flattened into the main argument
+and its default, followed by key-value pairs. The block above is then
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> note (title <span style="color: #50a14f;">"Note"</span> color <span style="color: #50a14f;">"teal"</span>) &#8230;)
+</code></pre>
+</div>
+
+<p>
+The full story is at <code>C-h o org-defblock</code>.
+</p>
+</div>
+</div>
+<div id="outline-container-Make-your-own-links" class="outline-3">
+<h3 id="Make-your-own-links"><span class="section-number-3">3.2.</span> <a href="#Make-your-own-links">Make your own links with <code>org-deflink</code></a></h3>
+<div class="outline-text-3" id="text-Make-your-own-links">
+<p>
+An Org link <code>[[NAME:label][description]]</code> is a function of its label and description;
+so, we declare one as we would a <code>cl-defun</code>, then say how it exports and how it looks
+within Emacs.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> shout (label <span style="color: #c18401;">&amp;optional</span> description backend)
+  <span style="color: #50a14f;">"Shout the description, else the label."</span>
+  <span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:weight</span> bold <span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"red"</span>)
+  <span style="color: #e44649;">:help-echo</span> (format <span style="color: #50a14f;">"I'll shout %s"</span> (<span style="color: #a626a4;">or</span> description label))
+  <span style="color: #e44649;">:export</span> (format (<span style="color: #a626a4;">if</span> (eq backend 'latex) <span style="color: #50a14f;">"\\textbf{%s}"</span> <span style="color: #50a14f;">"&lt;b&gt;%s&lt;/b&gt;"</span>)
+                  (upcase (<span style="color: #a626a4;">or</span> description label))))
+</code></pre>
+</div>
+
+<p>
+Then <code>shout:hello</code> and <code>[[shout:hello][hey there]]</code> export as <b>HELLO</b> and <b>HEY THERE</b>.
+The arglist names the label, description, and export backend, in that order; any may be
+omitted from the end, and <code>(description "…")</code> gives a default. Besides <code>:export</code>, the
+keys <code>:face</code>, <code>:help-echo</code>, <code>:follow</code>, <code>:keymap</code>, <code>:display</code> and <code>:let</code> customise the link
+within Emacs; <code>C-h o org-deflink</code> has the details.
+</p>
+
+<p>
+<i>Convenience:</i> The arglist may be omitted, whence the anaphoric names <code>o-label</code>,
+<code>o-description</code> and <code>o-backend</code> are used instead:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> shout
+  <span style="color: #50a14f;">"Shout the description, else the label."</span>
+  <span style="color: #e44649;">:export</span> (upcase (<span style="color: #a626a4;">or</span> o-description o-label)))
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-tags-are-functions-of-org-sections" class="outline-3">
+<h3 id="tags-are-functions-of-org-sections"><span class="section-number-3">3.3.</span> <a href="#tags-are-functions-of-org-sections">Tags are functions of Org sections: <code>org-deftag</code></a></h3>
+<div class="outline-text-3" id="text-tags-are-functions-of-org-sections">
+<p>
+<center> <a href="https://i.redd.it/rre5ggpx9jya1.png" class="tooltip" title="Image credit Musa"><img src="https://i.redd.it/rre5ggpx9jya1.png" alt="Article image"
+             width="100%" height="100%" align="top"/></a> </center>
+</p>
+
+<p>
+Just as a special block is a function on a region of text, so too a tag is construable
+as a function on an Org section (<a href="https://www.reddit.com/r/emacs/comments/13bdlck/tags_are_functions_of_org_sections_%E1%B4%97%D9%88/">Reddit post</a>). By way of example, the following
+renders any section tagged <code>:quote:</code> as a <code>&lt;blockquote&gt;</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deftag</span> quote (<span style="color: #c18401;">&amp;optional</span> (color <span style="color: #50a14f;">"black"</span>) <span style="color: #c18401;">&amp;key</span> cite)
+  <span style="color: #50a14f; font-style: italic;">"HTML export a section as a &lt;blockquote&gt;, its text coloured COLOR, crediting CITE."</span>
+  (insert <span style="color: #50a14f;">"\n#+html:"</span> (format <span style="color: #50a14f;">"&lt;blockquote style=\"color: %s\"&gt;"</span> color))
+  (org-next-visible-heading 1)
+  (insert (<span style="color: #a626a4;">if</span> cite (format <span style="color: #50a14f;">"\n#+html: &lt;cite&gt;%s&lt;/cite&gt;"</span> cite) <span style="color: #50a14f;">""</span>) <span style="color: #50a14f;">"\n#+html: &lt;/blockquote&gt;"</span>))
+</code></pre>
+</div>
+
+<p>
+As with <code>cl-defun</code>, the <code>&amp;optional</code> arguments are positional: the underscore-separated
+items after the tag's name bind them in order. Any the tag omits are read from the
+section's property of the same name, and then default. The <code>&amp;key</code> arguments are read from
+properties only &mdash;handy for lots of named info.
+</p>
+<pre class="example">
+* Tags are functions of Org sections        :quote_blue:
+* Tags are functions of Org sections        :quote:
+:PROPERTIES:
+:COLOR: blue
+:CITE: Musa
+:END:
+</pre>
+<p>
+When both the tag and a property give an argument, the tag wins.
+</p>
+
+<p>
+<i>Convenience:</i> The arglist may be flattened into name-default pairs, all positional;
+<code>(org-deftag quote (color "black") …)</code> is the above, sans <code>cite</code>.
+</p>
+
+<p>
+The body runs at export time, with point where the heading used to be &mdash;it has been
+erased, along with its property drawer, so we reinsert <code>o-heading</code> if we want it. The body may mention
+</p>
+<ul class="org-ul">
+<li><code>o-backend</code> &mdash;the export backend, such as <code>html</code> or <code>latex</code>;</li>
+<li><code>o-heading</code> &mdash;the heading's text, sans the tag;</li>
+<li><code>o-properties</code> &mdash;all of the section's properties, as a plist such as <code>(:color "blue")</code>; and</li>
+<li><code>o-drawer</code> &mdash;the erased property drawer, as text, should we want it back.</li>
+</ul>
+
+<p>
+Sections without the tag are left untouched, property drawers and all.
+</p>
+
+<p>
+Often, all we want is for a section to export as one of our special blocks; for that, we
+need no tag of our own &mdash;see the <code>:tag t</code> option of <code>org-defblock</code>, <a href="#Make-your-own-blocks">above</a>. By way of
+example, <code>:details_Hint:</code> folds a section's text away under the title <i>Hint</i>.
+</p>
+
+<p>
+The full story is at <code>C-h o org-deftag</code>.
+</p>
+</div>
+</div>
+<div id="outline-container-C-c-C-c-for-your-own-blocks" class="outline-3">
+<h3 id="C-c-C-c-for-your-own-blocks"><span class="section-number-3">3.4.</span> <a href="#C-c-C-c-for-your-own-blocks"><code>C-c C-c</code> for your own blocks</a></h3>
+<div class="outline-text-3" id="text-C-c-C-c-for-your-own-blocks">
+<p>
+Org's <code>C-c C-c</code> does the obvious thing at point: it runs a src block, ticks a checkbox,
+recalculates a table. Our special blocks may join in; one <code>org-def-action</code> gives every
+<code>#+begin_NAME</code> … <code>#+end_NAME</code> block a <code>C-c C-c</code> action, as one <code>org-defblock</code> gives it an export.
+</p>
+
+<p>
+For a single block, the <code>:C-c_C-c</code> switch suffices: <code>#+begin_quiz :C-c_C-c my/check-answers</code>
+makes <code>C-c C-c</code> within that block call <code>my/check-answers</code>; a Lisp form, rather than a
+function name, is evaluated instead. For every block of a kind, we define an action:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> shout () <span style="color: #50a14f;">"Upcase the contents."</span> (upcase contents))
+
+(<span style="color: #a626a4;">org-def-action</span> shout (<span style="color: #c18401;">&amp;optional</span> greeting <span style="color: #c18401;">&amp;key</span> (volume 1))
+  <span style="color: #50a14f; font-style: italic;">"Announce the shout's GREETING, at VOLUME."</span>
+  (message <span style="color: #50a14f;">"%s, at %s: %s"</span> greeting volume raw-contents))
+</code></pre>
+</div>
+
+<p>
+Then <code>C-c C-c</code> within <code>#+begin_shout Hello :volume 11</code> … <code>#+end_shout</code> says <i>Hello, at 11: …</i>.
+The arglist is the block's, in either of <code>org-defblock</code>'s styles; the body sees the
+arguments by name &mdash;those the block <a href="#Make-your-own-blocks">inherits</a>, by <code>header-args:shout</code>, too&mdash; and the
+block's text as <code>raw-contents</code>, with point within the block. A non-nil value claims the key
+press, so Org does nothing else with it; nil declines it, leaving it to the block's
+<code>:C-c_C-c</code> switch, if any.
+</p>
+
+<p>
+For a complete worked example, we may mimic the <abbr class="tooltip" tabindex="0">graph<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> block's handler,
+<a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-graph-block.el">org-graph&ndash;cc-handler</a>. It
+</p>
+<ul class="org-ul">
+<li>finds its block via <code>(re-search-backward "^[ \t]*#\\+begin_graph\\b")</code> then <code>(org-special-block-after-point "graph")</code>;</li>
+<li>reads the block's keyword arguments, so <code>#+begin_graph :C-c_C-c dot</code> changes what <code>C-c C-c</code> does;</li>
+<li>honours <code>C-u</code> via <code>current-prefix-arg</code> &mdash;showing the dot source rather than rendering a PNG;</li>
+<li>inserts a <code>#+RESULTS:</code> section after <code>#+end_graph</code>, just as src blocks do; and</li>
+<li>returns <code>t</code>, claiming the keypress.</li>
+</ul>
+
+<p>
+It is the graph's action, at the end of <code>org-graph-block.el</code>:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-def-action</span> graph ()
+  <span style="color: #50a14f; font-style: italic;">"Render the graph at point, or show its dot source; see `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">org-graph--cc-handler</span><span style="color: #50a14f; font-style: italic;">'."</span>
+  (org-graph--cc-handler))
+</code></pre>
+</div>
+
+<p>
+The dispatcher itself &mdash;a single function on <code>org-ctrl-c-ctrl-c-hook</code>&mdash; lives in
+<a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-ctrl-c-ctrl-c-for-special-block.el">org-ctrl-c-ctrl-c-for-special-block.el</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-C-c-quote-for-your-own-blocks" class="outline-3">
+<h3 id="C-c-quote-for-your-own-blocks"><span class="section-number-3">3.5.</span> <a href="#C-c-quote-for-your-own-blocks"><code>C-c '</code> to edit a block in its own buffer</a></h3>
+<div class="outline-text-3" id="text-C-c-quote-for-your-own-blocks">
+<p>
+Just as <code>C-c '</code> edits a src block in a buffer of its language, so too it edits every special
+block &mdash;ours, or any <code>#+begin_𝒳</code> at all&mdash; in an Org buffer; <code>C-c '</code> again writes the contents
+back. Org keeps all it already does: a table, a link, or a src block within a special block is
+edited as ever.
+</p>
+
+<p>
+A block may instead choose its buffer's mode: the option <code>:edit-indirect-mode MODE</code> makes
+<code>C-c '</code> open the block's contents in a buffer in <code>MODE</code>. By way of example, the <abbr class="tooltip" tabindex="0">graph<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> block
+is declared with <code>:edit-indirect-mode org-graph-edit-mode</code>, an Org mode that completes Graphviz
+attributes.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> poem (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #e44649;">:edit-indirect-mode</span> text-mode)
+  <span style="color: #50a14f;">"Set CONTENTS in italics, under TITLE."</span>
+  (format <span style="color: #50a14f;">"&lt;h3&gt;%s&lt;/h3&gt;&lt;em&gt;%s&lt;/em&gt;"</span> title contents))
+</code></pre>
+</div>
+
+<p>
+For an action beyond an edit buffer, <code>(org-defblock-add-edit-special-handler "poem" #'my-handler)</code>
+registers any function of no arguments, just as <code>C-c C-c</code> handlers are registered &mdash;see
+<a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-special-block-indirect-edit.el">org-special-block-indirect-edit.el</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-C-c-C-v-C-d-to-split-a-block" class="outline-3">
+<h3 id="C-c-C-v-C-d-to-split-a-block"><span class="section-number-3">3.6.</span> <a href="#C-c-C-v-C-d-to-split-a-block"><code>C-c C-v C-d</code> to split a block in two</a></h3>
+<div class="outline-text-3" id="text-C-c-C-v-C-d-to-split-a-block">
+<p>
+Just as <code>C-c C-v C-d</code> splits a src block at point, so too it splits any special block, after
+<a href="https://scripter.co/splitting-an-org-block-into-two/">Kaushal Modi's trick</a>; each piece keeps the block's whole <code>#+begin_</code> line, header arguments
+and all. By way of example, with point at the start of <code>Two.</code>,
+</p>
+<pre class="example">
+#+begin_tip Mind
+One.
+Two.
+#+end_tip
+</pre>
+<p>
+becomes
+</p>
+<pre class="example">
+#+begin_tip Mind
+One.
+#+end_tip
+
+#+begin_tip Mind
+Two.
+#+end_tip
+</pre>
+
+<p>
+At a line's end, the split falls after that line; an active region is split off as a piece of
+its own; and <code>C-u C-c C-v C-d</code> puts a heading between the pieces. In a src block within a
+special block, it is the src block that is split, as ever. The command is
+<code>org-special-block-split</code>, should you want it on a key of its own.
+</p>
+</div>
+</div>
+<div id="outline-container-eldoc-for-blocks-and-links" class="outline-3">
+<h3 id="eldoc-for-blocks-and-links"><span class="section-number-3">3.7.</span> <a href="#eldoc-for-blocks-and-links">Hover for a block's arguments: <code>eldoc</code></a></h3>
+<div class="outline-text-3" id="text-eldoc-for-blocks-and-links">
+<p>
+With point on a <code>#+begin_NAME</code> or <code>#+end_NAME</code> line, or on a <code>NAME:</code> link, the echo area
+&mdash;or <a href="https://github.com/casouri/eldoc-box">eldoc-box</a>, should we use it&mdash; shows how the block is called, defaults and all, along
+with the first line of its docstring:
+</p>
+<pre class="example">
+#+begin_details TITLE="Details" :background-color "#e5f5e5" :title-color "green": Enclose contents in a folded up box, for HTML.
+</pre>
+<p>
+This needs no setup beyond <code>org-special-block-extras-mode</code>, and works for our own blocks too.
+For the full story of a block, <code>C-h o org-block/NAME</code>.
+</p>
+
+<p>
+Likewise, completing on a <code>#+begin_</code> line ---<code>M-TAB</code>, or any completion popup&mdash; offers every
+block's name beside the first line of its docstring, and Org's own blocks beside them; a popup's
+documentation pane shows the block's whole docstring.
+</p>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Blocks, links, and switches for Org, exported alike to HTML, LaTeX, and Markdown.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2" role="doc-backlink">2</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">GitHub's alerts: a coloured rule and a titled heading; Markdown gets the alerts themselves.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.3" class="footnum" href="#fnr.3" role="doc-backlink">3</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Draw attention to text, fold it away, or set ideas side by side.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.4" class="footnum" href="#fnr.4" role="doc-backlink">4</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Notes that stay out of the reader's way: in the margin in LaTeX, hovered or tapped in HTML. Org's own footnotes join them.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.5" class="footnum" href="#fnr.5" role="doc-backlink">5</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">19 named colours, each a block and a link, and a highlight that colours the background.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.6" class="footnum" href="#fnr.6" role="doc-backlink">6</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Aligned equations, with coloured tags that <code>eqref:𝒳</code> cites; equational proofs and proof trees, as Org lists.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.7" class="footnum" href="#fnr.7" role="doc-backlink">7</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Org lists drawn by Graphviz; this very map is one.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.8" class="footnum" href="#fnr.8" role="doc-backlink">8</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Define a term once, cite it everywhere with <code>doc:𝒳</code>; <code>show:GLOSSARY</code> lists every citation.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.9" class="footnum" href="#fnr.9" role="doc-backlink">9</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A term's definition as a tooltip; or a Lisp expression's value, inline.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.10" class="footnum" href="#fnr.10" role="doc-backlink">10</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Keys as keycaps, their command's documentation as a tooltip; click one in Emacs to run it.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.11" class="footnum" href="#fnr.11" role="doc-backlink">11</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Shields.io badges, for a project's README.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.12" class="footnum" href="#fnr.12" role="doc-backlink">12</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara"><code>red:𝒳</code>, <code>[[box:Title][…]]</code>, and the like: a block's one-line form.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.13" class="footnum" href="#fnr.13" role="doc-backlink">13</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Export a block only for some backends, or never.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.14" class="footnum" href="#fnr.14" role="doc-backlink">14</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Substitute variables beforehand; or drop the block's behaviour, keeping its text.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.15" class="footnum" href="#fnr.15" role="doc-backlink">15</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Box the result, or fold it away; on src and quote blocks too.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.16" class="footnum" href="#fnr.16" role="doc-backlink">16</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Show the block's source; with demo, beside its result.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.17" class="footnum" href="#fnr.17" role="doc-backlink">17</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A block's action: render a graph, run a :C-c<sub>C</sub>-c form.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.18" class="footnum" href="#fnr.18" role="doc-backlink">18</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Edit any special block's contents in a buffer of their own.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.19" class="footnum" href="#fnr.19" role="doc-backlink">19</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Split any special block in two at point.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.20" class="footnum" href="#fnr.20" role="doc-backlink">20</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Hover a #+begin_ line, or a link, for its arguments and gist.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.21" class="footnum" href="#fnr.21" role="doc-backlink">21</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A block, its link, and its tag, from one cl-defun-style definition.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.22" class="footnum" href="#fnr.22" role="doc-backlink">22</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A link type: how it looks in Emacs and how it exports.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.23" class="footnum" href="#fnr.23" role="doc-backlink">23</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A heading tag as a function of its section.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.24" class="footnum" href="#fnr.24" role="doc-backlink">24</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Compose blocks: solution is details of a box of details.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.25" class="footnum" href="#fnr.25" role="doc-backlink">25</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">May a document's :when, :let, and :C-c<sub>C</sub>-c run Lisp? Ask, by default.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.26" class="footnum" href="#fnr.26" role="doc-backlink">26</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Inline the tooltips' CSS and JS in HTML exports; on, by default.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.27" class="footnum" href="#fnr.27" role="doc-backlink">27</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Org files whose glossary entries every document may cite.</p></div></div>
+
+
+</div>
+</div><hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://alhassy.com/resources/cc-by-sa-3.0-88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>

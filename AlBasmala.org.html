@@ -1245,7 +1245,7 @@ then escape to '&amp;lt;br&amp;gt;' and be shown as text."</span>
   (concat
    <span style="color: #50a14f;">"&lt;a class=\"tooltip\" title=\"See the various edits to this article over time\" href=\""</span>
    (map-elt json <span style="color: #50a14f;">"history"</span>)
-   <span style="color: #50a14f;">"\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/-History-informational?logo=github">https://img.shields.io/badge/-History-informational?logo=github</a>\"&gt;&lt;/a&gt;"</span>))
+   <span style="color: #50a14f;">"\"&gt;&lt;img src=\"<a href="https://alhassy.com/resources/badge-history.svg">https://alhassy.com/resources/badge-history.svg</a>\"&gt;&lt;/a&gt;"</span>))
 
 <span style="color: #a0a1a7;">#+end_src
 </span>
@@ -1302,6 +1302,38 @@ Example use:  (@tags (seq-elt blog-posts 0))
 
 Every article has an image ^_^ ---a =resources/= filename, a path, or a URL; =emacs-birthday-present.png= otherwise.
 <span style="color: #a0a1a7;">  #+html: &lt;center&gt; &lt;img src="resources/emacs-birthday-present.png" width=100 height=100&gt; &lt;/center&gt;</span>
+
+Credits live in one place: =resources/credits.org= holds a table, one row per file, that =@image= and
+=image:= consult by filename whenever a spec carries no explicit credit.
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog--credits-cache</span> nil
+  <span style="color: #50a14f; font-style: italic;">"(MTIME . ROWS) of resources/credits.org, so we parse the table only when it changes."</span>)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--credit</span> (file)
+  <span style="color: #50a14f; font-style: italic;">"FILE &#8614; its Org-formatted credit line from resources/credits.org, or nil when uncredited."</span>
+  (<span style="color: #a626a4;">let</span> ((credits (expand-file-name <span style="color: #50a14f;">"resources/credits.org"</span> blog-posts-directory)))
+    (<span style="color: #a626a4;">when</span> (file-exists-p credits)
+      (<span style="color: #a626a4;">let</span> ((mtime (file-attribute-modification-time (file-attributes credits))))
+        (<span style="color: #a626a4;">unless</span> (equal mtime (car blog--credits-cache))
+          (<span style="color: #a626a4;">setq</span> blog--credits-cache
+                (cons mtime (<span style="color: #a626a4;">with-temp-buffer</span>
+                              (insert-file-contents credits)
+                              (re-search-forward org-table-line-regexp)
+                              (org-table-to-lisp))))))
+      (<span style="color: #a626a4;">-when-let</span> ((_ title creator source licence licence-url)
+                  (assoc (file-name-nondirectory file) (cdr blog--credits-cache)))
+        (format <span style="color: #50a14f;">"Image credit: <a href="%s">[[%s][&#8220;%s&#8221;]]</a> by %s, %s."</span> source title creator
+                (<span style="color: #a626a4;">if</span> (s-blank? licence-url) licence (format <span style="color: #50a14f;">"<a href="%s">[[%s][%s]]</a>"</span> licence-url licence)))))))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--org-links-to-html</span> (s)
+  <span style="color: #50a14f; font-style: italic;">"S &#8614; S with every Org link <a href="url">[[url][text]]</a> rendered as an &lt;a&gt; anchor."</span>
+  (replace-regexp-in-string <span style="color: #50a14f;">"\\[\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">]]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">]]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\]"</span> <span style="color: #50a14f;">"&lt;a href=\"\\1\"&gt;\\2&lt;/a&gt;"</span> s))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--org-links-to-plain</span> (s)
+  <span style="color: #50a14f; font-style: italic;">"S &#8614; S with every Org link <a href="url">[[url][text]]</a> reduced to its text; e.g., for a tooltip."</span>
+  (replace-regexp-in-string <span style="color: #50a14f;">"\\[\\<a href="^">[[</a></span><span style="color: #50a14f; font-weight: bold;"><a href="^">^</a></span><span style="color: #50a14f;"><a href="^">]]</a>+\\]\\[</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">[</span><span style="color: #50a14f; font-weight: bold;">^</span><span style="color: #50a14f;">]]+</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\]\\]"</span> <span style="color: #50a14f;">"\\1"</span> s))
+<span style="color: #a0a1a7;">#+end_src
+</span>
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">@image</span> (json <span style="color: #c18401;">&amp;optional</span> explicit-image-path-prefix)
   <span style="color: #50a14f; font-style: italic;">"Assemble the value of '#+fileimage: image width height border?' as an HTML form.
@@ -1312,22 +1344,26 @@ in the image path.
 
 Example use:  (@image (seq-elt blog-posts 0))
 
-Here are 4 example uses:
+Here are 3 example uses:
 
 ,#+fileimage: emacs-birthday-present.png
 ,#+fileimage: ../resources/emacs-birthday-present.png
-,#+fileimage: <a href="https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg">https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg</a> 350 300
-,#+fileimage: <a href="https://unsplash.com/photos/Vc2dD4l57og">https://unsplash.com/photos/Vc2dD4l57og</a>
+,#+fileimage: <a href="https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg">https://upload.wikimedia.org/wikipedia/en/6/64/Dora_and_Boots.jpg</a> 350 300 Photo by <a href="https://example.com">[[https://example.com][Dora]]</a>, CC BY 2.0.
 
-+ Notice that the second indicates explicit width and height.
++ Notice that the third indicates explicit width and height.
++ It also ends with an optional credit: all text after the height (and after an optional =no-border=),
+  rendered as a caption beneath the image, with Org links =<a href="url">[[url][text]]</a>= becoming anchors.
+  Without one, the image's row in resources/credits.org, if any, is the caption.
 + (To make the first approach work in previews regardless of where the
    buffer's file lives, we need the variable EXPLICIT-IMAGE-PATH-PREFIX,
    which `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--inner-template</span><span style="color: #50a14f; font-style: italic;">' sets to the deployed
    <a href="https://alhassy.com/resources/">https://alhassy.com/resources/</a> URL rather than a local relative path.
    This requires a slash at the end.)
-+ The unsplash approach is specific: It shows the *main* image in the provided URL, and links to the provided URL.
 "</span>
-  (<span style="color: #a626a4;">-let</span> [(image width height no-border?) (s-split <span style="color: #50a14f;">" "</span> (map-elt json <span style="color: #50a14f;">"image"</span>))]
+  (<span style="color: #a626a4;">-let*</span> (((image width height . rest) (s-split <span style="color: #50a14f;">" "</span> (map-elt json <span style="color: #50a14f;">"image"</span>)))
+          (no-border? (equal (car rest) <span style="color: #50a14f;">"no-border"</span>))
+          (credit (<span style="color: #a626a4;">or</span> (s-presence (s-join <span style="color: #50a14f;">" "</span> (<span style="color: #a626a4;">if</span> no-border? (cdr rest) rest)))
+                      (blog--credit image))))
     (<span style="color: #a626a4;">setq</span> width (<span style="color: #a626a4;">or</span> width 350))
     (<span style="color: #a626a4;">setq</span> height (<span style="color: #a626a4;">or</span> height 350))
     (<span style="color: #a626a4;">setq</span> no-border? (<span style="color: #a626a4;">if</span> no-border? <span style="color: #50a14f;">""</span> <span style="color: #50a14f;">"style=\"border: 2px solid black;\""</span>))
@@ -1335,14 +1371,13 @@ Here are 4 example uses:
      ((s-contains? <span style="color: #50a14f;">"/"</span> image) t) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">It's a URL, or explicit path, do nothing to it.
 </span>     (explicit-image-path-prefix (<span style="color: #a626a4;">setq</span> image (format <span style="color: #50a14f;">"%s%s"</span>  explicit-image-path-prefix image)))
      ((not (s-contains? <span style="color: #50a14f;">"/"</span> image)) (<span style="color: #a626a4;">setq</span> image (format <span style="color: #50a14f;">"resources/%s"</span> image))))
-    (<span style="color: #a626a4;">-let</span> [unsplash (cl-second (s-match <span style="color: #50a14f;">".*unsplash.com/photos/</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">"</span> image))]
-      (<span style="color: #a626a4;">setq</span> href (<span style="color: #a626a4;">if</span> unsplash (concat <span style="color: #50a14f;">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span> unsplash) image))
-      (<span style="color: #a626a4;">setq</span> title (format <span style="color: #50a14f;">"Image credit %s"</span> (<span style="color: #a626a4;">if</span> unsplash (concat <span style="color: #50a14f;">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span> unsplash) image)))
-      (<span style="color: #a626a4;">setq</span> src (<span style="color: #a626a4;">if</span> unsplash (format <span style="color: #50a14f;">"<a href="https://source.unsplash.com/%s/%sx%s">https://source.unsplash.com/%s/%sx%s</a>"</span> unsplash width height) image))
-      (s-collapse-whitespace
-       (format <span style="color: #50a14f;">"&lt;center class=\"post-image\"&gt;&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
-             %s width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;&lt;/center&gt;"</span>
-              href title src no-border? width height)))))
+    (s-collapse-whitespace
+     (format <span style="color: #50a14f;">"&lt;center class=\"post-image\"&gt;&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
+             %s width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;%s&lt;/center&gt;"</span>
+             image (<span style="color: #a626a4;">if</span> (s-blank? credit) (concat <span style="color: #50a14f;">"Image credit "</span> image) (blog--org-links-to-plain credit))
+             image no-border? width height
+             (<span style="color: #a626a4;">if</span> (s-blank? credit) <span style="color: #50a14f;">""</span>
+               (format <span style="color: #50a14f;">"&lt;br&gt;&lt;small class=\"image-credit\"&gt;%s&lt;/small&gt;"</span> (blog--org-links-to-html credit)))))))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 <span style="color: #8b4513; font-weight: bold;">** blog--article-style, blog--make-slug: Utilities for the </span><span style="color: #8b4513; font-weight: bold;">=multiple=</span><span style="color: #8b4513; font-weight: bold;"> article style </span><span style="color: #8b4513; font-weight: bold;">:details:</span>
@@ -1651,6 +1686,10 @@ interactively after editing :SITE_NAV: headings."</span>
          (mapconcat (<span style="color: #a626a4;">lambda</span> (p)
                       (format <span style="color: #50a14f;">"  &lt;a href=\"%s\"&gt;%s&lt;/a&gt;\n"</span> (@url p) (map-elt p <span style="color: #50a14f;">"site_nav"</span>)))
                     blog-pages <span style="color: #50a14f;">""</span>)
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A red badge on any live page means CI failed, so the site lags master.
+</span>         <span style="color: #50a14f;">"  &lt;br/&gt;&lt;a href=\"<a href="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml">https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml</a>\"&gt;"</span>
+         <span style="color: #50a14f;">"&lt;img style=\"vertical-align:middle\" alt=\"build status\""</span>
+         <span style="color: #50a14f;">" src=\"<a href="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml/badge.svg?branch=master">https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml/badge.svg?branch=master</a>\"&gt;&lt;/a&gt;\n"</span>
          <span style="color: #50a14f;">"&lt;/div&gt;"</span>)))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--refresh-posts</span> ()
@@ -1957,7 +1996,7 @@ see the source/history/support links up top ---nobody scrolls to the bottom."</s
      (@history post)
      <span style="color: #50a14f;">"&amp;ensp;"</span>
      <span style="color: #50a14f;">"&lt;a href=\"<a href="https://www.buymeacoffee.com/alhassy">https://www.buymeacoffee.com/alhassy</a>\"&gt;&lt;img src="</span>
-     <span style="color: #50a14f;">"\"<a href="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee">https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee</a>\"&gt;"</span>
+     <span style="color: #50a14f;">"\"<a href="https://alhassy.com/resources/badge-buy-me-a-coffee.svg">https://alhassy.com/resources/badge-buy-me-a-coffee.svg</a>\"&gt;"</span>
      <span style="color: #50a14f;">"&lt;/a&gt;"</span>
      <span style="color: #50a14f;">"&lt;/center&gt;"</span>)))
 
@@ -2031,10 +2070,14 @@ Each =.org.html= page is htmlize's =inline-css= rendering: the file as Emacs sho
 </span>(advice-add 'htmlize-buffer-1 <span style="color: #e44649;">:around</span>
             (<span style="color: #a626a4;">lambda</span> (orig <span style="color: #c18401;">&amp;rest</span> args) (<span style="color: #a626a4;">let</span> ((inhibit-message t)) (apply orig args))))
 
+<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Faces like (:background white) name colours by symbol, which htmlize's string-match chokes on.
+</span>(advice-add 'htmlize-color-to-rgb <span style="color: #e44649;">:filter-args</span>
+            (<span style="color: #a626a4;">lambda</span> (args) (cons (<span style="color: #a626a4;">if</span> (<span style="color: #a626a4;">and</span> (car args) (symbolp (car args))) (symbol-name (car args)) (car args)) (cdr args))))
+
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--source-badge</span> (url)
   <span style="color: #50a14f; font-style: italic;">"URL &#8614; the &#8220;Source&#8221; badge linking to an article's colourised Org source."</span>
   (concat <span style="color: #50a14f;">"&lt;a class=\"tooltip\" title=\"See the colourised Org source of this article; i.e., what I typed to get this nice webpage\" href=\""</span>
-          url <span style="color: #50a14f;">"\"&gt;&lt;img src=\"<a href="https://img.shields.io/badge/-Source-informational?logo=read-the-docs">https://img.shields.io/badge/-Source-informational?logo=read-the-docs</a>\"&gt;&lt;/a&gt;"</span>))
+          url <span style="color: #50a14f;">"\"&gt;&lt;img src=\"<a href="https://alhassy.com/resources/badge-source.svg">https://alhassy.com/resources/badge-source.svg</a>\"&gt;&lt;/a&gt;"</span>))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--htmlize-to</span> (name)
   <span style="color: #50a14f; font-style: italic;">"Write the current Org buffer, fully unfolded and htmlized with inline CSS, to `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-publish-directory</span><span style="color: #50a14f; font-style: italic;">'/NAME.org.html.
@@ -2072,7 +2115,7 @@ The &lt;title&gt; is the buffer's file name, so callers let-bind `</span><span s
 &lt;center style=\"font-size: 12px\"&gt;
   &lt;a rel=\"license\" href=\"<a href="https://creativecommons.org/licenses/by-sa/3.0/">https://creativecommons.org/licenses/by-sa/3.0/</a>\"&gt;
      &lt;img alt=\"Creative Commons License\" style=\"border-width:0\"
-          src=\"<a href="https://i.creativecommons.org/l/by-sa/3.0/88x31.png\&quot;/">https://i.creativecommons.org/l/by-sa/3.0/88x31.png\"/</a>&gt;
+          src=\"<a href="https://alhassy.com/resources/cc-by-sa-3.0-88x31.png\&quot;/">https://alhassy.com/resources/cc-by-sa-3.0-88x31.png\"/</a>&gt;
   &lt;/a&gt;
 
   &lt;br/&gt;
@@ -2148,12 +2191,12 @@ broken image.  <span style="text-decoration: underline;"><a href="file:arabic-ro
  <span style="color: #50a14f;">"Show one of 6 hardcoded phrases as a small inline image."</span>
  (<span style="color: #a626a4;">-let</span> [url
         (<span style="color: #a626a4;">pcase</span> o-label
-          (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"<a href="https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png">https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png</a>"</span>)
-          (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"<a href="https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png">https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png</a>"</span>)
-          (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"<a href="https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png">https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png</a>"</span>)
-          (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"<a href="https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png">https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png</a>"</span>)
-          (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"<a href="https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png">https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png</a>"</span>)
-          (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"<a href="https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png">https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png</a>"</span>)
+          (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-take-a-break.png">https://alhassy.com/resources/iraqi-sign-take-a-break.png</a>"</span>)
+          (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-yes.png">https://alhassy.com/resources/iraqi-sign-yes.png</a>"</span>)
+          (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-no.png">https://alhassy.com/resources/iraqi-sign-no.png</a>"</span>)
+          (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-agree.png">https://alhassy.com/resources/iraqi-sign-agree.png</a>"</span>)
+          (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-disagree.png">https://alhassy.com/resources/iraqi-sign-disagree.png</a>"</span>)
+          (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-question.png">https://alhassy.com/resources/iraqi-sign-question.png</a>"</span>)
           (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"<a href="arabic:%s">arabic:%s</a> is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> o-label)))]
    (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url o-label url)))
 <span style="color: #a0a1a7;">#+end_src
@@ -2402,16 +2445,27 @@ Its behaviour <span style="text-decoration: underline;"><a href="https://www.w3s
  <span style="color: #a0a1a7; font-weight: bold;">/* </span><span style="color: #a0a1a7;">wrap lengthy lines for code blocks</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
  <span style="color: #0184bc;">pre</span>{<span style="color: #a626a4;">white-space</span>:pre-wrap}
 
- <span style="color: #a0a1a7; font-weight: bold;">/* </span><span style="color: #a0a1a7;">Also curvy inline code with ~ &#8943; ~ and = &#8943; =</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+ <span style="color: #a0a1a7; font-weight: bold;">/* </span><span style="color: #a0a1a7;">Iosevka Slab (SIL OFL), self-hosted and subset to Latin, Greek, arrows &amp; maths; &#224; la ogbe.net</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+ <span style="color: #e44649;">@font-face</span> { <span style="color: #a626a4;">font-family</span>: <span style="color: #50a14f;">"Iosevka Slab Web"</span>; <span style="color: #a626a4;">font-display</span>: swap; <span style="color: #a626a4;">font-weight</span>: normal; <span style="color: #a626a4;">font-style</span>: normal;
+              <span style="color: #a626a4;">src</span>: url(<span style="color: #50a14f;">'fonts/iosevka-slab-regular.woff2'</span>) format(<span style="color: #50a14f;">'woff2'</span>) }
+ <span style="color: #e44649;">@font-face</span> { <span style="color: #a626a4;">font-family</span>: <span style="color: #50a14f;">"Iosevka Slab Web"</span>; <span style="color: #a626a4;">font-display</span>: swap; <span style="color: #a626a4;">font-weight</span>: bold;   <span style="color: #a626a4;">font-style</span>: normal;
+              <span style="color: #a626a4;">src</span>: url(<span style="color: #50a14f;">'fonts/iosevka-slab-bold.woff2'</span>) format(<span style="color: #50a14f;">'woff2'</span>) }
+ <span style="color: #e44649;">@font-face</span> { <span style="color: #a626a4;">font-family</span>: <span style="color: #50a14f;">"Iosevka Slab Web"</span>; <span style="color: #a626a4;">font-display</span>: swap; <span style="color: #a626a4;">font-weight</span>: normal; <span style="color: #a626a4;">font-style</span>: italic;
+              <span style="color: #a626a4;">src</span>: url(<span style="color: #50a14f;">'fonts/iosevka-slab-italic.woff2'</span>) format(<span style="color: #50a14f;">'woff2'</span>) }
+
+ <span style="color: #0184bc;">pre, code</span> { <span style="color: #a626a4;">font-family</span>: <span style="color: #50a14f;">"Iosevka Slab Web"</span>, monospace <span style="color: #e44649;">!important</span>; }
+
+ <span style="color: #a0a1a7; font-weight: bold;">/* </span><span style="color: #a0a1a7;">Inline code with ~ &#8943; ~ and = &#8943; = sits in its paragraph: the slab face on a faint blush ---the old pink, whispering</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
  <span style="color: #0184bc;">code</span> {
-     <span style="color: #a0a1a7; font-weight: bold;">/* </span><span style="color: #a0a1a7;">background: Cyan !important;</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
-     <span style="color: #a626a4;">background</span>: <span style="color: #ffffff; background-color: #ffc0cb;">pink</span> <span style="color: #e44649;">!important</span>;
-     <span style="color: #a626a4;">border-radius</span>: 7px;
-     <span style="color: #a0a1a7; font-weight: bold;">/* </span><span style="color: #a0a1a7;">border: 1px solid lightgrey; background: #FFFFE9; padding: 2px</span><span style="color: #a0a1a7; font-weight: bold;"> */</span>
+     <span style="color: #a626a4;">background</span>: <span style="color: #ffffff; background-color: #ffc0cb;">rgba(255, 192, 203, 0.3)</span> <span style="color: #e44649;">!important</span>;
+     <span style="color: #a626a4;">border-radius</span>: 3px;
+     <span style="color: #a626a4;">padding</span>: 0 0.2em;
+     <span style="color: #a626a4;">font-size</span>: 0.95em;
  }
 <span style="color: #a0a1a7;">#+end_src
 </span>
-Code such as ~(= 2 (+ 1 1))~ now sticks out with a pink background &#9829;&#8255;&#9829;
+Code such as ~(= 2 (+ 1 1))~ now reads as part of its sentence: a slab-serif monospace face on a faint
+blush, enough to mark it as code without shouting over the prose.
 
 <span style="color: #a626a4; font-weight: bold;">*** Pink Tables                                                     </span><span style="color: #a626a4; font-weight: bold;">:details:</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
@@ -2598,7 +2652,7 @@ at export time, via =blog--stable-headline-ids=, so CI never emits random ids.
 Two headings named, say, =Notes= would share the slug =notes=; plain &#12308;<a href="kbd:C-x_C-s">C-x</a> <a href="kbd:C-x_C-s">C-</a>s&#12309; refuses, while
 &#12308;<a href="kbd:C-u_C-x_C-s">C-u</a> <a href="kbd:C-u_C-x_C-s">C-x</a> <a href="kbd:C-u_C-x_C-s">C-</a>s&#12309; stamps =notes--placeholder-2=, &#8230; so we can preview a rough draft right away.  Since
 =blog--make-slug= collapses dash runs, no real slug contains =--=, so the marker is unambiguous:
-every later save logs each placeholder to =*Messages*= ---&#12308;<a href="kbd:C-h_e">C-h</a> e&#12309;--- until we name it properly.
+every later save logs each placeholder to =*Messages*= ---&#12308;<a href="kbd:C-h_e---">C-h</a> <a href="kbd:C-h_e---">e--</a>-&#12309; until we name it properly.
 
 <span style="color: #a0a1a7;">#+begin_details "blog--ensure-useful-section-anchors: Run on every C-x C-s"
 </span>#+BEGIN_SRC emacs-lisp
@@ -3501,7 +3555,7 @@ jobs:
         run: |
           emacs --batch \
             --eval "(require 'package)" \
-            --eval "(setq package-archives '((\"melpa\" . \"<a href="https://melpa.org/packages/">https://melpa.org/packages/</a>\")))" \
+            --eval "(setq package-archives '((\"gnu\" . \"<a href="https://elpa.gnu.org/packages/">https://elpa.gnu.org/packages/</a>\") (\"melpa\" . \"<a href="https://melpa.org/packages/">https://melpa.org/packages/</a>\")) package-install-upgrade-built-in t)" \
             --eval "(package-initialize)" \
             --eval "(package-refresh-contents)" \
             --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))" \
@@ -3665,16 +3719,15 @@ Example usage:
 "</span>
 <span style="color: #a0a1a7; font-weight: bold;">;;             </span><span style="color: #a0a1a7;">(upcase (or o-description o-label))
 </span>  (<span style="color: #a626a4;">-let</span> [(image width height center? credit?) (s-split <span style="color: #50a14f;">"|"</span> o-label)]
-    (<span style="color: #a626a4;">-let</span> [unsplash (cl-second (s-match <span style="color: #50a14f;">".*unsplash.com/photos/</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">.*</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">"</span> image))]
-      (<span style="color: #a626a4;">let*</span> ((href (<span style="color: #a626a4;">if</span> unsplash (concat <span style="color: #50a14f;">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span> unsplash) image))
-            (title (format <span style="color: #50a14f;">"Image credit %s"</span> (<span style="color: #a626a4;">or</span> credit? (<span style="color: #a626a4;">if</span> unsplash (concat <span style="color: #50a14f;">"<a href="https://unsplash.com/photos/">https://unsplash.com/photos/</a>"</span> unsplash) image))))
-            (src (<span style="color: #a626a4;">if</span> unsplash (format <span style="color: #50a14f;">"<a href="https://source.unsplash.com/%s/%sx%s">https://source.unsplash.com/%s/%sx%s</a>"</span> unsplash width height) image))
-            (it (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
+    (<span style="color: #a626a4;">let</span> ((it (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;"</span>
-                        href title src width height)))
-        (<span style="color: #a626a4;">if</span> center?
-            (format <span style="color: #50a14f;">"&lt;center&gt; %s &lt;/center&gt;"</span> it)
-          it)))))
+                      image
+                      (<span style="color: #a626a4;">if</span> credit? (concat <span style="color: #50a14f;">"Image credit "</span> credit?)
+                        (<span style="color: #a626a4;">or</span> (<span style="color: #a626a4;">-some-&gt;</span> (blog--credit image) blog--org-links-to-plain) (concat <span style="color: #50a14f;">"Image credit "</span> image)))
+                      image width height)))
+      (<span style="color: #a626a4;">if</span> center?
+          (format <span style="color: #50a14f;">"&lt;center&gt; %s &lt;/center&gt;"</span> it)
+        it))))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 <span style="color: #a626a4; font-weight: bold;">*** Known bug and proposed fix.                                    </span><span style="color: #a626a4; font-weight: bold;">:noexport:</span>
@@ -3895,12 +3948,12 @@ tree.
   <span style="color: #50a14f;">"Show one of 6 hardcoded phrases as a small inline image."</span>
   (<span style="color: #a626a4;">-let</span> [url
          (<span style="color: #a626a4;">pcase</span> o-label
-           (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"<a href="https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png">https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-19.png</a>"</span>)
-           (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"<a href="https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png">https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-20.png</a>"</span>)
-           (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"<a href="https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png">https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-21.png</a>"</span>)
-           (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"<a href="https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png">https://i0.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-22.png</a>"</span>)
-           (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"<a href="https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png">https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-23.png</a>"</span>)
-           (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"<a href="https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png">https://i1.wp.com/oerabic.llc.ed.ac.uk/wp-content/uploads/2020/09/Visual-Communication-Signs-IRAQI-35.png</a>"</span>))]
+           (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-take-a-break.png">https://alhassy.com/resources/iraqi-sign-take-a-break.png</a>"</span>)
+           (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-yes.png">https://alhassy.com/resources/iraqi-sign-yes.png</a>"</span>)
+           (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-no.png">https://alhassy.com/resources/iraqi-sign-no.png</a>"</span>)
+           (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-agree.png">https://alhassy.com/resources/iraqi-sign-agree.png</a>"</span>)
+           (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-disagree.png">https://alhassy.com/resources/iraqi-sign-disagree.png</a>"</span>)
+           (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-question.png">https://alhassy.com/resources/iraqi-sign-question.png</a>"</span>))]
     (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url o-label url)))
 <span style="color: #a0a1a7;">#+end_src
 </span>
@@ -3927,23 +3980,23 @@ tree.
     - per article via advice
 
 <span style="color: #a0a1a7;"> #+begin_export html
-</span> &lt;footer class="container"&gt;
-     &lt;div class="site-footer"&gt;
+</span> &lt;<span style="color: #0184bc;">footer</span> <span style="color: #8b4513;">class</span>=<span style="color: #50a14f;">"container"</span>&gt;
+     &lt;<span style="color: #0184bc;">div</span> <span style="color: #8b4513;">class</span>=<span style="color: #50a14f;">"site-footer"</span>&gt;
 
-         &lt;div class="copyright pull-left"&gt;
+         &lt;<span style="color: #0184bc;">div</span> <span style="color: #8b4513;">class</span>=<span style="color: #50a14f;">"copyright pull-left"</span>&gt;
              Powered by
-             &lt;a href="<a href="https://github.com/alhassy/emacs.d">https://github.com/alhassy/emacs.d</a>"&gt;Emacs&lt;/a&gt;
-         &lt;/div&gt;
+             &lt;<span style="color: #0184bc;">a</span> <span style="color: #8b4513;">href</span>=<span style="color: #50a14f;">"<a href="https://github.com/alhassy/emacs.d">https://github.com/alhassy/emacs.d</a>"</span>&gt;Emacs&lt;/<span style="color: #0184bc;">a</span>&gt;
+         &lt;/<span style="color: #0184bc;">div</span>&gt;
 
-         &lt;a href="<a href="https://github.com/alhassy">https://github.com/alhassy</a>" target="_blank" aria-label="view source code"&gt;
+         &lt;<span style="color: #0184bc;">a</span> <span style="color: #8b4513;">href</span>=<span style="color: #50a14f;">"<a href="https://github.com/alhassy">https://github.com/alhassy</a>"</span> <span style="color: #8b4513;">target</span>=<span style="color: #50a14f;">"_blank"</span> <span style="color: #8b4513;">aria-label</span>=<span style="color: #50a14f;">"view source code"</span>&gt;
              octicon-github
-         &lt;/a&gt;
+         &lt;/<span style="color: #0184bc;">a</span>&gt;
 
-         &lt;div class="pull-right"&gt;
-             &lt;a href="javascript:window.scrollTo(0,0)" &gt;TOP&lt;/a&gt;
-         &lt;/div&gt;
-     &lt;/div&gt;
- &lt;/footer&gt;
+         &lt;<span style="color: #0184bc;">div</span> <span style="color: #8b4513;">class</span>=<span style="color: #50a14f;">"pull-right"</span>&gt;
+             &lt;<span style="color: #0184bc;">a</span> <span style="color: #8b4513;">href</span>=<span style="color: #50a14f;">"javascript:window.scrollTo(0,0)"</span> &gt;TOP&lt;/<span style="color: #0184bc;">a</span>&gt;
+         &lt;/<span style="color: #0184bc;">div</span>&gt;
+     &lt;/<span style="color: #0184bc;">div</span>&gt;
+ &lt;/<span style="color: #0184bc;">footer</span>&gt;
 <span style="color: #a0a1a7;"> #+end_export
 </span>
  + Footer should include
@@ -4727,8 +4780,8 @@ width="142" height="142" align="top"&gt; &lt;/center&gt;
 
 
 <span style="color: #a0a1a7;"> #+BEGIN_EXPORT html
-</span> &lt;table style="width:100%"&gt;
-   &lt;tr&gt;
+</span> &lt;<span style="color: #0184bc;">table</span> <span style="color: #8b4513;">style</span>=<span style="color: #50a14f;">"width:100%"</span>&gt;
+   &lt;<span style="color: #0184bc;">tr</span>&gt;
 <span style="color: #a0a1a7;"> #+END_EXPORT
 </span>
 <span style="color: #a0a1a7;"> #+HTML: &lt;td&gt;</span>
@@ -4739,14 +4792,14 @@ width="142" height="142" align="top"&gt; &lt;/center&gt;
 
 <span style="color: #a0a1a7;"> #+HTML:  &lt;td&gt; Results in, &lt;br&gt; &lt;br&gt; &lt;br&gt;</span>
 <span style="color: #a0a1a7;"> #+BEGIN_EXPORT html
-</span> &lt;iframe src="../assets/demoing_template.html" style="width:100%" height="487"&gt;
+</span> &lt;<span style="color: #0184bc;">iframe</span> <span style="color: #8b4513;">src</span>=<span style="color: #50a14f;">"../assets/demoing_template.html"</span> <span style="color: #8b4513;">style</span>=<span style="color: #50a14f;">"width:100%"</span> <span style="color: #8b4513;">height</span>=<span style="color: #50a14f;">"487"</span>&gt;
      alternative content for browsers which do not support iframe.
- &lt;/iframe&gt;
+ &lt;/<span style="color: #0184bc;">iframe</span>&gt;
 <span style="color: #a0a1a7;"> #+END_EXPORT
 </span><span style="color: #a0a1a7;"> #+HTML:  &lt;/td&gt;</span>
 <span style="color: #a0a1a7;"> #+BEGIN_EXPORT html
-</span>   &lt;/tr&gt;
- &lt;/table&gt;
+</span>   &lt;/<span style="color: #0184bc;">tr</span>&gt;
+ &lt;/<span style="color: #0184bc;">table</span>&gt;
 <span style="color: #a0a1a7;"> #+END_EXPORT
 </span>
 <span style="color: #a0a1a7;"> #+latex: In the LaTeX format, this content is not supported.</span>

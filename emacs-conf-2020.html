@@ -1,0 +1,1445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-10-17 Sat 04:58 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Powering-up Special Blocks: EmacsConf 2020 slides</title>
+<meta name="description" content="The EmacsConf 2020 talk on org-special-block-extras: a modular interface for special blocks and links.
+A modular interface for special blocks and links: defblock" />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-c:before { content: 'C'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'JavaScript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+<style>
+.spoiler {color: pink; background-color:pink;}
+.spoiler:hover {color: black; background-color:white;}
+<style>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<style>
+</style>
+<script>
+</script>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style></head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+  <br/><a href="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml"><img style="vertical-align:middle" alt="build status" src="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml/badge.svg?branch=master"></a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">Powering-up Special Blocks: EmacsConf 2020 slides</h1></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/emacs-conf-2020.org.html"><img src="https://alhassy.com/resources/badge-source.svg"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/org-special-block-extras/commits/master/emacs-conf-2020.org"><img src="https://alhassy.com/resources/badge-history.svg"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://alhassy.com/resources/badge-buy-me-a-coffee.svg"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#Overview">1. Overview</a></li>
+<li><a href="#motivation">2. Motivation</a></li>
+<li><a href="#Once-upon-a-time">3. Once upon a time</a>
+<ul>
+<li><a href="#what-kind-of-feedback">3.1. What <i>kind</i> of feedback?</a></li>
+<li><a href="#example-text-and-feedback">3.2. Example 💓 Text and Feedback</a></li>
+<li><a href="#Amin-️-LaTeX">3.3. Amin ❤️ LaTeX</a></li>
+<li><a href="#Sacha-PDF">3.4. Sacha 💔 PDF</a></li>
+<li><a href="#Amin-HTML">3.5. Amin 💢 HTML</a></li>
+<li><a href="#">3.6. 💥 😧 💭  📖</a></li>
+<li><a href="#How-to-set-up-special-blocks">3.7. How to set up special blocks?</a></li>
+<li><a href="#Corwin-Terse">3.8. Corwin  🥶 🤔 🥊 <i>Terse!</i></a></li>
+<li><a href="#How-to-setup-Org-links">3.9. How to setup Org links?</a></li>
+<li><a href="#The-friends-learn-a-lot">3.10. The friends learn a lot!</a></li>
+</ul>
+</li>
+<li><a href="#Goals">4. Goals</a>
+<ul>
+<li><a href="#Solving-the-friend's-trilemma">4.1. Solving the friend's trilemma</a></li>
+<li><a href="#Line-1-Declare-a-block">4.2. Line 1: <i>Declare</i> a block</a></li>
+<li><a href="#Line-2-Document-the-block">4.3. Line 2: <i>Document</i> the block</a></li>
+<li><a href="#Lines-3-6-Do-the-thing">4.4. Lines 3-6: <i>Do the thing!</i></a></li>
+<li><a href="#Anaphoric">4.5. <i>Anaphoric?</i></a></li>
+<li><a href="#How-do-the-feedback">4.6. <i>How do the feedback?</i></a></li>
+</ul>
+</li>
+<li><a href="#More-Blocks">5. More Blocks!</a></li>
+<li><a href="#Bye">6. Bye!</a></li>
+</ul>
+</div>
+</div>
+<div class="org-center">
+<p>
+⭐ The code lives at <a href="https://github.com/alhassy/org-special-block-extras">github.com/alhassy/org-special-block-extras</a> &mdash;star it, or <a href="https://github.com/alhassy/org-special-block-extras/issues">discuss it there</a>! <a href="https://github.com/alhassy/org-special-block-extras"><img src="https://img.shields.io/github/stars/alhassy/org-special-block-extras?style=social"></a>
+</p>
+</div>
+<style>
+
+.reveal .slide-number {
+  font-size: 34pt;
+  color: #ff2D00; }
+
+.reveal .slides {
+  height: 100%;
+  width: 100% !important ;
+  top: 0;
+  margin-top: 0;
+}
+
+.reveal .slides>section {
+  min-height: 90%;
+  min-width:  90%;
+}
+
+.reveal .slides>section>section {
+  min-height: 100%;
+}
+
+.print-pdf .reveal .slides > section.present, .print-pdf .reveal .slides > section > section.present {
+  min-height: 770px !important;
+  position: relative !important;
+}
+
+.reveal table th, .reveal table td {
+    text-align: left;
+    border: none;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+}
+
+.reveal ul {
+    line-height: 200%
+}
+
+.reveal ol {
+    line-height: 200%
+}
+
+.reveal dl {
+    line-height: 200%
+}
+
+.reveal p {
+    line-height: 200%
+}
+
+.reveal pre {
+    font-size: 1em;
+    box-shadow:none;
+}
+
+</style>
+<div id="outline-container-Overview" class="outline-2">
+<h2 id="Overview"><span class="section-number-2">1.</span> <a href="#Overview">Overview</a></h2>
+<div class="outline-text-2" id="text-Overview">
+<p>
+With a bit of Lisp &mdash;and a lot of time&mdash; we obtain
+</p>
+
+<small>
+
+<ol class="org-ol">
+<li><p>
+a uniform, and <b>practical</b>, syntax for both <i>special blocks</i> and <i>link types</i>
+</p>
+<br></li>
+<li><p>
+reusing the Org <code>src</code> interface &mdash;including arguments for blocks
+and <b>global header arguments</b> for links
+</p>
+<br></li>
+<li><p>
+<b>“write once, generate many”</b>: Write markup in Org and have
+it exported to other backends!
+</p>
+<br></li>
+</ol>
+
+<details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
+<summary><strong><font face="Courier" size="3" color="green">(•̀ᴗ•́)و</font></strong></summary>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Idea</th>
+<th scope="col" class="org-left">Documentation</th>
+<th scope="col" class="org-left">Link only?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Colours</td>
+<td class="org-left"><abbr class="tooltip" tabindex="0">latex-definitions<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">color<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></td>
+<td class="org-left">&nbsp;</td>
+</tr>
+
+<tr>
+<td class="org-left">Parallel</td>
+<td class="org-left"><abbr class="tooltip" tabindex="0">parallel<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></td>
+<td class="org-left">&nbsp;</td>
+</tr>
+
+<tr>
+<td class="org-left">Editorial Remarks</td>
+<td class="org-left"><abbr class="tooltip" tabindex="0">remark<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></td>
+<td class="org-left">&nbsp;</td>
+</tr>
+
+<tr>
+<td class="org-left">Folded Details</td>
+<td class="org-left"><abbr class="tooltip" tabindex="0">details<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> ,  <abbr class="tooltip" tabindex="0">box<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></td>
+<td class="org-left">&nbsp;</td>
+</tr>
+
+<tr>
+<td class="org-left">Keystrokes</td>
+<td class="org-left"><abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">C-c C-e</kbd><template><pre>C-c C-e ∷ org-export-dispatch
+Export dispatcher for Org mode.
+
+It provides an access to common export related tasks in a buffer.
+Its interface comes in two flavors: standard and expert.
+
+While both share the same set of bindings, only the former
+displays the valid keys associations in a dedicated buffer.
+Scrolling (resp. line-wise motion) in this buffer is done with
+SPC and DEL (resp. C-n and C-p) keys.
+
+Set variable ‘org-export-dispatch-use-expert-ui’ to switch to one
+flavor or the other.
+
+When ARG is ‘C-u’, repeat the last export action, with the same
+set of options used back then, on the current buffer.
+
+When ARG is ‘C-u C-u’, display the asynchronous export stack.
+
+(fn &amp;optional ARG)</pre></template></abbr></td>
+<td class="org-left"><code>kbd</code></td>
+</tr>
+
+<tr>
+<td class="org-left">OctoIcons &amp; Link Here</td>
+<td class="org-left"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M0 2a1 1 0 011-1h14a1 1 0 011 1v9a1 1 0 01-1 1H7l-4 4v-4H1a1 1 0 01-1-1V2zm1 0h14v9H6.5L4 13.5V11H1V2zm6 6h2v2H7V8zm0-5h2v4H7V3z"></path></svg> <a class="anchor" aria-hidden="true" id="Overview" href="#Overview"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a></td>
+<td class="org-left"><code>octoicon</code>, <code>link-here</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Documentation-Glossary</td>
+<td class="org-left"><abbr class="tooltip" tabindex="0">documentation<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></td>
+<td class="org-left"><code>doc</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Other fun stuff: <abbr class="tooltip" tabindex="0">solution<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">org-demo<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">stutter<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">rename<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">spoiler<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> (─‿‿─)
+</p>
+
+</details>
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Incidentally</h3> 
+<p>
+😂 The setup joyously works for org-reveal 😹
+</p>
+
+<p>
+🥰 🍭 🦄 😆
+</p>
+</div>
+
+</small>
+</div>
+</div>
+<div id="outline-container-motivation" class="outline-2">
+<h2 id="motivation"><span class="section-number-2">2.</span> <a href="#motivation">Motivation</a></h2>
+<div class="outline-text-2" id="text-motivation">
+<p>
+See an <b><span style="color:green;">aesthetically pleasing style</span></b> online and seek to reproduce it …
+</p>
+<br>
+
+<style> .spoiler-grey {color: grey; background-color:grey;} .spoiler-grey:hover {color: black; background-color:white;} </style>
+<p>
+⇄ The author wrote raw HTML
+</p>
+
+<p>
+<span class="spoiler-grey"> Obscures my source with styling information! </span>
+</p>
+
+<p>
+⇄ The author wraps the HTML in an <code>{{{Org-macro}}}</code>
+</p>
+
+<p>
+<span class="spoiler-grey"> Not useful if I want to export to PDF! </span>
+</p>
+
+<p>
+⇄ <span style="color:red;">The author doesn't even provide the source!</span>
+</p>
+
+<p>
+<span class="spoiler-grey"> Time to ‘View Page Source’ and do a lot of reading! </span>
+</p>
+
+<p>
+⇉ We want <b><b><span style="color:magenta;">Org users</span></b></b> to have <b><span style="color:green;">numerous</span></b> styles available
+and an <b><span style="color:green;">extensible</span></b> mechanism to add more! ⇇
+</p>
+</div>
+</div>
+<div id="outline-container-Once-upon-a-time" class="outline-2">
+<h2 id="Once-upon-a-time"><span class="section-number-2">3.</span> <a href="#Once-upon-a-time">Once upon a time</a></h2>
+<div class="outline-text-2" id="text-Once-upon-a-time">
+<p>
+Three friends ---<span style="color:green;">Amin</span>, <span style="color:red;">Sacha</span>, and <span style="color:blue;">Corwin---</span> were organising a conference
+</p>
+
+<p>
+&hellip; <b><span style="color:orange;">EmacsConf2020</span>!</b>
+</p>
+
+<br>
+<p>
+Sacha wrote an Org file and wanted some <b>feedback</b>
+</p>
+
+<br>
+<details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
+<summary><strong><font face="Courier" size="3" color="green">Source for this slide!</font></strong></summary>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Three friends ---<span style="color: #00ff00;"><a href="green:Amin">green:Amin</a></span>, <span style="color: #ff0000;"><a href="red:Sacha">red:Sacha</a></span>,
+and <span style="color: #0000ff;"><a href="blue:Corwin---">blue:Corwin---</a></span> were organising a conference
+
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+... <span style="font-weight: bold;">*</span><span style="color: #ffa500; font-weight: bold;"><a href="orange:EmacsConf2020">orange:EmacsConf2020</a></span><span style="font-weight: bold;">!*</span>
+
+<span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
+<span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
+Sacha wrote an Org file and wanted some <span style="font-weight: bold;">*feedback*</span>
+</code></pre>
+</div>
+
+</details>
+</div>
+<div id="outline-container-what-kind-of-feedback" class="outline-3">
+<h3 id="what-kind-of-feedback"><span class="section-number-3">3.1.</span> <a href="#what-kind-of-feedback">What <i>kind</i> of feedback?</a></h3>
+<div class="outline-text-3" id="text-what-kind-of-feedback">
+<ul class="org-ul">
+<li><p>
+top-level <abbr class="tooltip" tabindex="0">remarks<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> <i>visible in the export</i>
+</p>
+
+<p>
+… suggest <span style="color:red;">replacement</span> text
+</p>
+
+<p>
+… this is not possible, <span style="color:green;">elegantly</span>, with raw HTML!
+</p>
+
+<br></li>
+
+<li><p>
+<abbr class="tooltip" tabindex="0">translate<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> in the export
+</p>
+
+<p>
+… everyone speaks different languages!
+</p>
+
+<p>
+… or suggest a rewrite, without altering the other person's
+text
+</p>
+
+<p>
+… this is not possible with raw HTML <span style="color:red;">at all</span>!
+</p></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-example-text-and-feedback" class="outline-3">
+<h3 id="example-text-and-feedback"><span class="section-number-3">3.2.</span> <a href="#example-text-and-feedback">Example 💓 Text and Feedback</a></h3>
+<div class="outline-text-3" id="text-example-text-and-feedback">
+<p>
+Sacha …
+</p>
+<div style="column-count: 2;">
+<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Writes</h3> 
+<div ><pre class="src src-org">Let's begin at $\sqrt{3 + \sum_{i = 0}^{12} i}$ in the *morning*.</pre></div>
+</div>
+<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Sees</h3> 
+<p>
+Let's begin at \(\sqrt{3 + \sum_{i = 0}^{12} i}\) in the <b>morning</b>.
+</p>
+</div>
+</div>
+<p>
+She gets feedback …
+</p>
+
+<div style="column-count: 2;">
+<small>
+<p style="color: black;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Amin:</strong></span> 
+<p>
+How about
+</p>
+
+<p>
+<code class="src src-emacs-lisp">(sqrt (apply '+ 3 (number-sequence 0 12)))</code> ;-)
+</p>
+<span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+</small>
+
+<hr>
+
+<small>
+<p style="color: black;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Corwin:</strong></span> 
+<p>
+C'mon guys, let's just say <b>9 am</b>!
+</p>
+<span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+</small>
+</div>
+</div>
+</div>
+<div id="outline-container-Amin-️-LaTeX" class="outline-3">
+<h3 id="Amin-️-LaTeX"><span class="section-number-3">3.3.</span> <a href="#Amin-️-LaTeX">Amin ❤️ LaTeX</a></h3>
+<div class="outline-text-3" id="text-Amin-️-LaTeX">
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+Amin likes to export to PDF, so he wrote top-level
+remarks using LaTeX
+</p>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+latex: {\color{green} \fbox{[Amin:}}</span>
+  Please change &#8230;
+<span style="color: #a0a1a7;">#+latex:  \fbox{]}</span>
+</code></pre>
+</div>
+
+<p style="color: green;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Amin:</strong></span> 
+<p>
+Please change …
+</p>
+<span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+</div>
+</div>
+<div id="outline-container-Sacha-PDF" class="outline-3">
+<h3 id="Sacha-PDF"><span class="section-number-3">3.4.</span> <a href="#Sacha-PDF">Sacha 💔 PDF</a></h3>
+<div class="outline-text-3" id="text-Sacha-PDF">
+<div style="padding: 1em;background-color: #FFCCFF;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+But Sacha likes to look at the resulting <span style="color:green;">HTML</span>! … not PDFs!
+</p>
+</div>
+
+<div style="padding: 1em;background-color: #CCFFFF;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+So, she <i>may</i> <span style="color:red;">not</span> see his top-level feedback
+and she <i>may</i> <span style="color:red;">forgot</span> to look at the Org source
+</p>
+</div>
+
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+Happily, she thinks things are <span style="color:red;">all</span> <span style="color:red;">good</span> &hellip;!
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-Amin-HTML" class="outline-3">
+<h3 id="Amin-HTML"><span class="section-number-3">3.5.</span> <a href="#Amin-HTML">Amin 💢 HTML</a></h3>
+<div class="outline-text-3" id="text-Amin-HTML">
+<p>
+Sacha may write top-level feedback …
+</p>
+
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+html: &lt;strong&gt; [Sacha Speculates: &lt;/strong&gt;</span>
+
+I think that maybe we could try &#8230;
+
+<span style="color: #a0a1a7;">#+html: &lt;strong&gt; End of speculations] &lt;/strong&gt;</span>
+</code></pre>
+</div>
+</div>
+
+<p style="color: black;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Sacha Speculates:</strong></span> 
+<p>
+I think that maybe we could try …
+</p>
+<strong> End of speculations</strong> <span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+Now Amin exports to PDF; take a quick glance and
+not notice anything standing out; thinks <span style="color:red;"> <i>it's all OK</i></span>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-" class="outline-3">
+<h3 id=""><span class="section-number-3">3.6.</span> <a href="#">💥 😧 💭  📖</a></h3>
+<div class="outline-text-3" id="text-">
+<p>
+Corwin <span style="color:cyan;">actually</span> reads an exported result, and is worried at what he sees.
+</p>
+
+<br>
+<p>
+Amin &amp; Sacha agree to read up and make <b><span style="color:green;">a uniform Org interface that
+exports to both HTML &amp; PDF</span></b>
+</p>
+
+<br>
+<p>
+They use Org <i>“special blocks”</i>!
+</p>
+</div>
+</div>
+<div id="outline-container-How-to-set-up-special-blocks" class="outline-3">
+<h3 id="How-to-set-up-special-blocks"><span class="section-number-3">3.7.</span> <a href="#How-to-set-up-special-blocks">How to set up special blocks?</a></h3>
+<div class="outline-text-3" id="text-How-to-set-up-special-blocks">
+<p>
+They agree to figure out the necessary <span style="color:magenta;">Lisp</span>,
+</p>
+
+<p>
+<span style="color:cyan;">hooks</span>, <span style="color:blue;">advice</span>, and <span style="color:violet;">macros</span> needed to form a
+</p>
+
+<p>
+special custom block that outputs <b>both</b> HTML and PDF, <br> <span style="color:green;">but</span>
+uses Org as interface.
+</p>
+
+<p>
+So much work, but it's worth it!
+</p>
+
+<p>
+<span style="color:red;">&hellip;!?</span>
+</p>
+</div>
+</div>
+<div id="outline-container-Corwin-Terse" class="outline-3">
+<h3 id="Corwin-Terse"><span class="section-number-3">3.8.</span> <a href="#Corwin-Terse">Corwin  🥶 🤔 🥊 <i>Terse!</i></a></h3>
+<div class="outline-text-3" id="text-Corwin-Terse">
+<p>
+Corwin likes to provide <span style="color:blue;">terse</span>, <i>right to the point</i>, feedback
+and thinks blocks are overkill.
+</p>
+
+<p>
+The team decides to incorporate an <span style="color:red;">Org-link</span> <span style="color:red;">type</span>
+</p>
+
+<p>
+and <span style="color:green;">&mdash;to avoid duplication of code!---</span> they have the link
+type reuse the core code of the block type.
+</p>
+</div>
+</div>
+<div id="outline-container-How-to-setup-Org-links" class="outline-3">
+<h3 id="How-to-setup-Org-links"><span class="section-number-3">3.9.</span> <a href="#How-to-setup-Org-links">How to setup Org links?</a></h3>
+<div class="outline-text-3" id="text-How-to-setup-Org-links">
+<p>
+They have their <span style="color:pink;">own interface</span>&hellip;!
+</p>
+
+<p>
+<span style="color:gray;">Need</span>
+<span style="color:violet;">to</span>
+<span style="color:magenta;">learn</span>
+a
+<span style="color:red;">little</span>
+<span style="color:blue;">about</span>
+</p>
+<p>
+<b><span style="color:teal;">font</span></b>,
+<span style="color:orange;">follow</span>
+<span style="color:cyan;">links</span>,
+<span style="color:purple;">export</span>
+<span style="color:pink;">handles</span>.
+</p>
+
+<p>
+Eek
+<span style="color:green;">&hellip;!</span>
+</p>
+</div>
+</div>
+<div id="outline-container-The-friends-learn-a-lot" class="outline-3">
+<h3 id="The-friends-learn-a-lot"><span class="section-number-3">3.10.</span> <a href="#The-friends-learn-a-lot">The friends learn a lot!</a></h3>
+<div class="outline-text-3" id="text-The-friends-learn-a-lot">
+<ul class="org-ul">
+<li><abbr class="tooltip" tabindex="0">defun<template><pre>Define NAME as a function.
+The definition is (lambda ARGLIST [DOCSTRING] [INTERACTIVE] BODY...).
+DECL is a declaration, optional, of the form (declare DECLS...) where
+DECLS is a list of elements of the form (PROP . VALUES).  These are
+interpreted according to ‘defun-declarations-alist’.
+INTERACTIVE is an optional ‘interactive’ specification.
+The return value is undefined.
+
+(fn NAME ARGLIST [DOCSTRING] [DECL] [INTERACTIVE] BODY...)</pre></template></abbr>, for making <span style="color:red;">functions</span> to format their blocks!</li>
+<li><abbr class="tooltip" tabindex="0">advice-add<template><pre>Like ‘add-function’ but for the function named SYMBOL.
+Contrary to ‘add-function’, this will properly handle the cases where SYMBOL
+is defined as a macro, alias, command, ...
+HOW can be one of:
+ :around        (lambda (&amp;rest r) (apply FUNCTION OLDFUN r))
+ :before        (lambda (&amp;rest r) (apply FUNCTION r) (apply OLDFUN r))
+ :after         (lambda (&amp;rest r) (prog1 (apply OLDFUN r) (apply FUNCTION r)))
+ :override      (lambda (&amp;rest r) (apply FUNCTION r))
+ :after-until   (lambda (&amp;rest r) (or (apply OLDFUN r) (apply FUNCTION r)))
+ :after-while   (lambda (&amp;rest r) (and (apply OLDFUN r) (apply FUNCTION r)))
+ :before-until  (lambda (&amp;rest r) (or (apply FUNCTION r) (apply OLDFUN r)))
+ :before-while  (lambda (&amp;rest r) (and (apply FUNCTION r) (apply OLDFUN r)))
+ :filter-args   (lambda (&amp;rest r) (apply OLDFUN (funcall FUNCTION r)))
+ :filter-return (lambda (&amp;rest r) (funcall FUNCTION (apply OLDFUN r)))
+
+(fn SYMBOL HOW FUNCTION &amp;optional PROPS)</pre></template></abbr>, for advising Emacs utilities
+to <span style="color:blue;">handle</span> their new special blocks</li>
+<li><abbr class="tooltip" tabindex="0">-let<template><pre>Bind variables according to VARLIST then eval BODY.
+
+VARLIST is a list of lists of the form (PATTERN SOURCE).  Each
+PATTERN is matched against the SOURCE "structurally".  SOURCE
+is only evaluated once for each PATTERN.  Each PATTERN is matched
+recursively, and can therefore contain sub-patterns which are
+matched against corresponding sub-expressions of SOURCE.
+
+All the SOURCEs are evalled before any symbols are
+bound (i.e. "in parallel").
+
+If VARLIST only contains one (PATTERN SOURCE) element, you can
+optionally specify it using a vector and discarding the
+outer-most parens.  Thus
+
+  (-let ((PATTERN SOURCE)) ...)
+
+becomes
+
+  (-let [PATTERN SOURCE] ...).
+
+‘-let’ uses a convention of not binding places (symbols) starting
+with _ whenever it’s possible.  You can use this to skip over
+entries you don’t care about.  However, this is not *always*
+possible (as a result of implementation) and these symbols might
+get bound to undefined values.
+
+Following is the overview of supported patterns.  Remember that
+patterns can be matched recursively, so every a, b, aK in the
+following can be a matching construct and not necessarily a
+symbol/variable.
+
+Symbol:
+
+  a - bind the SOURCE to A.  This is just like regular ‘let’.
+
+Conses and lists:
+
+  (a) - bind ‘car’ of cons/list to A
+
+  (a . b) - bind car of cons to A and ‘cdr’ to B
+
+  (a b) - bind car of list to A and ‘cadr’ to B
+
+  (a1 a2 a3 ...) - bind 0th car of list to A1, 1st to A2, 2nd to A3...
+
+  (a1 a2 a3 ... aN . rest) - as above, but bind the Nth cdr to REST.
+
+Vectors:
+
+  [a] - bind 0th element of a non-list sequence to A (works with
+        vectors, strings, bit arrays...)
+
+  [a1 a2 a3 ...] - bind 0th element of non-list sequence to A0, 1st to
+                   A1, 2nd to A2, ...
+                   If the PATTERN is shorter than SOURCE, the values at
+                   places not in PATTERN are ignored.
+                   If the PATTERN is longer than SOURCE, an ‘error’ is
+                   thrown.
+
+  [a1 a2 a3 ... &amp;rest rest] - as above, but bind the rest of
+                              the sequence to REST.  This is
+                              conceptually the same as improper list
+                              matching (a1 a2 ... aN . rest)
+
+Key/value stores:
+
+  (&amp;plist key0 a0 ... keyN aN) - bind value mapped by keyK in the
+                                 SOURCE plist to aK.  If the
+                                 value is not found, aK is nil.
+                                 Uses ‘plist-get’ to fetch values.
+
+  (&amp;alist key0 a0 ... keyN aN) - bind value mapped by keyK in the
+                                 SOURCE alist to aK.  If the
+                                 value is not found, aK is nil.
+                                 Uses ‘assoc’ to fetch values.
+
+  (&amp;hash key0 a0 ... keyN aN) - bind value mapped by keyK in the
+                                SOURCE hash table to aK.  If the
+                                value is not found, aK is nil.
+                                Uses ‘gethash’ to fetch values.
+
+Further, special keyword &amp;keys supports "inline" matching of
+plist-like key-value pairs, similarly to &amp;keys keyword of
+‘cl-defun’.
+
+  (a1 a2 ... aN &amp;keys key1 b1 ... keyN bK)
+
+This binds N values from the list to a1 ... aN, then interprets
+the cdr as a plist (see key/value matching above).
+
+A shorthand notation for kv-destructuring exists which allows the
+patterns be optionally left out and derived from the key name in
+the following fashion:
+
+- a key :foo is converted into ‘foo’ pattern,
+- a key 'bar is converted into ‘bar’ pattern,
+- a key "baz" is converted into ‘baz’ pattern.
+
+That is, the entire value under the key is bound to the derived
+variable without any further destructuring.
+
+This is possible only when the form following the key is not a
+valid pattern (i.e. not a symbol, a cons cell or a vector).
+Otherwise the matching proceeds as usual and in case of an
+invalid spec fails with an error.
+
+Thus the patterns are normalized as follows:
+
+   ;; derive all the missing patterns
+   (&amp;plist :foo 'bar "baz") =&gt; (&amp;plist :foo foo 'bar bar "baz" baz)
+
+   ;; we can specify some but not others
+   (&amp;plist :foo 'bar explicit-bar) =&gt; (&amp;plist :foo foo 'bar explicit-bar)
+
+   ;; nothing happens, we store :foo in x
+   (&amp;plist :foo x) =&gt; (&amp;plist :foo x)
+
+   ;; nothing happens, we match recursively
+   (&amp;plist :foo (a b c)) =&gt; (&amp;plist :foo (a b c))
+
+You can name the source using the syntax SYMBOL &amp;as PATTERN.
+This syntax works with lists (proper or improper), vectors and
+all types of maps.
+
+  (list &amp;as a b c) (list 1 2 3)
+
+binds A to 1, B to 2, C to 3 and LIST to (1 2 3).
+
+Similarly:
+
+  (bounds &amp;as beg . end) (cons 1 2)
+
+binds BEG to 1, END to 2 and BOUNDS to (1 . 2).
+
+  (items &amp;as first . rest) (list 1 2 3)
+
+binds FIRST to 1, REST to (2 3) and ITEMS to (1 2 3)
+
+  [vect &amp;as _ b c] [1 2 3]
+
+binds B to 2, C to 3 and VECT to [1 2 3] (_ avoids binding as usual).
+
+  (plist &amp;as &amp;plist :b b) (list :a 1 :b 2 :c 3)
+
+binds B to 2 and PLIST to (:a 1 :b 2 :c 3).  Same for &amp;alist and &amp;hash.
+
+This is especially useful when we want to capture the result of a
+computation and destructure at the same time.  Consider the
+form (function-returning-complex-structure) returning a list of
+two vectors with two items each.  We want to capture this entire
+result and pass it to another computation, but at the same time
+we want to get the second item from each vector.  We can achieve
+it with pattern
+
+  (result &amp;as [_ a] [_ b]) (function-returning-complex-structure)
+
+Note: Clojure programmers may know this feature as the ":as
+binding".  The difference is that we put the &amp;as at the front
+because we need to support improper list binding.
+
+(fn VARLIST &amp;rest BODY)</pre></template></abbr>, pattern matching / <span style="color:olive;">“destructuring lets”</span></li>
+<li><abbr class="tooltip" tabindex="0">extract-arguments<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, an <b><span style="color:red;">ad-hoc</span></b> mechanism to <span style="color:cyan;">simulate</span> arguments with special
+blocks</li>
+<li><abbr class="tooltip" tabindex="0">org-link-set-parameters<template><pre>Set link TYPE properties to PARAMETERS.
+PARAMETERS should be keyword value pairs.  See
+‘org-link-parameters’ for supported keys.
+
+(fn TYPE &amp;rest PARAMETERS)</pre></template></abbr>, to make new link types</li>
+</ul>
+
+<p>
+<span style="color:green;">Of</span> <span style="color:green;">course</span> to actually write the formatting function they need <abbr class="tooltip" tabindex="0">loop<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>,
+<abbr class="tooltip" tabindex="0">s-replace<template><pre>Replaces OLD with NEW in S.
+
+(fn OLD NEW S)</pre></template></abbr>, <abbr class="tooltip" tabindex="0">mapcar<template><pre>Apply FUNCTION to each element of SEQUENCE, and make a list of the results.
+The result is a list just as long as SEQUENCE.
+SEQUENCE may be a list, a vector, a bool-vector, or a string.
+
+(fn FUNCTION SEQUENCE)</pre></template></abbr>, <abbr class="tooltip" tabindex="0">or<template><pre>Eval args until one of them yields non-nil, then return that value.
+The remaining args are not evalled at all.
+If all args return nil, return nil.
+
+(fn CONDITIONS...)</pre></template></abbr>, <abbr class="tooltip" tabindex="0">s-match<template><pre>When the given expression matches the string, this function returns a list
+of the whole matching string and a string for each matched subexpressions.
+Subexpressions that didn’t match are represented by nil elements
+in the list, except that non-matching subexpressions at the end
+of REGEXP might not appear at all in the list.  That is, the
+returned list can be shorter than the number of subexpressions in
+REGEXP plus one.  If REGEXP did not match the returned value is
+an empty list (nil).
+
+When START is non-nil the search will start at that index.
+
+(fn REGEXP S &amp;optional START)</pre></template></abbr>, and much more!
+</p>
+
+<small>
+<p>
+<span style="color:pink;">Such a pain!</span>
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">⇒ It's probably not worth it!</td>
+</tr>
+
+<tr>
+<td class="org-left">“Just do enough to make it work!”</td>
+</tr>
+
+<tr>
+<td class="org-left">“We're in a rush!”</td>
+</tr>
+</tbody>
+</table>
+</small>
+</div>
+</div>
+</div>
+<div id="outline-container-Goals" class="outline-2">
+<h2 id="Goals"><span class="section-number-2">4.</span> <a href="#Goals">Goals</a></h2>
+<div class="outline-text-2" id="text-Goals">
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>“Squad goals”</h3> 
+<p>
+A <b><span style="color:green;">modular</span></b> and <b><span style="color:blue;">unified</span></b> interface for producing new special blocks and
+link types, <b><span style="color:olive;">simultaneously</span></b>, with roughly the same interface as a
+<abbr class="tooltip" tabindex="0">defun<template><pre>Define NAME as a function.
+The definition is (lambda ARGLIST [DOCSTRING] [INTERACTIVE] BODY...).
+DECL is a declaration, optional, of the form (declare DECLS...) where
+DECLS is a list of elements of the form (PROP . VALUES).  These are
+interpreted according to ‘defun-declarations-alist’.
+INTERACTIVE is an optional ‘interactive’ specification.
+The return value is undefined.
+
+(fn NAME ARGLIST [DOCSTRING] [DECL] [INTERACTIVE] BODY...)</pre></template></abbr>!
+</p>
+
+<br>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">⇒ <abbr class="tooltip" tabindex="0">defblock<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> ⇐</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-Solving-the-friend's-trilemma" class="outline-3">
+<h3 id="Solving-the-friend's-trilemma"><span class="section-number-3">4.1.</span> <a href="#Solving-the-friend's-trilemma">Solving the friend's trilemma</a></h3>
+<div class="outline-text-3" id="text-Solving-the-friend's-trilemma">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
+            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+          color who contents))
+</code></pre>
+</div>
+
+<p>
+Huh?
+</p>
+
+<p>
+There are 3 main parts …
+</p>
+</div>
+</div>
+<div id="outline-container-Line-1-Declare-a-block" class="outline-3">
+<h3 id="Line-1-Declare-a-block"><span class="section-number-3">4.2.</span> <a href="#Line-1-Declare-a-block">Line 1: <i>Declare</i> a block</a></h3>
+<div class="outline-text-3" id="text-Line-1-Declare-a-block">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span id="coderef-here1" class="coderef-off"><span class="linenr">1: </span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)</span>
+<span class="linenr">2: </span>  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+<span class="linenr">3: </span>  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
+<span class="linenr">4: </span>            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+<span class="linenr">5: </span>            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+<span class="linenr">6: </span>          color who contents))
+</code></pre>
+</div>
+
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+<b>Line <a href="#coderef-here1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-here1');" onmouseout="CodeHighlightOff(this, 'coderef-here1');">1</a></b>: <b><span style="color:olive;">def</span>-ine a new <span style="color:olive;">block</span></b> named <b><span style="color:green;">feedback</span></b> whose
+   main argument is <b><span style="color:blue;">who</span></b> wrote the feedback,
+   and optionally a <b><span style="color:red;">color</span></b> &mdash;which is red by default.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-Line-2-Document-the-block" class="outline-3">
+<h3 id="Line-2-Document-the-block"><span class="section-number-3">4.3.</span> <a href="#Line-2-Document-the-block">Line 2: <i>Document</i> the block</a></h3>
+<div class="outline-text-3" id="text-Line-2-Document-the-block">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span class="linenr">1: </span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+<span id="coderef-here2" class="coderef-off"><span class="linenr">2: </span>  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span></span>
+<span class="linenr">3: </span>  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
+<span class="linenr">4: </span>            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+<span class="linenr">5: </span>            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+<span class="linenr">6: </span>          color who contents))
+</code></pre>
+</div>
+
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+<b>Line <a href="#coderef-here2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-here2');" onmouseout="CodeHighlightOff(this, 'coderef-here2');">2</a></b>:
+Just as when you write a function, <b><span style="color:green;">you</span></b> write what it does.
+</p>
+
+<p>
+Moreover, this documentation is used as a <span style="color:olive;">tooltip</span>
+for the Org link form of <span style="color:magenta;">feedback</span> &mdash;for <span style="color:blue;">Corwin---</span>
+<i>within Emacs!</i>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-Lines-3-6-Do-the-thing" class="outline-3">
+<h3 id="Lines-3-6-Do-the-thing"><span class="section-number-3">4.4.</span> <a href="#Lines-3-6-Do-the-thing">Lines 3-6: <i>Do the thing!</i></a></h3>
+<div class="outline-text-3" id="text-Lines-3-6-Do-the-thing">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span class="linenr">1: </span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+<span class="linenr">2: </span>  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+<span id="coderef-here3" class="coderef-off"><span class="linenr">3: </span>  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)</span>
+<span class="linenr">4: </span>            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+<span class="linenr">5: </span>            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+<span class="linenr">6: </span>          color who contents))
+</code></pre>
+</div>
+
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+<b>Line <a href="#coderef-here3" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-here3');" onmouseout="CodeHighlightOff(this, 'coderef-here3');">3</a></b>: Depending on whether we're exporting
+to HTML &mdash;for <span style="color:red;">Sacha---</span> or to PDF &mdash;for <span style="color:green;">Amin---</span>
+we use HTML divs or LaTeX macros.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-Anaphoric" class="outline-3">
+<h3 id="Anaphoric"><span class="section-number-3">4.5.</span> <a href="#Anaphoric"><i>Anaphoric?</i></a></h3>
+<div class="outline-text-3" id="text-Anaphoric">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span class="linenr">1: </span>(defblock feedback (who) (color <span style="color: #50a14f;">"red"</span>)
+<span class="linenr">2: </span>  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) constructive feedback."</span>
+<span id="coderef-anaB" class="coderef-off"><span class="linenr">3: </span>  (format (<span style="color: #a626a4;">if</span> (equal backend 'html)</span>
+<span class="linenr">4: </span>            <span style="color: #50a14f;">"&lt;strong style=\"color: %s;\"&gt;&#10214;%s: %s&#10215;&lt;/strong&gt;"</span>
+<span class="linenr">5: </span>            <span style="color: #50a14f;">"{\\color{%s}\\bfseries %s: %s}"</span>)
+<span id="coderef-anaC" class="coderef-off"><span class="linenr">6: </span>          color who contents))</span>
+</code></pre>
+</div>
+
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+Lines <a href="#coderef-anaB" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-anaB');" onmouseout="CodeHighlightOff(this, 'coderef-anaB');">3</a> and  <a href="#coderef-anaC" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-anaC');" onmouseout="CodeHighlightOff(this, 'coderef-anaC');">6</a>
+let the user refer to the current export <b><span style="color:olive;">backend</span></b>
+and to the <b><span style="color:olive;">contents</span></b> of the special block / link.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-How-do-the-feedback" class="outline-3">
+<h3 id="How-do-the-feedback"><span class="section-number-3">4.6.</span> <a href="#How-do-the-feedback"><i>How do the feedback?</i></a></h3>
+<div class="outline-text-3" id="text-How-do-the-feedback">
+<div style="padding: 1em;background-color: #FFCCFF;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+<b>Sacha 😍 Org/HTML</b>
+</p>
+
+<div style="column-count: 2; column-rule: 1px solid yes;">
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_feedback Sacha Speculates
+</span>I think we should do &#8230;
+<span style="color: #a0a1a7;">#+end_feedback</span>
+</code></pre>
+</div>
+
+<hr>
+
+<p style="color: black;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Sacha Speculates:</strong></span> 
+<p>
+I think we should do …
+</p>
+<span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+</div>
+</div>
+
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+<b>Amin 😻 Org/PDF</b>
+</p>
+<div style="column-count: 2; column-rule: 1px solid yes;">
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_feedback Amin :color green
+</span>I think we should do &#8230;
+<span style="color: #a0a1a7;">#+end_feedback</span>
+</code></pre>
+</div>
+
+<hr>
+<p style="color: green;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Amin:</strong></span> 
+<p>
+I think we should do …
+</p>
+<span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+</div>
+</div>
+
+<div style="padding: 1em;background-color: #CCFFFF;border-radius: 15px;font-size: 0.9em;"> <h3></h3> 
+<p>
+<b>Corwin 💌 Org/Terse</b>
+</p>
+<div style="column-count: 2; column-rule: 1px solid yes;">
+<p>
+<code>[[feedback:Corwin][Guys, let's wrap up already!]]</code>
+</p>
+
+<hr>
+<p>
+<p style="color: black;"><span style="border-width:1px;border-style:solid;padding:5px"><strong>[Corwin:</strong></span> Guys, let's wrap up already!  <span style="border-width:1px;border-style:solid;padding:5px"><strong>]</strong></span></p>
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-More-Blocks" class="outline-2">
+<h2 id="More-Blocks"><span class="section-number-2">5.</span> <a href="#More-Blocks">More Blocks!</a></h2>
+<div class="outline-text-2" id="text-More-Blocks">
+<p>
+Using a few lines of Lisp …
+</p>
+
+<ul class="org-ul">
+<li><p>
+write text in <abbr class="tooltip" tabindex="0">parallel<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> columns
+</p>
+
+<p>
+… to save on vertical whitespace
+</p></li>
+
+<li>hide away technical <abbr class="tooltip" tabindex="0">details<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> for the interested reader only</li>
+
+<li>enclose text in a pretty <abbr class="tooltip" tabindex="0">box<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></li>
+
+<li>Educational material blocks: <abbr class="tooltip" tabindex="0">spolier<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">solution<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, and <abbr class="tooltip" tabindex="0">org-demo<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></li>
+</ul>
+
+<p>
+Finally,
+<b><span style="color:blue;">blocks compose:</span></b>
+<b><span style="color:green;">They're building blocks for new and better ideas!</span></b>
+</p>
+
+<p>
+<i>More details and examples at</i>
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><a href="https://alhassy.com/org-special-block-extras">https://alhassy.com/org-special-block-extras</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-Bye" class="outline-2">
+<h2 id="Bye"><span class="section-number-2">6.</span> <a href="#Bye">Bye!</a></h2>
+<div class="outline-text-2" id="text-Bye">
+<p>
+<i>Thanks for listening in!</i>
+</p>
+
+<small>
+<ul class="org-ul">
+<li><p>
+The <b><span style="color:olive;">org-special-block-extras</span></b> Library:
+</p>
+
+<p>
+<a href="https://alhassy.com/org-special-block-extras">https://alhassy.com/org-special-block-extras</a>
+</p>
+
+<p>
+… has examples, tutorial, and is a <i>literate program</i>! (•̀ᴗ•́)و
+</p></li>
+
+<li><p>
+<b><span style="color:green;">A 5-page PDF covering ELisp fundamentals</span></b>:
+</p>
+
+<p>
+<a href="https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf">https://alhassy.github.io/ElispCheatSheet/CheatSheet.pdf</a>
+</p></li>
+
+<li><p>
+<span style="color:violet;">These slides</span>:
+</p>
+
+<p>
+<a href="https://github.com/alhassy/org-special-block-extras/blob/master/emacs-conf-2020.org">https://github.com/alhassy/org-special-block-extras/blob/master/emacs-conf-2020.org</a>
+</p></li>
+</ul>
+</small>
+
+<p>
+<img src="https://img.shields.io/badge/thanks-for_reading-nil">
+<a href="https://twitter.com/intent/tweet?text=This%20looks%20super%20neat%20%28%E2%80%A2%CC%80%E1%B4%97%E2%80%A2%CC%81%29%D9%88%3A:&url=https://github.com/alhassy/org-special-block-extras"><img src="https://img.shields.io/twitter/url?url=https://github.com/alhassy/org-special-block-extras"></a>
+<a href="https://www.buymeacoffee.com/alhassy"><img src="https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee"></a>
+</p>
+</div>
+</div>
+<hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://alhassy.com/resources/cc-by-sa-3.0-88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>
