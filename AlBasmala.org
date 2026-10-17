@@ -472,6 +472,15 @@ on with the GitHub tip ---whose bugs we may have just fixed, unpushed!
 :END:
 #+end_src
 
+A single =.el= isn't always enough.  =org-special-block-extras.org= shows =osbe-example:box=,
+an =org-defblock= in =tests/examples/README.el= that reads =tests/examples/box.el= beside it
+and scans the repo's =*.el= for =box='s definition; fetched alone, it finds neither.  So a
+=:LOAD:= that's neither a URL nor an absolute path is relative to the =:REDIRECT:='s GitHub
+repo, which we shallow-clone to the git-ignored =resources/redirects/clones/<repo>/=
+---refetched each publish, with last time's clone as the offline fallback--- and load from
+there; e.g., =:LOAD: tests/examples/README.el=.  One-off link types thus stay with their
+article, rather than piling up in AlBasmala.org.
+
 Finally, a redirected article on GitHub opens with a banner inviting readers to star the
 repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
 read, where it's missed.  Its History badge points at the repo's log for the file, not at
@@ -588,6 +597,31 @@ keep last time's copy, and only signal an error when there is none."
        (message "=> REDIRECT %s is unreachable (%s); reusing the vendored %s"
                 redirect (error-message-string err) vendored)))
     vendored))
+
+(defun blog--clone-redirect-repo (redirect)
+  "REDIRECT ↦ the directory of a fresh shallow clone of its GitHub repo, `blog-redirects-subdir'clones/REPO/.
+
+When the fetch fails ---say, no network--- we keep last time's clone, and only signal an error when there is none."
+  (pcase-let* ((`(,owner ,repo ,branch ,_) (or (blog--github-raw-parts redirect)
+                                               (user-error "A repo-relative :LOAD: needs a GitHub :REDIRECT:, not %s" redirect)))
+               (dir (file-name-as-directory (expand-file-name (concat blog-redirects-subdir "clones/" repo) blog-posts-directory)))
+               (url (format "https://github.com/%s/%s.git" owner repo))
+               (git (lambda (&rest args) (zerop (apply #'call-process "git" nil nil nil args)))))
+    (cond
+     ((not (file-directory-p dir))
+      (make-directory (file-name-directory (directory-file-name dir)) t)
+      (unless (funcall git "clone" "--quiet" "--depth" "1" "--branch" branch url dir)
+        (user-error "Couldn't clone %s, and there's no earlier clone at %s" url dir)))
+     ((not (and (funcall git "-C" dir "fetch" "--quiet" "--depth" "1" "origin" branch)
+                (funcall git "-C" dir "reset" "--quiet" "--hard" "FETCH_HEAD")))
+      (message "=> Couldn't fetch %s; reusing the clone at %s" url dir)))
+    dir))
+
+(defun blog--redirect-load-file (slug redirect lib)
+  "(SLUG, REDIRECT, LIB) ↦ the file to `load' for :LOAD: LIB; a URL or absolute path is vendored, else LIB is relative to REDIRECT's repo."
+  (if (or (blog--url-p lib) (file-name-absolute-p lib))
+      (expand-file-name (blog--vendor-one-redirect slug lib ".el") blog-posts-directory)
+    (expand-file-name lib (blog--clone-redirect-repo redirect))))
 
 (defun blog--map-publishable-top-headings (fn)
   "Walk top-level headings in the current buffer and call FN with point on each.
@@ -3338,7 +3372,7 @@ file-level keywords so that the `blog' backend exports it as a standalone articl
                   ;; unless it's already loaded ---say, our working copy, mid-hack.
                   (when-let ((lib (cdr (assoc "load" info))))
                     (unless (featurep (intern (file-name-base lib)))
-                      (load (expand-file-name (blog--vendor-one-redirect slug lib ".el") blog-posts-directory) nil t)))
+                      (load (blog--redirect-load-file slug redirect lib) nil t)))
                   (insert (blog--redirect-banner redirect)
                           (format "#+include: \"%s\"\n"
                                   (expand-file-name
