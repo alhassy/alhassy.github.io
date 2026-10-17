@@ -480,11 +480,60 @@ on with the GitHub tip ---whose bugs we may have just fixed, unpushed!
 <span style="font-weight: bold;">:END:</span>
 <span style="color: #a0a1a7;">#+end_src
 </span>
+A single =.el= isn't always enough.  =org-special-block-extras.org= shows =osbe-example:box=,
+an =org-defblock= in =tests/examples/README.el= that reads =tests/examples/box.el= beside it
+and scans the repo's =*.el= for =box='s definition; fetched alone, it finds neither.  So a
+=:LOAD:= that's neither a URL nor an absolute path is relative to the =:REDIRECT:='s GitHub
+repo, which we shallow-clone to the git-ignored =resources/redirects/clones/&lt;repo&gt;/=
+---refetched each publish, with last time's clone as the offline fallback--- and load from
+there; e.g., =:LOAD: tests/examples/README.el=.  One-off link types thus stay with their
+article, rather than piling up in AlBasmala.org.
+
 Finally, a redirected article on GitHub opens with a banner inviting readers to star the
 repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
 read, where it's missed.  Its History badge points at the repo's log for the file, not at
 =projects.org='s, and its Source badge colourises the vendored file, not the five-line
 heading.
+
+<span style="color: #a626a4; font-weight: bold;">*** A REDIRECT to a container</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">a-redirect-to-a-container</span>
+<span style="font-weight: bold;">:END:</span>
+
+=org-special-block-extras.org= is a 9,000-line manual; as one article, it buries the block
+types under the pitch and the developer's guide under both.  So it declares
+=#+article_style: multiple=, just like =projects.org=, and each public top-level heading
+becomes its own article; its one =projects.org= heading still points at the whole file.
+
+<span style="color: #a0a1a7;">#+begin_src org :tangle no
+</span>,#+article_style: multiple
+,* &#129497;&#8205;&#9794;&#65039; <span style="font-style: italic;">/Write Once, Export Everywhere/</span>: Say Hello to =org-special-block-extras=
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span>   <span style="color: #383a42; background-color: #fafafa;">org-special-block-extras</span>
+<span style="color: #a626a4;">:TITLE:</span>       <span style="color: #383a42; background-color: #fafafa;">org-special-block-extras: Write Once, Export Everywhere</span>
+<span style="color: #a626a4;">:DESCRIPTION:</span> <span style="color: #383a42; background-color: #fafafa;">A unified interface for special blocks and links: defblock.</span>
+<span style="font-weight: bold;">:END:</span>
+,* Block and link types provided by this package
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span>   <span style="color: #383a42; background-color: #fafafa;">org-special-block-extras-blocks-and-links</span>
+&#8942;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- <span style="font-weight: bold;">*Registry.*</span> =blog--info-multiple= swaps such a heading's info for its vendored source's
+  article infos, via =blog--redirected-container-infos=; each inherits the heading's
+  =:REDIRECT:=, =:LOAD:=, history, draft-ness, and tags, and remembers its slug as
+  ="redirect-slug"=, which names the vendored file.  An =:ignore:= heading ---say, =HTML &amp;
+  LaTeX Setup=--- and the footnote section are never articles.
+- <span style="font-weight: bold;">*Body.*</span> An article is =#+include: "vendored.org::#slug" :only-contents t :minlevel 1=,
+  after =#+setupfile: vendored.org=, so the container's =#+macro:=s and =header-args=
+  ---notably =:eval never-export=--- still apply.
+- <span style="font-weight: bold;">*Cross-article links.*</span> =<span style="text-decoration: underline;"><a href="#Boxed-Text">[[#Boxed-Text]]</a></span>= in the pitch targets a section of another
+  article, so =blog--prepare-redirect= rewrites it to
+  =<span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#Boxed-Text">[[https://alhassy.com/org-special-block-extras-blocks-and-links#Boxed-Text][&#8230;]]</a></span>=; a
+  link within its own article stays put.
+
+The first article reuses the heading's slug, so =alhassy.com/org-special-block-extras= still
+lands on the pitch.
 
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-redirects-subdir</span> <span style="color: #50a14f;">"resources/redirects/"</span>
@@ -537,14 +586,25 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--prepare-redirect</span> (file redirect)
   <span style="color: #50a14f; font-style: italic;">"Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, <a href="file:images/x.png">file:images/x.png</a> &#8614; URL-dir/images/x.png.
 
-Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">', and re-roots relative file links and #+fileimage: at REDIRECT's
-directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;."</span>
+Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">', re-roots relative file links and #+fileimage: at REDIRECT's
+directory when it's a URL, and, in a container, points <a href="#id">[[#id]]</a> at the article holding id when
+that's another one; see &#167;&#8220;Making a source include-ready&#8221;."</span>
   (<span style="color: #a626a4;">with-temp-buffer</span>
     (insert-file-contents file)
     (<span style="color: #a626a4;">delay-mode-hooks</span> (org-mode))
-    (<span style="color: #a626a4;">let</span> ((base (<span style="color: #a626a4;">and</span> (blog--url-p redirect) (file-name-directory redirect))))
+    (<span style="color: #a626a4;">let*</span> ((base    (<span style="color: #a626a4;">and</span> (blog--url-p redirect) (file-name-directory redirect)))
+           (tree    (org-element-parse-buffer))
+           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The :CUSTOM_ID: of EL's top-level heading, i.e., its article's slug in a container.
+</span>           (article (<span style="color: #a626a4;">lambda</span> (el) (<span style="color: #a626a4;">when-let</span> ((top (car (last (seq-filter (<span style="color: #a626a4;">lambda</span> (e) (eq 'headline (org-element-type e)))
+                                                                         (org-element-lineage el))))))
+                                   (org-element-property <span style="color: #e44649;">:CUSTOM_ID</span> top))))
+           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">id &#8614; its heading's article, when this source is a container; e.g., "Boxed-Text" &#8614; "org-special-block-extras-blocks-and-links".
+</span>           (homes   (<span style="color: #a626a4;">when</span> (blog--multiple-style-p file)
+                      (org-element-map tree 'headline
+                        (<span style="color: #a626a4;">lambda</span> (h) (<span style="color: #a626a4;">when-let</span> ((id (org-element-property <span style="color: #e44649;">:CUSTOM_ID</span> h)))
+                                      (cons id (<span style="color: #a626a4;">if</span> (= 1 (org-element-property <span style="color: #e44649;">:level</span> h)) id (funcall article h)))))))))
       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Edit back to front, so the positions of earlier elements stay valid.
-</span>      (<span style="color: #a626a4;">dolist</span> (el (nreverse (org-element-map (org-element-parse-buffer) '(keyword link) #'identity)))
+</span>      (<span style="color: #a626a4;">dolist</span> (el (nreverse (org-element-map tree '(keyword link) #'identity)))
         (<span style="color: #a626a4;">let</span> ((beg  (org-element-property <span style="color: #e44649;">:begin</span> el))
               (end  (org-element-property <span style="color: #e44649;">:end</span> el))
               (type (org-element-property <span style="color: #e44649;">:type</span> el))
@@ -561,6 +621,15 @@ directory when it's a URL; see &#167;&#8220;Making a source include-ready&#8221;
                 (goto-char beg)
                 (search-forward image end)
                 (replace-match url t t))))
+           ((<span style="color: #a626a4;">and</span> (equal type <span style="color: #50a14f;">"custom-id"</span>) (map-elt homes path)
+                 (not (equal (map-elt homes path) (funcall article el))))
+            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Another article's section: link to that article, keeping our description or using its id.
+</span>            (<span style="color: #a626a4;">let</span> ((desc (<span style="color: #a626a4;">if</span> (org-element-property <span style="color: #e44649;">:contents-begin</span> el)
+                            (buffer-substring (org-element-property <span style="color: #e44649;">:contents-begin</span> el) (org-element-property <span style="color: #e44649;">:contents-end</span> el))
+                          path)))
+              (delete-region beg (- end (org-element-property <span style="color: #e44649;">:post-blank</span> el)))
+              (goto-char beg)
+              (insert (format <span style="color: #50a14f;">"<a href="%s#%s">[[%s#%s][%s]]</a>"</span> (blog--url (map-elt homes path)) path desc))))
            ((<span style="color: #a626a4;">and</span> base (equal type <span style="color: #50a14f;">"file"</span>) (not (file-name-absolute-p path)))
             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
 </span>            (<span style="color: #a626a4;">let</span> ((url (url-expand-file-name path base)))
@@ -596,6 +665,31 @@ keep last time's copy, and only signal an error when there is none."</span>
        (message <span style="color: #50a14f;">"=&gt; REDIRECT %s is unreachable (%s); reusing the vendored %s"</span>
                 redirect (error-message-string err) vendored)))
     vendored))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--clone-redirect-repo</span> (redirect)
+  <span style="color: #50a14f; font-style: italic;">"REDIRECT &#8614; the directory of a fresh shallow clone of its GitHub repo, `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-redirects-subdir</span><span style="color: #50a14f; font-style: italic;">'clones/REPO/.
+
+When the fetch fails ---say, no network--- we keep last time's clone, and only signal an error when there is none."</span>
+  (<span style="color: #a626a4;">pcase-let*</span> ((`(,owner ,repo ,branch ,_) (<span style="color: #a626a4;">or</span> (blog--github-raw-parts redirect)
+                                               (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"A repo-relative :LOAD: needs a GitHub :REDIRECT:, not %s"</span> redirect)))
+               (dir (file-name-as-directory (expand-file-name (concat blog-redirects-subdir <span style="color: #50a14f;">"clones/"</span> repo) blog-posts-directory)))
+               (url (format <span style="color: #50a14f;">"<a href="https://github.com/%s/%s.git">https://github.com/%s/%s.git</a>"</span> owner repo))
+               (git (<span style="color: #a626a4;">lambda</span> (<span style="color: #c18401;">&amp;rest</span> args) (zerop (apply #'call-process <span style="color: #50a14f;">"git"</span> nil nil nil args)))))
+    (<span style="color: #a626a4;">cond</span>
+     ((not (file-directory-p dir))
+      (make-directory (file-name-directory (directory-file-name dir)) t)
+      (<span style="color: #a626a4;">unless</span> (funcall git <span style="color: #50a14f;">"clone"</span> <span style="color: #50a14f;">"--quiet"</span> <span style="color: #50a14f;">"--depth"</span> <span style="color: #50a14f;">"1"</span> <span style="color: #50a14f;">"--branch"</span> branch url dir)
+        (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"Couldn't clone %s, and there's no earlier clone at %s"</span> url dir)))
+     ((not (<span style="color: #a626a4;">and</span> (funcall git <span style="color: #50a14f;">"-C"</span> dir <span style="color: #50a14f;">"fetch"</span> <span style="color: #50a14f;">"--quiet"</span> <span style="color: #50a14f;">"--depth"</span> <span style="color: #50a14f;">"1"</span> <span style="color: #50a14f;">"origin"</span> branch)
+                (funcall git <span style="color: #50a14f;">"-C"</span> dir <span style="color: #50a14f;">"reset"</span> <span style="color: #50a14f;">"--quiet"</span> <span style="color: #50a14f;">"--hard"</span> <span style="color: #50a14f;">"FETCH_HEAD"</span>)))
+      (message <span style="color: #50a14f;">"=&gt; Couldn't fetch %s; reusing the clone at %s"</span> url dir)))
+    dir))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--redirect-load-file</span> (slug redirect lib)
+  <span style="color: #50a14f; font-style: italic;">"(SLUG, REDIRECT, LIB) &#8614; the file to `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">load</span><span style="color: #50a14f; font-style: italic;">' for :LOAD: LIB; a URL or absolute path is vendored, else LIB is relative to REDIRECT's repo."</span>
+  (<span style="color: #a626a4;">if</span> (<span style="color: #a626a4;">or</span> (blog--url-p lib) (file-name-absolute-p lib))
+      (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory)
+    (expand-file-name lib (blog--clone-redirect-repo redirect))))
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--map-publishable-top-headings</span> (fn)
   <span style="color: #50a14f; font-style: italic;">"Walk top-level headings in the current buffer and call FN with point on each.
@@ -1525,12 +1619,15 @@ Priority:
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--info-subtree</span> (headline-node container-file slug)
   <span style="color: #50a14f; font-style: italic;">"Extract post metadata for HEADLINE-NODE from CONTAINER-FILE with SLUG.
 
-Returns nil when the headline carries a :noexport: tag or the COMMENT keyword.
+Returns nil when the headline carries a :noexport: or :ignore: tag, the COMMENT keyword,
+or is the footnote section: none of these is an article.
 Returns an alist with the same keys as blog--info plus \"slug\" and \"container\"."</span>
   (<span style="color: #a626a4;">let*</span> ((heading-tags (mapcar #'downcase
                                (org-element-property <span style="color: #e44649;">:tags</span> headline-node))))
     (<span style="color: #a626a4;">unless</span> (<span style="color: #a626a4;">or</span> (member <span style="color: #50a14f;">"noexport"</span> heading-tags)
-                (org-element-property <span style="color: #e44649;">:commentedp</span> headline-node))
+                (member <span style="color: #50a14f;">"ignore"</span> heading-tags)
+                (org-element-property <span style="color: #e44649;">:commentedp</span> headline-node)
+                (org-element-property <span style="color: #e44649;">:footnote-section-p</span> headline-node))
       (<span style="color: #a626a4;">let*</span> (<span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">draft?
 </span>             (draft? (<span style="color: #a626a4;">or</span> (member <span style="color: #50a14f;">"draft"</span> heading-tags)
                          (equal <span style="color: #50a14f;">"t"</span> (org-element-property <span style="color: #e44649;">:DRAFT</span> headline-node))
@@ -1608,10 +1705,28 @@ Headings tagged :draft: are included but marked."</span>
                           (blog--make-slug (<span style="color: #a626a4;">or</span> (org-element-property <span style="color: #e44649;">:TITLE</span> h)
                                                (org-element-property <span style="color: #e44649;">:raw-value</span> h)))))
                     top-headings)))
-      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Build alists, skipping noexport/COMMENT headings (blog--info-subtree returns nil for them)
-</span>      (delq nil
-            (cl-mapcar (<span style="color: #a626a4;">lambda</span> (h slug) (blog--info-subtree h container-file slug))
-                       top-headings slugs)))))
+      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Build alists, skipping noexport/COMMENT headings (blog--info-subtree returns nil for them);
+</span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">a :REDIRECT: to a container becomes that container's articles.
+</span>      (mapcan #'blog--redirected-container-infos
+              (delq nil
+                    (cl-mapcar (<span style="color: #a626a4;">lambda</span> (h slug) (blog--info-subtree h container-file slug))
+                               top-headings slugs))))))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--redirected-container-infos</span> (info)
+  <span style="color: #50a14f; font-style: italic;">"INFO &#8614; (INFO), or the infos of its vendored :REDIRECT: source's articles when that's a container.
+
+Each inherits INFO's redirect, load, history, draft, and tags, and remembers INFO's slug as
+\"redirect-slug\", which names the vendored file; see &#167;&#8220;A REDIRECT to a container&#8221;."</span>
+  (<span style="color: #a626a4;">let</span> ((vendored (<span style="color: #a626a4;">and</span> (map-elt info <span style="color: #50a14f;">"redirect"</span>)
+                       (expand-file-name (concat blog-redirects-subdir (@slug info) <span style="color: #50a14f;">".org"</span>) blog-posts-directory))))
+    (<span style="color: #a626a4;">if</span> (not (<span style="color: #a626a4;">and</span> vendored (file-exists-p vendored) (blog--multiple-style-p vendored)))
+        (list info)
+      (mapcar (<span style="color: #a626a4;">lambda</span> (article)
+                (append (list (cons <span style="color: #50a14f;">"redirect-slug"</span> (@slug info))
+                              (cons <span style="color: #50a14f;">"tags"</span> (s-join <span style="color: #50a14f;">" "</span> (seq-uniq (s-split <span style="color: #50a14f;">" "</span> (concat (map-elt info <span style="color: #50a14f;">"tags"</span>) <span style="color: #50a14f;">" "</span> (map-elt article <span style="color: #50a14f;">"tags"</span>)) t)))))
+                        (map-filter (<span style="color: #a626a4;">lambda</span> (key _) (member key '(<span style="color: #50a14f;">"redirect"</span> <span style="color: #50a14f;">"load"</span> <span style="color: #50a14f;">"history"</span> <span style="color: #50a14f;">"draft"</span>))) info)
+                        article))
+              (blog--info-multiple vendored)))))
 
 <span style="color: #a0a1a7;">#+end_src
 </span>
@@ -3230,7 +3345,7 @@ Dispatches on #+article_style: per file:
       (<span style="color: #a626a4;">when</span> (equal (blog--file-keyword f <span style="color: #50a14f;">"article_style"</span>) <span style="color: #50a14f;">"multiple"</span>)
         (<span style="color: #a626a4;">dolist</span> (info (blog--info-multiple f))
           (<span style="color: #a626a4;">when-let</span> ((redirect (map-elt info <span style="color: #50a14f;">"redirect"</span>)))
-            (blog--vendor-one-redirect (map-elt info <span style="color: #50a14f;">"slug"</span>) redirect)))))
+            (blog--vendor-one-redirect (<span style="color: #a626a4;">or</span> (map-elt info <span style="color: #50a14f;">"redirect-slug"</span>) (map-elt info <span style="color: #50a14f;">"slug"</span>)) redirect)))))
     (blog--refresh-posts)
     (blog--validate-slugs)
     (<span style="color: #a626a4;">dolist</span> (f (seq-filter #'blog--publishable-p (blog--org-files)))
@@ -3336,7 +3451,8 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
 </span>          <span style="color: #a0a1a7; font-weight: bold;">;;      </span><span style="color: #a0a1a7;">* Article Title        (deleted)
 </span>          <span style="color: #a0a1a7; font-weight: bold;">;;      </span><span style="color: #a0a1a7;">** Abstract :ignore:   * Abstract :ignore:
 </span>          <span style="color: #a0a1a7; font-weight: bold;">;;      </span><span style="color: #a0a1a7;">** Introduction ...    * Introduction ...
-</span>          (<span style="color: #a626a4;">let</span> ((redirect (cdr (assoc <span style="color: #50a14f;">"redirect"</span> info))))
+</span>          (<span style="color: #a626a4;">let</span> ((redirect      (cdr (assoc <span style="color: #50a14f;">"redirect"</span> info)))
+                (redirect-slug (<span style="color: #a626a4;">or</span> (cdr (assoc <span style="color: #50a14f;">"redirect-slug"</span> info)) slug)))
             (<span style="color: #a626a4;">if</span> redirect
                 (<span style="color: #a626a4;">with-current-buffer</span> tmp-buf
                   (goto-char (point-max))
@@ -3346,12 +3462,15 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
 </span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">unless it's already loaded ---say, our working copy, mid-hack.
 </span>                  (<span style="color: #a626a4;">when-let</span> ((lib (cdr (assoc <span style="color: #50a14f;">"load"</span> info))))
                     (<span style="color: #a626a4;">unless</span> (<span style="color: #a626a4;">featurep</span> (intern (file-name-base lib)))
-                      (load (expand-file-name (blog--vendor-one-redirect slug lib <span style="color: #50a14f;">".el"</span>) blog-posts-directory) nil t)))
-                  (insert (blog--redirect-banner redirect)
-                          (format <span style="color: #50a14f;">"#+include: \"%s\"\n"</span>
-                                  (expand-file-name
-                                   (blog--vendor-one-redirect slug redirect)
-                                   blog-posts-directory)))
+                      (load (blog--redirect-load-file redirect-slug redirect lib) nil t)))
+                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">An article of a redirected container is its heading's contents, read with the
+</span>                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">container's file-level keywords ---say, its #+macro:s and header-args.
+</span>                  (<span style="color: #a626a4;">let</span> ((vendored (expand-file-name (blog--vendor-one-redirect redirect-slug redirect) blog-posts-directory)))
+                    (insert (blog--redirect-banner redirect)
+                            (<span style="color: #a626a4;">if</span> (assoc <span style="color: #50a14f;">"redirect-slug"</span> info)
+                                (format <span style="color: #50a14f;">"#+setupfile: %s\n#+include: \"%s::#%s\" :only-contents t :minlevel 1\n"</span>
+                                        vendored vendored slug)
+                              (format <span style="color: #50a14f;">"#+include: \"%s\"\n"</span> vendored))))
                   (save-buffer))
               (<span style="color: #a626a4;">save-excursion</span>
                 (goto-char heading-point)
@@ -3375,7 +3494,8 @@ file-level keywords so that the `</span><span style="color: #50a14f; font-weight
 
           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">4. Per-article colourised source: the vendored file for a redirect, else the subtree.
 </span>          (<span style="color: #a626a4;">if</span> (cdr (assoc <span style="color: #50a14f;">"redirect"</span> info))
-              (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir slug <span style="color: #50a14f;">".org"</span>) blog-posts-directory))
+              (blog--htmlize-file (expand-file-name (concat blog-redirects-subdir (<span style="color: #a626a4;">or</span> (cdr (assoc <span style="color: #50a14f;">"redirect-slug"</span> info)) slug) <span style="color: #50a14f;">".org"</span>)
+                                                    blog-posts-directory))
             (blog--htmlize-subtree heading-point slug)))
 
       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Cleanup temp files regardless of errors.
@@ -3397,8 +3517,9 @@ publishes are stable even if the heading title changes.
 
 Returns the list of slugs that were published."</span>
   (<span style="color: #a626a4;">let*</span> ((all-infos (blog--info-multiple container-file))
-         (by-slug   (<span style="color: #a626a4;">let</span> ((h (make-hash-table <span style="color: #e44649;">:test</span> #'equal)))
-                      (<span style="color: #a626a4;">dolist</span> (i all-infos) (puthash (@slug i) i h))
+         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A heading's infos are usually just its own; a :REDIRECT: to a container yields its articles.
+</span>         (by-slug   (<span style="color: #a626a4;">let</span> ((h (make-hash-table <span style="color: #e44649;">:test</span> #'equal)))
+                      (<span style="color: #a626a4;">dolist</span> (i (reverse all-infos)) (<span style="color: #a626a4;">push</span> i (gethash (<span style="color: #a626a4;">or</span> (map-elt i <span style="color: #50a14f;">"redirect-slug"</span>) (@slug i)) h)))
                       h))
          (results   '()))
     (<span style="color: #a626a4;">with-current-buffer</span> (find-file-noselect container-file)
@@ -3414,10 +3535,10 @@ Returns the list of slugs that were published."</span>
               (<span style="color: #a626a4;">unless</span> slug
                 (<span style="font-weight: bold;">user-error</span> <span style="color: #50a14f;">"Container heading %S in %s has no :CUSTOM_ID: property ---run C-x C-s on the source first"</span>
                             title (f-filename container-file)))
-              (<span style="color: #a626a4;">let</span> ((info (gethash slug by-slug)))
-                (message <span style="color: #50a14f;">"=&gt; Publishing subtree: %s (%s)..."</span> title slug)
+              (<span style="color: #a626a4;">dolist</span> (info (gethash slug by-slug))
+                (message <span style="color: #50a14f;">"=&gt; Publishing subtree: %s (%s)..."</span> (@title info) (@slug info))
                 (blog--publish-single-subtree (point) container-file info)
-                (<span style="color: #a626a4;">push</span> slug results))))
+                (<span style="color: #a626a4;">push</span> (@slug info) results))))
           (org-end-of-subtree t t))))
     (nreverse results)))
 
@@ -3551,6 +3672,10 @@ jobs:
         uses: purcell/setup-emacs@v8.0
         with:
           version: 30.1
+
+      # org-special-block-extras' graph block, in its manual, draws with Graphviz.
+      - name: Install Graphviz
+        run: sudo apt-get install -y graphviz
 
       # A key unique to each run never hits exactly, so the newest elpa-&#8230;-* cache is restored
       # (restore-keys) and, after the upgrade below, saved anew.  A fixed key would hit forever and

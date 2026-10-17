@@ -1,0 +1,2186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-10-17 Sat 06:07 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>org-special-block-extras: The block and link types</title>
+<meta name="description" content="Boxes, details, tooltips, glossaries, graphs, callouts, colours, and more ---each shown beside its export." />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-c:before { content: 'C'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'JavaScript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+<link href="https://alhassy.github.io/next-700-module-systems/prototype/org-notes-style.css" rel="stylesheet" type="text/css" />
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style>
+<style>
+</style>
+<script>
+</script>
+</head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+  <br/><a href="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml"><img style="vertical-align:middle" alt="build status" src="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml/badge.svg?branch=master"></a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">org-special-block-extras: The block and link types</h1></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/org-special-block-extras-blocks-and-links.org.html"><img src="https://alhassy.com/resources/badge-source.svg"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/org-special-block-extras/commits/master/org-special-block-extras.org"><img src="https://alhassy.com/resources/badge-history.svg"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://alhassy.com/resources/badge-buy-me-a-coffee.svg"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#Boxed-Text">1. Boxed Text —Calling out super duper info</a></li>
+<li><a href="#Folded-Details">2. Folded Details &mdash;Let the user see stuff only if they're interested</a></li>
+<li><a href="#nice-keystroke-renditions">3. Nice Keystroke Renditions: kbd:C-h_t</a></li>
+<li><a href="#tooltip">4. Remark —Inline footnotes, viz HTML tooltips and LaTeX notes in the margin</a></li>
+<li><a href="#Glossaries">5. Glossaries &mdash;Define a term once, cite it with <code>doc:𝒳</code></a></li>
+<li><a href="#Parallel">6. Parallel ---<i>Place ideas side-by-side, possibly with a separator</i></a></li>
+<li><a href="#Aligned-equations">7. Aligned equations ---<code>#+begin_align</code>, cited by <code>eqref:𝒳</code></a></li>
+<li><a href="#latex-definitions-for-hiding-LaTeX-declarations-in-HTML">8.   <code>latex-definitions</code> for hiding LaTeX declarations in HTML</a></li>
+<li><a href="#Graphs">9. Graphs ---<i>Org lists, drawn by Graphviz</i></a></li>
+<li><a href="#Switches-for-every-block">10. Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></li>
+<li><a href="#Callouts">11. Callouts &mdash;Note, tip, important, warning, caution</a></li>
+<li><a href="#Colours-links">12. Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></li>
+<li><a href="#quote-citations">13. Quotations, cited ---<code>#+begin_quote KEY</code></a></li>
+<li><a href="#Highlights">14. Highlights &mdash;Colour the background, not the text</a></li>
+<li><a href="#style-block">15. Page-wide CSS with <code>style</code></a></li>
+<li><a href="#Markdown-export">16. Markdown export &mdash;What survives GitHub, and how to change it</a></li>
+<li><a href="#latex-packages">17. PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></li>
+</ul>
+</div>
+</div>
+<div class="org-center">
+<p>
+⭐ The code lives at <a href="https://github.com/alhassy/org-special-block-extras">github.com/alhassy/org-special-block-extras</a> &mdash;star it, or <a href="https://github.com/alhassy/org-special-block-extras/issues">discuss it there</a>! <a href="https://github.com/alhassy/org-special-block-extras"><img src="https://img.shields.io/github/stars/alhassy/org-special-block-extras?style=social"></a>
+</p>
+</div>
+<div id="outline-container-Boxed-Text" class="outline-2">
+<h2 id="Boxed-Text"><span class="section-number-2">1.</span> <a href="#Boxed-Text">Boxed Text —Calling out super duper info</a></h2>
+<div class="outline-text-2" id="text-Boxed-Text">
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">It can be useful to draw attention to some important text by
+enclosing it in a [[doc:org-block/box][box]].
+
+#+begin_box Uses of callout boxes
+Such boxes often callout tips, warnings, cautionary info or
+emphasises core information.
+#+end_box</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+It can be useful to draw attention to some important text by
+enclosing it in a <abbr class="tooltip"
+tabindex="0">box<template><pre>Enclose text in a box, possibly with a TITLE.
+
+By default, the box’s BACKGROUND-COLOR is green for HTML and red for LaTeX;
+for LaTeX, there are also FRAME-COLOR and TITLE-BACKGROUND-COLOR.
+
+SHADOW is an alternate style of boxing: It shows the contents in a centred
+box with a shadow colour being the given non-nil value of SHADOW.
+If SHADOW is a hexadecimal colour, it should be a string enclosed in double quotes.
+More accurately, the following are all valid uses:
+
+    #+begin_box title :shadow t
+    #+begin_box title :shadow inset
+
+    #+begin_box title :shadow "pink"
+    #+begin_box title :shadow pink
+
+    #+begin_box title :shadow (cyan pink orange yellow)
+    #+begin_box title :shadow (cyan "inset pink" orange)
+    #+begin_box title :shadow (:left cyan :right pink :deep-right orange :deep-left yellow)
+
+Notice that prefixing colours with ‘inset’ causes the colour to be within the box,
+rather than spread, with blur, around the box. The use of ‘inset’ swaps left and right.
+
+The HTML export uses a padded div, whereas the LaTeX export
+requires the tcolorbox package; Markdown, sans colours, gets a quote opening with TITLE in bold.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_box
+     Hello, world
+     #+end_box
+
+ is rewritten to the result of the call
+
+     (org-block/box ‘latex "Hello, world")</pre></template></abbr>.
+</p>
+
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Uses
+of callout boxes</h3> 
+<p>
+Such boxes often callout tips, warnings, cautionary info or
+emphasises core information.
+</p>
+</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+</div>
+</div>
+<div id="outline-container-Folded-Details" class="outline-2">
+<h2 id="Folded-Details"><span class="section-number-2">2.</span> <a href="#Folded-Details">Folded Details &mdash;Let the user see stuff only if they're interested</a></h2>
+<div class="outline-text-2" id="text-Folded-Details">
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Sometimes there is a remark or a code snippet that is useful to
+have, but not relevant to the discussion at hand and so we want to
+/fold away such [[doc:org-block/details][details]]/.
+
+#+begin_details Example use cases
++ ‘Conversation-style’ articles, where the author asks the reader questions
+  whose answers are “folded away” so the reader can think about the exercise
+  before seeing the answer.
+
++ Hiding boring but important code snippets, such as a list of import
+  declarations or a tedious implementation.
+#+end_details
+
+Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "green"~.</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+Sometimes there is a remark or a code snippet that is useful to
+have, but not relevant to the discussion at hand and so we want to
+<i>fold away such <abbr class="tooltip"
+tabindex="0">details<template><pre>Enclose contents in a folded up box, for HTML.
+
+For LaTeX, this is just a boring, but centered, box.
+
+By default, the TITLE of such blocks is “Details”,
+its TITLE-COLOR is green, and BACKGROUND-COLOR is “#e5f5e5”.
+
+In HTML, we show folded, details, regions with a nice greenish colour.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_details
+     Hello, world
+     #+end_details
+
+ is rewritten to the result of the call
+
+     (org-block/details ‘latex "Hello, world")</pre></template></abbr></i>.
+</p>
+
+<details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px;
+color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
+<summary><strong><font face="Courier" size="3" color="green">Example use
+cases</font></strong></summary>
+<ul class="org-ul">
+<li>‘Conversation-style’ articles, where the author asks the reader questions
+whose answers are “folded away” so the reader can think about the exercise
+before seeing the answer.</li>
+
+<li>Hiding boring but important code snippets, such as a list of import
+declarations or a tedious implementation.</li>
+</ul>
+
+</details>
+
+<p>
+Full syntax <code>#+begin_details "title" :background-color "cyan" :title-color "green"</code>.
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+Src blocks fold too: the header argument <code>:folded t</code> exports a src block, exactly as Org
+otherwise would, inside a <code>details</code> block titled by its language; <code>:folded "TITLE"</code> picks
+the title.
+</p>
+<pre class="example">
+#+begin_src emacs-lisp :folded "How is it done?"
+(org-defblock details …)
+#+end_src
+</pre>
+
+<p>
+A page with many folded blocks may offer a button to unfold them all at once:
+<code>[[toggle-details:][Show me everything]]</code> is that button; pressed again, it folds them
+all. Without a description, it reads “Unfold all details”.
+</p>
+</div>
+</div>
+<div id="outline-container-nice-keystroke-renditions" class="outline-2">
+<h2 id="nice-keystroke-renditions"><span class="section-number-2">3.</span> <a href="#nice-keystroke-renditions">Nice Keystroke Renditions: <kbd style="">C-h t</kbd></a></h2>
+<div class="outline-text-2" id="text-nice-keystroke-renditions">
+<p>
+Anyone who writes <i>about</i> Emacs will likely want to mention keystrokes in an
+aesthetically pleasing way, such as <kbd style="">C-u 80 -</kbd> to insert 80 dashes,
+or <kbd style="">C-c C-e h o</kbd> to export an Org-mode file to HTML,
+or the useful <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">M-s h .</kbd><template><pre>M-s h . ∷ highlight-symbol-at-point
+Highlight each instance of the symbol at point.
+Uses the next face from ‘hi-lock-face-defaults’ without prompting,
+unless you use a prefix argument.
+Uses ‘find-tag-default-as-symbol-regexp’ to retrieve the symbol at point.
+
+If REGEXP contains upper case characters (excluding those preceded by ‘\’)
+and ‘search-upper-case’ is non-nil, the matching is case-sensitive.
+
+This uses Font lock mode if it is enabled; otherwise it uses overlays,
+in which case the highlighting will not update as you type.  The Font
+Lock mode is considered "enabled" in a buffer if its ‘major-mode’
+causes ‘font-lock-specified-p’ to return non-nil, which means
+the major mode specifies support for Font Lock.</pre></template></abbr>.
+</p>
+
+<ul class="org-ul">
+<li><p>
+<code>kbd:𝒳</code> will show a tooltip defining 𝒳, as an Emacs Lisp function, if possible.
+For example, <code>kbd:C-h_t</code> is <kbd style="">C-h t</kbd>; and likewise <code>&lt;kbd:M-s h .&gt;</code> is <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">M-s h.</kbd><template><pre>M-s h. ∷ highlight-symbol-at-point
+Highlight each instance of the symbol at point.
+Uses the next face from ‘hi-lock-face-defaults’ without prompting,
+unless you use a prefix argument.
+Uses ‘find-tag-default-as-symbol-regexp’ to retrieve the symbol at point.
+
+If REGEXP contains upper case characters (excluding those preceded by ‘\’)
+and ‘search-upper-case’ is non-nil, the matching is case-sensitive.
+
+This uses Font lock mode if it is enabled; otherwise it uses overlays,
+in which case the highlighting will not update as you type.  The Font
+Lock mode is considered "enabled" in a buffer if its ‘major-mode’
+causes ‘font-lock-specified-p’ to return non-nil, which means
+the major mode specifies support for Font Lock.</pre></template></abbr> (we need to use <code>&lt;...&gt;</code> since punctuation is not picked up as part of link
+labels).  In contrast, <code>kbd:nope</code> renders as <kbd style="">nope</kbd> <i>without</i> a tooltip (nor a
+red border).
+</p>
+
+<p>
+You can also supply explicit tooltip description: <code>[[kbd:key
+  sequence][description]]</code> will show as <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">key sequence</kbd><template><pre>key sequence ∷ 
+description</pre></template></abbr>; i.e.,
+the key sequence in nice key font along with a tooltip explaining it.
+</p></li>
+
+<li>In Emacs itself, each of these displays as 〔C-x C-s〕: the <code>kbd:</code> markup becomes the
+brackets and each <code>_</code> a space. Only the markup is displayed differently, so the keys
+stay editable as ever. Moreover, clicking one runs its keys &mdash;after asking, as <code>elisp:</code>
+links do&mdash; so readers may try them on the spot.</li>
+</ul>
+
+
+
+<div class="figure">
+<p><img src="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/kbd.png" alt="kbd.png" width="80%" height="80%s" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-tooltip" class="outline-2">
+<h2 id="tooltip"><span class="section-number-2">4.</span> <a href="#tooltip">Remark —Inline footnotes, viz HTML tooltips and LaTeX notes in the margin</a></h2>
+<div class="outline-text-2" id="text-tooltip">
+<p>
+Sometimes you want to remark on <abbr class="tooltip" tabindex="0">details<template><pre>Enclose contents in a folded up box, for HTML.
+
+For LaTeX, this is just a boring, but centered, box.
+
+By default, the TITLE of such blocks is “Details”,
+its TITLE-COLOR is green, and BACKGROUND-COLOR is “#e5f5e5”.
+
+In HTML, we show folded, details, regions with a nice greenish colour.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_details
+     Hello, world
+     #+end_details
+
+ is rewritten to the result of the call
+
+     (org-block/details ‘latex "Hello, world")</pre></template></abbr> without drawing too much
+attention, and so a tooltip via <abbr class="tooltip" tabindex="0">remark<template><pre>Format CONTENTS as a first-class editor comment according to BACKEND.
+
+The CONTENTS string has an optional switch: If it contains a line
+with having only ‘#+replacewith:’, then the text preceding this
+clause should be replaced by the text after it; i.e., this is
+what the EDITOR (the person editing) intends and so we format the
+replacement instruction (to the author) as such.
+
+In Emacs, as links, editor remarks are shown with a bold red; but
+the exported COLOR of a remark is black by default and it is not
+STRONG ---i.e., bold---. There is an optional SIGNOFF message
+that is appended to the remark.
+
+Remarks are hidden from the export when ‘org-hide-editor-comments’ is
+non-nil.  For just one file, write “#+bind: org-hide-editor-comments t”
+in it; that needs ‘org-export-allow-bind-keywords’ set to t, which we
+leave to you, since #+bind lets a document set any variable.
+
+In Markdown, a remark block is GitHub’s “&gt; [!NOTE]” alert, titled EDITOR; as a link, it stays HTML.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_remark
+     Hello, world
+     #+end_remark
+
+ is rewritten to the result of the call
+
+     (org-block/remark ‘latex "Hello, world")</pre></template></abbr> suffices.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">It can be annoying to make readers jump to the bottom of the page to
+read a footnote.  Instead, I prefer to write an /inline [[doc:org-block/tooltip][remark]]/
+containing, say, references or additional explanation.
+
+   /[[tooltip:Allah][The God of Abraham; known as Elohim in the Bible]] does not burden a
+       soul beyond what it can bear./ --- Quran 2:286
+
+Or, without specifying an explicit label:
+
+   /Allah[[tooltip:][The God of Abraham; known as Elohim in the Bible]] does not
+       burden a soul beyond what it can bear./ --- Quran 2:286</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+It can be annoying to make readers jump to the bottom of the page to
+read a footnote.  Instead, I prefer to write an <i>inline <abbr class="tooltip"
+tabindex="0">remark<template><pre>Show CONTENTS, as Org, in a tooltip on MARKER; hovered on a desktop, tapped on a phone.
+In LaTeX, MARKER is followed by CONTENTS as a margin note, numbered as footnotes are, as the margin block’s are;
+in beamer, whose slides have no margins, as a footnote.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_tooltip
+     Hello, world
+     #+end_tooltip
+
+ is rewritten to the result of the call
+
+     (org-block/tooltip ‘latex "Hello, world")</pre></template></abbr></i>
+containing, say, references or additional explanation.
+</p>
+
+<p>
+<i><abbr class="tooltip" tabindex="0">Allah<template><p>
+The God of Abraham; known as Elohim in the Bible</p></template></abbr>&emsp13; does not burden a
+    soul beyond what it can bear.</i> &mdash; Quran 2:286
+</p>
+
+<p>
+Or, without specifying an explicit label:
+</p>
+
+<p>
+<i>Allah<abbr class="tooltip" tabindex="0">°<template><p>
+The God of Abraham; known as Elohim in the Bible</p></template></abbr>&emsp13; does not
+    burden a soul beyond what it can bear.</i> &mdash; Quran 2:286
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+A tooltip opens when its word is hovered with a mouse, or tapped on a phone; it closes when we
+leave both, tap elsewhere, or press <code>Escape</code>. Its text is Org, exported as Org, so it may hold
+links &mdash;clickable, since moving into the tooltip keeps it open&mdash; and any other markup; an
+Elisp docstring is shown just as it is written. The machinery is <a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/tooltips.js">tooltips.js</a>, about eighty
+lines with no dependencies, in the look of <a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/tooltips.css">tooltips.css</a>; both are inlined into each exported
+page, which so fetches nothing for them.
+</p>
+
+<p>
+Org's own footnotes are such remarks too: in HTML, each footnote's number is a tooltip of its
+definition, the footnotes section staying below, for print; in LaTeX, each is a margin note, as
+the <abbr class="tooltip" tabindex="0">margin<template><pre>Produce an HTML tooltip or a LaTeX margin note.
+
+The ‘margin’ block is intended for “one-off” (mostly optional) remarks.
+
+It is essentially “inline footnotes”.
+
+For notes that you want to use repeatedly, in multiple articles
+or in multiple locations in the same article, consider using
+‘documentation’ to declare them and ‘doc’ to invoke them.
+
+For LaTeX, place ‘#+resize:’ to have the remainder of a block be
+resized, for now 1.3 the margin width ---requires \usepackage{adjustbox}.
+
+----------------------------------------------------------------------
+
+WIDTH, COUNTER, and COLOR are LaTeX specific.
+
+When no label, marker, is used for a marginal note, we rely
+on a COUNTER, such as ‘footnote’ (default) or ‘sidenote.’
+Since HTML has no margin per se, we use “∘” as default marker:
+Users hover over it to read the marginal note.
+
+Marginal notes have their labels, markers, in black
+and the notes themselves have COLOR being grey!80.
+In Emacs, margin links appear grey with an orange tinted border.
+
+Regarding LaTeX, since verbatim environments do not in general work well
+as arguments to other commands, such as ‘\marginpar’, we save the contents
+of the special block in a ‘minipage’ within a LaTeX ‘box’; then we can unfold such
+a box in the margin. Hence, ‘src’ blocks can appear within ‘margin’ blocks (•̀ᴗ•́)و
+
+The WIDTH argument is the width of the margin; i.e., the width of the underlying
+minipage.
+
+One could use \maxsizebox{.25\textwidth}{\textheight}{ ... }
+which only resizes the content if its natural size is larger than
+the given 〈width〉 or 〈height〉.  We don’t use this, since
+maxsizebox does not natively allow linebreaks
+(e.g., one would wrap contents in a tabular environment then use
+‘\\’, two backslashes, to request a line break; but this
+crashes if one wants to also use verbatim environments.)
+
+In LaTeX, it may be useful to invoke ‘\dotfill’.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_margin
+     Hello, world
+     #+end_margin
+
+ is rewritten to the result of the call
+
+     (org-block/margin ‘latex "Hello, world")</pre></template></abbr> block's are, numbered as footnotes are. All three of Org's spellings serve: an
+anonymous <code>[fn::…]</code>, a named <code>[fn:NAME]</code> defined elsewhere, and a named inline <code>[fn:NAME: …]</code>, which
+later <code>[fn:NAME]</code> references share.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">The Quran was revealed over 23 years[fn::From 610 to 632 CE, in Mecca then Medina.], and the
+Torah[fn:torah] and the Gospel[fn:injil: /Injil/, given to Jesus.] are honoured in it as earlier
+scriptures; the Gospel[fn:injil] is named in it a dozen times.
+
+[fn:torah] /Tawrat/, given to Moses; see [[https://en.wikipedia.org/wiki/Tawrat][Tawrat]].</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+The Quran was revealed over 23 years<sup><abbr class="tooltip" tabindex="0"
+id="fnr.1">1<template>From 610 to 632 CE, in Mecca then Medina.</template></abbr></sup>, and the
+Torah<sup><abbr class="tooltip" tabindex="0" id="fnr.torah">2<template><p class="footpara">
+<i>Tawrat</i>, given to Moses; see <a href="https://en.wikipedia.org/wiki/Tawrat">Tawrat</a>.
+</p></template></abbr></sup> and the Gospel<sup><abbr class="tooltip" tabindex="0"
+id="fnr.injil">3<template><i>Injil</i>, given to Jesus.</template></abbr></sup> are honoured in it
+as earlier
+scriptures; the Gospel<sup><abbr class="tooltip" tabindex="0"
+id="fnr.injil.3">3<template><i>Injil</i>, given to Jesus.</template></abbr></sup> is named in it a
+dozen times.
+</p>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1"
+role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">From
+610 to 632 CE, in Mecca then Medina.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.torah" class="footnum" href="#fnr.torah"
+role="doc-backlink">2</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+<i>Tawrat</i>, given to Moses; see <a href="https://en.wikipedia.org/wiki/Tawrat">Tawrat</a>.
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.injil" class="footnum" href="#fnr.injil"
+role="doc-backlink">3</a></sup> <div class="footpara" role="doc-footnote"><p
+class="footpara"><i>Injil</i>, given to Jesus.</p></div></div>
+
+
+</div>
+</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+</div>
+</div>
+<div id="outline-container-Glossaries" class="outline-2">
+<h2 id="Glossaries"><span class="section-number-2">5.</span> <a href="#Glossaries">Glossaries &mdash;Define a term once, cite it with <code>doc:𝒳</code></a></h2>
+<div class="outline-text-2" id="text-Glossaries">
+<p>
+A <code>doc:𝒳</code> link shows the documentation of 𝒳 as a tooltip in HTML, and as a glossary
+reference in LaTeX. Here 𝒳 is an Emacs Lisp function or variable, a word in the English
+dictionary &mdash;via <a href="https://wordnet.princeton.edu">WordNet</a>'s <code>wn</code>, should we have it&mdash; or, best of all, a term of our own.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">The ~doc~ link type can be used to show tooltips for Emacs Lisp commands such as
+
+                         doc:thread-last
+                         
+However, it can also be used for your own definitions/glossary.
+First define a term as follows, which does not render anything in the resulting HTML.
+
+                 #+begin_documentation Category Theory :label cat
+                 A theory of typed composition; e.g., typed monoids.
+                 #+end_documentation
+
+Then you can refer to it using the given :label, if any:
+
+                             doc:cat
+  
+Or else refer to it with underscores in lieu of spaces:
+
+                       doc:Category_Theory
+
+Either approach renders the name of the term, not the way its referenced.
+If you want to change what's rendered, provide a description:
+
+                  [[doc:cat][abstract nonsense]]
+
+Finally, if ~doc~ gets a label that is not an Emacs Lisp command, variable, nor a user-defined
+definition via #+begin_documentation, then we try to look up its definition via the dictionary:
+
+                          doc:happiness</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+The <code>doc</code> link type can be used to show tooltips for Emacs Lisp commands such as
+</p>
+
+<p>
+<abbr class="tooltip"
+tabindex="0">thread-last<template><pre>Thread FORMS elements as the last argument of their successor.
+Example:
+    (thread-last
+      5
+      (+ 20)
+      (/ 25)
+      -
+      (+ 40))
+Is equivalent to:
+    (+ 40 (- (/ 25 (+ 20 5))))
+Note how the single ‘-’ got converted into a list before
+threading.
+
+(fn &amp;rest FORMS)</pre></template></abbr>
+</p>
+
+<p>
+However, it can also be used for your own definitions/glossary.
+First define a term as follows, which does not render anything in the resulting HTML.
+</p>
+
+
+
+<p>
+Then you can refer to it using the given :label, if any:
+</p>
+
+<p>
+<abbr class="tooltip" tabindex="0">Category Theory<template><p>
+A theory of typed composition; e.g., typed monoids.</p></template></abbr>
+</p>
+
+<p>
+Or else refer to it with underscores in lieu of spaces:
+</p>
+
+<p>
+<abbr class="tooltip" tabindex="0">Category Theory<template><p>
+A theory of typed composition; e.g., typed monoids.</p></template></abbr>
+</p>
+
+<p>
+Either approach renders the name of the term, not the way its referenced.
+If you want to change what's rendered, provide a description:
+</p>
+
+<p>
+<abbr class="tooltip" tabindex="0">abstract nonsense<template><p>
+A theory of typed composition; e.g., typed monoids.</p></template></abbr>
+</p>
+
+<p>
+Finally, if <code>doc</code> gets a label that is not an Emacs Lisp command, variable, nor a
+user-defined
+definition via #+begin<sub>documentation</sub>, then we try to look up its definition via the
+dictionary:
+</p>
+
+<p>
+<abbr class="tooltip" tabindex="0">happiness<template><pre>Overview of noun happiness
+
+The noun happiness has 2 senses (first 2 from tagged texts)
+                                      
+1. (4) happiness, felicity -- (state of well-being characterized by emotions ranging from contentment to intense joy)
+2. (2) happiness -- (emotions experienced when in a state of well-being)
+
+Synonyms/Hypernyms (Ordered by Estimated Frequency) of noun happiness
+
+2 senses of happiness                                                   
+
+Sense 1
+happiness, felicity
+       =&gt; emotional state, spirit
+
+Sense 2
+happiness
+       =&gt; feeling</pre></template></abbr>
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+Our own terms are <i>data</i> in an Org file: an entry is either a <code>documentation</code> block, which
+exports nothing, or a heading tagged <code>:documentation:</code>, which exports as an ordinary
+section. The heading's title is the term's name, its <code>:DOC_KEYS:</code> property lists the labels
+by which we cite it, and its own text is the definition. Either way, the name with
+underscores in lieu of spaces is a label too; e.g., <code>doc:Category_Theory</code>. Moreover,
+<code>show:GLOSSARY</code> lists every term the page cites, wherever it sits.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Our glossary, listing every term this page cites ---even those cited further below:
+
+                                     show:GLOSSARY
+
+* Category Theory                                                   :documentation:
+:PROPERTIES:
+:DOC_KEYS: cat
+:END:
+A theory of typed composition; e.g., typed monoids.
+
+* Using our terms
+
+A glossary entry may instead be a block, which exports nothing:
+
+#+begin_documentation Monoid :label mon
+A set with an associative binary operation that has a unit.
+#+end_documentation
+
+Then, doc:cat studies [[doc:mon][monoids]] and their kin.</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+Our glossary, listing every term this page cites &mdash;even those cited further below:
+</p>
+
+<p>
+<abbr class="tooltip" tabindex="0">Monoid<template><p>
+A set with an associative binary operation that has a unit.</p></template></abbr> <abbr
+class="tooltip" tabindex="0">Category Theory<template><p>
+A theory of typed composition; e.g., typed monoids.</p></template></abbr>
+</p>
+<div id="outline-container-org0000001" class="outline-2">
+<h2>Category Theory&nbsp;&nbsp;&nbsp<span class="tag"><span
+class="documentation">documentation</span></span></h2>
+<div class="outline-text-2" id="text-org0000001">
+<p>
+A theory of typed composition; e.g., typed monoids.
+</p>
+</div>
+</div>
+<div id="outline-container-org0000004" class="outline-2">
+<h2>Using our terms</h2>
+<div class="outline-text-2" id="text-org0000004">
+<p>
+A glossary entry may instead be a block, which exports nothing:
+</p>
+
+
+
+<p>
+Then, <abbr class="tooltip" tabindex="0">Category Theory<template><p>
+A theory of typed composition; e.g., typed monoids.</p></template></abbr> studies <abbr
+class="tooltip" tabindex="0">monoids<template><p>
+A set with an associative binary operation that has a unit.</p></template></abbr> and their kin.
+</p>
+</div>
+</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+Terms we cite across many files go in a library: a list of Org files in
+<code>org-docs-libraries</code>, whose entries &mdash;blocks and headings alike&mdash; every <code>doc:𝒳</code> link may
+cite. The files are read, not exported, so loading them is quick; <code>M-x
+  org-docs-load-libraries</code> reloads them after an edit, and <code>M-x org-docs-insert</code> inserts a
+<code>doc:𝒳</code> link by searching all the terms we have.
+</p>
+
+<p>
+A radio target is a term too: in <code>A &lt;&lt;&lt;monoid&gt;&gt;&gt; is a set with an associative operation
+  and a unit.</code>, the target names the term and its paragraph defines it; so <code>doc:monoid</code>
+cites it, in the same file or, from a library, in any other.
+</p>
+
+<p>
+Finally, a package's whole API makes a glossary of its own: the <code>package-docs</code> block
+exports a table of the public functions, macros, and variables that a feature defines,
+each name a <code>doc:𝒳</code> link whose tooltip is its documentation.
+</p>
+<pre class="example">
+#+begin_package-docs org-deflink
+#+end_package-docs
+</pre>
+</div>
+</div>
+<div id="outline-container-Parallel" class="outline-2">
+<h2 id="Parallel"><span class="section-number-2">6.</span> <a href="#Parallel">Parallel ---<i>Place ideas side-by-side, possibly with a separator</i></a></h2>
+<div class="outline-text-2" id="text-Parallel">
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Reduce the amount of whitespace noise in your articles by using the
+[[doc:org-block/parallel][parallel]] block to place ideas
+side-by-side ---with up to 𝓃-many columns.
+
+----------------------------------------------------------------------
+
+#+begin_parallel 2
+*“Soft Columns”:* Writing ~#+begin_parallel 𝓃 :bar BAR~ will produce
+𝒏-many parallel columns, possibly separated by solid rules, or a
+“bar”. /This style allows text to freely move between columns,
+depending on the size of the browser, which may dynamically shrink
+and grow./ The value ~BAR~ can either be ~t~, ~nil~, or any
+(backend)-valid colour specification; such as ~red~ or ~green~.
+#+end_parallel
+
+----------------------------------------------------------------------
+
+#+begin_parallel 25% 50% 25% :bar green
+
+*“Hard Columns”:* Alternatively, /for non-uniform column widths, 𝓃 may
+instead be a specification of the widths of the columns./
+
+#+columnbreak:  
+However, this extra flexibility comes at an additional cost: The
+contents of the block must now contain /𝓃-1/ lines consisting of
+~#+columnbreak:~, when the specification determines 𝓃-many columns.
+
+#+columnbreak:
+Goodbye (“God-be-with-ye”) to the right!
+
+#+end_parallel
+
+# In the Soft Columns style above, any ‘#+columnbreak:’ are merely ignored.
+
+In summary, articles can get lengthy when vertical whitespace is
+wasted on thin lines; instead, one could save space by using
+/[[doc:org-block/parallel][parallel]] columns of text/.</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+Reduce the amount of whitespace noise in your articles by using the
+<abbr class="tooltip"
+tabindex="0">parallel<template><pre>Place ideas side-by-side, possibly with a separator.
+
+There are COLS many columns, and they may be separated by solid
+vertical rules if BAR is a non-nil (colour) value.
+
++ COLS is either a number or a sequence of the shape: 10% 20% 30%.
++ BAR is either ‘t’, ‘nil’, or a colour such as ‘red’ or ‘blue’.
+
+----------------------------------------------------------------------
+
+“Soft Columns”: Writing “#+begin_parallel 𝓃 :bar t” will produce
+𝒏-many parallel columns, possibly separated by solid rules, or a
+“bar”. This style allows text to freely move between columns,
+depending on the size of the browser, which may dynamically
+shrink and grow.  BAR can either be ‘t’, ‘nil’, or
+any (backend)-valid colour specification; such as ‘red’ or
+‘green’.
+
+“Hard Columns”: Alternatively, for non-uniform column widths,
+COLS may instead be a specification of the widths of the
+columns. However, this extra flexibility comes at an additional
+cost: The contents of the block must now contain 𝒏-1 lines
+consisting of ‘#+columnbreak:’, when the specification determines
+𝒏 columns, as shown in the following example.
+
+   #+begin_parallel 20% 60% 20% :bar green
+   Hello, to the left!
+
+   #+columnbreak:
+   A super duper wide middle margin!
+
+   #+columnbreak:
+   Goodbye (“God-be-with-ye”) to the right!
+   #+end_parallel
+
+The specification is 𝒏 measurements denoting widths; which may be
+in any HTML recognisable units; e.g., “5em 20px 30%” is valid.
+I personally advise only the use of percentage measurements.
+
+In the Soft Columns style above, any ‘#+columnbreak:’ are merely ignored.
+With LaTeX export, the use of ‘#+columnbreak:’ is used to request a column break.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_parallel
+     Hello, world
+     #+end_parallel
+
+ is rewritten to the result of the call
+
+     (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> block to place ideas
+side-by-side &mdash;with up to 𝓃-many columns.
+</p>
+
+<hr />
+
+<div style="column-count: 2;">
+<p>
+<b>“Soft Columns”:</b> Writing <code>#+begin_parallel 𝓃 :bar BAR</code> will produce
+𝒏-many parallel columns, possibly separated by solid rules, or a
+“bar”. <i>This style allows text to freely move between columns,
+depending on the size of the browser, which may dynamically shrink
+and grow.</i> The value <code>BAR</code> can either be <code>t</code>, <code>nil</code>, or any
+(backend)-valid colour specification; such as <code>red</code> or <code>green</code>.
+</p>
+</div>
+
+<hr />
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start;"><div
+style="width: 25%; margin: 10px; border-right: 4px solid green;">
+<p>
+<b>“Hard Columns”:</b> Alternatively, <i>for non-uniform column widths, 𝓃 may
+instead be a specification of the widths of the columns.</i>
+</p>
+
+<p>
+</div><div style="width: 50%; margin: 10px; border-right: 4px solid green;">
+However, this extra flexibility comes at an additional cost: The
+contents of the block must now contain <i>𝓃-1</i> lines consisting of
+<code>#+columnbreak:</code>, when the specification determines 𝓃-many columns.
+</p>
+
+<p>
+</div><div style="width: 25%; margin: 10px; border-right: none;">
+Goodbye (“God-be-with-ye”) to the right!
+</p>
+</div></div>
+
+<p>
+In summary, articles can get lengthy when vertical whitespace is
+wasted on thin lines; instead, one could save space by using
+<i><abbr class="tooltip"
+tabindex="0">parallel<template><pre>Place ideas side-by-side, possibly with a separator.
+
+There are COLS many columns, and they may be separated by solid
+vertical rules if BAR is a non-nil (colour) value.
+
++ COLS is either a number or a sequence of the shape: 10% 20% 30%.
++ BAR is either ‘t’, ‘nil’, or a colour such as ‘red’ or ‘blue’.
+
+----------------------------------------------------------------------
+
+“Soft Columns”: Writing “#+begin_parallel 𝓃 :bar t” will produce
+𝒏-many parallel columns, possibly separated by solid rules, or a
+“bar”. This style allows text to freely move between columns,
+depending on the size of the browser, which may dynamically
+shrink and grow.  BAR can either be ‘t’, ‘nil’, or
+any (backend)-valid colour specification; such as ‘red’ or
+‘green’.
+
+“Hard Columns”: Alternatively, for non-uniform column widths,
+COLS may instead be a specification of the widths of the
+columns. However, this extra flexibility comes at an additional
+cost: The contents of the block must now contain 𝒏-1 lines
+consisting of ‘#+columnbreak:’, when the specification determines
+𝒏 columns, as shown in the following example.
+
+   #+begin_parallel 20% 60% 20% :bar green
+   Hello, to the left!
+
+   #+columnbreak:
+   A super duper wide middle margin!
+
+   #+columnbreak:
+   Goodbye (“God-be-with-ye”) to the right!
+   #+end_parallel
+
+The specification is 𝒏 measurements denoting widths; which may be
+in any HTML recognisable units; e.g., “5em 20px 30%” is valid.
+I personally advise only the use of percentage measurements.
+
+In the Soft Columns style above, any ‘#+columnbreak:’ are merely ignored.
+With LaTeX export, the use of ‘#+columnbreak:’ is used to request a column break.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_parallel
+     Hello, world
+     #+end_parallel
+
+ is rewritten to the result of the call
+
+     (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+</div>
+</div>
+<div id="outline-container-Aligned-equations" class="outline-2">
+<h2 id="Aligned-equations"><span class="section-number-2">7.</span> <a href="#Aligned-equations">Aligned equations ---<code>#+begin_align</code>, cited by <code>eqref:𝒳</code></a></h2>
+<div class="outline-text-2" id="text-Aligned-equations">
+<p>
+An <abbr class="tooltip" tabindex="0">align<template><pre>Equations aligned at each &amp;, numbered when NUMBERED; a line may end in a coloured tag, “:tag-blue: Name”.
+
+  #+begin_align :let (-&gt; "\\Rightarrow" == "\\equiv")
+  p -&gt; q &amp;== \neg p \lor q          :tag-blue: Implication
+  p \land q &amp;== p == q == p \lor q  :tag-orange: Golden Rule
+  #+end_align
+
+Then [[eqref:Golden Rule]] refers to the second line, as (Golden Rule) in orange; following that
+link in Emacs visits the line.
+
++ The contents are LaTeX, not Org markup; as in LaTeX, a line sans a tag ends in \\.
++ “:tag-COLOUR: NAME” ≈ “\tag{$\color{COLOUR}{\text{NAME}}$} \label{NAME} \\”, for any xcolor COLOUR.
++ Shorthands, such as -&gt; above, come from the :let switch, which every block has; :let NAME shares them, from
+  the table #+name: NAME or the variable NAME.
++ In Markdown, the equations are a fenced math block.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_align
+     Hello, world
+     #+end_align
+
+ is rewritten to the result of the call
+
+     (org-block/align ‘latex "Hello, world")</pre></template></abbr> block's contents are LaTeX, aligned at each <code>&amp;</code>; as in LaTeX, a line ends in
+<code>\\</code>, unless it ends in a tag <code>:tag-COLOUR: NAME</code>, which is <code>NAME</code> in that colour and is what
+<code>[[eqref:NAME]]</code> cites. Following such a link in Emacs visits the line; failing that, any
+<code>\tag{…NAME…}</code>. An <code>align :numbered t</code> numbers its untagged lines too. Since the contents are
+LaTeX, shorthands are welcome: the <a href="#Switches-for-every-block">:let switch</a> gives them, as below.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">An ~align~ block lines equations up at each =&=; a line may end in a coloured tag, to which an
+=eqref:= link refers. Shorthands, such as =->= below, come from the =:let= switch every block has.
+
+#+begin_align :let (-> "\\Rightarrow" == "\\equiv")
+p -> q &== \neg p \lor q          :tag-blue: Implication
+p \land q &== p == q == p \lor q  :tag-orange: Golden Rule
+#+end_align
+
+By [[eqref:Golden Rule]], conjunction is defined by equivalence and disjunction.</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+An <code>align</code> block lines equations up at each <code>&amp;</code>; a line may end in a
+coloured tag, to which an
+<code>eqref:</code> link refers. Shorthands, such as <code>-&gt;</code> below, come from the
+<code>:let</code> switch every block has.
+</p>
+
+\begin{align*}
+p \Rightarrow q &amp;\equiv \neg p \lor q          \tag{$\color{blue}{\text{Implication}}$}
+\label{Implication} \\
+p \land q &amp;\equiv p \equiv q \equiv p \lor q  \tag{$\color{orange}{\text{Golden Rule}}$}
+\label{Golden Rule}
+\end{align*}
+
+<p>
+By \eqref{Golden Rule}, conjunction is defined by equivalence and disjunction.
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+To share shorthands among many blocks, name them once, in a table that need not itself export:
+</p>
+<pre class="example">
+#+begin_align :let logic
+p -&gt; q &amp;== \neg p \lor q
+#+end_align
+
+* Shorthands :noexport:
+#+name: logic
+| Variable | Value       |
+|----------+-------------|
+| -&gt;       | \Rightarrow |
+| ==       | \equiv      |
+</pre>
+<p>
+The rows above the rule are a header, and are skipped. A Lisp variable serves too, across
+documents: <code>(setq logic '(-&gt; "\\Rightarrow"))</code> and then <code>:let logic</code>.
+</p>
+</div>
+</div>
+<div id="outline-container-latex-definitions-for-hiding-LaTeX-declarations-in-HTML" class="outline-2">
+<h2 id="latex-definitions-for-hiding-LaTeX-declarations-in-HTML"><span class="section-number-2">8.</span> <a href="#latex-definitions-for-hiding-LaTeX-declarations-in-HTML">  <code>latex-definitions</code> for hiding LaTeX declarations in HTML</a></h2>
+<div class="outline-text-2" id="text-latex-definitions-for-hiding-LaTeX-declarations-in-HTML">
+<p>
+To present mathematical formulae in HTML export, we may use
+LaTeX-style commands such as <code>{\color{red} x}</code> by enclosing them in
+<code>$</code>-symbols to obtain \({\color{red}x}\).  This is known as the MathJax
+tool &mdash;Emacs' default HTML export includes it.  (Unfortunately,
+MathJax does not directly support arbitrary HTML elements to occur
+within the <code>$</code>-delimiters.)
+</p>
+
+<p>
+It is common to declare LaTeX definitions for convenience, but such
+declarations occur within <code>$</code>-delimiters and thereby produce
+undesirable extra whitespace. See the superflous vertical whitespace
+in the <code>Result</code> side below. 
+</p>
+
+<div style="column-count: 2;">
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
+<div ><pre class="src src-org">Hello, in this blog post I'd like to talk about quantifiers.
+# First, I'll define some helpers that I use multiple times...
+  $$
+ \def\Plus{\color{teal}\bigoplus}
+ \def\plus{\;\color{teal}\oplus\;}
+ \def\f#1{{\color{brown}f}{\color{violet}(#1)}}
+ \def\xstart{\color{red} a}
+ \def\xend{\color{cyan} b}
+ $$
+ 
+ Anyhow, let's talk about quantifiers...
+ $$
+ \Plus_{{\color{violet} x} = \xstart}^{\xend} \f{x}
+ \; = \;
+ \f{{\xstart}} \plus \f{a+1} \plus \f{a+2} \plus \cdots \plus \f{{\xend}}
+ $$
+
+ The above “quantification” means [[teal:Loop sequentially with]]
+ [[brown:loop-bodies f(x)]] [[teal:fused using ⊕]], using [[violet:x as the
+ name of the current element]], [[red:starting at a]] and [[cyan:ending at b]].</pre></div>
+</div>
+<div style="padding: 1em;background-color: #FFFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<p>
+Hello, in this blog post I'd like to talk about quantifiers.
+</p>
+
+<p>
+\[
+    \def\Plus{\color{teal}\bigoplus}
+    \def\plus{\;\color{teal}\oplus\;}
+    \def\f#1{{\color{brown}f}{\color{violet}(#1)}}
+    \def\xstart{\color{red} a}
+    \def\xend{\color{cyan} b}
+    \]
+</p>
+
+<p>
+Anyhow, let's talk about quantifiers&hellip;
+\[
+    \Plus_{{\color{violet} x} = \xstart}^{\xend} \f{x}
+    \; = \;
+    \f{{\xstart}} \plus \f{a+1} \plus \f{a+2} \plus \cdots \plus \f{{\xend}}
+    \]
+</p>
+
+<p>
+The above “quantification” means <span style="color:teal;">Loop sequentially with</span>
+<span style="color:brown;">loop-bodies f(x)</span> <span style="color:teal;">fused using ⊕</span>, using <span style="color:violet;">x as the name of the current element</span>, <span style="color:red;">starting at a</span> and <span style="color:cyan;">ending at b</span>.
+</p>
+</div>
+</div>
+<p>
+As such, we declare the <abbr class="tooltip" tabindex="0">latex-definitions<template><pre>Declare but do not display the CONTENTS according to the BACKEND.
+In LaTeX, they are declarations, so they go to the preamble, as #+latex_header: lines; within a beamer frame, which
+is read into a definition of its own, a macro’s #1 would otherwise be an error.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_latex-definitions
+     Hello, world
+     #+end_latex-definitions
+
+ is rewritten to the result of the call
+
+     (org-block/latex-definitions ‘latex "Hello, world")</pre></template></abbr> block type which avoids
+displaying such extra whitespace in the resulting HTML.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Hello, in this blog post I'd like to talk about quantifiers.
+ 
+# First, I'll define some helpers that I use multiple times...   
+#+begin_latex-definitions
+\def\Plus{\color{teal}\bigoplus}
+\def\plus{\;\color{teal}\oplus\;}
+\def\f#1{{\color{brown}f}{\color{violet}(#1)}}
+\def\xstart{\color{red} a}
+\def\xend{\color{cyan} b}
+#+end_latex-definitions
+
+Anyhow, let's talk about quantifiers...
+$$
+\Plus_{{\color{violet} x} = \xstart}^{\xend} \f{x}
+\; = \;
+\f{{\xstart}} \plus \f{a+1} \plus \f{a+2} \plus \cdots \plus \f{{\xend}}
+$$
+
+The above “quantification” means [[teal:Loop sequentially with]]
+[[brown:loop-bodies f(x)]] [[teal:fused using ⊕]], using [[violet:x as the
+name of the current element]], [[red:starting at a]] and [[cyan:ending at b]].</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+Hello, in this blog post I'd like to talk about quantifiers.
+</p>
+
+<p style="display:none">\[\def\Plus{\color{teal}\bigoplus}
+\def\plus{\;\color{teal}\oplus\;}
+\def\f#1{{\color{brown}f}{\color{violet}(#1)}}
+\def\xstart{\color{red} a}
+\def\xend{\color{cyan} b}\]</p>
+
+<p>
+Anyhow, let's talk about quantifiers&hellip;
+\[
+\Plus_{{\color{violet} x} = \xstart}^{\xend} \f{x}
+\; = \;
+\f{{\xstart}} \plus \f{a+1} \plus \f{a+2} \plus \cdots \plus \f{{\xend}}
+\]
+</p>
+
+<p>
+The above “quantification” means <span style="color:teal;">Loop sequentially with</span>
+<span style="color:brown;">loop-bodies f(x)</span> <span style="color:teal;">fused using ⊕</span>,
+using <span style="color:violet;">x as the name of the current element</span>, <span
+style="color:red;">starting at a</span> and <span style="color:cyan;">ending at b</span>.
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+</div>
+</div>
+<div id="outline-container-Graphs" class="outline-2">
+<h2 id="Graphs"><span class="section-number-2">9.</span> <a href="#Graphs">Graphs ---<i>Org lists, drawn by Graphviz</i></a></h2>
+<div class="outline-text-2" id="text-Graphs">
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Org lists are already trees, so the ~graph~ block draws them with Graphviz:
+nesting makes an edge, and a two-column table styles the item above it.
+
+#+begin_graph :file lambda-calculus.png
+#+graph:
+| rankdir | LR |
+
+#+node:
+| shape | box |
+
++ λ-calculus
+  | shape | ellipse |
+  + encodes :: Church encodings
+  + <<combinators>> Combinators
+    + S K I
++ Lisp
+  + borrows :: [[combinators]]
+    | :edge.style | dotted |
+#+end_graph
+
+Press =C-c C-c= inside the block to render it to a PNG; =C-u C-c C-c= shows the dot source instead.</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+Org lists are already trees, so the <code>graph</code> block draws them with Graphviz:
+nesting makes an edge, and a two-column table styles the item above it.
+</p>
+
+<img src="data:image/png;base64,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" alt="graph" />
+
+<p>
+Press <code>C-c C-c</code> inside the block to render it to a PNG; <code>C-u C-c C-c</code> shows the dot source instead.</p>
+ </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+The <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
+
+MAIN-ARG is the graph’s title, its label.
+The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
+:directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
+wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
+rather than erring.  Pass :file foo.png on the
+#+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
+a figure that [[foo]] reaches and #+caption: captions; otherwise the name is graph-HASH.png, HASH being that of the
+dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
+
+For HTML export: if :svg t is set, embeds an inline &lt;svg&gt; element (tooltips
+are preserved as &lt;title&gt; attributes and appear on hover in browsers).
+Otherwise, renders to an inline base64 PNG.
+For Markdown, it writes the image file and links it, as for a named graph.
+For other backends it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
+
+Within the block body:
+
+  #+graph: table  ↦ global graph[ ] attributes
+  #+node:  table  ↦ default node[ ] attributes
+  #+edge:  table  ↦ default edge[ ] attributes
+  #+rank:  n1 n2  ↦ { rank=same; n1; n2 } for nodes without a common parent; ids may be [[links]]
+  Under an item, #+graph:, #+node:, #+edge:, and #+rank: reach its whole subtree, as Org’s inherited properties do.
+  #+begin_cluster TITLE :KEY V … #+end_cluster  ↦ subgraph cluster_TITLE { … }; nests, and may sit in an item
+  :NAME: … :END:  ↦ a drawer of any name, folding such directives away
+  - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
+
+A #+name: table outside any graph is a template every graph in the buffer may use; the graph’s own wins.
+A section tagged :graph: exports as a graph of its text, its :PROPERTIES: drawer serving as the header line.
+
+Each list item declares a node.  Nesting encodes edges (parent → child); ordered children, 1. 2. 3., share a rank
+in the order written.  An item’s text may hold a &lt;&lt;target&gt;&gt;, its id; [[TARGET]] or [[TARGET][LABEL]] links, extra arcs;
+and *bold*, /italic/, _underline_, +strike+, =code=, or ~pre~, which make its label an HTML-like one.
+A description tag, ‘+ L :: CHILD’, labels the arc into CHILD; trailing ‘:T:’ tags splice #+name: templates;
+an inline footnote, [fn::NOTE], is the node’s tooltip, as is a note: a paragraph past the item’s first, or a
+#+begin_note block ---with ‘#+begin_note :edge’, the arc’s---, shown beneath the label instead under :notes inline;
+a web, file, or [[*Section]] link, its URL; an [[file:IMAGE.png]], its image;
+a checkbox, [X], [-], or [ ], applies the template checked, partial, or unchecked, when one exists; and a ‘\\’
+breaks the label’s line ---in a table value or #+record: cell, too.
+Org’s {{{macros}}} expand, by the buffer’s #+macro: lines.
+A two-column inline table on a list item supplies node attributes.
+
+  | key        | val    |  ↦ a Graphviz attribute of the node; values are quoted for you.
+  | :id        | alias  |  ↦ cross-reference name for this node.
+  | :edge.KEY  | val    |  ↦ attribute of the arc from the parent; a parallel arc is a second child item.
+  | :edge[T].KEY | val  |  ↦ attribute of this item’s arc to T, from a [[T]] link; "rec::port" reaches a record’s port.
+  | :inherit   | T₁ T₂  |  ↦ inherit the #+name: templates’ rows; explicit rows win.  Also :edge.:inherit, and :T₁:T₂: tags:
+                            after an item, its node’s; after a reference, or a description term, its arc’s.
+  A child item that is a lone [[T]] link is a reference to T: an arc to it, styled by the child’s :edge.KEY rows.
+  | :children-rank | same | ↦ constrain immediate children to the same rank;
+                            also accepts min, max, source, sink.
+  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }.
+  #+record: table       ↦ the node’s &lt;TABLE&gt; label, as laid out: a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an arc from there;
+                            ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.
+
+Example:
+
+  #+begin_graph :rankdir LR
+  + A
+    + calls :: B
+      + returns :: C
+  #+end_graph
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_graph
+     Hello, world
+     #+end_graph
+
+ is rewritten to the result of the call
+
+     (org-block/graph ‘latex "Hello, world")</pre></template></abbr> block is opt-in, so we load it separately with
+<code>(require 'org-graph-block)</code>. Rendering needs the <code>dot</code> executable from <a href="https://graphviz.org">Graphviz</a>:
+HTML export embeds a PNG &mdash;or an inline SVG, with tooltips intact, via <code>:svg t</code>&mdash; whereas
+other backends receive the dot source. Inside the block, <code>#+graph:</code>, <code>#+node:</code> and <code>#+edge:</code>
+tables set Graphviz's defaults; <code>C-h o org-block/graph</code> documents every option.
+</p>
+</div>
+</div>
+<div id="outline-container-Switches-for-every-block" class="outline-2">
+<h2 id="Switches-for-every-block"><span class="section-number-2">10.</span> <a href="#Switches-for-every-block">Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></h2>
+<div class="outline-text-2" id="text-Switches-for-every-block">
+<p>
+Just as every src block understands <code>:exports</code> and <code>:results</code>, every block understands these
+header arguments &mdash;ours, those made with <code>org-defblock</code>, Org's own src, example, quote, verse,
+and center blocks, and any <code>#+begin_𝒳</code> at all, no declaration needed:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Switch</th>
+<th scope="col" class="org-left">Effect upon export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>:noexport t</code></td>
+<td class="org-left">Nothing at all; e.g., notes to self</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:when FORM</code></td>
+<td class="org-left">Nothing at all, unless the Lisp <code>FORM</code> is non-nil; it may mention <code>backend</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:let (VAR VAL …)</code></td>
+<td class="org-left">Each whole-word <code>VAR</code>, or operator such as <code>-&gt;</code>, in the contents becomes its value, beforehand</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:let NAME</code></td>
+<td class="org-left">Likewise, for the <code>VAR</code> and <code>VAL</code> of each row of the table <code>#+name: NAME</code>, else of the variable <code>NAME</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:ignore t</code></td>
+<td class="org-left">The contents, as plain Org; i.e., the block's own behaviour is bypassed</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:boxed TITLE</code></td>
+<td class="org-left">The result, within a <abbr class="tooltip" tabindex="0">box<template><pre>Enclose text in a box, possibly with a TITLE.
+
+By default, the box’s BACKGROUND-COLOR is green for HTML and red for LaTeX;
+for LaTeX, there are also FRAME-COLOR and TITLE-BACKGROUND-COLOR.
+
+SHADOW is an alternate style of boxing: It shows the contents in a centred
+box with a shadow colour being the given non-nil value of SHADOW.
+If SHADOW is a hexadecimal colour, it should be a string enclosed in double quotes.
+More accurately, the following are all valid uses:
+
+    #+begin_box title :shadow t
+    #+begin_box title :shadow inset
+
+    #+begin_box title :shadow "pink"
+    #+begin_box title :shadow pink
+
+    #+begin_box title :shadow (cyan pink orange yellow)
+    #+begin_box title :shadow (cyan "inset pink" orange)
+    #+begin_box title :shadow (:left cyan :right pink :deep-right orange :deep-left yellow)
+
+Notice that prefixing colours with ‘inset’ causes the colour to be within the box,
+rather than spread, with blur, around the box. The use of ‘inset’ swaps left and right.
+
+The HTML export uses a padded div, whereas the LaTeX export
+requires the tcolorbox package; Markdown, sans colours, gets a quote opening with TITLE in bold.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_box
+     Hello, world
+     #+end_box
+
+ is rewritten to the result of the call
+
+     (org-block/box ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for untitled</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:folded TITLE</code></td>
+<td class="org-left">The result, folded within <abbr class="tooltip" tabindex="0">details<template><pre>Enclose contents in a folded up box, for HTML.
+
+For LaTeX, this is just a boring, but centered, box.
+
+By default, the TITLE of such blocks is “Details”,
+its TITLE-COLOR is green, and BACKGROUND-COLOR is “#e5f5e5”.
+
+In HTML, we show folded, details, regions with a nice greenish colour.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_details
+     Hello, world
+     #+end_details
+
+ is rewritten to the result of the call
+
+     (org-block/details ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for the block's name</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:verbatim t</code></td>
+<td class="org-left">The block as written, sans its switches, shown as Org source</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:verbatim demo</code></td>
+<td class="org-left">That source beside what it exports to, as with <abbr class="tooltip" tabindex="0">org-demo<template><pre>Output the CONTENTS of the block as both parsed Org and unparsed.
+
+Label the source text by SOURCE and the result text by RESULT
+
+finally, the source-result fragments can be shown in a STYLE
+that is either “parallel” (default) or “sequential”.
+
+SEP is the separator; e.g., a rule ‘&lt;hr&gt;’.
+
+In Markdown, the source is a fenced org block above its result, each under its label in bold.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_org-demo
+     Hello, world
+     #+end_org-demo
+
+ is rewritten to the result of the call
+
+     (org-block/org-demo ‘latex "Hello, world")</pre></template></abbr></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_box Exercise :let (N 7)
+What do the first N odd numbers sum to?
+#+end_box
+
+#+begin_box Answer :let (N 7 SUM (* N N)) :folded "Peek at the answer"
+The first N odd numbers sum to N × N, which is SUM.
+#+end_box
+
+#+begin_remark :noexport t
+Ask the class for a proof by induction next week.
+#+end_remark
+
+#+begin_parallel :when (eq backend 'html) :boxed "On the web only"
+Columns suit wide screens.
+#+columnbreak:
+Print gets one column.
+#+end_parallel</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;">
+<h3>Exercise</h3> 
+<p>
+What do the first 7 odd numbers sum to?
+</p>
+</div>
+
+<details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px;
+color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
+<summary><strong><font face="Courier" size="3" color="green">Peek at the
+answer</font></strong></summary>
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;">
+<h3>Answer</h3> 
+<p>
+The first 7 odd numbers sum to 7 × 7, which is 49.
+</p>
+</div>
+
+</details>
+
+
+
+<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>On
+the web only</h3> 
+<div style="column-count: 2;">
+<p>
+Columns suit wide screens.
+</p>
+<p>
+Print gets one column.
+</p>
+</div>
+</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+A src block's <code>:folded t</code> is titled by its language, and its code is still exported by Org,
+as ever. Switches apply before Babel runs, so a src block's <code>:let</code> changes the code it runs,
+<code>:noexport</code> keeps it from running at all, and <code>:folded</code> folds away its results too. Other
+switches then apply to a <code>:verbatim</code> showing; e.g., <code>:verbatim demo :folded t</code> folds away a
+block's source and result alike.
+</p>
+
+<p>
+Moreover, <code>:C-c_C-c ACTION</code> gives a block an action in Emacs: pressing <code>C-c C-c</code> within it
+calls <code>ACTION</code> when it names a function, else evaluates it as a Lisp form; see <a href="https://alhassy.com/org-special-block-extras-developers-guide#C-c-C-c-for-your-own-blocks">C-c C-c for
+your own blocks</a>.
+</p>
+
+<p>
+Switches are inherited as a src block's header-args are; e.g., <code>:header-args:red: :let (N 3)</code>
+in a heading's drawer gives every <code>red</code> block of its subtree that <code>:let</code>.
+</p>
+
+<p>
+A block that declares a keyword of the same name keeps it for itself; e.g., a block with
+its own <code>folded</code> argument receives <code>:folded</code> as usual. Since <code>:when</code>, <code>:let</code> and <code>:C-c_C-c</code>
+run Lisp written in the document, Emacs asks once before running each distinct form;
+<code>org-defblock-evaluate-switches</code> may instead allow them freely, or never.
+</p>
+</div>
+</div>
+<div id="outline-container-Callouts" class="outline-2">
+<h2 id="Callouts"><span class="section-number-2">11.</span> <a href="#Callouts">Callouts &mdash;Note, tip, important, warning, caution</a></h2>
+<div class="outline-text-2" id="text-Callouts">
+<p>
+Five blocks, after GitHub's alerts, call out a paragraph with a coloured rule down its
+left under a titled heading; the title defaults to the block's name.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_tip
+=C-h k= followed by any key tells us what that key does.
+#+end_tip
+
+#+begin_warning Mind the gap
+=C-x C-c= quits Emacs, unsaved buffers and all ---it asks first, though.
+#+end_warning</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div class="callout" style="border-left: 0.25em solid #1a7f37; padding: 0.5em 1em; margin: 1em 0;">
+<p style="color: #1a7f37; font-weight: bold; margin: 0;">💡 Tip</p>
+<p>
+<code>C-h k</code> followed by any key tells us what that key does.
+</p>
+
+</div>
+
+<div class="callout" style="border-left: 0.25em solid #9a6700; padding: 0.5em 1em; margin: 1em 0;">
+<p style="color: #9a6700; font-weight: bold; margin: 0;">⚠️ Mind the gap</p>
+<p>
+<code>C-x C-c</code> quits Emacs, unsaved buffers and all &mdash;it asks first, though.
+</p>
+
+</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+The colours, icons, and intended uses live in <code>org-callouts</code>. Since a heading tagged
+<code>:note:</code> is common enough to mean something else entirely, callouts claim neither tags nor
+link types.
+</p>
+
+<p>
+Exported to Markdown (<code>ox-md</code> or <code>ox-gfm</code>), a callout becomes GitHub's own alert,
+<code>&gt; [!WARNING]</code>; since alerts are untitled, a custom title becomes its bold first paragraph.
+See <a href="#Markdown-export">Markdown export</a> for what the other blocks become.
+</p>
+</div>
+</div>
+<div id="outline-container-Colours-links" class="outline-2">
+<h2 id="Colours-links"><span class="section-number-2">12.</span> <a href="#Colours-links">Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></h2>
+<div class="outline-text-2" id="text-Colours-links">
+<p>
+Each of the 19 colours that HTML and LaTeX's <code>xcolor</code> share &mdash;black, blue, brown, cyan, darkgray, gray,
+green, lightgray, lime, magenta, olive, orange, pink, purple, red, teal, violet, white, and yellow&mdash; is a
+block, a link, and a tag; <code>color</code> takes any other, by name or hex code. In Emacs, too, each such link
+shows its text in its colour, as soon as <code>org-special-block-extras-mode</code> is on.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_red
+Look at my text, it's red!
+#+end_red
+
+#+begin_pink
+Look at my text, it's pink!
+#+end_pink
+
+#+begin_color cyan
+Look at my text, it's cyan!
+#+end_color
+
+green:Look
+blue:Here
+orange:Buddo!
+
+[[color:#ff0066][Any hex colour]], [[color:navy][any colour's name]], and [[red:][a described red link]].</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <span style="color:red;">
+<p>
+Look at my text, it's red!
+</p>
+</span>
+
+<span style="color:pink;">
+<p>
+Look at my text, it's pink!
+</p>
+</span>
+
+<span style="color:cyan;">
+<p>
+Look at my text, it's cyan!
+</p>
+</span>
+
+<p>
+<span style="color:green;">Look</span>
+<span style="color:blue;">Here</span>
+<span style="color:orange;">Buddo</span>!
+</p>
+
+<p>
+<span style="color:#ff0066;">Any hex colour</span>, <span style="color:navy;">any colour's
+name</span>, and <span style="color:red;">a described red link</span>.
+</p> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+</div>
+</div>
+<div id="outline-container-quote-citations" class="outline-2">
+<h2 id="quote-citations"><span class="section-number-2">13.</span> <a href="#quote-citations">Quotations, cited ---<code>#+begin_quote KEY</code></a></h2>
+<div class="outline-text-2" id="text-quote-citations">
+<p>
+Org's own quote block, given a bibliography key, cites it, at its pages &mdash;the key given as the
+main argument, or as <code>:key</code>:
+</p>
+<pre class="example">
+#+begin_quote zermelo1908 :pages 20-22
+Set theory is that branch of mathematics whose task is to investigate
+the fundamental notions of number, order, and function.
+#+end_quote
+</pre>
+<p>
+In LaTeX, and so in beamer, this is csquotes' <code>\blockcquote[20-22]{zermelo1908}{…}</code>, cited by
+our bibliography &mdash;biblatex's <code>\addbibresource</code>, BibTeX's <code>\bibliography</code>, or org-cite&mdash;
+which is ours to give; csquotes itself is loaded for us, unless we load it ourselves. In HTML, it is a <code>&lt;blockquote&gt;</code> closed by
+“&mdash; <i>zermelo1908</i>, 20-22”; in Markdown, a quote closed likewise. A quote sans arguments is
+Org's own, as ever.
+</p>
+
+<p>
+The quoted text hugs its braces, <code>\blockcquote[20-22]{zermelo1908}{Set theory …function.}</code>, sans
+the stray spaces LaTeX would read from its newlines; so does the <code>contents</code> of any block of ours
+whose LaTeX wraps it in braces, say <code>(format "\\textbf{%s}" contents)</code>.
+</p>
+
+<p>
+As a link, a quote is inline: <code>[[quote:zermelo1908][set theory is …]]</code> is csquotes'
+<code>\textcquote{zermelo1908}{…}</code>, and <code>[[quote:][to be]]</code> is just “to be”. A section tagged
+<code>:quote:</code> is a quote of its text.
+</p>
+</div>
+</div>
+<div id="outline-container-Highlights" class="outline-2">
+<h2 id="Highlights"><span class="section-number-2">14.</span> <a href="#Highlights">Highlights &mdash;Colour the background, not the text</a></h2>
+<div class="outline-text-2" id="text-Highlights">
+<p>
+Where <code>red:𝒳</code> colours text, <code>[[highlight:pink][𝒳]]</code> colours its background; the colour
+defaults to yellow, and the link shows so highlighted in Emacs too.
+</p>
+
+<p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Skimming readers see [[highlight:yellow][the one sentence that matters]], and [[highlight:pink][the one to reread]].
+
+#+begin_highlight #e5f5e5
+A whole paragraph, gently set apart.
+#+end_highlight</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+Skimming readers see <span style="background-color:yellow;">the one sentence that matters</span>,
+and <span style="background-color:pink;">the one to reread</span>.
+</p>
+
+<div style="background-color:#e5f5e5;">
+<p>
+A whole paragraph, gently set apart.
+</p>
+</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>
+</code></pre>
+</div>
+ </details>
+</p>
+
+<p>
+For the reader who would rather pick the page's background colour themself,
+<code>[[palette:][Pick a background]]</code> is a button that unfolds a palette of pale colours,
+<code>org-palette-colors</code>; clicking one makes it the background &mdash;try it: <button onclick="let p = this.nextElementSibling; p.style.display = p.style.display === 'none' ? 'block' : 'none';">Pick a background</button><div style="display: none"><button style="background-color: snow" onclick="document.body.style.background = 'snow'">snow</button><button style="background-color: ghostwhite" onclick="document.body.style.background = 'ghostwhite'">ghostwhite</button><button style="background-color: whitesmoke" onclick="document.body.style.background = 'whitesmoke'">whitesmoke</button><button style="background-color: floralwhite" onclick="document.body.style.background = 'floralwhite'">floralwhite</button><button style="background-color: oldlace" onclick="document.body.style.background = 'oldlace'">oldlace</button><button style="background-color: linen" onclick="document.body.style.background = 'linen'">linen</button><button style="background-color: antiquewhite" onclick="document.body.style.background = 'antiquewhite'">antiquewhite</button><button style="background-color: papayawhip" onclick="document.body.style.background = 'papayawhip'">papayawhip</button><button style="background-color: blanchedalmond" onclick="document.body.style.background = 'blanchedalmond'">blanchedalmond</button><button style="background-color: bisque" onclick="document.body.style.background = 'bisque'">bisque</button><button style="background-color: cornsilk" onclick="document.body.style.background = 'cornsilk'">cornsilk</button><button style="background-color: ivory" onclick="document.body.style.background = 'ivory'">ivory</button><button style="background-color: lemonchiffon" onclick="document.body.style.background = 'lemonchiffon'">lemonchiffon</button><button style="background-color: seashell" onclick="document.body.style.background = 'seashell'">seashell</button><button style="background-color: honeydew" onclick="document.body.style.background = 'honeydew'">honeydew</button><button style="background-color: mintcream" onclick="document.body.style.background = 'mintcream'">mintcream</button><button style="background-color: azure" onclick="document.body.style.background = 'azure'">azure</button><button style="background-color: aliceblue" onclick="document.body.style.background = 'aliceblue'">aliceblue</button><button style="background-color: lavender" onclick="document.body.style.background = 'lavender'">lavender</button><button style="background-color: lavenderblush" onclick="document.body.style.background = 'lavenderblush'">lavenderblush</button><button style="background-color: mistyrose" onclick="document.body.style.background = 'mistyrose'">mistyrose</button><button style="background-color: beige" onclick="document.body.style.background = 'beige'">beige</button><button style="background-color: lightyellow" onclick="document.body.style.background = 'lightyellow'">lightyellow</button><button style="background-color: lightcyan" onclick="document.body.style.background = 'lightcyan'">lightcyan</button><button style="background-color: white" onclick="document.body.style.background = 'white'">white</button></div>.
+</p>
+</div>
+</div>
+<div id="outline-container-style-block" class="outline-2">
+<h2 id="style-block"><span class="section-number-2">15.</span> <a href="#style-block">Page-wide CSS with <code>style</code></a></h2>
+<div class="outline-text-2" id="text-style-block">
+<p>
+A <code>style</code> block is the page's CSS, taken verbatim; it exports to nothing but HTML.
+</p>
+<pre class="example">
+#+begin_style
+h2 { color: teal; }
+#+end_style
+</pre>
+</div>
+</div>
+<div id="outline-container-Markdown-export" class="outline-2">
+<h2 id="Markdown-export"><span class="section-number-2">16.</span> <a href="#Markdown-export">Markdown export &mdash;What survives GitHub, and how to change it</a></h2>
+<div class="outline-text-2" id="text-Markdown-export">
+<p>
+Exporting to Markdown, with <code>ox-md</code> or <code>ox-gfm</code>, our blocks see <code>backend</code> as <code>html</code>, since <code>md</code>
+derives from it; <code>(org-export-markdown-p)</code> tells the two apart. A Markdown renderer, such as
+GitHub's, keeps only some HTML: it strips every <code>style</code>, <code>class</code>, <code>&lt;style&gt;</code>, and <code>&lt;font&gt;</code>, yet
+keeps <code>&lt;details&gt;</code>, <code>&lt;kbd&gt;</code>, <code>&lt;mark&gt;</code>, <code>&lt;ins&gt;</code>, <code>&lt;abbr title&gt;</code>, <code>&lt;img&gt;</code>, and <code>$$</code> maths.
+</p>
+
+<dl class="org-dl">
+<dt>Work as-is</dt><dd><code>badge</code>, <code>melpa</code>, <code>kbd</code>, <code>details</code>, <code>solution</code>, <code>rename</code>, and <code>show</code> export
+just as they do to HTML, and so render on GitHub &mdash;sans colours.</dd>
+
+<dt>Markdown of their own</dt><dd><p>
+these blocks export to Markdown idioms, rather than HTML.
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Block</th>
+<th scope="col" class="org-left">Markdown export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>note</code>, <code>tip</code>, …</td>
+<td class="org-left">GitHub's own alert, <code>&gt; [!TIP]</code>; a custom title is a bold line</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>box</code></td>
+<td class="org-left">a quote, opening with its title in bold</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>remark</code></td>
+<td class="org-left">a <code>&gt; [!NOTE]</code> alert, titled by its editor</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>highlight</code></td>
+<td class="org-left"><code>&lt;mark&gt;</code>, which GitHub shows yellow, whatever the colour</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>spoiler</code></td>
+<td class="org-left">numbered blanks, with the answers folded away beneath</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>tree</code></td>
+<td class="org-left"><code>$$…$$</code> displays, as GitHub's maths knows no <code>\[…\]</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>org-demo</code></td>
+<td class="org-left">the source as a code block, then its result</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>doc</code>, <code>tooltip</code>, <code>kbd</code></td>
+<td class="org-left"><code>&lt;abbr&gt;</code> with a plain-text <code>title</code>, as there is no tooltipster</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>latex-definitions</code></td>
+<td class="org-left">nothing, lest its definitions show</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>graph</code></td>
+<td class="org-left">its image, written to its <code>:file</code> (else <code>graph-HASH.png</code>), linked</td>
+</tr>
+</tbody>
+</table></dd>
+
+<dt>Plain HTML</dt><dd>every other block emits the HTML it always does, which a given Markdown
+renderer may not honour; e.g., on GitHub, colours ---<code>red:𝒳</code>, <code>#+begin_color</code>&mdash; and
+<code>parallel</code>'s columns are stripped, leaving plain, stacked text. Then there are <code>style</code>,
+<code>palette</code>, <code>html-export-style</code>, and <code>toggle-details</code>, which are HTML-only by design: they
+dress the page itself, and Markdown has no say over the page.</dd>
+</dl>
+
+<p>
+Dislike how a block B exports to Markdown? Advise <code>org-block/B</code> on your own machine; its
+result is Org, so the export makes of it whatever it does of any Org. By way of example,
+boxes between horizontal rules:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(advice-add 'org-block/box <span style="color: #e44649;">:around</span>
+            (<span style="color: #a626a4;">lambda</span> (box backend raw-contents <span style="color: #c18401;">&amp;rest</span> args)
+              <span style="color: #50a14f; font-style: italic;">"In Markdown, a box is its bold title and text, between rules; elsewhere, as before."</span>
+              (<span style="color: #a626a4;">if</span> (org-export-markdown-p)
+                  (format <span style="color: #50a14f;">"-----\n*%s*\n\n%s\n-----"</span> (car args) raw-contents)
+                (apply box backend raw-contents args))))
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-latex-packages" class="outline-2">
+<h2 id="latex-packages"><span class="section-number-2">17.</span> <a href="#latex-packages">PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></h2>
+<div class="outline-text-2" id="text-latex-packages">
+<p>
+Each block names the LaTeX packages it needs &mdash;a box, <code>xcolor</code> and <code>tcolorbox</code>; a cited quote,
+<code>csquotes</code>&mdash; and a LaTeX export that uses the block, or its link, loads them just before
+<code>\begin{document}</code>. So we declare none ourselves; a package we do load, options and all, is left be.
+To see what a block needs, read the <code>:latex-head</code> of its definition, or evaluate
+<code>(get 'org-block/box 'org-latex-head)</code> ⇒ <code>("xcolor" "tcolorbox")</code>.
+</p>
+
+<p>
+A test, <a href="https://github.com/alhassy/org-special-block-extras/blob/master/tests/org-pdf-export-tests.el">tests/org-pdf-export-tests.el</a>, keeps this honest: it compiles every example of this manual to a
+PDF, and to beamer slides, declaring no packages at all. It uses LuaLaTeX, which reads Unicode such
+as 𝒳 and ⇒ as is; pdflatex instead needs a <code>\newunicodechar</code> for each such character. Slides have no
+margins, so there our margin notes, tooltips, and Org's footnotes are beamer's own footnotes.
+</p>
+</div>
+</div>
+<hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://alhassy.com/resources/cc-by-sa-3.0-88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>
