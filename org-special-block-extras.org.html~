@@ -3397,6 +3397,9 @@ LaTeX!
 Reading in glare?  <span style="background-color: #ffffff;"><a href="palette:">Pick a background</a></span> ---a pale colour soothes the eyes.
 
 <span style="color: #8b4513; font-weight: bold;">** &#127873;  What Does It Do?</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">what-does-it-do</span>
+  <span style="font-weight: bold;">:END:</span>
 
 - <span style="font-weight: bold;">*&#127912; Style with ease*</span> --- add colors, badges, tooltips (from a dictionary, Emacs
   Help, or custom file), keystroke notations, inline editorial comments, or even
@@ -4229,17 +4232,40 @@ from&#8728;to m = {! try it! }
 
   To colour a formula, LaTeX ---and MathJax, which typesets it in HTML--- would have us write
   ={\color{red} x}=; yet our prose colours by =red:x=. A <a href="doc:org-block/math">math</a> block is display maths
-  wherein our links are LaTeX's: =<span style="color: #ff0000;"><a href="red:ATOM">red:ATOM</a></span>= colours a ={group}=, a =\command{with}{arguments}=, or a
-  word; =<span style="color: #ff0000;"><a href="red:">[[red:][a + b]]</a></span>= colours =a + b=. So too for =<span style="color: #ff0066;"><a href="color:#ff0066">color:#ff0066</a></span>=, =highlight:=, =eqref:=, web
-  links, and =tooltip:= and =doc:=, which hover in HTML. Org's emphasis is read when its markers hug
-  their text, as in prose: =*f(a)*= is bold, whereas =a*b*c= and =a = b= are left be.
+  wherein our links are LaTeX's: =<span style="color: #ff0000;"><a href="red:ATOM">red:ATOM</a></span>= colours a ={group}=, =\left(&#8230;\right)=, a
+  =\command{with}{arguments}=, a word, else one character; =<span style="color: #ff0000;"><a href="red:">[[red:][a + b]]</a></span>= colours =a + b=. So too
+  for =<span style="color: #ff0066;"><a href="color:#ff0066">color:#ff0066</a></span>=, =highlight:=, =eqref:=, web links, and =tooltip:= and =doc:=, which hover in
+  HTML; as does a footnote, =x<span style="text-decoration: underline;">[fn::the current element]</span>=. A tooltip in maths is as one in prose: the
+  same box in HTML, and in LaTeX, a margin note, its number on =x=. Org's emphasis is read when its markers
+  hug their text, as in prose: =*f(a)*= is bold, whereas =a*b*c= and =a = b= are left be.
 
-  A line that begins =\def=, =\newcommand=, &#8230;, is a definition: declared, but not shown ---in LaTeX,
-  in the preamble; in HTML, hidden, whence MathJax knows it page-wide. Below, the first block is
-  only definitions, and so shows nothing.
+  A line that begins =\def=, =\newcommand=, &#8230;, begins a definition, through the line that closes
+  its braces: declared, but not shown ---in LaTeX, in the preamble; in HTML, hidden, whence MathJax
+  knows it page-wide. A line =# &#8230;= is a comment. Below, the first block is only definitions, and so
+  shows nothing.
 
   <a href="osbe-example:math">osbe-example:math</a>
 
+  The rest of Org's markup is read as one would hope:
+  + An Org table is a matrix ---a =pmatrix=, or whichever environment =:matrix= names--- whose
+    columns =TAB= aligns for us. As in Org, a line that begins =|= is a table; so we write
+    =\lvert x \rvert= for an absolute value.
+  + A line ending =:tag-COLOUR: NAME= is tagged, as in an <span style="text-decoration: underline;"><a href="#Aligned-equations">align</a></span> block, and
+    =<a href="eqref:NAME">[[eqref:NAME]]</a>= cites it; =:numbered t= numbers the rest.
+  + Lines that end in =\\= are gathered, each centred on a line of its own; to line them up at
+    =&amp;=, we reach for an <span style="text-decoration: underline;"><a href="#Aligned-equations">align</a></span> block.
+  + In Emacs, the block looks as a =#+begin_src latex= block does, with each =<span style="color: #ff0000;"><a href="red:ATOM">red:ATOM</a></span>= in red, as
+    the maths reads it; =C-c C-c= shows the maths as an image atop the block, until =C-c C-c= again,
+    or an edit; and =C-c '= edits it in =latex-mode=.
+
+<span style="color: #a0a1a7;">  #+begin_example
+</span>,#+begin_math :numbered t :matrix bmatrix
+R_{<a href="teal:\theta">teal:\theta</a>} =
+| \cos <a href="teal:\theta">teal:\theta</a> | -\sin <a href="teal:\theta">teal:\theta</a> |
+| \sin <a href="teal:\theta">teal:\theta</a> | \cos <a href="teal:\theta">teal:\theta</a>  |
+,#+end_math
+<span style="color: #a0a1a7;">  #+end_example
+</span>
 <span style="color: #8b4513; font-weight: bold;">** Aligned equations ---</span><span style="color: #8b4513; font-weight: bold;">=#+begin_align=</span><span style="color: #8b4513; font-weight: bold;">, cited by </span><span style="color: #8b4513; font-weight: bold;">=eqref:&#119987;=</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">Aligned-equations</span>
@@ -4248,8 +4274,9 @@ from&#8728;to m = {! try it! }
   An <a href="doc:org-block/align">align</a> block's contents are LaTeX, aligned at each =&amp;=; as in LaTeX, a line ends in
   =\\=, unless it ends in a tag =:tag-COLOUR: NAME=, which is =NAME= in that colour and is what
   =<a href="eqref:NAME">[[eqref:NAME]]</a>= cites. Following such a link in Emacs visits the line; failing that, any
-  =\tag{&#8230;NAME&#8230;}=. An =align :numbered t= numbers its untagged lines too. The contents are LaTeX,
-  read as a <span style="text-decoration: underline;"><a href="#math">math</a></span> block's are, so =red:&#119987;= colours a symbol; shorthands are welcome too: the <span style="text-decoration: underline;"><a href="#Switches-for-every-block">:let switch</a></span> gives them, as below.
+  =\tag{&#8230;NAME&#8230;}=, as in a <span style="text-decoration: underline;"><a href="#math">math</a></span> block. An =align :numbered t= numbers its untagged lines too.
+  The contents are LaTeX, read as a math block's are, so =red:&#119987;= colours a symbol; shorthands are
+  welcome too: the <span style="text-decoration: underline;"><a href="#Switches-for-every-block">:let switch</a></span> gives them, as below.
 
   <a href="osbe-example:align">osbe-example:align</a>
 
@@ -4834,7 +4861,18 @@ Two.
 </span>#+begin_details TITLE="Details" :background-color "#e5f5e5" :title-color "green": Enclose contents in a folded up box, for HTML.
 <span style="color: #a0a1a7;">  #+end_example
 </span>  This needs no setup beyond =org-special-block-extras-mode=, and works for our own blocks too.
-  For the full story of a block, =C-h o org-block/NAME=.
+
+  A multi-line display, such as eldoc-box, shows more beneath that line: the keys that act on the
+  block ---e.g., a math block's =C-c C-c= preview and =C-c '= edit--- and two buttons: <span style="font-style: italic;">/Docs/</span>,
+  for the full story, =C-h o org-block/NAME=; and <span style="font-style: italic;">/See the manual/</span>, for the section of this
+  manual that documents it. Our own blocks declare these as =org-defblock= options:
+<span style="color: #a0a1a7;">  #+begin_example
+</span>(org-defblock shy (:hover "Prose that eldoc shows beneath the docstring's first line."
+                   :manual "<a href="https://example.com/shy">https://example.com/shy</a>") ; or "#ANCHOR", a section of this manual
+  "Be shy."
+  contents)
+<span style="color: #a0a1a7;">  #+end_example
+</span>  An =org-deflink= takes =:hover= and =:manual= too.
 
   Likewise, completing on a =#+begin_= line ---=M-TAB=, or any completion popup--- offers every
   block's name beside the first line of its docstring, and Org's own blocks beside them; a popup's

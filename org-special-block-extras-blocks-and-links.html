@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-18 Sun 20:41 -->
+<!-- 2026-10-18 Sun 23:02 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -1240,16 +1240,19 @@ For example, upon LaTeX export, the Org special block
  is rewritten to the result of the call
 
      (org-block/math ‘latex "Hello, world")</pre></template></abbr> block is display maths
-wherein our links are LaTeX's: <code>red:ATOM</code> colours a <code>{group}</code>, a <code>\command{with}{arguments}</code>, or a
-word; <code>[[red:][a + b]]</code> colours <code>a + b</code>. So too for <code>color:#ff0066</code>, <code>highlight:</code>, <code>eqref:</code>, web
-links, and <code>tooltip:</code> and <code>doc:</code>, which hover in HTML. Org's emphasis is read when its markers hug
-their text, as in prose: <code>*f(a)*</code> is bold, whereas <code>a*b*c</code> and <code>a = b</code> are left be.
+wherein our links are LaTeX's: <code>red:ATOM</code> colours a <code>{group}</code>, <code>\left(…\right)</code>, a
+<code>\command{with}{arguments}</code>, a word, else one character; <code>[[red:][a + b]]</code> colours <code>a + b</code>. So too
+for <code>color:#ff0066</code>, <code>highlight:</code>, <code>eqref:</code>, web links, and <code>tooltip:</code> and <code>doc:</code>, which hover in
+HTML; as does a footnote, <code>x[fn::the current element]</code>. A tooltip in maths is as one in prose: the
+same box in HTML, and in LaTeX, a margin note, its number on <code>x</code>. Org's emphasis is read when its markers
+hug their text, as in prose: <code>*f(a)*</code> is bold, whereas <code>a*b*c</code> and <code>a = b</code> are left be.
 </p>
 
 <p>
-A line that begins <code>\def</code>, <code>\newcommand</code>, …, is a definition: declared, but not shown &mdash;in LaTeX,
-in the preamble; in HTML, hidden, whence MathJax knows it page-wide. Below, the first block is
-only definitions, and so shows nothing.
+A line that begins <code>\def</code>, <code>\newcommand</code>, …, begins a definition, through the line that closes
+its braces: declared, but not shown &mdash;in LaTeX, in the preamble; in HTML, hidden, whence MathJax
+knows it page-wide. A line <code># …</code> is a comment. Below, the first block is only definitions, and so
+shows nothing.
 </p>
 
 <p>
@@ -1300,6 +1303,30 @@ style="color:red;">starting at a</span> and <span style="color:cyan;">ending at 
 </div>
  </details>
 </p>
+
+<p>
+The rest of Org's markup is read as one would hope:
+</p>
+<ul class="org-ul">
+<li>An Org table is a matrix &mdash;a <code>pmatrix</code>, or whichever environment <code>:matrix</code> names&mdash; whose
+columns <code>TAB</code> aligns for us. As in Org, a line that begins <code>|</code> is a table; so we write
+<code>\lvert x \rvert</code> for an absolute value.</li>
+<li>A line ending <code>:tag-COLOUR: NAME</code> is tagged, as in an <a href="#Aligned-equations">align</a> block, and
+<code>[[eqref:NAME]]</code> cites it; <code>:numbered t</code> numbers the rest.</li>
+<li>Lines that end in <code>\\</code> are gathered, each centred on a line of its own; to line them up at
+<code>&amp;</code>, we reach for an <a href="#Aligned-equations">align</a> block.</li>
+<li>In Emacs, the block looks as a <code>#+begin_src latex</code> block does, with each <code>red:ATOM</code> in red, as
+the maths reads it; <code>C-c C-c</code> shows the maths as an image atop the block, until <code>C-c C-c</code> again,
+or an edit; and <code>C-c '</code> edits it in <code>latex-mode</code>.</li>
+</ul>
+
+<pre class="example">
+#+begin_math :numbered t :matrix bmatrix
+R_{teal:\theta} =
+| \cos teal:\theta | -\sin teal:\theta |
+| \sin teal:\theta | \cos teal:\theta  |
+#+end_math
+</pre>
 </div>
 </div>
 <div id="outline-container-Aligned-equations" class="outline-2">
@@ -1340,8 +1367,9 @@ For example, upon LaTeX export, the Org special block
      (org-block/align ‘latex "Hello, world")</pre></template></abbr> block's contents are LaTeX, aligned at each <code>&amp;</code>; as in LaTeX, a line ends in
 <code>\\</code>, unless it ends in a tag <code>:tag-COLOUR: NAME</code>, which is <code>NAME</code> in that colour and is what
 <code>[[eqref:NAME]]</code> cites. Following such a link in Emacs visits the line; failing that, any
-<code>\tag{…NAME…}</code>. An <code>align :numbered t</code> numbers its untagged lines too. The contents are LaTeX,
-read as a <a href="#math">math</a> block's are, so <code>red:𝒳</code> colours a symbol; shorthands are welcome too: the <a href="#Switches-for-every-block">:let switch</a> gives them, as below.
+<code>\tag{…NAME…}</code>, as in a <a href="#math">math</a> block. An <code>align :numbered t</code> numbers its untagged lines too.
+The contents are LaTeX, read as a math block's are, so <code>red:𝒳</code> colours a symbol; shorthands are
+welcome too: the <a href="#Switches-for-every-block">:let switch</a> gives them, as below.
 </p>
 
 <p>
