@@ -420,6 +420,44 @@ Hence how far an article can lag its source:
 - *A renamed branch or file* makes the fetch 404: we keep publishing the stale copy, and the
   message tells us to fix the =:REDIRECT:=.
 
+To cut a URL article's lag from a day to minutes, its repo dispatches our build whenever it
+pushes to =master=.  Git has no post-push hook, so the repo's =.git/hooks/pre-push= waits, in
+the background, until the remote's =master= is the commit pushed ---a rejected push thus
+dispatches nothing--- then runs =gh workflow run=, logging to =.git/publish.log=.  We copy it
+verbatim into each repo a =:REDIRECT:= points at, then =chmod +x .git/hooks/pre-push=; e.g.,
+=org-special-block-extras= has it.
+
+#+begin_src shell :tangle no
+#!/bin/sh
+# After a push to master lands, rebuild alhassy.com, which publishes this repo's Org via a :REDIRECT:;
+# see AlBasmala.org §“A REDIRECT tracks master”.  Git has no post-push hook, so we wait, in the background,
+# until the remote's master is the commit we pushed; a rejected push so triggers nothing.
+remote="$1"
+log="$(git rev-parse --absolute-git-dir)/publish.log"
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+  [ "$remote_ref" = refs/heads/master ] || continue
+  echo "pre-push: alhassy.com rebuilds once ${local_sha%"${local_sha#???????}"} lands; see .git/publish.log" >&2
+  (
+    for _ in $(seq 60); do
+      if [ "$(git ls-remote "$remote" refs/heads/master | cut -f1)" = "$local_sha" ]; then
+        echo "$(date) $local_sha: $(gh workflow run ci.yml -R alhassy/alhassy.github.io 2>&1 || echo FAILED)"
+        exit
+      fi
+      sleep 2
+    done
+    echo "$(date) $local_sha: never landed; no rebuild"
+  ) >>"$log" 2>&1 </dev/null &
+done
+exit 0
+#+end_src
+
+A repo whose default branch is =main= says so in its =refs/heads/master=, twice.  Hooks aren't
+versioned, so a fresh clone needs the copy anew.  A =.github/workflows/= file dispatching on
+push would be versioned, but a workflow's own =GITHUB_TOKEN= cannot dispatch another repo's, so
+each repo would need a personal access token as a secret; for a handful of repos on one laptop,
+the hook is the lighter setup.  Either way, raw.githubusercontent.com caches files for up to 5
+minutes, so a rebuild that quick may yet fetch the old copy.
+
 *** Making a source include-ready
 :PROPERTIES:
 :CUSTOM_ID: making-a-source-include-ready
@@ -3628,6 +3666,7 @@ CI workaround sits beside its explanation. One =build= job
 
 The daily run is for =:REDIRECT:= articles: they track their repos' tips, but pushes there
 don't trigger us; see §[[#vendoring-redirects-so-ci-can-resolve-them][staleness]].
+A rebuild with nothing new costs about a minute of Actions time, which is free for a public repo.
 
 #+begin_src yaml :tangle .github/workflows/ci.yml
 name: blog CI
@@ -3639,6 +3678,8 @@ on:
     branches: [ master ]
   workflow_dispatch:
   # :REDIRECT: articles track their repos' tips, which don't trigger us; so rebuild daily too.
+  # Cron fields are "minute hour day-of-month month day-of-week", so "17 6 * * *" ≡ every day at 06:17 UTC
+  # ---best-effort: GitHub starts scheduled runs late under load, often by hours.
   schedule:
     - cron: "17 6 * * *"
 
