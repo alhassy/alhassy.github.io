@@ -3678,6 +3678,27 @@ jobs:
       - name: Install Graphviz
         run: sudo apt-get install -y graphviz
 
+      # &#8230; and, under :smartdiagram, typesets with pdflatex, then pdftoppm (poppler) makes the PNG.
+      # tlmgr resolves no dependencies, so we list what a smartdiagram's standalone document loads;
+      # cached, a minimal TeX Live costs seconds rather than texlive-full's gigabytes.
+      - name: Install a minimal TeX Live, for smartdiagrams
+        uses: TeX-Live/setup-texlive-action@v4
+        with:
+          packages: |
+            scheme-basic
+            standalone
+            preview
+            smartdiagram
+            pgf
+            xkeyval
+            xstring
+            etoolbox
+            varwidth
+            xcolor
+
+      - name: Install poppler, for pdftoppm
+        run: sudo apt-get install -y poppler-utils
+
       # A key unique to each run never hits exactly, so the newest elpa-&#8230;-* cache is restored
       # (restore-keys) and, after the upgrade below, saved anew.  A fixed key would hit forever and
       # never be re-saved, freezing our packages at whatever MELPA had when the key last changed.
