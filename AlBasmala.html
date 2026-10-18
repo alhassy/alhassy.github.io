@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-18 Sun 23:02 -->
+<!-- 2026-10-18 Sun 23:18 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -504,9 +504,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 3CA&gt;
+C-RET		#&lt;interpreted-function C16&gt;
 
-C-x C-s		#&lt;interpreted-function C06&gt;
+C-x C-s		#&lt;interpreted-function 4C6&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -1332,6 +1332,49 @@ upstream" view.</li>
 <li><b>A renamed branch or file</b> makes the fetch 404: we keep publishing the stale copy, and the
 message tells us to fix the <code>:REDIRECT:</code>.</li>
 </ul>
+
+<p>
+To cut a URL article's lag from a day to minutes, its repo dispatches our build whenever it
+pushes to <code>master</code>.  Git has no post-push hook, so the repo's <code>.git/hooks/pre-push</code> waits, in
+the background, until the remote's <code>master</code> is the commit pushed &mdash;a rejected push thus
+dispatches nothing&mdash; then runs <code>gh workflow run</code>, logging to <code>.git/publish.log</code>.  We copy it
+verbatim into each repo a <code>:REDIRECT:</code> points at, then <code>chmod +x .git/hooks/pre-push</code>; e.g.,
+<code>org-special-block-extras</code> has it.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell"><code><span style="color: #a0a1a7; font-weight: bold;">#</span><span style="color: #a0a1a7;">!/bin/</span><span style="color: #a626a4;">sh</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">After a push to master lands, rebuild alhassy.com, which publishes this repo's Org via a :REDIRECT:;
+</span><span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">see AlBasmala.org &#167;&#8220;A REDIRECT tracks master&#8221;.  Git has no post-push hook, so we wait, in the background,
+</span><span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">until the remote's master is the commit we pushed; a rejected push so triggers nothing.
+</span><span style="color: #8b4513;">remote</span>=<span style="color: #50a14f;">"$1"</span>
+<span style="color: #8b4513;">log</span>=<span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">git rev-parse --absolute-git-dir</span><span style="color: #50a14f;">)/publish.log"</span>
+<span style="color: #a626a4;">while </span><span style="color: #e44649;">read</span> -r _local_ref local_sha remote_ref _remote_sha; <span style="color: #a626a4;">do</span>
+  [ <span style="color: #50a14f;">"$remote_ref"</span> = refs/heads/master ] || <span style="color: #a626a4;">continue</span>
+  <span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"pre-push: alhassy.com rebuilds once ${local_sha%"</span>${<span style="color: #8b4513;">local_sha</span>#???????}<span style="color: #50a14f;">"} lands; see .git/publish.log"</span> &gt;&amp;2
+  (
+    <span style="color: #a626a4;">for</span> _<span style="color: #a626a4;"> in</span> $(<span style="font-weight: bold;">seq 60</span>); <span style="color: #a626a4;">do</span>
+      <span style="color: #a626a4;">if</span> [ <span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">git ls-remote "$remote" refs/heads/master | cut -f1</span><span style="color: #50a14f;">)"</span> = <span style="color: #50a14f;">"$local_sha"</span> ]; <span style="color: #a626a4;">then</span>
+        <span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">date</span><span style="color: #50a14f;">) $local_sha: $(</span><span style="font-weight: bold;">gh workflow run ci.yml -R alhassy/alhassy.github.io 2&gt;&amp;1 || echo FAILED</span><span style="color: #50a14f;">)"</span>
+        <span style="color: #a626a4;">exit</span>
+      <span style="color: #a626a4;">fi</span>
+      sleep 2
+    <span style="color: #a626a4;">done</span>
+    <span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">date</span><span style="color: #50a14f;">) $local_sha: never landed; no rebuild"</span>
+  ) &gt;&gt;<span style="color: #50a14f;">"$log"</span> 2&gt;&amp;1 &lt;/dev/null &amp;
+<span style="color: #a626a4;">done</span>
+<span style="color: #a626a4;">exit</span> 0
+</code></pre>
+</div>
+
+<p>
+A repo whose default branch is <code>main</code> says so in its <code>refs/heads/master</code>, twice.  Hooks aren't
+versioned, so a fresh clone needs the copy anew.  A <code>.github/workflows/</code> file dispatching on
+push would be versioned, but a workflow's own <code>GITHUB_TOKEN</code> cannot dispatch another repo's, so
+each repo would need a personal access token as a secret; for a handful of repos on one laptop,
+the hook is the lighter setup.  Either way, raw.githubusercontent.com caches files for up to 5
+minutes, so a rebuild that quick may yet fetch the old copy.
+</p>
 </div>
 </div>
 <div id="outline-container-making-a-source-include-ready" class="outline-4">
@@ -5345,6 +5388,7 @@ only spares us re-downloading what hasn't changed&mdash;, then saves them as a f
 <p>
 The daily run is for <code>:REDIRECT:</code> articles: they track their repos' tips, but pushes there
 don't trigger us; see §<a href="#vendoring-redirects-so-ci-can-resolve-them">staleness</a>.
+A rebuild with nothing new costs about a minute of Actions time, which is free for a public repo.
 </p>
 
 <div class="org-src-container">
@@ -5357,6 +5401,8 @@ on:
     branches: [ master ]
   workflow_dispatch:
   # :REDIRECT: articles track their repos' tips, which don't trigger us; so rebuild daily too.
+  # Cron fields are "minute hour day-of-month month day-of-week", so "17 6 * * *" ≡ every day at 06:17 UTC
+  # ---best-effort: GitHub starts scheduled runs late under load, often by hours.
   schedule:
     - cron: "17 6 * * *"
 
@@ -5849,9 +5895,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 3CA&gt;
+C-RET		#&lt;interpreted-function C16&gt;
 
-C-x C-s		#&lt;interpreted-function C06&gt;
+C-x C-s		#&lt;interpreted-function 4C6&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle

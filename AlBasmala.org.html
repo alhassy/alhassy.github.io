@@ -428,6 +428,44 @@ Hence how far an article can lag its source:
 - <span style="font-weight: bold;">*A renamed branch or file*</span> makes the fetch 404: we keep publishing the stale copy, and the
   message tells us to fix the =:REDIRECT:=.
 
+To cut a URL article's lag from a day to minutes, its repo dispatches our build whenever it
+pushes to =master=.  Git has no post-push hook, so the repo's =.git/hooks/pre-push= waits, in
+the background, until the remote's =master= is the commit pushed ---a rejected push thus
+dispatches nothing--- then runs =gh workflow run=, logging to =.git/publish.log=.  We copy it
+verbatim into each repo a =:REDIRECT:= points at, then =chmod +x .git/hooks/pre-push=; e.g.,
+=org-special-block-extras= has it.
+
+<span style="color: #a0a1a7;">#+begin_src shell :tangle no
+</span><span style="color: #a0a1a7; font-weight: bold;">#</span><span style="color: #a0a1a7;">!/bin/</span><span style="color: #a626a4;">sh</span><span style="color: #a0a1a7;">
+</span><span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">After a push to master lands, rebuild alhassy.com, which publishes this repo's Org via a :REDIRECT:;
+</span><span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">see AlBasmala.org &#167;&#8220;A REDIRECT tracks master&#8221;.  Git has no post-push hook, so we wait, in the background,
+</span><span style="color: #a0a1a7; font-weight: bold;"># </span><span style="color: #a0a1a7;">until the remote's master is the commit we pushed; a rejected push so triggers nothing.
+</span><span style="color: #8b4513;">remote</span>=<span style="color: #50a14f;">"$1"</span>
+<span style="color: #8b4513;">log</span>=<span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">git rev-parse --absolute-git-dir</span><span style="color: #50a14f;">)/publish.log"</span>
+<span style="color: #a626a4;">while </span><span style="color: #e44649;">read</span> -r _local_ref local_sha remote_ref _remote_sha; <span style="color: #a626a4;">do</span>
+  [ <span style="color: #50a14f;">"$remote_ref"</span> = refs/heads/master ] || <span style="color: #a626a4;">continue</span>
+  <span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"pre-push: alhassy.com rebuilds once ${local_sha%"</span>${<span style="color: #8b4513;">local_sha</span>#???????}<span style="color: #50a14f;">"} lands; see .git/publish.log"</span> &gt;&amp;2
+  (
+    <span style="color: #a626a4;">for</span> _<span style="color: #a626a4;"> in</span> $(<span style="font-weight: bold;">seq 60</span>); <span style="color: #a626a4;">do</span>
+      <span style="color: #a626a4;">if</span> [ <span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">git ls-remote "$remote" refs/heads/master | cut -f1</span><span style="color: #50a14f;">)"</span> = <span style="color: #50a14f;">"$local_sha"</span> ]; <span style="color: #a626a4;">then</span>
+        <span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">date</span><span style="color: #50a14f;">) $local_sha: $(</span><span style="font-weight: bold;">gh workflow run ci.yml -R alhassy/alhassy.github.io 2&gt;&amp;1 || echo FAILED</span><span style="color: #50a14f;">)"</span>
+        <span style="color: #a626a4;">exit</span>
+      <span style="color: #a626a4;">fi</span>
+      sleep 2
+    <span style="color: #a626a4;">done</span>
+    <span style="color: #e44649;">echo</span> <span style="color: #50a14f;">"$(</span><span style="font-weight: bold;">date</span><span style="color: #50a14f;">) $local_sha: never landed; no rebuild"</span>
+  ) &gt;&gt;<span style="color: #50a14f;">"$log"</span> 2&gt;&amp;1 &lt;/dev/null &amp;
+<span style="color: #a626a4;">done</span>
+<span style="color: #a626a4;">exit</span> 0
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A repo whose default branch is =main= says so in its =refs/heads/master=, twice.  Hooks aren't
+versioned, so a fresh clone needs the copy anew.  A =.github/workflows/= file dispatching on
+push would be versioned, but a workflow's own =GITHUB_TOKEN= cannot dispatch another repo's, so
+each repo would need a personal access token as a secret; for a handful of repos on one laptop,
+the hook is the lighter setup.  Either way, raw.githubusercontent.com caches files for up to 5
+minutes, so a rebuild that quick may yet fetch the old copy.
+
 <span style="color: #a626a4; font-weight: bold;">*** Making a source include-ready</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">making-a-source-include-ready</span>
@@ -3636,6 +3674,7 @@ CI workaround sits beside its explanation. One =build= job
 
 The daily run is for =:REDIRECT:= articles: they track their repos' tips, but pushes there
 don't trigger us; see &#167;<span style="text-decoration: underline;"><a href="#vendoring-redirects-so-ci-can-resolve-them">staleness</a></span>.
+A rebuild with nothing new costs about a minute of Actions time, which is free for a public repo.
 
 <span style="color: #a0a1a7;">#+begin_src yaml :tangle .github/workflows/ci.yml
 </span>name: blog CI
@@ -3647,6 +3686,8 @@ on:
     branches: [ master ]
   workflow_dispatch:
   # :REDIRECT: articles track their repos' tips, which don't trigger us; so rebuild daily too.
+  # Cron fields are "minute hour day-of-month month day-of-week", so "17 6 * * *" &#8801; every day at 06:17 UTC
+  # ---best-effort: GitHub starts scheduled runs late under load, often by hours.
   schedule:
     - cron: "17 6 * * *"
 
