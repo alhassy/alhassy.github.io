@@ -230,7 +230,9 @@ By way of example, the heading =* Quick Emacs Tip: visual-line-mode= is publishe
 =alhassy.com/quick-emacs-tip-visual-line-mode=.
 
 - A container heading's slug is its =:CUSTOM_ID:=; kbd:C-x_C-s stamps a missing one
-  with =blog--make-slug= of the title, so later title edits never shift the URL.
+  with =blog--make-slug= of the title, so later title edits never shift the URL; an
+  existing id that isn't lower-case kebab-case ---e.g., a =:REDIRECT:='s =Next_Steps=--- becomes
+  so, =next-steps=, along with every =[[#Next_Steps]]= link to it.
 - =blog--validate-slugs= refuses a slug that isn't lower-case kebab-case, or that another
   article ---container or standalone--- already owns, naming both.
 
@@ -828,7 +830,7 @@ kbd:C-c_i_i / kbd:C-c_i_s insert images.
 
 Binds:
   C-x C-s  ---assign :CUSTOM_ID: slugs to fresh container headings, stamp
-             section anchors, vendor :REDIRECT: sources, bump #+modified: /
+             section anchors, kebab-case existing ids (and their [[#id]] links), vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
   C-u C-x C-s ---likewise, but repeated section ids become <slug>--placeholder-N;
@@ -2818,7 +2820,7 @@ every later save logs each placeholder to =*Messages*= ---kbd:C-h_e--- until we 
   "Matches a placeholder CUSTOM_ID; `blog--make-slug' collapses dash runs, so no real slug contains “--”.")
 
 (defun blog--ensure-useful-section-anchors (&optional placeholders)
-  "Org sections without a CUSTOM_ID are given one derived from the heading title.
+  "Org sections without a CUSTOM_ID are given one derived from the heading title; existing ones are kebab-cased.
 
 Uses `blog--make-slug' so the result is lowercase kebab-case, consistent with
 URL slugs.  On a collision, pops a message-box and undoes ---unless PLACEHOLDERS
@@ -2828,6 +2830,18 @@ E.g., ↯ We'll go on a ∀∃⇅ adventure
    ↦  well-go-on-a-adventure
    ↦  well-go-on-a-adventure--placeholder-2, when repeated with PLACEHOLDERS"
   (interactive "P")
+  ;; Hand-written ids become lower-case kebab-case too, e.g., Next_Steps ↦ next-steps, as do the [[#id]] links naming them.
+  (org-map-entries
+   (lambda ()
+     (let* ((old (org-entry-get nil "CUSTOM_ID"))
+            (new (blog--make-slug (string-replace "_" " " old))))
+       (unless (equal old new)
+         (org-entry-put nil "CUSTOM_ID" new)
+         (save-excursion
+           (goto-char (point-min))
+           (while (search-forward (format "[[#%s]" old) nil t)
+             (replace-match (format "[[#%s]" new) t t))))))
+   "CUSTOM_ID={.}")
   ;; Existing ids count too, else a fresh slug could silently clash with a hand-written one.
   (let ((ids (org-map-entries (lambda () (org-entry-get nil "CUSTOM_ID")) "CUSTOM_ID={.}")))
     (org-map-entries
