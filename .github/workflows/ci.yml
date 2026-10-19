@@ -71,6 +71,11 @@ jobs:
           key: elpa-${{ runner.os }}-emacs30.1-${{ github.run_id }}
           restore-keys: elpa-${{ runner.os }}-emacs30.1-
 
+      # org-special-block-extras comes from GitHub master, not MELPA: its manual, which we publish
+      # via a :REDIRECT: to master, uses features that MELPA's build may not have caught up to yet.
+      # So we axe any cached copy and clone master afresh, ~2s; package-vc-upgrade-all pulls async, so
+      # in batch it never lands.
+      # TODO: Install org-special-block-extras from MELPA again, once it stabilises.
       - name: Install Emacs package dependencies
         run: |
           emacs --batch \
@@ -78,7 +83,9 @@ jobs:
             --eval "(setq package-archives '((\"gnu\" . \"https://elpa.gnu.org/packages/\") (\"melpa\" . \"https://melpa.org/packages/\")) package-install-upgrade-built-in t)" \
             --eval "(package-initialize)" \
             --eval "(package-refresh-contents)" \
-            --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))" \
+            --eval "(dolist (p '(dash f s htmlize)) (unless (package-installed-p p) (package-install p)))" \
+            --eval "(dolist (d (cdr (assq 'org-special-block-extras package-alist))) (package-delete d t))" \
+            --eval "(package-vc-install (quote (org-special-block-extras :url \"https://github.com/alhassy/org-special-block-extras\" :lisp-dir \"lisp\")))" \
             --eval "(package-upgrade-all)"
 
       - name: Build all articles
