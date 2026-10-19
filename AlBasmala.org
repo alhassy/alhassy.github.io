@@ -513,15 +513,16 @@ on with the GitHub tip ---whose bugs we may have just fixed, unpushed!
 :END:
 #+end_src
 
-A single =.el= isn't always enough.  =org-special-block-extras.org= shows =osbe-example:box=,
-an =org-defblock= in =tests/examples/README.el= that reads =tests/examples/box.el= beside it
-and scans the repo's =*.el= for =box='s definition; fetched alone, it finds neither.  So a
+A single =.el= isn't always enough: one that reads files beside it ---say, a link type whose
+examples live in the repo's =examples/*.org=--- finds none when fetched alone.  So a
 =:LOAD:= that's neither a URL nor an absolute path is relative to the =:REDIRECT:='s GitHub
 repo, which we shallow-clone to the git-ignored =.redirect-clones/<repo>/= ---refetched each
 publish, with last time's clone as the offline fallback--- and load from there; e.g.,
-=:LOAD: tests/examples/README.el=.  The directory is hidden, so it's neither scanned for
-articles nor copied to the site, where a nested =.git= would break GitHub Pages.  One-off
-link types thus stay with their article, rather than piling up in AlBasmala.org.
+=:LOAD: lisp/examples.el=.  The directory is hidden, so it's neither scanned for articles
+nor copied to the site, where a nested =.git= would break GitHub Pages.  One-off link types
+thus stay with their article, rather than piling up in AlBasmala.org.
+(=org-special-block-extras.org= needs none: its =:demo= blocks carry their own snapshots,
+and CI installs the package itself.)
 
 Finally, a redirected article on GitHub opens with a banner inviting readers to star the
 repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
