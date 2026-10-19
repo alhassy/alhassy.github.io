@@ -803,7 +803,7 @@ mimic the usual ~src~-block syntax for argument passing to support special block
 For instance, here is a sample declaration.
 
 #+begin_src emacs-lisp :tangle no
-(org-defblock stutter (nil nil reps 2)
+(org-defblock stutter (nil nil reps 2 &amp;context contents)
   "Output the CONTENTS of the block REPS many times"
   (org-parse (s-repeat reps contents)))
 #+end_src
@@ -2120,7 +2120,7 @@ hello&lt;/li&gt;
 (deftest "Identity blocks preserve indentation/enumeration"
     :expected-result :failed
   :tags '(core)
-  (org-defblock id nil "doc" contents)
+  (org-defblock id (&amp;context contents) "doc" contents)
   (should (equal
 "
   1. item one
@@ -2148,7 +2148,7 @@ hello&lt;/li&gt;
 
 (deftest "Identity blocks export to LaTex preserves indentation/enumeration"
     :expected-result :failed
-(org-defblock id nil "doc" contents)
+(org-defblock id (&amp;context contents) "doc" contents)
 (should (equal
 "\\begin{enumerate}
 \\item item one
@@ -2170,7 +2170,7 @@ world
 
 (deftest "Identity blocks export to HTML preserves indentation/enumeration"
     :expected-result :failed
-(org-defblock id nil "doc" contents)
+(org-defblock id (&amp;context contents) "doc" contents)
 (should (equal
 
 "&lt;ol class=\"org-ol\"&gt;
@@ -2257,7 +2257,7 @@ Perhaps an example will clarify things ...
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">it takes two arguments: &#8220;color&#8221; and &#8220;signoff&#8221;
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">with default values being "red" and "".
 </span>(<span style="color: #a626a4;">org-defblock</span> rremark
-  (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"red"</span> signoff <span style="color: #50a14f;">""</span>)
+  (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"red"</span> signoff <span style="color: #50a14f;">""</span> <span style="color: #c18401;">&amp;context</span> backend contents)
   (vector <span style="color: #e44649;">:face</span> angry-red)
   <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) editorial remarks; in Emacs they're angry red."</span>
   (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
@@ -2316,7 +2316,7 @@ has more bells and whistles &#8230; keep reading ;-)
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">it takes two arguments: &#8220;color&#8221; and &#8220;signoff&#8221;
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">with default values being "red" and "".
 </span>(<span style="color: #a626a4;">org-defblock</span> rremark
-  (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"red"</span> signoff <span style="color: #50a14f;">""</span>)
+  (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"red"</span> signoff <span style="color: #50a14f;">""</span> <span style="color: #c18401;">&amp;context</span> backend contents)
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"red"</span> <span style="color: #e44649;">:weight</span> bold)]
   <span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">:please-preserve-new-lines
 </span>  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) editorial remarks; in Emacs they're angry red."</span>
@@ -2435,7 +2435,7 @@ text before seeing the answer ----this works well in HTML, not so in LaTeX.
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">org-defblock</span> solution
   (title <span style="color: #50a14f;">"Solution"</span> reprimand <span style="color: #50a14f;">"Did you actually try? Maybe see the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">hints</span><span style="color: #50a14f;">&#8217; above!"</span>
-   really <span style="color: #50a14f;">"Solution, for real"</span>)
+   really <span style="color: #50a14f;">"Solution, for real"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Show the answers to a problem, but with a reprimand in case no attempt was made."</span>
   (<span style="color: #a626a4;">org-thread-blockcall</span> raw-contents
                     (details really <span style="color: #e44649;">:title-color</span> <span style="color: #50a14f;">"red"</span>)
@@ -2617,7 +2617,7 @@ woah, I'm repeated 5 times!woah, I'm repeated 5 times!woah, I'm repeated 5 times
 <span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
 <span style="color: #a0a1a7;">#+begin_solution
 </span>#+begin_src emacs-lisp
-(org-defblock stutter (reps 2)
+(org-defblock stutter (reps 2 &amp;context contents)
   "Output the CONTENTS of the block REPS many times"
   (-let [num (if (numberp reps) reps (string-to-number reps))]
     (s-repeat num contents)))
@@ -2675,7 +2675,7 @@ Genesis 41-17: Firaun said unto Yusuf, <span style="font-style: italic;">/In my 
 
 <span style="color: #a0a1a7;">#+begin_solution
 </span>#+begin_src emacs-lisp
-(org-defblock rename (list "")
+(org-defblock rename (list "" &amp;context contents)
   "Perform the given LIST of substitutions on the text.
 The LIST is a comma separated list of &#8216;to&#8217; separated symbols.
 In a link, no quotes are needed.
@@ -2785,7 +2785,7 @@ Whereas, the following begins with ~#+begin_spoiler orange~ ...
 --------------------------------------------------------------------------------
 
 #+begin_src emacs-lisp
-(org-defblock spoiler (color "grey" left "((" right "))")
+(org-defblock spoiler (color "grey" left "((" right "))" &amp;context backend contents)
   "Hide text enclosed in double parens ((like this)) as if it were spoilers.
    LEFT and RIGHT may be other kinds of delimiters.
    The main argument, COLOR, indicates which color to use.
@@ -2893,7 +2893,7 @@ Possibly using ID's as the current working solution above.
                 conclusion
                 (if named? (format "[\\text{%s}]" name) "")))))))
 
-(org-defblock tree (main-arg)
+(org-defblock tree (main-arg &amp;context raw-contents)
   "Write a proof tree using Org-lists.
 
 To get
@@ -3566,8 +3566,8 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
    + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-     &#8658; You may mention CONTENTS to refer to the &#8216;org parsed&#8217; version of user text.
-     &#8658; CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+     &#8658; Its body asks, by <span style="color: #8b4513;">&amp;amp;</span>context, for CONTENTS: the &#8216;org parsed&#8217; version of user text.
+     &#8658; CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of <span style="color: #8b4513;">&amp;amp;</span>context is non-nil.
    
    For example, upon LaTeX export, the Org special block
    
@@ -3732,8 +3732,8 @@ src_<span style="color: #a0a1a7;">latex</span>[:exports code]{<span style="color
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
    + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-     &#8658; You may mention CONTENTS to refer to the &#8216;org parsed&#8217; version of user text.
-     &#8658; CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+     &#8658; Its body asks, by <span style="color: #8b4513;">&amp;amp;</span>context, for CONTENTS: the &#8216;org parsed&#8217; version of user text.
+     &#8658; CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of <span style="color: #8b4513;">&amp;amp;</span>context is non-nil.
    
    For example, upon LaTeX export, the Org special block
    
@@ -4081,8 +4081,8 @@ attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffic
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
    + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-     &#8658; You may mention CONTENTS to refer to the &#8216;org parsed&#8217; version of user text.
-     &#8658; CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+     &#8658; Its body asks, by <span style="color: #8b4513;">&amp;amp;</span>context, for CONTENTS: the &#8216;org parsed&#8217; version of user text.
+     &#8658; CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of <span style="color: #8b4513;">&amp;amp;</span>context is non-nil.
    
    For example, upon LaTeX export, the Org special block
    
@@ -4799,8 +4799,8 @@ from&#8728;to m = {! try it! }
      Regarding the Lisp function:
      + BACKEND refers to the current export backend.
      + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-       &#8658; You may mention CONTENTS to refer to the &#8216;org parsed&#8217; version of user text.
-       &#8658; CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+       &#8658; Its body asks, by <span style="color: #8b4513;">&amp;amp;</span>context, for CONTENTS: the &#8216;org parsed&#8217; version of user text.
+       &#8658; CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of <span style="color: #8b4513;">&amp;amp;</span>context is non-nil.
      
      For example, upon LaTeX export, the Org special block
      
@@ -4896,8 +4896,8 @@ from&#8728;to m = {! try it! }
      Regarding the Lisp function:
      + BACKEND refers to the current export backend.
      + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-       &#8658; You may mention CONTENTS to refer to the &#8216;org parsed&#8217; version of user text.
-       &#8658; CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+       &#8658; Its body asks, by <span style="color: #8b4513;">&amp;amp;</span>context, for CONTENTS: the &#8216;org parsed&#8217; version of user text.
+       &#8658; CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of <span style="color: #8b4513;">&amp;amp;</span>context is non-nil.
      
      For example, upon LaTeX export, the Org special block
      
@@ -6160,11 +6160,15 @@ margins, so there our margin notes, tooltips, and Org's footnotes are beamer's o
 
   We declare a block just as we declare a function with ~cl-defun~: the block's main
   argument ---written right after =#+begin_NAME=--- is its =&amp;optional= argument, and its
-  header arguments are its =&amp;key= arguments. In the body, ~backend~ names the current
-  export backend and ~contents~ the block's Org-parsed contents.
+  header arguments are its =&amp;key= arguments. After =&amp;context= come the names the body
+  needs of the export: ~backend~, the current export backend, and ~contents~, the block's
+  Org-parsed contents; there are also ~raw-contents~, ~args~, ~link?~, and ~anchor~.  The
+  body sees only what it so asks for, so none of ours shadows a variable of its own; a name
+  already taken may be had under another, as in =&amp;context ((:contents text))=. See the
+  docstring of ~org-defblock~ for the lot, and why we prefer this to anaphora.
 
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-defblock</span> note (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"teal"</span>))
+</span>(<span style="color: #a626a4;">org-defblock</span> note (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"teal"</span>) <span style="color: #c18401;">&amp;context</span> backend contents)
   <span style="color: #50a14f;">"Call out CONTENTS under TITLE, tinted COLOR."</span>
   (<span style="color: #a626a4;">pcase</span> backend
     ('html (format <span style="color: #50a14f;">"&lt;div style=\"border-left: 4px solid %s; padding-left: 1em\"&gt;&lt;b&gt;%s&lt;/b&gt;%s&lt;/div&gt;"</span>
@@ -6185,7 +6189,7 @@ Mind the gap.
   our own--- ~backend~ is =html= or =latex=, so one rendering serves them all. To single one out,
   we ask Org's own ~org-export-current-backend~; by way of example, a docsy alert in Hugo:
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-defblock</span> noteblock (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"primary"</span>))
+</span>(<span style="color: #a626a4;">org-defblock</span> noteblock (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"primary"</span>) <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
   <span style="color: #50a14f;">"A note: a docsy alert in Hugo, a noteblock environment in LaTeX, a box elsewhere in HTML."</span>
   (<span style="color: #a626a4;">cond</span> ((org-export-derived-backend-p org-export-current-backend 'hugo)
          (format <span style="color: #50a14f;">"{{%% alert title=\"%s\" color=\"%s\" %%}}\n%s\n{{%% /alert %%}}"</span> title color raw-contents))
@@ -6214,7 +6218,7 @@ Mind the gap.
   =*Messages*=. To leave some to Org, a handler hands them back; by way of example, a verse
   signed by its poet, else Org's own:
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-defblock</span> verse (<span style="color: #c18401;">&amp;optional</span> poet)
+</span>(<span style="color: #a626a4;">org-defblock</span> verse (<span style="color: #c18401;">&amp;optional</span> poet <span style="color: #c18401;">&amp;context</span> raw-contents contents)
   <span style="color: #50a14f;">"A verse, signed by POET; sans one, Org's own verse."</span>
   (<span style="color: #a626a4;">if</span> (org-string-nw-p poet)
       (format <span style="color: #50a14f;">"\\begin{verse}\n%s\n\\end{verse}\n--- %s"</span> contents poet)
@@ -6404,7 +6408,7 @@ Mind the gap.
   function name, is evaluated instead. For every block of a kind, we define an action:
 
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-defblock</span> shout () <span style="color: #50a14f;">"Upcase the contents."</span> (upcase contents))
+</span>(<span style="color: #a626a4;">org-defblock</span> shout (<span style="color: #c18401;">&amp;context</span> contents) <span style="color: #50a14f;">"Upcase the contents."</span> (upcase contents))
 
 (<span style="color: #a626a4;">org-def-action</span> shout (<span style="color: #c18401;">&amp;optional</span> greeting <span style="color: #c18401;">&amp;key</span> (volume 1))
   <span style="color: #50a14f; font-style: italic;">"Announce the shout's GREETING, at VOLUME."</span>
@@ -6452,7 +6456,7 @@ Mind the gap.
   attributes.
 
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-defblock</span> poem (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #e44649;">:edit-indirect-mode</span> text-mode)
+</span>(<span style="color: #a626a4;">org-defblock</span> poem (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #e44649;">:edit-indirect-mode</span> text-mode <span style="color: #c18401;">&amp;context</span> contents)
   <span style="color: #50a14f;">"Set CONTENTS in italics, under TITLE."</span>
   (format <span style="color: #50a14f;">"&lt;h3&gt;%s&lt;/h3&gt;&lt;em&gt;%s&lt;/em&gt;"</span> title contents))
 <span style="color: #a0a1a7;">  #+end_src
@@ -6667,7 +6671,7 @@ e.g., <a href="doc:org-block/color">color</a> and <a href="doc:org-block/teal">t
 
 (cl-loop for colour in org--named-colors
          do (eval `(org-defblock ,colour
-                     (the-color "black")
+                     (the-color "black" &amp;context backend contents)
                      (vector :face `(:foreground ,(format "%s" (quote ,colour))))
                      ,(format "Show text in %s color." colour)
                      (let ()
@@ -6734,7 +6738,7 @@ Let's have some sanity tests...
 
     #+begin_src emacs-lisp
 (org-defblock color
-  (color black)
+  (color black &amp;context backend contents)
   (vector :face (lambda (colour) `(:foreground ,(format "%s" colour))))
   "Format text according to a given COLOR, which is black by default."
   (format (pcase backend
@@ -6918,7 +6922,7 @@ Let's have some sanity tests...
   "Should editor comments be shown in the output or not.")
 
 (org-defblock remark
-      (editor "Editor Remark" color "black" signoff "" strong nil)
+      (editor "Editor Remark" color "black" signoff "" strong nil &amp;context backend contents)
 ; :inline-please__see_margin_block_for_a_similar_incantation ; &#8658; crashes!
 [:face '(:foreground "red" :weight bold)]
 "Format CONTENTS as an first-class editor comment according to BACKEND.
@@ -9207,7 +9211,7 @@ the problem of <span style="font-weight: bold;">*producing*</span> documentation
 </span>#+BEGIN_SRC emacs-lisp
 (org-defblock documentation
   (name (error "Documentation block: Name must be provided")
-       label nil show nil color "green")
+       label nil show nil color "green" &amp;context raw-contents)
   "Register the dictionary entries in CONTENTS to the dictionary variable.
 
 The dictionary variable is &#8216;org--docs&#8217;.
@@ -9459,7 +9463,7 @@ With that in-hand, let's define our theorem block.
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">setq</span> my/theorem-counter 0)
 
-(<span style="color: #a626a4;">org-defblock</span> theorem (title)
+(<span style="color: #a626a4;">org-defblock</span> theorem (title <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Show block contents prefixed with &#8220;Theorem &#119951;&#8221;, where the &#119951;umbering automatically increments."</span>
   (format <span style="color: #50a14f;">"&lt;div class=\"theorem\"&gt;&lt;b&gt;Theorem %s%s.&lt;/b&gt;&amp;nbsp;%s&lt;/div&gt;"</span>
           (<span style="color: #a626a4;">cl-incf</span> my/theorem-counter)
@@ -9561,7 +9565,7 @@ Then, provide support for a new type of special block, say re-using the ~src~
 blocks that, say, folds up all such blocks in HTML export, by declaring the
 following.
 <span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp :tangle no
-</span>(<span style="color: #a626a4;">org-defblock</span> src (lang nil title nil exports nil file nil)
+</span>(<span style="color: #a626a4;">org-defblock</span> src (lang nil title nil exports nil file nil <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Fold-away all &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">src</span><span style="color: #50a14f;">&#8217; blocks as &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">&lt;details&gt;</span><span style="color: #50a14f;">&#8217; HTML export.
 If a block has a &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">:title</span><span style="color: #50a14f;">&#8217;, use that to title the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">&lt;details&gt;</span><span style="color: #50a14f;">&#8217;."</span>
   (format <span style="color: #50a14f;">"&lt;details&gt; &lt;summary&gt; %s &lt;/summary&gt; &lt;pre&gt; %s &lt;/pre&gt;&lt;/details&gt;"</span>

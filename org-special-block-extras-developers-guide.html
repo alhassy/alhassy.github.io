@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 14:29 -->
+<!-- 2026-10-19 Mon 15:55 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Make your own blocks and links</title>
@@ -398,12 +398,16 @@ Every block and link above is made with the very tools below, so a new one of ou
 <p>
 We declare a block just as we declare a function with <code>cl-defun</code>: the block's main
 argument &mdash;written right after <code>#+begin_NAME</code>&mdash; is its <code>&amp;optional</code> argument, and its
-header arguments are its <code>&amp;key</code> arguments. In the body, <code>backend</code> names the current
-export backend and <code>contents</code> the block's Org-parsed contents.
+header arguments are its <code>&amp;key</code> arguments. After <code>&amp;context</code> come the names the body
+needs of the export: <code>backend</code>, the current export backend, and <code>contents</code>, the block's
+Org-parsed contents; there are also <code>raw-contents</code>, <code>args</code>, <code>link?</code>, and <code>anchor</code>.  The
+body sees only what it so asks for, so none of ours shadows a variable of its own; a name
+already taken may be had under another, as in <code>&amp;context ((:contents text))</code>. See the
+docstring of <code>org-defblock</code> for the lot, and why we prefer this to anaphora.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> note (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"teal"</span>))
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> note (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"teal"</span>) <span style="color: #c18401;">&amp;context</span> backend contents)
   <span style="color: #50a14f;">"Call out CONTENTS under TITLE, tinted COLOR."</span>
   (<span style="color: #a626a4;">pcase</span> backend
     ('html (format <span style="color: #50a14f;">"&lt;div style=\"border-left: 4px solid %s; padding-left: 1em\"&gt;&lt;b&gt;%s&lt;/b&gt;%s&lt;/div&gt;"</span>
@@ -429,7 +433,7 @@ our own&mdash; <code>backend</code> is <code>html</code> or <code>latex</code>, 
 we ask Org's own <code>org-export-current-backend</code>; by way of example, a docsy alert in Hugo:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> noteblock (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"primary"</span>))
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> noteblock (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Note"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"primary"</span>) <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
   <span style="color: #50a14f;">"A note: a docsy alert in Hugo, a noteblock environment in LaTeX, a box elsewhere in HTML."</span>
   (<span style="color: #a626a4;">cond</span> ((org-export-derived-backend-p org-export-current-backend 'hugo)
          (format <span style="color: #50a14f;">"{{%% alert title=\"%s\" color=\"%s\" %%}}\n%s\n{{%% /alert %%}}"</span> title color raw-contents))
@@ -469,7 +473,7 @@ are fair game: an <code>(org-defblock verse …)</code> overrides every <code>#+
 signed by its poet, else Org's own:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> verse (<span style="color: #c18401;">&amp;optional</span> poet)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> verse (<span style="color: #c18401;">&amp;optional</span> poet <span style="color: #c18401;">&amp;context</span> raw-contents contents)
   <span style="color: #50a14f;">"A verse, signed by POET; sans one, Org's own verse."</span>
   (<span style="color: #a626a4;">if</span> (org-string-nw-p poet)
       (format <span style="color: #50a14f;">"\\begin{verse}\n%s\n\\end{verse}\n--- %s"</span> contents poet)
@@ -718,7 +722,7 @@ function name, is evaluated instead. For every block of a kind, we define an act
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> shout () <span style="color: #50a14f;">"Upcase the contents."</span> (upcase contents))
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> shout (<span style="color: #c18401;">&amp;context</span> contents) <span style="color: #50a14f;">"Upcase the contents."</span> (upcase contents))
 
 (<span style="color: #a626a4;">org-def-action</span> shout (<span style="color: #c18401;">&amp;optional</span> greeting <span style="color: #c18401;">&amp;key</span> (volume 1))
   <span style="color: #50a14f; font-style: italic;">"Announce the shout's GREETING, at VOLUME."</span>
@@ -809,8 +813,8 @@ Example:
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -932,8 +936,8 @@ Example:
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -949,7 +953,7 @@ attributes.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> poem (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #e44649;">:edit-indirect-mode</span> text-mode)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> poem (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #e44649;">:edit-indirect-mode</span> text-mode <span style="color: #c18401;">&amp;context</span> contents)
   <span style="color: #50a14f;">"Set CONTENTS in italics, under TITLE."</span>
   (format <span style="color: #50a14f;">"&lt;h3&gt;%s&lt;/h3&gt;&lt;em&gt;%s&lt;/em&gt;"</span> title contents))
 </code></pre>

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 14:29 -->
+<!-- 2026-10-19 Mon 15:55 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -522,8 +522,8 @@ emphasises core information.
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
    + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-     ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-     ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+     ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+     ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
    
    For example, upon LaTeX export, the Org special block
    
@@ -543,7 +543,7 @@ emphasises core information.
    </p>
    </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> box (title <span style="color: #50a14f;">""</span> background-color nil shadow nil frame-color nil title-background-color nil
-                       <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span>)
+                       <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span> <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
               <span style="color: #50a14f;">"Enclose text in a box, possibly with a TITLE.
 
 By default, the box's BACKGROUND-COLOR is green for HTML and red for LaTeX;
@@ -626,8 +626,8 @@ Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "gree
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
    + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-     ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-     ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+     ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+     ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
    
    For example, upon LaTeX export, the Org special block
    
@@ -657,7 +657,7 @@ Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "gree
    Full syntax <code>#+begin_details "title" :background-color "cyan" :title-color "green"</code>.
    </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> details (title <span style="color: #50a14f;">"Details"</span> background-color <span style="color: #50a14f;">"#e5f5e5"</span> title-color <span style="color: #50a14f;">"green"</span>
-                              <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Folded-Details"</span>)
+                              <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Folded-Details"</span> <span style="color: #c18401;">&amp;context</span> backend contents)
               <span style="color: #50a14f;">"Enclose contents in a folded up box, for HTML.
 
 For LaTeX, this is just a boring, but centered, box.
@@ -785,8 +785,8 @@ In HTML, we show folded, details, regions with a nice greenish colour.
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -820,8 +820,8 @@ In Markdown, a remark block is GitHub’s “&gt; [!NOTE]” alert, titled EDITO
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -871,8 +871,8 @@ Or, without specifying an explicit label:
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
    + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-     ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-     ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+     ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+     ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
    
    For example, upon LaTeX export, the Org special block
    
@@ -937,8 +937,8 @@ note resized, to 1.3 the margin’s width ---requiring \usepackage{adjustbox}.
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -1192,7 +1192,7 @@ Then, doc:cat studies [[doc:mon][monoids]] and their kin.</pre> </div><div style
               (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)
                     label nil show nil color <span style="color: #50a14f;">"green"</span>
                     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A heading tagged :documentation: is an entry in its own right; see `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org--docs-read-buffer</span><span style="color: #a0a1a7;">'.
-</span>                    <span style="color: #e44649;">:tag</span> nil <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Glossaries"</span>)
+</span>                    <span style="color: #e44649;">:tag</span> nil <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Glossaries"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
               <span style="color: #50a14f;">"A glossary entry: CONTENTS defines NAME, cited as doc:LABEL; a heading tagged :documentation: is one too.
 
 The entries live in &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org--docs</span><span style="color: #50a14f;">&#8217;.
@@ -1336,8 +1336,8 @@ wasted on thin lines; instead, one could save space by using
      Regarding the Lisp function:
      + BACKEND refers to the current export backend.
      + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-       ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-       ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+       ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+       ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
      
      For example, upon LaTeX export, the Org special block
      
@@ -1433,8 +1433,8 @@ wasted on thin lines; instead, one could save space by using
      Regarding the Lisp function:
      + BACKEND refers to the current export backend.
      + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-       ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-       ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+       ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+       ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
      
      For example, upon LaTeX export, the Org special block
      
@@ -1446,7 +1446,7 @@ wasted on thin lines; instead, one could save space by using
      
           (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
      </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (cols <span style="color: #50a14f;">"2"</span> bar nil <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span>)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (cols <span style="color: #50a14f;">"2"</span> bar nil <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span> <span style="color: #c18401;">&amp;context</span> backend contents)
               <span style="color: #50a14f;">"Place ideas side-by-side, possibly with a separator.
 
 There are COLS many columns, and they may be separated by solid
@@ -1584,8 +1584,8 @@ Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link 
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -1654,7 +1654,8 @@ name of the current element]], [[red:starting at a]] and [[cyan:ending at b]].</
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> math (<span style="color: #c18401;">&amp;key</span> numbered (matrix <span style="color: #50a14f;">"pmatrix"</span>) (hints 'between) environment
                          <span style="color: #e44649;">:link</span> nil <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"amsmath"</span> <span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"cancel"</span>) <span style="color: #e44649;">:html-head</span> (mathjax)
                          <span style="color: #e44649;">:edit-indirect-mode</span> latex-mode <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#math"</span>
-                         <span style="color: #e44649;">:fontify</span> [<span style="color: #e44649;">:language</span> <span style="color: #50a14f;">"latex"</span> <span style="color: #e44649;">:keywords</span> org--math-fontify-keywords])
+                         <span style="color: #e44649;">:fontify</span> [<span style="color: #e44649;">:language</span> <span style="color: #50a14f;">"latex"</span> <span style="color: #e44649;">:keywords</span> org--math-fontify-keywords]
+                         <span style="color: #c18401;">&amp;context</span> backend raw-contents anchor)
   <span style="color: #50a14f;">"Display maths, wherein our links ---e.g., red:x, [[doc:fold][f]]--- and Org's *markup* are LaTeX's.
 
   #+begin_math
@@ -1709,7 +1710,8 @@ Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link 
   block in `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">latex-mode</span><span style="color: #50a14f;">', its hints, tags, and colours shown as in the Org buffer.  C-c C-x C-l, which shows Org's own maths as images, shows math blocks too."</span>
   (<span style="color: #a626a4;">pcase-let</span> ((`(,layout ,format ,folded) (org--math-hints-switch hints)))
     (<span style="color: #a626a4;">let</span> ((org--math-tips nil) (org--math-hint-format format) (org--math-hint-folded folded))
-      (<span style="color: #a626a4;">pcase-let</span> ((`(,definitions . ,shown) (org--math-render raw-contents backend numbered matrix org--handler-anchor layout environment)))
+      (<span style="color: #a626a4;">pcase-let</span> ((`(,definitions . ,shown)
+                   (org--math-render raw-contents backend numbered matrix anchor layout environment)))
         (<span style="color: #a626a4;">cond</span> ((org-export-markdown-p)
                <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A fenced math block is displayed already, so \[&#8230;\] would be one display too many.
 </span>               (<span style="color: #a626a4;">let</span> ((shown (<span style="color: #a626a4;">and</span> shown (string-remove-suffix <span style="color: #50a14f;">"\n\\]"</span> (string-remove-prefix <span style="color: #50a14f;">"\\[\n"</span> shown)))))
@@ -2388,7 +2390,8 @@ nesting makes an edge, and a two-column table styles the item above it.
 <p>
 Press <code>C-c C-c</code> inside the block to render it to a PNG; <code>C-u C-c C-c</code> shows the dot source instead.
 </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> graph (main-arg nil file nil svg nil <span style="color: #e44649;">:edit-indirect-mode</span> org-graph-edit-mode <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Graphs"</span>)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> graph (main-arg nil file nil svg nil <span style="color: #e44649;">:edit-indirect-mode</span> org-graph-edit-mode <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Graphs"</span>
+                    <span style="color: #c18401;">&amp;context</span> backend raw-contents args anchor)
   <span style="color: #50a14f;">"Render an Org list + tables as a Graphviz dot graph.
 
 MAIN-ARG is the graph's title, its label.
@@ -2458,19 +2461,19 @@ Example:
     + calls :: B
       + returns :: C
   #+end_graph"</span>
-  (<span style="color: #a626a4;">let*</span> ((smart   (plist-get org--handler-args <span style="color: #e44649;">:smartdiagram</span>))
+  (<span style="color: #a626a4;">let*</span> ((smart   (plist-get args <span style="color: #e44649;">:smartdiagram</span>))
          (raw     (org--graph-expand-macros raw-contents))
          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">HTML inlines a graph's &lt;svg&gt;, for its tooltips, unless told :svg nil; `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">svg</span><span style="color: #a0a1a7;">' alone cannot tell nil from omitted.
-</span>         (inline-svg (<span style="color: #a626a4;">and</span> (eq backend 'html) (not org--handler-anchor) (not (org-export-markdown-p))
-                          (<span style="color: #a626a4;">or</span> svg (not (<span style="color: #a626a4;">or</span> smart (plist-member org--handler-args <span style="color: #e44649;">:svg</span>))))))
+</span>         (inline-svg (<span style="color: #a626a4;">and</span> (eq backend 'html) (not anchor) (not (org-export-markdown-p))
+                          (<span style="color: #a626a4;">or</span> svg (not (<span style="color: #a626a4;">or</span> smart (plist-member args <span style="color: #e44649;">:svg</span>))))))
          (org--graph-tips (<span style="color: #a626a4;">and</span> inline-svg (make-hash-table <span style="color: #e44649;">:test</span> #'equal)))
-         (dot     (<span style="color: #a626a4;">if</span> smart (org--smartdiagram raw main-arg org--handler-args)
-                    (org--graph-raw-&gt;dot raw main-arg org--handler-args)))
+         (dot     (<span style="color: #a626a4;">if</span> smart (org--smartdiagram raw main-arg args)
+                    (org--graph-raw-&gt;dot raw main-arg args)))
          (render  (<span style="color: #a626a4;">if</span> smart
-                      (<span style="color: #a626a4;">lambda</span> (kind file) (org-graph--render-latex dot kind file (org-graph--dpi org--handler-args)))
+                      (<span style="color: #a626a4;">lambda</span> (kind file) (org-graph--render-latex dot kind file (org-graph--dpi args)))
                     (<span style="color: #a626a4;">lambda</span> (kind file) (org-graph--render dot kind file))))
          <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The header reads :file foo.png as the symbol foo.png; we want its name.
-</span>         (outfile (<span style="color: #a626a4;">or</span> (<span style="color: #a626a4;">and</span> file (format <span style="color: #50a14f;">"%s"</span> file)) (org-graph--named-file org--handler-anchor svg)
+</span>         (outfile (<span style="color: #a626a4;">or</span> (<span style="color: #a626a4;">and</span> file (format <span style="color: #50a14f;">"%s"</span> file)) (org-graph--named-file anchor svg)
                       (format <span style="color: #50a14f;">"graph-%s.png"</span> (substring (md5 dot) 0 12)))))
     (<span style="color: #a626a4;">pcase</span> backend
       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">LaTeX typesets a smartdiagram itself: no image, and its packages join the preamble.
@@ -2479,7 +2482,7 @@ Example:
        (format <span style="color: #50a14f;">"\\begin{center}\n%s\n\\end{center}"</span> dot))
       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A named graph is a figure: an image link, which the block's #+name: and #+caption: label, as with Babel's results.
 </span>      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Markdown gets one too, since its renderers strip the inline base64 &lt;img&gt; that HTML gets.
-</span>      ((guard (<span style="color: #a626a4;">or</span> org--handler-anchor (org-export-markdown-p)))
+</span>      ((guard (<span style="color: #a626a4;">or</span> anchor (org-export-markdown-p)))
        (funcall render (<span style="color: #a626a4;">if</span> (s-ends-with-p <span style="color: #50a14f;">".svg"</span> outfile) <span style="color: #50a14f;">"svg"</span> <span style="color: #50a14f;">"png"</span>) outfile)
        (org-parse (format <span style="color: #50a14f;">"[[file:%s]]"</span> outfile)))
       (`html
@@ -2492,7 +2495,7 @@ Example:
                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">dot unavailable, or its output sans &lt;svg&gt;: emit the raw dot source in a &lt;pre&gt;, its tooltips as text.
 </span>                 (format <span style="color: #50a14f;">"&lt;pre&gt;%s&lt;/pre&gt;"</span> (s-replace <span style="color: #50a14f;">"&lt;"</span> <span style="color: #50a14f;">"&amp;lt;"</span> (<span style="color: #a626a4;">if</span> (<span style="color: #a626a4;">and</span> inline-svg (not smart))
                                                                     (<span style="color: #a626a4;">let</span> (org--graph-tips)
-                                                                      (org--graph-raw-&gt;dot raw main-arg org--handler-args))
+                                                                      (org--graph-raw-&gt;dot raw main-arg args))
                                                                   dot))))
            (delete-file tmp))))
       (_
@@ -2577,8 +2580,8 @@ Example:
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -2717,8 +2720,8 @@ requires the tcolorbox package; Markdown, sans colours, gets a quote opening wit
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -2745,8 +2748,8 @@ In HTML, we show folded, details, regions with a nice greenish colour.
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
 + RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
 
 For example, upon LaTeX export, the Org special block
 
@@ -3072,7 +3075,8 @@ A whole paragraph, gently set apart.
   </p>
   </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> highlight
-              (color <span style="color: #50a14f;">"yellow"</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Highlights"</span> <span style="color: #e44649;">:link</span> [<span style="color: #e44649;">:face</span> (list <span style="color: #e44649;">:background</span> (<span style="color: #a626a4;">or</span> (org-string-nw-p o-label) <span style="color: #50a14f;">"yellow"</span>))])
+              (color <span style="color: #50a14f;">"yellow"</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Highlights"</span> <span style="color: #e44649;">:link</span> [<span style="color: #e44649;">:face</span> (list <span style="color: #e44649;">:background</span> (<span style="color: #a626a4;">or</span> (org-string-nw-p o-label) <span style="color: #50a14f;">"yellow"</span>))]
+               <span style="color: #c18401;">&amp;context</span> backend raw-contents contents link?)
               <span style="color: #50a14f;">"Highlight text with a background of COLOR, which is yellow by default; as a link, it is so highlighted in Emacs too.
 
   [[highlight:pink][Read this twice.]]
@@ -3080,16 +3084,16 @@ A whole paragraph, gently set apart.
 For LaTeX, a hex COLOR such as #e5f5e5 needs no quotes; a block's text is a full-width paragraph box.
 In Markdown, the text is &lt;mark&gt;ed, paragraph by paragraph, which GitHub shows yellow whatever COLOR is."</span>
               (<span style="color: #a626a4;">pcase</span> (<span style="color: #a626a4;">if</span> (org-export-markdown-p) 'md backend)
-                ('md (<span style="color: #a626a4;">if</span> contents-occur-as-link-description
+                ('md (<span style="color: #a626a4;">if</span> link?
                          (format <span style="color: #50a14f;">"&lt;mark&gt;%s&lt;/mark&gt;"</span> contents)
                        (org-parse (format <span style="color: #50a14f;">"@@html:&lt;mark&gt;@@%s@@html:&lt;/mark&gt;@@"</span>
                                           (s-replace-regexp <span style="color: #50a14f;">"\n\n+"</span> <span style="color: #50a14f;">"@@html:&lt;/mark&gt;@@\n\n@@html:&lt;mark&gt;@@"</span> (s-trim raw-contents))))))
                 ('latex (concat (org--latex-define-color <span style="color: #50a14f;">"osbe-highlight"</span> color)
-                                (<span style="color: #a626a4;">if</span> contents-occur-as-link-description
+                                (<span style="color: #a626a4;">if</span> link?
                                     (format <span style="color: #50a14f;">"\\colorbox{osbe-highlight}{%s}"</span> contents)
                                   (format <span style="color: #50a14f;">"\\colorbox{osbe-highlight}{\\parbox{\\dimexpr\\linewidth-2\\fboxsep}{%s}}"</span> contents))))
                 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A block's text is paragraphs, which a &lt;span&gt; may not hold.
-</span>                (_ (format (<span style="color: #a626a4;">if</span> contents-occur-as-link-description
+</span>                (_ (format (<span style="color: #a626a4;">if</span> link?
                                <span style="color: #50a14f;">"&lt;span style=\"background-color:%s;\"&gt;%s&lt;/span&gt;"</span>
                              <span style="color: #50a14f;">"&lt;div style=\"background-color:%s;\"&gt;%s&lt;/div&gt;"</span>)
                            color contents))))
