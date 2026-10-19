@@ -276,7 +276,7 @@ that section's text; =[:subsections ignore]= leaves any subsection outside the b
 choking on a heading the box cannot hold.
 #+begin_src emacs-lisp
 ;; A section tagged :abstract: is boxed too; its subsections stay outside the box, as a block cannot hold a heading.
-(org-defblock abstract (main nil :tag [:subsections ignore] &context contents) nil
+(org-defblock abstract (:tag [:subsections ignore] &context contents)
   "Render a block in a slightly narrowed blueish box, titled \"Abstract\".
 
    Supported backends: HTML. "
@@ -2349,18 +2349,18 @@ broken image.  [[file:arabic-roots.org][Arabic Roots]] explains its design.
 
 #+name: arabic-link
 #+begin_src emacs-lisp
-(org-deflink arabic
+(org-deflink arabic (label)
  "Show one of 6 hardcoded phrases as a small inline image."
  (-let [url
-        (pcase o-label
+        (pcase label
           ("Let's take a break" "https://alhassy.com/resources/iraqi-sign-take-a-break.png")
           ("Yes" "https://alhassy.com/resources/iraqi-sign-yes.png")
           ("No" "https://alhassy.com/resources/iraqi-sign-no.png")
           ("Agree" "https://alhassy.com/resources/iraqi-sign-agree.png")
           ("Disagree" "https://alhassy.com/resources/iraqi-sign-disagree.png")
           ("I have a question" "https://alhassy.com/resources/iraqi-sign-question.png")
-          (_ (error "arabic:%s is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question" o-label)))]
-   (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
+          (_ (error "arabic:%s is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question" label)))]
+   (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url label url)))
 #+end_src
 
 The Arabic articles cite =doc:arabic-root= and friends, from [[file:arabic-glossary.org][the glossary of Arabic linguistic terms]];
@@ -3916,7 +3916,7 @@ A quick way to embed clickable images, along with tooltip credits and other conf
   :config (org-special-block-extras-mode t))
 
 
-(org-deflink image
+(org-deflink image (label)
              "Provide a quick way to insert images along with credits via tooltips.
 
 Example usage:
@@ -3925,8 +3925,7 @@ image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|1
 
 image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
 "
-;;             (upcase (or o-description o-label))
-  (-let [(image width height center? credit?) (s-split "|" o-label)]
+  (-let [(image width height center? credit?) (s-split "|" label)]
     (let ((it (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/></a>"
                       image
@@ -4152,17 +4151,17 @@ tree.
 
 #+begin_src emacs-lisp :exports code
 
-(org-deflink card
+(org-deflink card (label)
   "Show one of 6 hardcoded phrases as a small inline image."
   (-let [url
-         (pcase o-label
+         (pcase label
            ("Let's take a break" "https://alhassy.com/resources/iraqi-sign-take-a-break.png")
            ("Yes" "https://alhassy.com/resources/iraqi-sign-yes.png")
            ("No" "https://alhassy.com/resources/iraqi-sign-no.png")
            ("Agree" "https://alhassy.com/resources/iraqi-sign-agree.png")
            ("Disagree" "https://alhassy.com/resources/iraqi-sign-disagree.png")
            ("I have a question" "https://alhassy.com/resources/iraqi-sign-question.png"))]
-    (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url o-label url)))
+    (format "<a href=\"%s\" class=\"tooltip\" title=\"%s\"><img src=\"%s\" height=50></a>" url label url)))
 #+end_src
 
 *** COMMENT  Ideas
