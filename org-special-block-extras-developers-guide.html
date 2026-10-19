@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 14:22 -->
+<!-- 2026-10-19 Mon 14:27 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Make your own blocks and links</title>
@@ -736,7 +736,91 @@ press, so Org does nothing else with it; nil declines it, leaving it to the bloc
 </p>
 
 <p>
-For a complete worked example, we may mimic the <abbr class="tooltip" tabindex="0">graph<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> block's handler,
+For a complete worked example, we may mimic the <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
+
+MAIN-ARG is the graph’s title, its label.
+The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
+:directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
+wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
+rather than erring.  Pass :file foo.png on the
+#+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
+a figure that [[foo]] reaches and #+caption: captions; otherwise the name is graph-HASH.png, HASH being that of the
+dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
+
+For HTML export: embeds an inline &lt;svg&gt; element, whose nodes’ and arcs’ tooltips hover as prose’s do, by tooltips.js;
+under :svg nil, an inline base64 PNG, sans tooltips.
+For Markdown, it writes the image file and links it, as for a named graph.
+For other backends it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
+
+With :smartdiagram TYPE ---constellation, flow:horizontal, descriptive, and so on--- LaTeX’s smartdiagram package
+typesets the list instead, as ‘org--smartdiagram’ says: the #+graph: rows are \smartdiagramset’s, and prose after the
+list sits beneath the diagram.  It renders by pdflatex, at :dpi dots per inch, 300 by default; LaTeX export typesets it
+in place, adding smartdiagram to the preamble.
+
+Within the block body:
+
+  #+graph: table  ↦ global graph[ ] attributes
+  #+node:  table  ↦ default node[ ] attributes
+  #+edge:  table  ↦ default edge[ ] attributes
+  #+rank:  n1 n2  ↦ { rank=same; n1; n2 } for nodes without a common parent; ids may be [[links]]
+  Under an item, #+graph:, #+node:, #+edge:, and #+rank: reach its whole subtree, as Org’s inherited properties do.
+  #+begin_cluster TITLE :KEY V … #+end_cluster  ↦ subgraph cluster_TITLE { … }; nests, and may sit in an item
+  :NAME: … :END:  ↦ a drawer of any name, folding such directives away
+  - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
+
+A #+name: table outside any graph is a template every graph in the buffer may use; the graph’s own wins.
+A section tagged :graph: exports as a graph of its text, its :PROPERTIES: drawer serving as the header line.
+
+Each list item declares a node.  Nesting encodes edges (parent → child); ordered children, 1. 2. 3., share a rank
+in the order written.  An item’s text may hold a &lt;&lt;target&gt;&gt;, its id; [[TARGET]] or [[TARGET][LABEL]] links, extra arcs;
+and *bold*, /italic/, _underline_, +strike+, =code=, or ~pre~, a braced x^{2} or H_{2}O, or a @@dot:…@@ snippet,
+which make its label an HTML-like one; an entity, \alpha, is its character.  A &lt;&lt;&lt;radio target&gt;&gt;&gt; is a node, every
+item mentioning it having an arc to it.  Other Org syntax in a block, such as a headline or #+begin_quote, is an error.
+A description tag, ‘+ L :: CHILD’, labels the arc into CHILD; trailing ‘:T:’ tags splice #+name: templates;
+an inline footnote, [fn::NOTE], is the node’s tooltip, as is a note: a paragraph past the item’s first, or a
+#+begin_note block ---with ‘#+begin_note :edge’, the arc’s---, shown beneath the label instead under :notes inline;
+a web, file, or [[*Section]] link, its URL; an [[file:IMAGE.png]], its image;
+a checkbox, [X], [-], or [ ], applies the template checked, partial, or unchecked, when one exists; and a ‘\\’
+breaks the label’s line ---in a table value or #+record: cell, too.
+Org’s {{{macros}}} expand, by the buffer’s #+macro: lines.
+A two-column inline table on a list item supplies node attributes.
+
+  | key        | val    |  ↦ a Graphviz attribute of the node; values are quoted for you.
+  | :id        | alias  |  ↦ cross-reference name for this node.
+  | :edge.KEY  | val    |  ↦ attribute of the arc from the parent; a parallel arc is a second child item.
+  | :edge[T].KEY | val  |  ↦ attribute of this item’s arc to T, from a [[T]] link; "rec::port" reaches a record’s port.
+  | :inherit   | T₁ T₂  |  ↦ inherit the #+name: templates’ rows; explicit rows win.  Also :edge.:inherit, and :T₁:T₂: tags:
+                            after an item, its node’s; after a reference, or a description term, its arc’s.
+  A child item that is a lone [[T]] link is a reference to T: an arc to it, styled by the child’s :edge.KEY rows.
+  | :children-rank | same | ↦ constrain immediate children to the same rank;
+                            also accepts min, max, source, sink.
+  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }.
+  #+record: table       ↦ the node’s &lt;TABLE&gt; label, as laid out: a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an arc from there;
+                            ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.
+
+Example:
+
+  #+begin_graph :rankdir LR
+  + A
+    + calls :: B
+      + returns :: C
+  #+end_graph
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_graph
+     Hello, world
+     #+end_graph
+
+ is rewritten to the result of the call
+
+     (org-block/graph ‘latex "Hello, world")</pre></template></abbr> block's handler,
 <a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-graph-block.el">org-graph&ndash;cc-handler</a>. It
 </p>
 <ul class="org-ul">
@@ -775,7 +859,91 @@ edited as ever.
 
 <p>
 A block may instead choose its buffer's mode: the option <code>:edit-indirect-mode MODE</code> makes
-<code>C-c '</code> open the block's contents in a buffer in <code>MODE</code>. By way of example, the <abbr class="tooltip" tabindex="0">graph<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> block
+<code>C-c '</code> open the block's contents in a buffer in <code>MODE</code>. By way of example, the <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
+
+MAIN-ARG is the graph’s title, its label.
+The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
+:directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
+wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
+rather than erring.  Pass :file foo.png on the
+#+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
+a figure that [[foo]] reaches and #+caption: captions; otherwise the name is graph-HASH.png, HASH being that of the
+dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
+
+For HTML export: embeds an inline &lt;svg&gt; element, whose nodes’ and arcs’ tooltips hover as prose’s do, by tooltips.js;
+under :svg nil, an inline base64 PNG, sans tooltips.
+For Markdown, it writes the image file and links it, as for a named graph.
+For other backends it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
+
+With :smartdiagram TYPE ---constellation, flow:horizontal, descriptive, and so on--- LaTeX’s smartdiagram package
+typesets the list instead, as ‘org--smartdiagram’ says: the #+graph: rows are \smartdiagramset’s, and prose after the
+list sits beneath the diagram.  It renders by pdflatex, at :dpi dots per inch, 300 by default; LaTeX export typesets it
+in place, adding smartdiagram to the preamble.
+
+Within the block body:
+
+  #+graph: table  ↦ global graph[ ] attributes
+  #+node:  table  ↦ default node[ ] attributes
+  #+edge:  table  ↦ default edge[ ] attributes
+  #+rank:  n1 n2  ↦ { rank=same; n1; n2 } for nodes without a common parent; ids may be [[links]]
+  Under an item, #+graph:, #+node:, #+edge:, and #+rank: reach its whole subtree, as Org’s inherited properties do.
+  #+begin_cluster TITLE :KEY V … #+end_cluster  ↦ subgraph cluster_TITLE { … }; nests, and may sit in an item
+  :NAME: … :END:  ↦ a drawer of any name, folding such directives away
+  - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
+
+A #+name: table outside any graph is a template every graph in the buffer may use; the graph’s own wins.
+A section tagged :graph: exports as a graph of its text, its :PROPERTIES: drawer serving as the header line.
+
+Each list item declares a node.  Nesting encodes edges (parent → child); ordered children, 1. 2. 3., share a rank
+in the order written.  An item’s text may hold a &lt;&lt;target&gt;&gt;, its id; [[TARGET]] or [[TARGET][LABEL]] links, extra arcs;
+and *bold*, /italic/, _underline_, +strike+, =code=, or ~pre~, a braced x^{2} or H_{2}O, or a @@dot:…@@ snippet,
+which make its label an HTML-like one; an entity, \alpha, is its character.  A &lt;&lt;&lt;radio target&gt;&gt;&gt; is a node, every
+item mentioning it having an arc to it.  Other Org syntax in a block, such as a headline or #+begin_quote, is an error.
+A description tag, ‘+ L :: CHILD’, labels the arc into CHILD; trailing ‘:T:’ tags splice #+name: templates;
+an inline footnote, [fn::NOTE], is the node’s tooltip, as is a note: a paragraph past the item’s first, or a
+#+begin_note block ---with ‘#+begin_note :edge’, the arc’s---, shown beneath the label instead under :notes inline;
+a web, file, or [[*Section]] link, its URL; an [[file:IMAGE.png]], its image;
+a checkbox, [X], [-], or [ ], applies the template checked, partial, or unchecked, when one exists; and a ‘\\’
+breaks the label’s line ---in a table value or #+record: cell, too.
+Org’s {{{macros}}} expand, by the buffer’s #+macro: lines.
+A two-column inline table on a list item supplies node attributes.
+
+  | key        | val    |  ↦ a Graphviz attribute of the node; values are quoted for you.
+  | :id        | alias  |  ↦ cross-reference name for this node.
+  | :edge.KEY  | val    |  ↦ attribute of the arc from the parent; a parallel arc is a second child item.
+  | :edge[T].KEY | val  |  ↦ attribute of this item’s arc to T, from a [[T]] link; "rec::port" reaches a record’s port.
+  | :inherit   | T₁ T₂  |  ↦ inherit the #+name: templates’ rows; explicit rows win.  Also :edge.:inherit, and :T₁:T₂: tags:
+                            after an item, its node’s; after a reference, or a description term, its arc’s.
+  A child item that is a lone [[T]] link is a reference to T: an arc to it, styled by the child’s :edge.KEY rows.
+  | :children-rank | same | ↦ constrain immediate children to the same rank;
+                            also accepts min, max, source, sink.
+  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }.
+  #+record: table       ↦ the node’s &lt;TABLE&gt; label, as laid out: a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an arc from there;
+                            ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.
+
+Example:
+
+  #+begin_graph :rankdir LR
+  + A
+    + calls :: B
+      + returns :: C
+  #+end_graph
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_graph
+     Hello, world
+     #+end_graph
+
+ is rewritten to the result of the call
+
+     (org-block/graph ‘latex "Hello, world")</pre></template></abbr> block
 is declared with <code>:edit-indirect-mode org-graph-edit-mode</code>, an Org mode that completes Graphviz
 attributes.
 </p>

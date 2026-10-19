@@ -1,0 +1,2163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>org-special-block-extras-graphs.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #a0a1a7;"># Load the package during export so #+begin_graph blocks are handled.</span>
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp :results none :exports none
+</span>(add-to-list 'load-path (expand-file-name <span style="color: #50a14f;">"lisp"</span> (file-name-directory (<span style="color: #a626a4;">or</span> load-file-name buffer-file-name))))
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org-special-block-extras</span>)
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org-defblock</span>)
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org-graph-block</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Overview</span>
+
+~org-graph-block~ extends <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras">org-special-block-extras</a></span> with a ~#+begin_graph~ block that
+compiles native Org syntax &#8212; nested plain lists and two-column tables &#8212; into
+<span style="text-decoration: underline;"><a href="https://graphviz.org">Graphviz dot</a></span>.
+
+No raw dot required.  Nesting encodes edges; inline tables encode attributes.
+
+<span style="color: #8b4513; font-weight: bold;">** Setup</span>
+
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org-special-block-extras</span>)
+(<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org-graph-block</span>)
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Graphviz must be on your ~PATH~ (~dot -V~ should work in a terminal).
+
+<span style="color: #8b4513; font-weight: bold;">** Pressing </span><span style="color: #8b4513; font-weight: bold;">=C-c C-c=</span>
+
+Anywhere inside a ~#+begin_graph &#8230; #+end_graph~ block, ~C-c C-c~ renders a PNG
+immediately.  The output filename is auto-generated unless you supply ~:file~:
+
+<span style="color: #a0a1a7;">#+begin_example
+</span>#+begin_graph :file my-diagram.png
+&#8230;
+#+end_graph
+<span style="color: #a0a1a7;">#+end_example
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Pressing </span><span style="color: #8b4513; font-weight: bold;">=C-c '</span><span style="color: #8b4513; font-weight: bold;">=</span><span style="color: #8b4513; font-weight: bold;">, or </span><span style="color: #8b4513; font-weight: bold;">=C-M-i=</span>
+
+~C-c '~ edits the block's body in its own ~org-graph-edit-mode~ buffer. There, and in any Org buffer's
+graph blocks, ~C-M-i~ completes table keys and values, and eldoc explains the key at point; on the
+~#+begin_graph~ line itself, they do the same for ~:rankdir~, ~:node.shape~, and friends. See item 3 of
+<span style="text-decoration: underline;"><a href="*Quality of Life">Quality of Life</a></span>.
+
+<span style="color: #0184bc; font-weight: bold;">* Syntax Reference</span>
+
+| Construct                                    | Dot equivalent                                                                  |
+|----------------------------------------------+---------------------------------------------------------------------------------|
+| ~#+begin_graph TITLE~                        | ~graph [ label=TITLE ]~                                                         |
+| ~#+begin_graph :KEY V~                       | ~graph [ KEY=V ]~; also ~:node.KEY V~ and ~:edge.KEY V~; ~V~ needs no quotes    |
+| ~#+begin_graph :directed nil~                | ~graph { &#8230; }~, with ~--~ arcs                                                   |
+| ~#+name: N~ above ~#+begin_graph~            | renders to ~N.png~: a figure that ~<span style="text-decoration: underline;"><a href="N">[[</a><a href="N">N]</a><a href="N">]</a></span>~ reaches, and ~#+caption:~ captions    |
+| ~* HEADING :graph:~, with ~:PROPERTIES:~     | the section's text is a graph; ~:RANKDIR: LR~ is ~:rankdir LR~, and so on       |
+| ~:NAME:~ &#8230; ~:END:~ drawer                    | the directives inside, folded away                                              |
+| ~#+graph:~ table                             | ~graph [ &#8230; ]~                                                                   |
+| ~#+node:~ table                              | ~node [ &#8230; ]~                                                                    |
+| ~#+edge:~ table                              | ~edge [ &#8230; ]~                                                                    |
+| ~#+rank: n1 <span style="text-decoration: underline;"><a href="n 2">[[</a><a href="n 2">n 2]</a><a href="n 2">]</a></span>~                         | ~{ rank=same; n1; "n 2" }~                                                      |
+| ~#+name: T~ + table                          | style template ~T~, used via ~:T:~ tags or ~:inherit~ rows; in or out of graphs |
+| top-level ~- :T: :: MEANING~                 | a legend entry: a sample of template ~T~, captioned ~MEANING~                   |
+| ~#+begin_cluster TITLE :KEY V~               | ~subgraph cluster_TITLE { label=TITLE KEY=V &#8230; }~                                |
+| ~+ NAME~ list item                           | node ~NAME~ declaration                                                         |
+| indent ~+ CHILD~ under ~+ PARENT~            | edge PARENT &#8594; CHILD                                                             |
+| ~+ L :: CHILD~ under ~+ PARENT~              | edge PARENT &#8594; CHILD, labelled ~L~                                               |
+| ~1. A~, ~2. B~ under ~+ PARENT~              | edges PARENT &#8594; A, B; ~{ rank=same; A; B }~, in that order                       |
+| ~+ <span style="text-decoration: underline;">&lt;&lt;ID&gt;&gt;</span> NAME~                              | node ~ID~, labelled ~NAME~                                                      |
+| ~+ NAME <span style="text-decoration: underline;"><a href="T">[[</a><a href="T">T]</a><a href="T">]</a></span>~, ~+ NAME <span style="text-decoration: underline;"><a href="T">[[T][</a><a href="T">L]</a><a href="T">]</a></span>~            | edge NAME &#8594; T, labelled ~L~                                                     |
+| ~+ NAME :T&#8321;:T&#8322;:~                             | node NAME, with templates ~T&#8321;~ and ~T&#8322;~ spliced in                              |
+| ~+ NAME <span style="text-decoration: underline;">[fn::NOTE]</span>~                          | node NAME, with ~tooltip=NOTE~                                                  |
+| ~+ NAME \\ MORE~                             | node ~NAME MORE~, its label broken over two lines; likewise in table cells      |
+| ~+ NAME <span style="text-decoration: underline;"><a href="https://&#8230;">[[</a><a href="https://&#8230;">https://&#8230;]</a><a href="https://&#8230;">]</a></span>~, ~<span style="text-decoration: underline;"><a href="file:x.png">[[</a><a href="file:x.png">file:x.png]</a><a href="file:x.png">]</a></span>~     | node NAME, with ~URL="<span style="text-decoration: underline;"><a href="https://">https:/</a><a href="https://">/</a></span>&#8230;"~, or ~image="x.png"~                           |
+| ~+ [X] NAME~, ~[-]~, ~[ ]~                   | node NAME, with template ~checked~, ~partial~, or ~unchecked~, if defined       |
+| ~<span style="text-decoration: underline;">{{{M}}}</span>~, after ~#+macro: M V~              | ~V~, anywhere in the block                                                      |
+| ~*b*~ ~/i/~ ~_u_~ ~+s+~ ~=c=~ =~p~=          | an HTML-like label: ~&lt;B&gt;~, ~&lt;I&gt;~, ~&lt;U&gt;~, ~&lt;S&gt;~, monospace                       |
+| ~&#8739; key &#8739; value &#8739;~                            | node attribute; values are quoted for you                                       |
+| ~&#8739; :id &#8739; alias &#8739;~                            | cross-reference name for this node                                              |
+| ~&#8739; :edge.KEY &#8739; value &#8739;~                      | attribute of the arc from the parent; each KEY at most once                     |
+| ~+ <span style="text-decoration: underline;"><a href="T">[[</a><a href="T">T]</a><a href="T">]</a></span>~ under ~+ PARENT~                   | edge PARENT &#8594; T, a node declared elsewhere; ~record::port~ targets a port       |
+| ~&#8739; :edge[T].KEY &#8739; value &#8739;~                   | attribute of this item's arc to ~T~, from a ~<span style="text-decoration: underline;"><a href="T">[[</a><a href="T">T]</a><a href="T">]</a></span>~ link; see Strictly tables   |
+| ~&#8739; :inherit &#8739; T &#8739;~, ~&#8739; :edge.:inherit &#8739; T &#8739;~ | inherit template ~T~'s rows; explicit rows win                                  |
+| ~&#8739; :children-rank &#8739; same &#8739;~                  | ~{ rank=same; &lt;immediate children&gt; }~                                           |
+| ~&#8739; shape &#8739; cluster &#8739;~                        | ~subgraph cluster_ID { &#8230; }~ around the children; see Strictly tables            |
+| ~#+record:~ table under ~+ NAME~             | node NAME, labelled by that table; ~<span style="text-decoration: underline;">&lt;&lt;P&gt;&gt;</span>~ in a cell is port ~P~                |
+
+<span style="color: #0184bc; font-weight: bold;">* Org's Own Syntax</span>
+
+We want a graph block to read like the Org it is. So wherever Org already has a construct whose
+meaning <span style="font-style: italic;">/is/</span> the graph meaning, we use it; tables remain for everything else. Each construct below is
+an alternative to a table row, never a replacement: ~<span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span>~ and ~| :id | lam |~ both stay.
+
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold;">~</span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;">&lt;&lt;targets&gt;&gt;</span><span style="color: #8b4513; font-weight: bold;">~</span><span style="color: #8b4513; font-weight: bold;"> name nodes, </span><span style="color: #8b4513; font-weight: bold;">~</span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;"><a href="links">[[</a><a href="links">links]</a><a href="links">]</a></span><span style="color: #8b4513; font-weight: bold;">~</span><span style="color: #8b4513; font-weight: bold;"> draw arcs</span>
+
+In Org, ~<span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span>~ is a place we can link to, and ~<span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>~ points there. In a graph, the target is the
+node's id and the link is an arc to it. Moreover, ~C-c C-o~ on the link jumps to its node:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
+  + church
++ lisp <span style="text-decoration: underline;"><a href="lam">[[lam][inspired by]]</a></span> <span style="text-decoration: underline;"><a href="church">[[church]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>lam [ label="&#955;-calculus" ];
+lam -&gt; church;
+lisp -&gt; lam [ label="inspired by" ];
+lisp -&gt; church;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- Inside a graph block, Org shows links in full: we see ~<span style="text-decoration: underline;"><a href="lam">[[lam][inspired by]]</a></span>~, not just ~inspired by~,
+  since both parts matter here. Links elsewhere in the buffer keep Org's usual display.
+- The target and links vanish from the label; ~lisp~ above is labelled just ~lisp~.
+- ~<span style="text-decoration: underline;"><a href="T">[[T][L]]</a></span>~ labels the arc ~L~; an item may have any number of links. As in Org, an item's text is its
+  whole first paragraph, so a long line of links may wrap onto the lines below it, before its table.
+- An item that is nothing but a link, ~+ <span style="text-decoration: underline;"><a href="church">[[church][encodes]]</a></span>~, is a <span style="font-style: italic;">/reference/</span> to the node ~church~:
+  its parent's arc to it is labelled ~encodes~, and ~church~ is declared by its own item. See
+  <span style="text-decoration: underline;"><a href="*Edges: nesting, ~:edge.KEY~, and links">~:edge.KEY~</a></span><span style="text-decoration: underline;"><a href="*Edges: nesting, ~:edge.KEY~, and links">Edges</a></span>.
+- Only links to nodes are arcs; ~<span style="text-decoration: underline;"><a href="https://orgmode.org">[[https://orgmode.org][Org]]</a></span>~ makes its node clickable, and stays ~Org~ in
+  the label. See <span style="text-decoration: underline;"><a href="*Web links are URLs, image links are images">Web links</a></span>.
+- In a ~#+record:~ table, a cell's ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ is its port, and its ~<span style="text-decoration: underline;"><a href="links">[[links]]</a></span>~ are arcs from that port.
+
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold;">~</span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;">&lt;</span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;">&lt;&lt;radio targets&gt;&gt;</span><span style="color: #8b4513; font-weight: bold; text-decoration: underline;">&gt;</span><span style="color: #8b4513; font-weight: bold;">~</span><span style="color: #8b4513; font-weight: bold;"> draw arcs from every mention</span>
+
+In Org, a radio target ~<span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;Church&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>~ stays visible, and every mention of "Church" elsewhere becomes a link
+to it, sans brackets. In a graph, the radio target is a node, and every item mentioning it ---in whatever
+case--- has an arc to it:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;Church&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span> encodes numbers as Church numerals
++ Lisp, after Church
++ Haskell, after church and Lisp
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Church [ label="Church encodes numbers as Church numerals" ];
+"Lisp, after Church" -&gt; Church;
+"Haskell, after church and Lisp" -&gt; Church;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+The mention stays in the label, and the radio target's own item never arcs to itself. Mind that this is
+Org's semantics exactly: a casual "Church" draws an arc too.
+
+<span style="color: #8b4513; font-weight: bold;">** Description lists label arcs</span>
+
+Org's description list, ~- TERM :: DEFINITION~, attaches a word to an item. In a graph, that word sits on
+the arc into the item ---read left to right, it <span style="font-style: italic;">/is/</span> the arc: client, then <span style="font-style: italic;">/request/</span>, then server:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
++ client
+  + <span style="font-weight: bold;">request ::</span> server
+  + <span style="font-weight: bold; font-style: italic;">/retry/</span><span style="font-weight: bold;"> ::</span> server
++ Lisp
+  + <span style="font-weight: bold;">inspired by ::</span> <span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>lam [ label="&#955;-calculus" ];
+client -&gt; server [ label=request ];
+client -&gt; server [ label=&lt;&lt;I&gt;retry&lt;/I&gt;&gt; ];
+Lisp -&gt; lam [ label="inspired by" ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- Two arcs between the same nodes are just two items: ~server~ above is one node, reached twice.
+- The child may be a link to a node declared elsewhere: above, ~inspired by~'s child ~<span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>~ arcs to ~&#955;-calculus~.
+- The tag may be marked up, as ~/retry/~ is; it is then an HTML-like label.
+- It is the terse spelling of ~| :edge.label | request |~; an explicit ~:edge.label~ row wins.
+- A top-level item has no arc into it, so a tag there is an error.
+- As in Org, the ~::~ needs whitespace on both sides: ~std::vector~ is a name, not a description.
+
+<span style="color: #8b4513; font-weight: bold;">** Tags splice templates</span>
+
+On a headline, ~:work:urgent:~ classifies the entry. On an item, tags classify the node: each names a
+~#+name:~ template whose rows are inherited, as an ~| :inherit | &#8230; |~ row would; explicit rows still win.
+Inside graph blocks, the tags wear Org's ~org-tag~ face, so they do not read as part of the label:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+name: wife
+| color | pink |
+| shape | box  |
+,#+name: faint
+| style | dotted |
+
++ Khadija :wife:faint:
+  | color | red |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Khadija [ shape=box style=dotted color=red label=Khadija ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Tags are trailing ~:word:~ groups, exactly as on a headline. So colons anywhere else are just text, and
+a node label that needs a trailing ~:word:~ of its own puts it in ~=verbatim=~, or in a ~| label |~ row:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Ratio 1:2
++ std::vector
++ Meeting at 12:30 :faint:
++ Vim's =:wq:=
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>"Ratio 1:2" [ label="Ratio 1:2" ];
+"std::vector" [ label="std::vector" ];
+"Meeting at 12:30" [ style=dotted label="Meeting at 12:30" ];
+"Vim's :wq:" [ label=&lt;Vim's &lt;FONT FACE="monospace"&gt;:wq:&lt;/FONT&gt;&gt; ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A tag naming no template is an error, rather than a typo silently becoming part of the label. While
+prototyping, though, we want shapes before names: ~#+begin_graph :unknown-tags random-templates~ makes
+up a template for each unknown tag ---a colour, a shape, a font--- the same at every use, so the tags
+read at a glance. A legend entry gives each its meaning; when the design settles, ~#+name:~ tables
+replace the made-up templates, one tag at a time:
+<span style="color: #a0a1a7;">#+begin_graph Prototype first, name later :unknown-tags random-templates
+</span>#+begin_cluster Legend
+- <span style="font-weight: bold;">:theory:</span><span style="font-weight: bold;"> ::</span> a calculus
+- <span style="font-weight: bold;">:language:</span><span style="font-weight: bold;"> ::</span> a programming language
+- <span style="font-weight: bold;">:editor:</span><span style="font-weight: bold;"> ::</span> an editor
+#+end_cluster
++ &#955;-calculus <span style="font-weight: bold;">:theory:</span>
+  + Combinatory logic <span style="font-weight: bold;">:theory:</span>
+  + Lisp <span style="font-weight: bold;">:language:</span>
+    + Scheme <span style="font-weight: bold;">:language:</span>
+    + Emacs Lisp <span style="font-weight: bold;">:language:</span>
+      + Emacs <span style="font-weight: bold;">:editor:</span>
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+The Nth unknown tag takes the Nth of ~org-graph-random-template-colours~, ~-shapes~, and ~-fonts~, so
+renders are stable, and the first eight tags differ in every way.
+
+<span style="color: #8b4513; font-weight: bold;">** Subtrees inherit </span><span style="color: #8b4513; font-weight: bold;">~#+node:~</span><span style="color: #8b4513; font-weight: bold;">, </span><span style="color: #8b4513; font-weight: bold;">~#+edge:~</span><span style="color: #8b4513; font-weight: bold;">, and </span><span style="color: #8b4513; font-weight: bold;">~#+rank:~</span>
+
+Org's properties are inherited: a ~:PROPERTIES:~ drawer on a heading reaches its subheadings. So it is
+with an item's ~#+node:~ and ~#+edge:~ tables: they style every node and arc beneath the item, while the
+item itself keeps its own ~| key | value |~ rows; its ~#+rank:~ lines apply there too. Graphviz scopes
+such defaults by an anonymous ~subgraph~, which draws no box:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Weather
+  ,#+node:
+  | shape | box |
+  ,#+edge:
+  | style | dotted |
+  + Rain
+    + Umbrella
+  + Sun
++ Climate
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Weather [ label=Weather ];
+subgraph {
+  node [ shape=box ]
+  edge [ style=dotted ]
+  Weather -&gt; Rain;
+  Rain [ label=Rain ];
+  Rain -&gt; Umbrella;
+  Umbrella [ label=Umbrella ];
+  Weather -&gt; Sun;
+  Sun [ label=Sun ];
+}
+Climate [ label=Climate ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A deeper item's tables override a shallower one's, as nested ~:PROPERTIES:~ do; a node first declared
+elsewhere keeps the defaults of where it was declared.
+
+<span style="color: #8b4513; font-weight: bold;">** Legends are description lists</span>
+
+A legend says what each style means: a glossary of templates. Org's glossary is the description list,
+so a top-level ~- :T: :: MEANING~ ---which has no parent to arc from--- is a legend entry: a sample
+styled by template ~T~, captioned ~MEANING~. Wrap the entries in a ~#+begin_cluster~ to box them:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+name: married
+| color | pink |
+| dir   | both |
+,#+name: wife
+| shape | box |
+
++ Muhammad
++ Khadija :wife:
+  + <span style="text-decoration: underline;"><a href="Muhammad">[[Muhammad]]</a></span> :married:
+,#+begin_cluster Legend
+- <span style="font-weight: bold;">:married: ::</span> marriage
+- <span style="font-weight: bold;">:wife: ::</span> <span style="font-style: italic;">/wife/</span>
+,#+end_cluster
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>subgraph cluster_Legend {
+  label=Legend
+  legend_1 [ shape=point style=invis ];
+  legend_1_end [ shape=point style=invis ];
+  legend_1 -&gt; legend_1_end [ color=pink dir=both label=marriage ];
+  legend_2 [ shape=box label=&lt;&lt;I&gt;wife&lt;/I&gt;&gt; ];
+}
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- A template that styles some arc in the graph ---by a reference's or a term's tags, an
+  ~:edge.:inherit~ row, or an ~#+edge:~ line--- is sampled as an arc; any other, as a node.
+- <span style="font-weight: bold;">Several tags, </span><span style="font-weight: bold;">~- :married:faint: ::</span> &#8230;~, sample their templates together.
+- The sample drops ~constraint~, which shapes the layout rather than the arc.
+- The legend can never drift from the graph: change ~married~, and its sample changes too.
+
+<span style="color: #8b4513; font-weight: bold;">** Footnotes are tooltips</span>
+
+A footnote is an aside we read when we want it; so is a tooltip. An inline footnote leaves the label and
+becomes the node's ~tooltip~ ---shown on hover in an ~:svg t~ HTML export:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Lisp <span style="text-decoration: underline;">[fn::McCarthy, 1958]</span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Lisp [ tooltip="McCarthy, 1958" label=Lisp ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A named footnote serves too: ~<span style="text-decoration: underline;">[fn:NAME: NOTE]</span>~ inline, or a bare ~<span style="text-decoration: underline;">[fn:NAME]</span>~ whose ~<span style="text-decoration: underline;">[fn:NAME]</span> NOTE~ definition
+sits elsewhere in the buffer ---say, below the graph. An explicit ~| tooltip | &#8230; |~ row wins.
+
+<span style="color: #8b4513; font-weight: bold;">** Notes are longer tooltips, or shown in the node</span>
+
+A footnote is awkward for more than a line. An item's text is its first paragraph, as in Org; every
+paragraph after it is a note, the tooltip of whatever its item's line describes: a node, or ---under a
+reference--- an arc. ~#+begin_note :edge~, sitting in an item as a ~#+begin_cluster~ may, describes the
+arc into the item instead; it is the one place we need the block:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Lisp <span style="text-decoration: underline;">[fn::1958]</span>
+
+  McCarthy's <span style="font-style: italic;">/list processor/</span>:
+  code is data.
+  + Scheme
+    ,#+begin_note :edge
+    Steele and Sussman distilled it.
+    ,#+end_note
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Lisp [ tooltip="1958\nMcCarthy's list processor: code is data." label=Lisp ];
+Lisp -&gt; Scheme [ tooltip="Steele and Sussman distilled it." ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+The blank line matters: without it, ~McCarthy's list processor:~ continues the first paragraph, and so
+the label. Likewise ~+ <span style="text-decoration: underline;">&lt;&lt;lisp&gt;&gt;</span> Lisp, the list processor~ names its node ~lisp~ and labels it with the
+whole line; a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ names, but only a new paragraph begins a note.
+
+Tooltips need a hover, and an exported PNG has none. ~#+begin_graph :notes inline~ shows every note
+beneath its label instead, in a smaller font, its markup kept and its lines filled to ~:wrap~ ---else 40---
+characters:
+<span style="color: #a0a1a7;">#+begin_graph Lisp's family :notes inline :wrap 24 :rankdir LR
+</span>+ Lisp <span style="text-decoration: underline;">[fn::1958]</span>
+
+  McCarthy's <span style="font-style: italic;">/list processor/</span>: code is data.
+  + <span style="font-weight: bold;">distils ::</span> Scheme
+    #+begin_note :edge
+    Steele and Sussman.
+    #+end_note
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+- A note's lines join, and each paragraph ---or ~\\~ break--- starts a new line.
+- A note follows the item's footnotes, which stay tooltips; an explicit ~tooltip~, ~:edge.tooltip~,
+  or ~label~ row wins.
+- A note outside every item is the graph's: its tooltip, or ---inline--- the text beneath its title. One
+  directly in a ~#+begin_cluster~ is the box's.
+- Within a graph, ~#+begin_note~ is never the callout of the same name, and ~C-c C-c~ in it renders the graph.
+
+<span style="color: #8b4513; font-weight: bold;">** Markup makes rich labels</span>
+
+~*bold*~, ~/italic/~, ~_underline_~, ~+strike+~, ~=code=~, and =~pre~= in an item's text make its label an
+HTML-like one, while its id stays the plain text:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="font-weight: bold;">*Church*</span> encodes =Bool=
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>"Church encodes Bool" [ label=&lt;&lt;B&gt;Church&lt;/B&gt; encodes &lt;FONT FACE="monospace"&gt;Bool&lt;/FONT&gt;&gt; ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+We escape ~&amp;~, ~&lt;~, ~&gt;~, and ~"~ for you. Graphviz has no way to tell ~=code=~ from =~pre~=, so both are
+monospace. A ~#+record:~ table's cells keep their markup too. Names such as ~a_b~, ~C++~, and
+~org-graph.el~ are not mistaken for markup.
+
+Org's entities are their characters, and braced sub- and superscripts are Graphviz's own; as under Org's
+~#+options: ^:{}~, an unbraced ~a_b~ stays text, so ~snake_case~ ids are safe. A ~<span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&#8230;<span style="color: #a0a1a7;">@@</span>~ export
+snippet is raw label HTML, for whatever Org has no markup for; a snippet for any other backend vanishes:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ \alpha \to \beta
++ x^{2} H_{2}O
++ <span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&lt;FONT COLOR="red"&gt;<span style="color: #a0a1a7;">@@</span>Alert<span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&lt;/FONT&gt;<span style="color: #a0a1a7;">@@</span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>"&#945; &#8594; &#946;" [ label="&#945; &#8594; &#946;" ];
+"x2 H2O" [ label=&lt;x&lt;SUP&gt;2&lt;/SUP&gt; H&lt;SUB&gt;2&lt;/SUB&gt;O&gt; ];
+Alert [ label=&lt;&lt;FONT COLOR="red"&gt;Alert&lt;/FONT&gt;&gt; ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Timestamps, statistics cookies, and citations show as written; LaTeX fragments too, since Graphviz has
+no math. Syntax that means nothing in a graph ---a headline, a ~#+begin_quote~, an unknown ~#+key:~--- is
+an error, rather than silently dropped; comments are fine.
+
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold;">~\\~</span><span style="color: #8b4513; font-weight: bold;"> breaks a line</span>
+
+In Org, a ~\\~ ending a line is a hard line break; in a graph, it breaks the node's label. Since a label
+seldom wants a literal ~\\~, it may sit mid-line too, so a two-line node stays one terse line:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Emacs
+  + <span style="font-weight: bold;">provides ::</span> <span style="text-decoration: underline;">&lt;&lt;closures&gt;&gt;</span> Closures \\ (lexical scope)
+  + <span style="font-weight: bold;">*Lisp*</span> \\
+    McCarthy, 1958
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Emacs -&gt; closures [ label=provides ];
+closures [ label=&lt;Closures&lt;BR/&gt;(lexical scope)&gt; ];
+Emacs -&gt; "Lisp McCarthy, 1958";
+"Lisp McCarthy, 1958" [ label=&lt;&lt;B&gt;Lisp&lt;/B&gt;&lt;BR/&gt;McCarthy, 1958&gt; ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+The label becomes an HTML-like one, as with markup; the id joins the lines with a space, so a node
+reached by a link usually wants a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, as ~closures~ above.
+
+It is the one line break wherever a label is written: a description term, a table value, a ~#+record:~
+cell. So an arc's label breaks just as its node's does:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Monad
+  + <span style="font-weight: bold;">every monad \\ is an adjunction ::</span> Adjunction
+  + Turing
+    | :edge.label | Church&#8211; \\ Turing thesis |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Monad -&gt; Adjunction [ label=&lt;every monad&lt;BR/&gt;is an adjunction&gt; ];
+Monad -&gt; Turing [ label="Church&#8211;\nTuring thesis" ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Web links are URLs, image links are images</span>
+
+A link to anything but a node keeps its Org meaning. A web or file link makes the node clickable in
+an ~:svg t~ HTML export, its description staying in the label; a description-less link to an image
+draws that image:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;"><a href="https://orgmode.org">[[https://orgmode.org][Org]]</a></span> mode
++ <span style="text-decoration: underline;">&lt;&lt;emacs&gt;&gt;</span> Emacs <span style="text-decoration: underline;"><a href="file:emacs.png">[[file:emacs.png]]</a></span>
++ <span style="text-decoration: underline;"><a href="file:gnu.png">[[file:gnu.png]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>"Org mode" [ URL="<a href="https://orgmode.org">https://orgmode.org</a>" label="Org mode" ];
+emacs [ image="emacs.png" label=Emacs ];
+"gnu.png" [ image="gnu.png" label="" ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A node has one ~URL~, so an item with two web links is an error. Graphviz finds the image relative to
+the Org file, as Org does; an explicit ~URL~ or ~image~ row wins.
+
+So a graph of screenshots is a tour. A lone image is its own node, drawn sans text, so the arc into it
+carries the words; ~imagescale~ fits each picture to its node's fixed size:
+<span style="color: #a0a1a7;">#+begin_graph This package, at a glance :rankdir LR :node.shape box :node.fixedsize true :node.width 2.4 :node.height 1.6 :node.imagescale true
+</span>+ org-special-block-extras
+  + <span style="font-weight: bold;">folds ::</span> <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/details.png">[[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/details.png]]</a></span>
+  + <span style="font-weight: bold;">sets side by side ::</span> <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/parallel.png">[[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/parallel.png]]</a></span>
+  + <span style="font-weight: bold;">explains on hover ::</span> <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/tooltips_emacs.png">[[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/tooltips_emacs.png]]</a></span>
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+A link to a section, ~<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>~, is a URL too ---not an arc, since nodes are named without a star.
+In an ~:svg t~ HTML export it leads to that section's anchor, which only Org knows; and in Emacs, a click on
+the rendered node opens the section. So a graph may be a map of its own document:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+begin_graph Org's own syntax :svg t :rankdir LR
++ <span style="text-decoration: underline;"><a href="*Org's Own Syntax">[[*Org's Own Syntax][Syntax]]</a></span>
+  + <span style="text-decoration: underline;"><a href="*Footnotes are tooltips">[[*Footnotes are tooltips][Footnotes]]</a></span>
+  + <span style="text-decoration: underline;"><a href="*Notes are longer tooltips, or shown in the node">[[*Notes are longer tooltips, or shown in the node][Notes]]</a></span>
+,#+end_graph
+<span style="color: #a0a1a7;">#+end_src
+</span>A bare ~<span style="text-decoration: underline;"><a href="*Footnotes are tooltips">[[*Footnotes are tooltips]]</a></span>~ labels its node with the heading's title; ~<span style="text-decoration: underline;"><a href="#custom-id">[[#custom-id]]</a></span>~ and
+~<span style="text-decoration: underline;"><a href="id:&#8230;">[[id:&#8230;]]</a></span>~ links work alike.
+
+<span style="color: #8b4513; font-weight: bold;">** Checkboxes are templates</span>
+
+A checkbox says how far along a thing is; so a graph of tasks is just a checklist. ~[X]~, ~[-]~, and ~[ ]~
+apply the templates ~checked~, ~partial~, and ~unchecked~, as a ~:checked:~ tag would; and ~C-c C-c~
+on a checkbox toggles it, as Org's own does, then renders the graph:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+name: unchecked
+| style | dashed |
+
++ <span style="font-weight: bold;">[-]</span> compile
+  + <span style="font-weight: bold;">[X]</span> parse
+  + <span style="font-weight: bold;">[ ]</span> typecheck
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>compile [ color=darkorange fontcolor=darkorange label=compile ];
+parse [ color=forestgreen fontcolor=forestgreen label=parse ];
+typecheck [ style=dashed label=typecheck ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+~checked~ and ~partial~ default to green and orange, by ~org-graph-checkbox-templates~; a graph's own
+~#+name:~ template wins. A checkbox whose template exists nowhere, such as ~unchecked~ by default,
+styles nothing.
+
+<span style="color: #8b4513; font-weight: bold;">** Macros name values</span>
+
+A palette repeats itself. Org's ~#+macro:~ names a value once, and ~<span style="text-decoration: underline;">{{{name}}}</span>~ uses it ---in a table, an
+item, anywhere in the block:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+macro: gold #f9e2af
+,#+begin_graph
++ Church
+  + Turing
+    | :edge.color     | <span style="text-decoration: underline;">{{{gold}}}</span> |
+    | :edge.fontcolor | <span style="text-decoration: underline;">{{{gold}}}</span> |
+,#+end_graph
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Templates name whole bundles of rows; macros name single values. An undefined macro is an error.
+
+In similar spirit, inline ~src_LANG{&#8230;}~ blocks and ~call_NAME()~ calls run at export, as anywhere in
+Org, their results landing in the label; ~C-c C-c~ shows them as written.
+
+<span style="color: #8b4513; font-weight: bold;">** Ordered lists keep their order</span>
+
+~+ - *~ say &#8220;these things&#8221;; ~1. 2. 3.~ say &#8220;first, second, third&#8221;. So ordered children sit side by side,
+on one rank, in the order written ---Graphviz no longer reshuffles them to save a crossing:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ &#955;-calculus
+  1. Church
+  2. Turing
+  3. Kleene
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>"&#955;-calculus" [ ordering=out label="&#955;-calculus" ];
+"&#955;-calculus" -&gt; Church;
+"&#955;-calculus" -&gt; Turing;
+"&#955;-calculus" -&gt; Kleene;
+{ rank=same; Church; Turing; Kleene }
+<span style="color: #a0a1a7;">#+end_src
+</span>
+An ordered top-level list, or one inside a cluster, shares a rank too. An explicit
+~| :children-rank | min |~ wins over the ~rank=same~; a lone ordered child gets no rank at all. For
+same rank <span style="font-style: italic;">/without/</span> the fixed order, use ~| :children-rank | same |~ with ~+~ bullets.
+
+Nodes with no common parent share a rank by ~#+rank:~, which takes bare ids or links; a link spares a
+multi-word id its quotes:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Logic
+  + &#955; calculus
++ Lisp
+,#+rank: Lisp <span style="text-decoration: underline;"><a href="&#955; calculus">[[&#955; calculus]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>{ rank=same; "&#955; calculus"; Lisp }
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Under ~splines=curved~, Graphviz drops the label of an arc between two nodes on one rank; so there, such
+an arc's label becomes an ~xlabel~, which it still draws.
+
+<span style="color: #8b4513; font-weight: bold;">** The </span><span style="color: #8b4513; font-weight: bold;">~#+begin_graph~</span><span style="color: #8b4513; font-weight: bold;"> line</span>
+
+The header line takes the graph's title and any graph attribute, so small graphs need no preamble:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+begin_graph Lambda calculus :rankdir LR :node.shape box :edge.color grey
++ &#955;
+  + Lisp
+,#+end_graph
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>graph [ label="Lambda calculus" rankdir=LR ]
+node [ shape=box ]
+edge [ color=grey ]
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- The title, the words before the first ~:key~, is the graph's ~label~; ~:directed nil~ makes the graph
+  undirected.
+- ~:KEY V~ is a graph attribute; ~:node.KEY V~ and ~:edge.KEY V~ are node and edge defaults ---the
+  same ~KEY~, ~node.KEY~, ~edge.KEY~ spelling as table rows.
+- ~:wrap N~ fills node and arc labels to lines of ~N~ characters, so long item text needs no ~\\~ breaks;
+  a label already broken by ~\\~ stays as written.
+- ~:notes inline~ shows notes beneath labels rather than as tooltips; ~:unknown-tags random-templates~
+  makes up templates for unknown tags; ~:unflatten N~ staggers wide rows of leaves.
+- ~:file~, ~:svg~, ~:directed~, ~:wrap~, ~:notes~, ~:unflatten~, ~:unknown-tags~, and ~:C-c_C-c~ belong to
+  the block itself, never to Graphviz; so do the
+  Babel habits ~:exports~ and ~:results~, which the block ignores.
+- The block's own ~#+graph:~, ~#+node:~, and ~#+edge:~ tables override the header.
+- As on Org's own ~#+attr_html:~ lines, values need no quotes: ~:bgcolor #6c7086~,
+  ~:fontname Helvetica,Arial~. A value with spaces does: ~:fontname "Helvetica Neue"~.
+- When the preamble outgrows the line, a drawer of any name ---~:SETTINGS:~, ~:PALETTE:~--- folds
+  its ~#+graph:~, ~#+node:~, ~#+edge:~, ~#+rank:~, and ~#+name:~ lines away with ~TAB~.
+
+<span style="color: #8b4513; font-weight: bold;">** Mind maps: </span><span style="color: #8b4513; font-weight: bold;">~:layout twopi~</span>
+
+Graphviz's ~layout~ attribute picks its engine, so the header line turns a tree into a mind map: ~twopi~
+places ~root~ in the middle and each generation on a ring around it. With ~:wrap~, long labels stay compact:
+<span style="color: #a0a1a7;">#+begin_graph Org mode, radially :layout twopi :root "Org mode" :wrap 12 :directed nil :node.shape box :node.style rounded
+</span>+ Org mode
+  + Agenda
+    + TODO keywords
+    + Scheduling and deadlines
+  + Babel
+    + Tangling
+    + Evaluating source blocks
+  + Export
+    + HTML
+    + LaTeX
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+Sans ~:root~, ~twopi~ picks a centre itself. ~neato~, ~fdp~, and ~circo~ suit graphs that are not trees.
+
+<span style="color: #8b4513; font-weight: bold;">** A mind map from a book: </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/How to Take Smart Notes/</span>
+
+A chapter of S&#246;nke Ahrens' <span style="font-style: italic;">/How to Take Smart Notes/</span>. Each connective, such as &#8220;is an aid for&#8221;, sits on its
+arc, as a description term; ordered steps are numbered arcs; ~:smart_kind:~ marks the three kinds of note;
+and ~<span style="text-decoration: underline;"><a href="fleeting">[[fleeting]]</a></span>~ arcs back to a note met earlier:
+<span style="color: #a0a1a7;">#+name: smart_kind</span>
+| shape     | note      |
+| fillcolor | "#fff5cc" |
+
+<span style="color: #a0a1a7;">#+begin_graph How to Take Smart Notes ---S&#246;nke Ahrens :rankdir LR :wrap 24 :directed nil :fontname Helvetica :node.shape box :node.style "rounded,filled" :node.fillcolor white :node.fontname Helvetica :edge.fontname Helvetica :edge.fontsize 10 :edge.fontcolor gray30 :edge.color gray60
+</span>+ <span style="text-decoration: underline;">&lt;&lt;notes&gt;&gt;</span> <span style="font-weight: bold;">*Smart notes*</span>
+  + Writing
+    + <span style="font-weight: bold;">is an aid for ::</span> thinking
+    + <span style="font-weight: bold;">is an aid for ::</span> studying
+    + <span style="font-weight: bold;">is an aid for ::</span> generating ideas
+    + <span style="font-weight: bold;">is an aid for ::</span> reading
+    + <span style="font-weight: bold;">is an aid for ::</span> understanding
+  + Thinking
+    + <span style="font-weight: bold;">happens ::</span> on paper
+  + Rule
+    + keep a pen at hand
+  + Process
+    + <span style="font-weight: bold;">1 ::</span> collect notes
+      + <span style="text-decoration: underline;">&lt;&lt;fleeting&gt;&gt;</span> Fleeting <span style="font-weight: bold;">:smart_kind:</span>
+        + reminders of thoughts
+          + put in one place
+          + process later
+      + <span style="text-decoration: underline;">&lt;&lt;literature&gt;&gt;</span> Literature <span style="font-weight: bold;">:smart_kind:</span>
+        + <span style="font-weight: bold;">taken ::</span> when reading
+        + <span style="font-weight: bold;">taken ::</span> briefly
+        + <span style="font-weight: bold;">taken ::</span> selectively, for your own topics
+        + <span style="font-weight: bold;">taken ::</span> in your own words
+        + <span style="font-weight: bold;">taken ::</span> with bibliographic data
+        + <span style="font-weight: bold;">kept ::</span> in the reference system
+      + Permanent <span style="font-weight: bold;">:smart_kind:</span>
+        + <span style="font-weight: bold;">review ::</span> <span style="text-decoration: underline;"><a href="fleeting">[[fleeting]]</a></span>
+        + <span style="font-weight: bold;">review ::</span> <span style="text-decoration: underline;"><a href="literature">[[literature]]</a></span>
+        + <span style="font-weight: bold;">review ::</span> once a day
+        + <span style="font-weight: bold;">think ::</span> how they relate to your research, reflections, interests
+        + one note for each idea
+        + written as if for another person \\ in full sentences, with sources, links; precisely, clearly, briefly
+        + <span style="font-weight: bold;">discard ::</span> the fleeting notes
+        + <span style="font-weight: bold;">add ::</span> behind the note it relates to directly
+        + <span style="font-weight: bold;">add ::</span> links
+        + <span style="font-weight: bold;">make sure ::</span> you can find it \\ from the index, or an entry point
+    + <span style="font-weight: bold;">2 ::</span> turn into a draft
+    + <span style="font-weight: bold;">3 ::</span> edit
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Wide trees: </span><span style="color: #8b4513; font-weight: bold;">~:unflatten N~</span>
+
+A node with many children lays them out in one wide row. ~:unflatten N~ passes the dot through Graphviz's
+own ~unflatten -l N~, which staggers those leaves over ~N~ ranks, so the graph is a block rather than a ribbon:
+<span style="color: #a0a1a7;">#+begin_graph Lisp's children :unflatten 3
+</span>+ Lisp
+  + Scheme
+  + Common Lisp
+  + Clojure
+  + Racket
+  + Emacs Lisp
+  + Fennel
+  + Janet
+  + Hy
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+<span style="color: #8b4513; font-weight: bold;">** Decision trees</span>
+
+A decision tree is a tree whose nodes come in kinds: decisions we make (boxes), chances we take
+(circles), and outcomes (bare text), with each chance's arcs labelled by how likely it is. Templates name
+the kinds, description terms label the arcs, and an item's ~#+edge:~ dashes every arc of chance beneath it:
+<span style="color: #a0a1a7;">#+begin_graph Should our package go lexical? :rankdir LR
+</span>#+name: decision
+| shape | box |
+#+name: chance
+| shape | circle |
+| label | ""     |
+| width | 0.3    |
+#+name: outcome
+| shape | plaintext |
+
++ Enable =lexical-binding=? <span style="font-weight: bold;">:decision:</span>
+  + <span style="font-weight: bold;">yes ::</span> <span style="text-decoration: underline;">&lt;&lt;specials&gt;&gt;</span> <span style="font-weight: bold;">:chance:</span>
+    #+edge:
+    | style | dashed |
+    + <span style="font-weight: bold;">80% ::</span> Closures capture \\ their environment <span style="font-weight: bold;">:outcome:</span>
+    + <span style="font-weight: bold;">20% ::</span> An undeclared special \\ breaks; we =defvar= it <span style="font-weight: bold;">:outcome:</span>
+  + <span style="font-weight: bold;">no ::</span> Dynamic scope; \\ the byte-compiler warns <span style="font-weight: bold;">:outcome:</span>
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+The chance node is all target: ~<span style="text-decoration: underline;">&lt;&lt;specials&gt;&gt;</span>~ names it, and its template's empty ~label~ leaves a dot.
+
+<span style="color: #8b4513; font-weight: bold;">** Smart diagrams: </span><span style="color: #8b4513; font-weight: bold;">~:smartdiagram TYPE~</span>
+
+Graphviz lays out a graph; LaTeX's <span style="text-decoration: underline;"><a href="https://ctan.org/pkg/smartdiagram">smartdiagram</a></span> package typesets a handful of fixed pictures
+---a planet amid its satellites, a flow of boxes, a column of terms and their descriptions--- that suit a
+README's opening better than any graph. ~:smartdiagram TYPE~ hands the very same list to smartdiagram
+instead; ~C-c C-c~ renders it with ~pdflatex~, and LaTeX export typesets it in place:
+<span style="color: #a0a1a7;">#+macro: replaces \\ <a href="color:gray">[[color:gray][replaces]]</a> \\ <a href="color:gray">[[color:gray][=$1=]]</a></span>
+<span style="color: #a0a1a7;">#+begin_graph One syntax =(key map)= \\ where =key= is =number=, =:keyword=, ='symbol=, or ="string"=! :smartdiagram constellation
+</span>#+graph:
+| planet color              | black!75        |
+| planet size               | 3.5cm           |
+| planet text width         | 3.3cm           |
+| satellite size            | 3.6cm           |
+| satellite text width      | 3.5cm           |
+| distance planet-satellite | 5.7cm           |
+| connection color          | gray!60         |
+| font                      | \small\sffamily |
+
++ <span style="font-weight: bold;">*easy-access.el*</span> \\ one syntax
+  | fontcolor | white |
+  + =(:k plist)= <span style="text-decoration: underline;">{{{replaces((plist-get plist :k))}}}</span>
+  + =(:k alist)= <span style="text-decoration: underline;">{{{replaces((cdr (assoc :k alist)))}}}</span>
+  + =(:k hash)= <span style="text-decoration: underline;">{{{replaces((gethash :k hash))}}}</span>
+  + =(:field instance)= <span style="text-decoration: underline;">{{{replaces((record-field instance))}}}</span>
+  + =(n sequence)= <span style="text-decoration: underline;">{{{replaces((seq-elt sequence n))}}}</span>
+  + =(setf (:k p) v)= <span style="text-decoration: underline;">{{{replaces((map-put p :k v))}}}</span>
+
+-----
+
+=(:school 'math "jasim" :names 2 my-nested-life)=
+
+<span style="color: #bebebe;"><a href="color:gray">[[color:gray][replaces]]</a></span>
+
+#+begin_src emacs-lisp
+(seq-elt (-&gt; my-nested-life
+             (map-elt :school)
+             (map-elt 'math)
+             (map-elt "jasim")
+             person-names)
+         2)
+#+end_src
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+- ~TYPE~ is one of ~constellation~, ~connected-constellation~, ~bubble~, ~flow~, ~flow:horizontal~,
+  ~circular~, ~circular:clockwise~, ~descriptive~, ~priority-descriptive~, or ~sequence~.
+- A constellation or bubble has one top item, its centre; that item's children orbit it. A descriptive
+  diagram's items are ~+ TERM :: DESCRIPTION~. Every other type reads the top items, in order.
+- The ~#+graph:~ rows are ~\smartdiagramset~'s, in smartdiagram's own words: ~| planet color | black!75 |~.
+- An item's ~| color |~, ~| fontcolor |~, and ~| fontsize |~ rows ---Graphviz's names for them--- colour
+  its shape and its text, and size its text; its ~:tags:~ splice ~#+name:~ templates of those rows, as in
+  any graph. An item's later paragraphs sit beneath its text.
+- The title sits above the diagram; prose before the list, between the two; prose after it, beneath.
+- ~:dpi N~ sets the PNG's resolution, 300 by default. ~C-u C-c C-c~ shows the LaTeX.
+- ~C-M-i~ and eldoc know which kind of graph they are in: under ~:smartdiagram~, they offer
+  smartdiagram's keys, with their defaults, rather than Graphviz's.
+- Graphviz's own syntax ---~#+node:~, ~#+edge:~, ~#+rank:~, links between items, records--- draws
+  nothing here, so it is an error rather than silently dropped.
+
+<span style="color: #a626a4; font-weight: bold;">*** Org's markup in place of LaTeX's</span>
+
+The diagram above began life as a ~#+begin_src latex-as-png~ block, via <span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png">ob-latex-as-png</a></span>.
+Every LaTeX incantation it needed has an Org counterpart that we already write daily:
+
+| LaTeX                                                     | Org                                                    |
+|-----------------------------------------------------------+--------------------------------------------------------|
+| ~\smartdiagram[constellation diagram]{&#8230;}~                 | ~:smartdiagram constellation~, over a nested list      |
+| ~\smartdiagramset{planet color=black!75, &#8230;}~              | a ~#+graph:~ table, one row a key                      |
+| ~\newcommand{\old}[1]{\textcolor{black!70}{\texttt{#1}}}~ | ~#+macro: old <span style="color: #bebebe;"><a href="color:gray">[[color:gray][</a><a href="color:gray">=$1=]</a><a href="color:gray">]</a></span>~                    |
+| ~\texttt{(:k plist)}~, ~\textbf{&#8230;}~                       | ~=(:k plist)=~, ~*&#8230;*~                                  |
+| ~\mbox{\texttt{&#8230;}}~, lest code break mid-circle           | nothing: code never breaks                             |
+| ~\textcolor{black!70}{replaces}~                          | ~<span style="color: #bebebe;"><a href="color:gray">[[color:gray][</a><a href="color:gray">replaces]</a><a href="color:gray">]</a></span>~                             |
+| ~{\color{white}&#8230;}~ on the planet                          | a ~fontcolor~ row of ~white~                           |
+| ~\centering{One syntax &#8230; \\ &#8230;}~ above the diagram         | the block's title                                      |
+| ~\vspace{1em}{\textcolor{black!44}\hrule}\vspace{1em}~    | ~-----~                                                |
+| ~\hspace{7em} (map-elt :school)~, line by line            | a ~#+begin_src~ block, indented as we read it          |
+| ~% \new{(N xs)} \replaces &#8230;~                              | ~# + =(N xs)= &#8230;~                                       |
+| ~\resizebox~, ~\vspace~, ~{\color{white} Bye!}~ padding   | nothing: the image is cropped to a small border        |
+
+The LaTeX column is a second language inside our Org file: its macros, its colour syntax, and hand-tuned
+~\hspace~'s that drift the moment a line changes. The Org column is the language the rest of the file is
+already in; it folds, links, exports, and completes like everything around it. The only backslashes
+that survive the move are ~\\~ ---which Org itself reads as a line break--- and the font names, such as
+~\small~, that smartdiagram's own settings take as values.
+
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold;">~#+name:~</span><span style="color: #8b4513; font-weight: bold;"> and </span><span style="color: #8b4513; font-weight: bold;">~#+caption:~</span><span style="color: #8b4513; font-weight: bold;"> make a figure</span>
+
+In Org, ~#+name:~ is what ~<span style="text-decoration: underline;"><a href="links">[[links]]</a></span>~ reach, and ~#+caption:~ captions a table or an image. A graph
+is an image, so both mean what they always do:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>As <span style="text-decoration: underline;"><a href="lineage">[[lineage]]</a></span> shows, Emacs is a Lisp.
+
+,#+name: lineage
+,#+caption: How Emacs came to be
+,#+begin_graph
++ &#955;-calculus
+  + Lisp
+    + Emacs Lisp
+,#+end_graph
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- The graph renders to ~lineage.png~ ---both on ~C-c C-c~ and on export--- and exports as that image,
+  numbered and captioned: ~<span style="text-decoration: underline;"><a href="lineage">[[lineage]]</a></span>~ reads &#8220;Figure 1&#8221; in HTML, and ~\ref~ in LaTeX.
+- An explicit ~:file~ still wins: ~#+begin_graph :file elsewhere.png~ renders there, and the
+  ~#+name:~ still labels it. With ~:svg t~, the figure is ~lineage.svg~.
+- An unnamed graph exports as before: inlined into HTML, or as dot source elsewhere.
+
+<span style="color: #8b4513; font-weight: bold;">** Sections are graphs: the </span><span style="color: #8b4513; font-weight: bold;">~:graph:~</span><span style="color: #8b4513; font-weight: bold;"> tag</span>
+
+A ~#+begin_graph~ block is a function on a region; a ~:graph:~ tag is the same function on a section.
+The section's text is the graph, and its ~:PROPERTIES:~ drawer ---Org's own home for key-value
+settings--- is the ~#+begin_graph~ line: ~:RANKDIR: LR~ is ~:rankdir LR~, ~:NODE.SHAPE: box~ is
+~:node.shape box~, and ~:FILE:~ is ~:file~. See <span style="text-decoration: underline;"><a href="*Fun Examples #4: A Section Is a Graph">the live example</a></span>:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,* Emacs's lineage :graph:
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:RANKDIR:</span> <span style="color: #383a42; background-color: #fafafa;">LR</span>
+<span style="color: #a626a4;">:NODE.SHAPE:</span> <span style="color: #383a42; background-color: #fafafa;">box</span>
+<span style="font-weight: bold;">:END:</span>
++ &#955;-calculus
+  + <span style="font-weight: bold;">inspired ::</span> Lisp
+    + Emacs Lisp
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- The heading stays a heading; only its text becomes the graph, on export.
+- ~:graph_Some_Title:~ titles the graph ~Some Title~, as the words before the first ~:key~ would.
+- Org's own properties, such as ~:CUSTOM_ID:~ and ~:CATEGORY:~, stay Org's; they never reach Graphviz.
+
+<span style="color: #0184bc; font-weight: bold;">* Keys, Edges, Records, and Ports</span>
+
+<span style="color: #8b4513; font-weight: bold;">** Ids and labels</span>
+
+Every node has an <span style="font-style: italic;">/id/</span>, which arcs and links name, and a <span style="font-style: italic;">/label/</span>, which is drawn. By default both are
+the item's text; so these three items, spelling it out more and more, all declare one and the same node:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Lisp
+
++ <span style="text-decoration: underline;">&lt;&lt;Lisp&gt;&gt;</span> Lisp
+
++ Lisp
+  | :id   | Lisp |
+  | label | Lisp |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Lisp [ label=Lisp ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+When the two should differ, we set either one apart: a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ or an ~| :id |~ row gives the id,
+and a ~| label |~ row gives the label:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
++ Combinatory Logic
+  | :id | combinatory |
++ Church
+  | label | Alonzo Church |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>lam [ label="&#955;-calculus" ];
+combinatory [ label="Combinatory Logic" ];
+Church [ label="Alonzo Church" ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- The id is the ~:id~ row, else the ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, else the text ---sans markup, links, footnotes,
+  and tags.
+- The label is the ~label~ row, else the text; markup makes it an HTML-like one.
+- Two items with one id are one node, so an item may appear twice to gain more children.
+
+<span style="color: #8b4513; font-weight: bold;">** Two kinds of keys</span>
+
+By way of example, this item has one row of each kind:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Alonzo
+  | label | Alonzo Church |
+  | :id   | church        |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>church [ label="Alonzo Church" ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A <span style="font-style: italic;">/plain/</span> key, such as ~label~, is a Graphviz attribute of the node, passed straight through. We
+quote its value for you, so ~Alonzo Church~, ~#00ff00~, and ~x -&gt; y~ all need no quotes; already-quoted
+values, and ~&lt;&#8230;&gt;~ HTML labels, are left alone.
+
+A key starting with a colon is <span style="font-style: italic;">/reserved/</span>: it means something to the ~graph~ block itself, never to
+Graphviz. A leading colon is never a Graphviz attribute, so the two kinds cannot clash. The reserved
+keys are listed in ~org-graph-reserved-keys~:
+
+| Key              | Meaning                                                                    |
+|------------------+----------------------------------------------------------------------------|
+| ~:id~            | the node's name for cross-references; else its ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, else its text |
+| ~:edge.KEY~      | attribute ~KEY~ of the arc from the parent                                 |
+| ~:edge[T].KEY~   | attribute ~KEY~ of this item's arc to ~T~                                  |
+| ~:inherit~       | inherit the rows of ~#+name:~ templates; also ~:NAME:~ tags                |
+| ~:children-rank~ | ~{ rank=&#8230; }~ over this item's immediate children                           |
+
+An unknown ~:key~ is an error rather than a silently ignored attribute.
+
+<span style="color: #8b4513; font-weight: bold;">** Edges: nesting, </span><span style="color: #8b4513; font-weight: bold;">~:edge.KEY~</span><span style="color: #8b4513; font-weight: bold;">, and links</span>
+
+Nesting makes an arc from parent to child; ~:edge.KEY~ rows on the child style that arc. Every
+attribute is its own row, exactly like a node's, so there is one key-value syntax throughout. For a
+mere label, the description list ~+ request :: server~ is terser; see
+<span style="text-decoration: underline;"><a href="*Description lists label arcs">Description lists label arcs</a></span>.
+A parallel arc is simply a second child, styled on its own; a ~KEY~ given twice is an error:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ client
+  + <span style="font-weight: bold;">request ::</span> server
+    | :edge.color | blue |
+  + <span style="font-weight: bold;">retry ::</span> server
+    | :edge.style | dashed |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>client -&gt; server [ label=request color=blue ];
+client -&gt; server [ label=retry style=dashed ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Arcs that nesting cannot express ---to a node declared elsewhere--- are links. A child item that is
+nothing but a link is a <span style="font-style: italic;">/reference/</span> to its target; nesting makes the arc, and the child's ~:edge.KEY~
+rows style it, exactly as for any other child. So each arc is its own small paragraph:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
++ Fortran
++ Lisp
+  + <span style="font-weight: bold;">borrows ::</span> <span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>
+    | :edge.style | dotted |
+  + <span style="text-decoration: underline;"><a href="Fortran">[[Fortran]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Lisp -&gt; lam [ label=borrows style=dotted ];
+Lisp -&gt; Fortran;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- A reference never declares its target: the target's own item names and labels it, even when that
+  item comes later. Node attributes on a reference are an error; they belong on the target's item.
+- Two references to one target are two parallel arcs, each styled on its own.
+- A reference may name a record's port, ~<span style="text-decoration: underline;"><a href="struct1::mid">[[struct1::mid]]</a></span>~, or a cluster.
+
+For a quick arc, a link may also sit in the item's own text; once the arc wants styling, it graduates
+to a reference child:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
++ Fortran
++ Lisp <span style="text-decoration: underline;"><a href="lam">[[lam][borrows]]</a></span> <span style="text-decoration: underline;"><a href="Fortran">[[Fortran]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Lisp -&gt; lam [ label=borrows ];
+Lisp -&gt; Fortran;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+As in Org, an item's tables and directives may also follow its sub-items; they still belong to it.
+
+<span style="color: #8b4513; font-weight: bold;">** Templates: </span><span style="color: #8b4513; font-weight: bold;">~#+name:~</span><span style="color: #8b4513; font-weight: bold;">, </span><span style="color: #8b4513; font-weight: bold;">~:tags:~</span><span style="color: #8b4513; font-weight: bold;">, and </span><span style="color: #8b4513; font-weight: bold;">~:inherit~</span>
+
+A family tree repeats itself: every marriage is the same pink, two-headed arc, and every wife the same
+boxed node. Rather than restate those rows each time, we name them once. A ~#+name:~ table is a
+reusable bundle of rows, and a tag applies it to whatever its line describes ---after an item, its
+node; after a reference, its arc:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>,#+name: married
+| color | "#cc3399" |
+| dir   | both      |
+,#+name: wife
+| shape | box |
+
++ Muhammad
++ Khadija :wife:
+  + <span style="text-decoration: underline;"><a href="Muhammad">[[Muhammad]]</a></span> :married:
+    | :edge.color | red |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Muhammad [ label=Muhammad ];
+Khadija [ shape=box label=Khadija ];
+Khadija -&gt; Muhammad [ dir=both color=red ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Explicit rows win over a template's, so the marriage above is red. A line may carry several tags,
+~:married:faint:~, each a template. The same rule reaches every other line a template could apply to:
+
+| Line                                | What its tags style                                           |
+|-------------------------------------+---------------------------------------------------------------|
+| ~+ Khadija :wife:~                  | the node                                                      |
+| ~+ <span style="text-decoration: underline;"><a href="Muhammad">[[</a><a href="Muhammad">Muhammad]</a><a href="Muhammad">]</a></span> :married:~          | the arc to the reference                                      |
+| ~+ wed :married: :: Khadija :wife:~ | the arc, by the description term's tags; the node, by its own |
+| ~#+node: :wife:~                    | every node; likewise ~#+edge:~ and ~#+graph:~                 |
+| ~#+name: wife :base1:base2:~        | the template ~wife~, which inherits ~base1~ and ~base2~       |
+
+Each tag is terse sugar for an ~:inherit~ row, which names one or more templates and is often the
+clearer choice in a long-lived graph: ~| :inherit | wife |~ in an item's table or under ~#+node:~,
+~| :edge.:inherit | married |~ for the arc into an item. Wherever it sits, the item's explicit rows
+still win.
+
+A template may inherit others; one that, directly or not, inherits itself contributes nothing the
+second time. A name that no ~#+name:~ defines is an error, rather than a silent nothing.
+
+As with Babel's named tables, a ~#+name:~ table anywhere in the buffer, outside any graph, is a
+template every graph in the buffer may use; so a house style ---~wife~, ~married~--- is named once per
+file rather than once per graph. A graph's own template of the same name wins, and a template inside
+one graph stays that graph's own.
+
+<span style="color: #8b4513; font-weight: bold;">** Records: a </span><span style="color: #8b4513; font-weight: bold;">~#+record:~</span><span style="color: #8b4513; font-weight: bold;"> table</span>
+
+A record is a node drawn as a table, and Org already has tables: under ~#+record:~, an item's table is
+its label, laid out exactly as written ---just as ~#+graph:~, ~#+node:~, and ~#+edge:~ name what the
+table below them is. A cell's ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ is its <span style="font-style: italic;">/port/</span>, a cell's ~<span style="text-decoration: underline;"><a href="link">[[link]]</a></span>~ is an arc from that
+port, and an arc reaches a port by ~record::port~ ---just as Org's ~<span style="text-decoration: underline;"><a href="file:notes.org::target">[[file:notes.org::target]]</a></span>~ reaches
+into a file:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ struct1
+  ,#+record:
+  | left | <span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span> middle <span style="text-decoration: underline;"><a href="struct2::one">[[</a><a href="struct2::one">struct2::one]</a><a href="struct2::one">]</a></span> | right |
++ struct2
+  ,#+record:
+  | <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> one | two   |
+  |<span style="font-weight: bold; font-style: italic;"> ^           | three </span>|
++ reader
+  + <span style="text-decoration: underline;"><a href="struct1::mid">[[struct1::mid]]</a></span>
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>struct1 [ shape=plain label=&lt;&lt;TABLE &#8230;&gt;&lt;TR&gt;&lt;TD&gt;left&lt;/TD&gt;&lt;TD PORT="mid"&gt;middle&lt;/TD&gt;&lt;TD&gt;right&lt;/TD&gt;&lt;/TR&gt;&lt;/TABLE&gt;&gt; ];
+struct1:mid -&gt; struct2:one;
+struct2 [ shape=plain label=&lt;&lt;TABLE &#8230;&gt;&lt;TR&gt;&lt;TD PORT="one" ROWSPAN="2"&gt;one&lt;/TD&gt;&lt;TD&gt;two&lt;/TD&gt;&lt;/TR&gt;&lt;TR&gt;&lt;TD&gt;three&lt;/TD&gt;&lt;/TR&gt;&lt;/TABLE&gt;&gt; ];
+reader -&gt; struct1:mid;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+Org tables have no merged cells, so two markers stand in for them: ~^~ continues the cell above, as
+~one~ does, and an empty cell continues the cell to its left ---or, in the first column, the one
+above. Together they draw any layout that Graphviz's old ~{ }~ nesting could:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ struct3
+  ,#+record:
+  | hello \\ world | b |            |   | g | h |
+  |<span style="font-weight: bold; font-style: italic;"> ^              | c | </span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">&lt;&lt;here&gt;&gt;</span><span style="font-weight: bold; font-style: italic;"> d | e | ^ | ^ </span>|
+  |<span style="font-weight: bold; font-style: italic;"> ^              | f |            |   | ^ | ^ </span>|
+<span style="color: #a0a1a7;">#+end_src
+</span>Here ~b~ and ~f~ span three columns, ~hello~, ~g~, and ~h~ three rows; a ~\\~ breaks a line, as in an item.
+
+Hlines and column cookies mean what they mean to Org. An hline draws a rule between rows, and a table
+with any hline draws one outer border rather than a box around every cell ---so a UML class is just
+the table we would write anyway. A row of ~&lt;l&gt;~, ~&lt;c&gt;~, and ~&lt;r&gt;~ cookies aligns its columns, and
+cells keep their markup:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Person
+  ,#+record:
+  | <span style="font-weight: bold; font-style: italic;">&lt;l&gt;</span>            |
+  | <span style="font-weight: bold;">*Person*</span>       |
+  |----------------|
+  | name: =String= |
+  | age: =Int=     |
+  |----------------|
+  | greet()        |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Person [ shape=plain label=&lt;&lt;TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"&gt;&lt;TR&gt;&lt;TD ALIGN="LEFT" BALIGN="LEFT"&gt;&lt;B&gt;Person&lt;/B&gt;&lt;/TD&gt;&lt;/TR&gt;&lt;HR/&gt;&#8230;&lt;/TABLE&gt;&gt; ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- A record is otherwise an ordinary node: its children are nodes of their own, and its attributes,
+  tags, and templates apply as usual; ~color~, ~fillcolor~, and ~fontcolor~ colour the table. Its
+  attribute table goes <span style="font-style: italic;">/above/</span> ~#+record:~, since rows right below the record table are part of it.
+- A record is ~shape=plain~, the table being its whole outline; an explicit ~shape~ row wins.
+- A cell with a link but no target is ported by its text, spaces as underscores; ~&lt;&lt;x marks the
+  spot&gt;&gt;~ is likewise reached as ~<span style="text-decoration: underline;"><a href="struct3::x marks the spot">[[struct3::x marks the spot]]</a></span>~.
+- Ports belong to their record, so two records may both have a ~head~ port: ~r1::head~ and ~r2::head~.
+- A cell's trailing tags style its arcs, as a reference's style its arc:
+  ~| <span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span> middle <span style="text-decoration: underline;"><a href="struct2::one">[[struct2::one]]</a></span> :dashed: |~ draws a dashed arc. A cell with tags but no link is an
+  error; write ~=:x:=~ for literal text.
+- ~a::b~ names a port only when ~a~ names a record; otherwise it is an ordinary node, such as
+  ~std::vector~. Record and port names may contain dots: ~<span style="text-decoration: underline;"><a href="org.el::v1.2">[[org.el::v1.2]]</a></span>~.
+- Graphviz spells ports ~record:port~; that is the spelling in the generated dot.
+
+<span style="color: #8b4513; font-weight: bold;">** Clusters</span>
+
+A cluster is a box drawn around some nodes: a <span style="font-style: italic;">/subgraph/</span>, so it gets the graph's own spelling. A
+~#+begin_cluster~ block takes a title and ~:KEY V~ attributes, ~:node.KEY~ and ~:edge.KEY~ defaults
+included, exactly as the ~#+begin_graph~ line does; and, being a block, it folds with ~TAB~:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Emacs
+  ,#+begin_cluster Packages :bgcolor lightgrey :node.shape box
+  + Org
+    ,#+begin_cluster
+    + agenda
+    + babel
+    ,#+end_cluster
+  + Magit
+  ,#+end_cluster
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>graph [ compound=true ]
+subgraph cluster_Packages {
+  label=Packages
+  bgcolor=lightgrey
+  node [ shape=box ]
+  Org [ label=Org ];
+  subgraph cluster_anonymous_1 { label="" agenda; babel; }
+  Org -&gt; agenda [ lhead=cluster_anonymous_1 ];
+  Magit [ label=Magit ];
+}
+Emacs -&gt; Org [ lhead=cluster_Packages ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+- A cluster block inside an item is that item's child: above, ~Emacs~ has an arc to ~Packages~.
+- An untitled cluster is an anonymous box, with no label and no name to draw arcs to.
+- When the attributes outgrow the line, a table opening the block styles the box, as an item's table
+  styles its node; ~#+node:~ and ~#+edge:~ tables set defaults inside it, as usual:
+<span style="color: #a0a1a7;">  #+begin_src org
+</span>  ,#+begin_cluster Prophets
+  | style     | filled  |
+  | fillcolor | #ddeeff |
+  ,#+node:
+  | fillcolor | #aaccff |
+  + Adam
+  ,#+end_cluster
+<span style="color: #a0a1a7;">  #+end_src
+</span>- The title runs up to the first ~:KEY~; ~#+begin_cluster Time 12:30~ is titled ~Time 12:30~.
+- ~C-c C-c~, ~C-M-i~, and eldoc work inside a cluster block just as anywhere else in the graph.
+
+An arc to or from a cluster lands on the cluster's first node, clipped at its border, as ~lhead~ shows above.
+
+<span style="color: #8b4513; font-weight: bold;">** Strictly tables: </span><span style="color: #8b4513; font-weight: bold;">~:edge[T].KEY~</span><span style="color: #8b4513; font-weight: bold;"> and </span><span style="color: #8b4513; font-weight: bold;">~| shape | cluster |~</span>
+
+Some of us prefer every attribute in a key-value table, never in the list's shape. Two spellings
+serve that taste; the examples above avoid them, but they are fully supported.
+
+An inline link's arc is styled by ~:edge[T].KEY~, naming the arc by where it goes; ~:edge[T].:inherit~
+applies a template to it. A row with no ~<span style="text-decoration: underline;"><a href="T">[[T]]</a></span>~ link in the item's text is an error:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
++ Lisp <span style="text-decoration: underline;"><a href="lam">[[lam][borrows]]</a></span>
+  | :edge[lam].style | dotted |
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>Lisp -&gt; lam [ label=borrows style=dotted ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+A ~| shape | cluster |~ row makes an item a cluster, as ~#+begin_cluster~ does. Its children are then
+its members rather than arc targets, so arcs out of them are inline links, styled as above:
+<span style="color: #a0a1a7;">#+begin_src org
+</span>+ Emacs
+  + Packages
+    | shape | cluster |
+    + Org
+    + Magit
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src dot
+</span>graph [ compound=true ]
+subgraph cluster_Packages { label=Packages Org; Magit; }
+Emacs -&gt; Org [ lhead=cluster_Packages ];
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Minimal Example</span>
+
+<span style="color: #a0a1a7;">#+begin_graph
+</span>+ A
+  + <span style="font-weight: bold;">calls them ::</span> B
+    + <span style="font-weight: bold;">returns ::</span> C
+    + <span style="font-weight: bold;">spawns ::</span> D
+      | :edge.style | dashed |
+      + <span style="font-weight: bold;">merges into ::</span> E
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-183215.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-183215.png</a></span>
+
+<span style="color: #0184bc; font-weight: bold;">* Quality of Life</span>
+
+<span style="color: #a0a1a7;">#+begin_graph
+</span>+ Functor \\ F : C &#8594; D
+  | shape | parallelogram |
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260517-142140.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260517-142140.png</a></span>
+
+
+1. Pressing ~C-u C-c C-c~ inside a ~#+begin_graph~ block shows the generated Graphviz dot source in
+   a ~*org-graph dot*~ buffer instead of rendering a PNG.  A ~#+RESULTS:~ block containing a fenced
+   ~#+begin_src dot &#8230; #+end_src~ is inserted (or replaced) in the org file so the source is preserved.
+
+   For blocks where you always want dot output, add ~:C-c_C-c dot~ to the header:
+<span style="color: #a0a1a7;">   #+begin_example
+</span>   #+begin_graph :C-c_C-c dot
+   &#8230;
+   #+end_graph
+<span style="color: #a0a1a7;">   #+end_example
+</span>   Plain ~C-c C-c~ on such a block shows dot; ~C-u C-c C-c~ toggles back to PNG.
+   The two controls compose via XOR &#8212; prefix always flips whatever the block default is.
+
+2. Pressing ~C-u RET~ on any table row inside a ~#+begin_graph~ block inserts a new ~| key | value |~
+   row interactively &#8212; a completion menu for the key, then one for the value (or a free-text prompt
+   when the attribute accepts arbitrary strings).
+
+   The menu is context-aware: it shows only attributes valid for the structural location of the table:
+   - Table under ~#+graph:~ &#8594; graph-level attributes (~rankdir~, ~splines~, ~bgcolor~, &#8230;)
+   - Table under ~#+node:~ &#8594; default node attributes (~shape~, ~style~, ~color~, &#8230;)
+   - Table under ~#+edge:~ &#8594; default edge attributes (~arrowhead~, ~dir~, ~penwidth~, &#8230;)
+   - Table on a list item &#8594; node attributes (same as above)
+
+   The full attribute catalogue lives in the ~org-graph-attributes~ defcustom, in
+   ~org-graph-attributes.el~ (customise via ~M-x customize-variable RET org-graph-attributes~); each
+   entry has the form:
+<span style="color: #a0a1a7;">   #+begin_src emacs-lisp
+</span>   (<span style="color: #e44649;">:name</span> <span style="color: #50a14f;">"shape"</span> <span style="color: #e44649;">:valid-on</span> (nodes) <span style="color: #e44649;">:default</span> <span style="color: #50a14f;">"ellipse"</span>
+    <span style="color: #e44649;">:values</span> (<span style="color: #50a14f;">"box"</span> <span style="color: #50a14f;">"polygon"</span> <span style="color: #50a14f;">"ellipse"</span> &#8230;)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">nil &#8594; free-text prompt
+</span>    <span style="color: #e44649;">:description</span> <span style="color: #50a14f;">"Sets the shape of a node."</span>)
+<span style="color: #a0a1a7;">   #+end_src
+</span>
+   For a colour ---~bgcolor~, ~fillcolor~, ~fontcolor~, or ~color~--- the value is picked from Helm's colour
+   list, when Helm is installed; ~RET~ inserts the colour's hex code, and its name as a comment.
+
+   Plain ~RET~ is unaffected &#8212; only the prefixed ~C-u RET~ triggers the completion.
+
+3. ~C-M-i~ (~completion-at-point~) and eldoc know about graph keys ---in any Org buffer's graph blocks,
+   and in the ~org-graph-edit-mode~ buffer that ~C-c '~ opens on one:
+   - In a key cell, completion offers the attributes valid there, plus the reserved keys; after
+     ~:edge.~ or ~:edge[T].~, it offers only edge attributes, prefix and all. In a value cell, it
+     offers the values of that row's attribute, such as ~vee~ for ~:edge.arrowhead~. Each candidate is
+     annotated with its description.
+   - On the ~#+begin_graph~ line, ~:r C-M-i~ offers ~:rankdir~ and the other graph attributes, every
+     ~:node.KEY~ and ~:edge.KEY~, and the block's own ~:file~, ~:svg~, ~:directed~, and ~:C-c_C-c~;
+     ~:rankdir L C-M-i~ then offers ~LR~.
+   - Eldoc shows the description of the key on the current row, or at point on the ~#+begin_graph~
+     line, ending with Graphviz's default; e.g., ~| :edge.arrowhead | vee |~ shows &#8220;Style of
+     arrowhead on the head node of an edge.  Default: normal.&#8221;
+   - ~C-u RET~ works in the ~C-c '~ buffer too.
+
+   The descriptions come from ~org-graph-attributes~, which lives on its own in ~org-graph-attributes.el~:
+   every Graphviz attribute, scraped from <span style="text-decoration: underline;"><a href="https://graphviz.org/doc/info/attrs.html">Graphviz's attribute table</a></span>. To add or adjust an attribute,
+   edit its entry there, or ~M-x customize-variable RET org-graph-attributes~. Reserved keys are
+   described by ~org-graph--reserved-key-docs~, and the header's own keys by ~org-graph--header-key-docs~.
+
+4. The image ~C-c C-c~ renders is clickable. Hovering over a node or cluster shows its tooltip ---its
+   footnotes and notes--- and a click follows it: to its link's target, when its item has a web, file, or
+   ~<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>~ link; else to the item itself, in the ~#+begin_graph~ block. Graphviz writes an image
+   map (~-Tcmapx~) beside the PNG, from the same layout, and its areas become the image's ~:map~; it is
+   scaled as the image is, say by ~org-image-actual-width~.
+
+   The map lives only as long as the image does: an image Org redisplays itself, say on reopening the file,
+   is clickable again after another ~C-c C-c~.
+
+<span style="color: #0184bc; font-weight: bold;">* Fun Example</span>
+
+Its palette is Catppuccin's; the colours it repeats are named once, by Org's own macros:
+<span style="color: #a0a1a7;">#+macro: yellow #f9e2af</span>
+<span style="color: #a0a1a7;">#+macro: mauve #cba6f7</span>
+<span style="color: #a0a1a7;">#+macro: surface #45475a</span>
+<span style="color: #a0a1a7;">#+macro: sky #89dceb</span>
+
+<span style="color: #a0a1a7;">#+begin_graph :file images/lambda-to-emacs-fun.png
+</span>#+graph:
+| rankdir  | TB                            |
+| label    | From &#955;-Calculus to Emacs Lisp |
+| labelloc | t                             |
+| fontname | Helvetica                     |
+| fontsize | 18                            |
+| bgcolor  | #1e1e2e                       |
+| splines  | curved                        |
+| nodesep  | 0.6                           |
+| ranksep  | 0.9                           |
+| pad      | 0.4                           |
+
+#+node:
+| fontname  | Helvetica      |
+| fontcolor | #cdd6f4        |
+| color     | #89b4fa        |
+| style     | filled,rounded |
+| fillcolor | #313244        |
+| shape     | box            |
+
+#+edge: <span style="font-weight: bold;">:lineage:</span>
+| fontname  | Helvetica |
+| fontsize  | 10        |
+| fontcolor | #a6e3a1   |
+| color     | #6c7086   |
+| arrowhead | vee       |
+
+#+rank: lambda combinatory
+#+rank: church turing
+#+rank: lisp haskell
+#+rank: emacs ghc
+
+#+name: lineage
+| style | solid |
+#+name: inspiration
+| style | dashed |
+#+name: equivalence
+| style      | dotted |
+| constraint | false  |
+
++ <span style="text-decoration: underline;">&lt;&lt;lambda&gt;&gt;</span> &#955;-Calculus \\ (Church, 1930s)
+  | shape     | ellipse       |
+  | fillcolor | <span style="text-decoration: underline;">{{{surface}}}</span> |
+  | color     | #f38ba8       |
+  | fontcolor | #f38ba8       |
+  | penwidth  | 2             |
+  + <span style="font-weight: bold;">encodes ::</span> <span style="text-decoration: underline;">&lt;&lt;church&gt;&gt;</span> Church Encoding \\ &#8469;, Bool, Pairs
+    + <span style="font-weight: bold;">Church&#8211; \\ Turing thesis </span><span style="font-weight: bold;">:equivalence:</span><span style="font-weight: bold;"> ::</span> <span style="text-decoration: underline;">&lt;&lt;turing&gt;&gt;</span> Turing Machines \\ (equivalent power)
+      | :edge.color     | <span style="text-decoration: underline;">{{{yellow}}}</span> |
+      | :edge.fontcolor | <span style="text-decoration: underline;">{{{yellow}}}</span> |
+  + <span style="font-weight: bold;">inspired </span><span style="font-weight: bold;">:inspiration:</span><span style="font-weight: bold;"> ::</span> <span style="text-decoration: underline;">&lt;&lt;lisp&gt;&gt;</span> Lisp \\ (McCarthy, 1958) \\ car &#183; cdr &#183; cons
+    | fillcolor | #1e3a5f   |
+    | color     | <span style="text-decoration: underline;">{{{sky}}}</span> |
+    | fontcolor | <span style="text-decoration: underline;">{{{sky}}}</span> |
+    | penwidth  | 2         |
+    + <span style="font-weight: bold;">subset of ::</span> <span style="text-decoration: underline;">&lt;&lt;emacs&gt;&gt;</span> Emacs Lisp \\ buffers &#183; modes &#183; hooks
+      | :edge.penwidth | 2             |
+      | :edge.color    | <span style="text-decoration: underline;">{{{sky}}}</span>     |
+      | shape          | doubleoctagon |
+      | fillcolor      | #7c3aed       |
+      | color          | #a78bfa       |
+      | fontcolor      | #ffffff       |
+      | fontsize       | 13            |
+      | penwidth       | 3             |
+      + <span style="font-weight: bold;">implements ::</span> <span style="text-decoration: underline;"><a href="advice">[[advice]]</a></span>
+    + <span style="font-weight: bold;">enables ::</span> <span style="text-decoration: underline;"><a href="macros">[[macros]]</a></span>
+    + <span style="font-weight: bold;">provides ::</span> <span style="text-decoration: underline;"><a href="closures">[[closures]]</a></span>
+  + <span style="font-weight: bold;">formalises </span><span style="font-weight: bold;">:inspiration:</span><span style="font-weight: bold;"> ::</span> <span style="text-decoration: underline;">&lt;&lt;haskell&gt;&gt;</span> Haskell \\ pure &#183; lazy &#183; typed
+    | fillcolor | #2a1e3f     |
+    | color     | <span style="text-decoration: underline;">{{{mauve}}}</span> |
+    | fontcolor | <span style="text-decoration: underline;">{{{mauve}}}</span> |
+    + <span style="text-decoration: underline;">&lt;&lt;ghc&gt;&gt;</span> GHC \\ Core &#8594; STG &#8594; Cmm
+      | fillcolor | #2a1e3f     |
+      | color     | <span style="text-decoration: underline;">{{{mauve}}}</span> |
+      | fontcolor | <span style="text-decoration: underline;">{{{mauve}}}</span> |
+    + <span style="font-weight: bold;">uses </span><span style="font-weight: bold;">:inspiration:</span><span style="font-weight: bold;"> ::</span> <span style="text-decoration: underline;"><a href="monad">[[monad]]</a></span>
+
++ <span style="text-decoration: underline;">&lt;&lt;combinatory&gt;&gt;</span> Combinatory Logic \\ (Sch&#246;nfinkel/Curry)
+  | shape     | ellipse       |
+  | fillcolor | <span style="text-decoration: underline;">{{{surface}}}</span> |
+  | color     | #fab387       |
+  | fontcolor | #fab387       |
+  + <span style="font-weight: bold;">equivalent ::</span> <span style="text-decoration: underline;"><a href="lambda">[[lambda]]</a></span>
+    | :edge.dir   | both         |
+    | :edge.color | <span style="text-decoration: underline;">{{{yellow}}}</span> |
+
+#+begin_cluster Emacs Concepts :fontcolor #a6e3a1 :color #313244 :style dashed
++ <span style="text-decoration: underline;">&lt;&lt;macros&gt;&gt;</span> Macros \\ (code-as-data)
++ <span style="text-decoration: underline;">&lt;&lt;closures&gt;&gt;</span> Closures \\ (lexical scope)
++ <span style="text-decoration: underline;">&lt;&lt;advice&gt;&gt;</span> Advice \\ (open recursion)
+#+end_cluster
+
+#+begin_cluster Category Theory :fontcolor <span style="text-decoration: underline;">{{{yellow}}}</span> :color <span style="text-decoration: underline;">{{{surface}}}</span> :style dashed
++ <span style="text-decoration: underline;">&lt;&lt;monad&gt;&gt;</span> Monad \\ &#951; &#183; &#956; &#183; associativity
+  | shape | parallelogram |
+  + <span style="text-decoration: underline;">&lt;&lt;adjoint&gt;&gt;</span> Adjunction \\ F &#8867; G
+    | :edge.label     | every monad \\ is an adjunction |
+    | :edge.color     | <span style="text-decoration: underline;">{{{yellow}}}</span>                    |
+    | :edge.fontcolor | <span style="text-decoration: underline;">{{{yellow}}}</span>                    |
+    | shape           | parallelogram                   |
+  + <span style="font-weight: bold;">models </span><span style="font-weight: bold;">:equivalence:</span><span style="font-weight: bold;"> ::</span> <span style="text-decoration: underline;"><a href="closures">[[closures]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;functor&gt;&gt;</span> Functor \\ F : C &#8594; D
+  | shape | parallelogram |
+  + <span style="font-weight: bold;">F&#8728;F with &#951;,&#956; ::</span> <span style="text-decoration: underline;"><a href="monad">[[monad]]</a></span>
+#+end_cluster
+
+#+begin_cluster Legend :fontcolor #cdd6f4 :color <span style="text-decoration: underline;">{{{surface}}}</span> :style filled :fillcolor #181825 :fontsize 11
+- <span style="font-weight: bold;">:lineage:</span><span style="font-weight: bold;"> ::</span> direct lineage
+- <span style="font-weight: bold;">:inspiration:</span><span style="font-weight: bold;"> ::</span> inspiration
+- <span style="font-weight: bold;">:equivalence:</span><span style="font-weight: bold;"> ::</span> equivalence
+#+end_cluster
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs-fun.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs-fun.png</a></span>
+
+<span style="color: #0184bc; font-weight: bold;">* Full Example &#8212; &#955;-Calculus &#8594; Emacs Lisp</span>
+
+This is the complete graph from the design conversation: &#955;-calculus,
+Combinatory Logic, Church Encodings, Lisp, Haskell, Emacs, GHC, and Category
+Theory &#8212; all in one diagram.
+
+NOTE: To get colour codes, I use `M-x helm-colors` then ~C-z~ (for additional
+actions) then ~C-c r~ to insert the hex-code at point. Within a graph's table, ~C-u RET~ does this for us:
+on a ~bgcolor~, ~fillcolor~, ~fontcolor~, or ~color~ row, it opens that same picker, and ~RET~ inserts
+the colour's hex code, and its name as a comment.
+
+<span style="color: #a0a1a7;">#+begin_graph :file images/lambda-to-emacs.png
+</span><span style="font-weight: bold;">:SETTINGS:</span>
+#+graph:
+| rankdir  | TB                            |
+| label    | From &#955;-Calculus to Emacs Lisp |
+| labelloc | t                             |
+| fontname | Helvetica                     |
+| fontsize | 48                            |
+| bgcolor  | #90ee90                       |
+| splines  | curved                        |
+| nodesep  | 0.6                           |
+| ranksep  | 0.9                           |
+| pad      | 0.4                           |
+
+#+node:
+| fontname  | Helvetica      |
+| fontcolor | #cdd6f4        |
+| color     | #Eea9b8        |
+| style     | filled,rounded |
+| fillcolor | #313244        |
+| shape     | box            |
+
+#+edge:
+| fontname  | Helvetica |
+| fontsize  | 10        |
+| fontcolor | #a6e3a1   |
+| color     | #6c7086   |
+| arrowhead | vee       |
+
+#+rank: lambda combinatory
+#+rank: church turing
+#+rank: emacs ghc
+<span style="font-weight: bold;">:END:</span>
++ <span style="text-decoration: underline;">&lt;&lt;lambda&gt;&gt;</span> &#955;-Calculus \\ (Church, 1930s)
+  | shape          | ellipse |
+  | fillcolor      | #45475a |
+  | color          | #f38ba8 |
+  | fontcolor      | #f38ba8 |
+  | penwidth       | 2       |
+  | :children-rank | same    |
+  + <span style="font-weight: bold;">encodes ::</span> <span style="text-decoration: underline;">&lt;&lt;church&gt;&gt;</span> Church Encoding \\ &#8469;, Bool, Pairs
+    + <span style="text-decoration: underline;">&lt;&lt;turing&gt;&gt;</span> Turing Machines \\ (equivalent power)
+      | :edge.label      | Church&#8211; \\ Turing thesis |
+      | :edge.style      | dotted                   |
+      | :edge.color      | #f9e2af                  |
+      | :edge.fontcolor  | #f9e2af                  |
+      | :edge.constraint | false                    |
+  + <span style="font-weight: bold;">formalises ::</span> <span style="text-decoration: underline;">&lt;&lt;haskell&gt;&gt;</span> Haskell \\ pure &#183; lazy &#183; typed
+    | :edge.style | dashed  |
+    | fillcolor   | #2a1e3f |
+    | color       | #cba6f7 |
+    | fontcolor   | #cba6f7 |
+    + <span style="text-decoration: underline;">&lt;&lt;ghc&gt;&gt;</span> GHC \\ Core &#8594; STG &#8594; Cmm
+      | fillcolor | #2a1e3f |
+      | color     | #cba6f7 |
+      | fontcolor | #cba6f7 |
+      + <span style="font-weight: bold;">uses ::</span> <span style="text-decoration: underline;"><a href="monad">[[monad]]</a></span>
+        | :edge.style | dashed |
+  + <span style="font-weight: bold;">inspired ::</span> <span style="text-decoration: underline;">&lt;&lt;lisp&gt;&gt;</span> Lisp \\ McCarthy 1958 \\ car &#183; cdr &#183; cons
+    | :edge.style | dashed  |
+    | fillcolor   | #1e3a5f |
+    | color       | #89dceb |
+    | fontcolor   | #89dceb |
+    | penwidth    | 2       |
+        + <span style="font-weight: bold;">models ::</span> <span style="text-decoration: underline;"><a href="closures">[[closures]]</a></span>
+          | :edge.style      | dotted |
+          | :edge.constraint | false  |
+        + <span style="text-decoration: underline;"><a href="macros">[[macros]]</a></span>
+    + <span style="font-weight: bold;">subset of ::</span> Emacs Lisp \\ buffers &#183; modes &#183; hooks
+      | :edge.penwidth | 2             |
+      | :edge.color    | #89dceb       |
+      | shape          | doubleoctagon |
+      | fillcolor      | #7c3aed       |
+      | color          | #a78bfa       |
+      | fontcolor      | #ffffff       |
+      | fontsize       | 13            |
+      | penwidth       | 3             |
+      + <span style="text-decoration: underline;"><a href="advice">[[advice]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;combinatory&gt;&gt;</span> Combinatory Logic \\ (Sch&#246;nfinkel/Curry)
+  | shape     | ellipse |
+  | fillcolor | #45475a |
+  | color     | #fab387 |
+  | fontcolor | #fab387 |
+  + <span style="font-weight: bold;">equivalent ::</span> <span style="text-decoration: underline;"><a href="lambda">[[lambda]]</a></span>
+    | :edge.dir   | both    |
+    | :edge.color | #f9e2af |
+#+begin_cluster Emacs Concepts :fontcolor #a6e3a1 :color #313244 :style dashed
++ <span style="text-decoration: underline;">&lt;&lt;advice&gt;&gt;</span> Advice \\ (open recursion)
++ <span style="text-decoration: underline;">&lt;&lt;closures&gt;&gt;</span> Closures \\ (lexical scope)
++ <span style="text-decoration: underline;">&lt;&lt;macros&gt;&gt;</span> Macros \\ (code-as-data)
+#+end_cluster
+#+begin_cluster Category Theory :fontcolor #f9e2af :color #45475a :style dashed :fontsize 28
+
++ Functor \\ F : C &#8594; D
+  | shape | parallelogram |
+  + <span style="font-weight: bold;">F&#8728;F with &#951;,&#956; ::</span> <span style="text-decoration: underline;"><a href="monad">[[monad]]</a></span>
+
++ <span style="text-decoration: underline;">&lt;&lt;monad&gt;&gt;</span> Monad \\ &#951; &#183; &#956; &#183; associativity
+  | shape | parallelogram |
+  + <span style="text-decoration: underline;"><a href="adjoint">[[adjoint]]</a></span>
+    | :edge.label     | every monad \\ is an adjunction |
+    | :edge.color     | #f9e2af                         |
+    | :edge.fontcolor | #f9e2af                         |
+  + <span style="text-decoration: underline;"><a href="closures">[[closures]]</a></span>
+
++ <span style="text-decoration: underline;">&lt;&lt;adjoint&gt;&gt;</span> Adjunction \\ F &#8867; G
+  | shape | parallelogram |
+#+end_cluster
+#+begin_cluster Legend
+| fontcolor | #8b008b |
+| color     | #45475a |
+| style     | filled  |
+| fillcolor | #181825 |
+| fontsize  | 11      |
+#+node:
+| shape     | plaintext |
+| fontcolor | #6c7086   |
++ Solid = Direct Lineage
++ Dashed = Inspiration
++ Dotted = Equivalence
+#+end_cluster
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs.png</a></span>
+
+
+Also, useful
+(setq org-image-actual-width 700)
+
+
+<span style="color: #a0a1a7;"># &#128162; Having two newlines before an item breaks things! Having two lines after</span>
+<span style="color: #a0a1a7;"># omits everything else: this is how org lists work, but we don't need this</span>
+<span style="color: #a0a1a7;"># stringent behaviour...?</span>
+
+<span style="color: #0184bc; font-weight: bold;">* Fun Examples #1</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2026-05-20 Wed 18:32]</span>
+<span style="font-weight: bold;">:END:</span>
+The expression ~1 * 2 + 3 - 4~ is parsed as:
+<span style="color: #a0a1a7;">#+begin_graph
+</span>+ -
+  + 4
+  + +
+    + 3
+    + *
+      + 1
+      + 2
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-184912.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-184912.png</a></span>
+a
+;; MA: I think this is a fun example to demo how we get REPL-like behaviour for graphs.
+;; Start by converting the exrepsssion "1 * 2 + 3 - 4" into 7 nodes: &#8220;+ 1, + *, + 2, + 4 &#8230;&#8221;, then C-c C-c, then use org list features along with C-c C-c to quickly add more and more structure :wink:
+;;
+;; However, M-&lt;left&gt; and M-&lt;right&gt; should promote/demote the current list item
+and all its children, currently I don't have that behaviour for some reason! &#128162;
+
+<span style="color: #a0a1a7;">#+begin_graph
+</span>+ start
+  + middle
+    + end
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="file:/var/folders/1s/wxmh4wdd2sn3j3jx0ygh3lm80000gn/T/graph-d6683045e63e.png">file:/var/folders/1s/wxmh4wdd2sn3j3jx0ygh3lm80000gn/T/graph-d6683045e63e.png</a></span>
+
+<span style="color: #0184bc; font-weight: bold;">* Fun Examples #2</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2026-05-20 Wed 18:39]</span>
+<span style="font-weight: bold;">:END:</span>
+
+Insert &#8220;| |&#8221; then do &#8220;C-u org-graph--insert-attribute-row&#8221; to get completing
+read menu for graph properties!
+<span style="color: #0184bc; font-weight: bold;">* Fun Examples #3: Records  pt1 </span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2026-05-20 Wed 19:13]</span>
+<span style="font-weight: bold;">:END:</span>
+
+An item's ~#+record:~ table is its label, drawn as laid out; ~<span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span>~ makes ~The Middle~ a port,
+whose link is an arc from it:
+
+<span style="color: #a0a1a7;">#+begin_graph
+</span>+ struct1
+  #+record:
+  | left | <span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span> The Middle <span style="text-decoration: underline;"><a href="struct2::one">[[</a><a href="struct2::one">struct2::one]</a><a href="struct2::one">]</a></span> | right |
++ struct2
+  #+record:
+  | <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> one | two |
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-194138.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-194138.png</a></span>
+<span style="color: #0184bc; font-weight: bold;">* Records pt2</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2026-05-20 Wed 19:41]</span>
+<span style="font-weight: bold;">:END:</span>
+
+Spans replace ~{ }~ nesting: ~^~ continues the cell above, and an empty cell the one to its left.
+<span style="color: #a0a1a7;">#+begin_graph
+</span>+ struct3
+  #+record:
+  | hello \\ world | b |                        |   | g | h |
+  |<span style="font-weight: bold; font-style: italic;"> ^              | c | </span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">&lt;&lt;x marks the spot&gt;&gt;</span><span style="font-weight: bold; font-style: italic;"> d | e | ^ | ^ </span>|
+  |<span style="font-weight: bold; font-style: italic;"> ^              | f |                        |   | ^ | ^ </span>|
+
++ where am i looking?
+  + <span style="font-weight: bold;">&#128064; ::</span> <span style="text-decoration: underline;"><a href="struct3::x marks the spot">[[struct3::x marks the spot]]</a></span>
+    | :edge.style | dotted  |
+    | :edge.color | #f9e2af |
+
+# label="Church&#8211;\nTuring thesis" style=dotted color="#f9e2af" fontcolor="#f9e2af" constraint=false |
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-195608.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/graph-20260520-195608.png</a></span>
+
+<span style="color: #0184bc; font-weight: bold;">* Fun Examples #4: A Section Is a Graph </span><span style="color: #0184bc; font-weight: bold;">:graph_Lineage:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:RANKDIR:</span> <span style="color: #383a42; background-color: #fafafa;">LR</span>
+<span style="color: #a626a4;">:NODE.SHAPE:</span> <span style="color: #383a42; background-color: #fafafa;">box</span>
+<span style="color: #a626a4;">:EDGE.COLOR:</span> <span style="color: #383a42; background-color: #fafafa;">grey</span>
+<span style="font-weight: bold;">:END:</span>
++ &#955;-calculus
+  + <span style="font-weight: bold;">inspired ::</span> Lisp
+    + <span style="font-weight: bold;">subset of ::</span> Emacs Lisp
+    + <span style="font-weight: bold;">dialect ::</span> Scheme
+
+<span style="color: #0184bc; font-weight: bold;">* Karbala &#8212; Family of the Prophet</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2026-05-20 Wed]</span>
+<span style="font-weight: bold;">:END:</span>
+ 
+A genealogy of the prophetic lineage (Adam &#8594; Noah &#8594; Ibrahim &#8594; &#8230; &#8594; Muhammad &#65018;)
+and the family of Imam Hussain ibn Ali at Karbala &#8212; including his wives,
+children, the antagonists (Muawiya, Yazid, Ibn Ziyad, Shimr), and a legend.
+Showcases: ~:SETTINGS:~ drawers, ~#+begin_cluster~ blocks with scoped ~#+node:~ overrides,
+~#+rank:~ groupings, diamond shapes for key Karbala actors, ~\\~ multi-line labels, footnote
+tooltips, bidirectional pink marriage edges, and red martyrdom arrows ---all without a single line
+of raw dot.
+
+<span style="color: #a0a1a7;">#+begin_graph :file ~/Downloads/karbala.png :svg t
+</span><span style="font-weight: bold;">:SETTINGS:</span>
+#+graph:
+| label    | The Karbala Tragedy |
+| labelloc |                   t |
+| fontsize |                  36 |
+| rankdir  |                  TB |
+| splines  |              curved |
+| nodesep  |                 0.6 |
+| ranksep  |                 1.0 |
+| pad      |                 0.5 |
+
+#+node:
+| shape     | ellipse |
+| style     | filled  |
+| fillcolor | #d4a96a |
+| fontname  | Georgia |
+| fontcolor | #2b1a00 |
+
+#+edge:
+| style     | solid   |
+| color     | #7a5c2e |
+| arrowhead | vee     |
+<span style="font-weight: bold;">:END:</span>
+
+# Style templates ---applied by :NAME: tags: after an item, to its node; after a reference, to its arc.
+#+name: married
+| color | #cc3399 |
+| dir   | both    |
+| style | solid   |
+
+#+name: motherhood
+| color | #00aa44 |
+| style | solid   |
+
+#+name: killed-by
+| color     | red  |
+| style     | bold |
+| arrowhead | dot  |
+| dir       | back |
+
+#+name: ancestry
+| style | dashed  |
+| color | #888888 |
+
+#+name: mention
+| style | dashed  |
+| color | #9955cc |
+
+#+name: imprisoned
+| color | #cc6600 |
+| style | dashed  |
+
+#+begin_cluster Prophets (&#1593;&#1604;&#1610;&#1607;&#1605; &#1575;&#1604;&#1587;&#1604;&#1575;&#1605;)
+| style     | filled  |
+| fillcolor | #ddeeff |
+| color     | #3355aa |
+| fontcolor | #003388 |
+#+node:
+| fillcolor | #aaccff |
+| color     | #3355aa |
++ <span style="text-decoration: underline;">&lt;&lt;idris&gt;&gt;</span> Idris \\ (&#1573;&#1583;&#1585;&#1610;&#1587;)
+  <span style="text-decoration: underline;">[fn::Idris &#8212; mentioned in Quran (19:56-57). Raised to a high station. Often identified with the biblical Enoch.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;hud&gt;&gt;</span> Hud \\ (&#1607;&#1608;&#1583;)
+  <span style="text-decoration: underline;">[fn::Hud &#8212; sent to the &#703;&#256;d people (southern Arabia). They rejected him; destroyed by a violent wind.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;salih&gt;&gt;</span> Salih \\ (&#1589;&#1575;&#1604;&#1581;)
+  <span style="text-decoration: underline;">[fn::Salih &#8212; sent to the Thamud people. Brought a she-camel as a divine sign; they killed it and were destroyed.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;adam&gt;&gt;</span> Adam \\ (&#1570;&#1583;&#1605;)
+  <span style="text-decoration: underline;">[fn::Adam &#8212; first human and first prophet. Created from clay; placed in Paradise then sent to Earth.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;noah&gt;&gt;</span> Noah \\ (&#1606;&#1608;&#1581;)
+  <span style="text-decoration: underline;">[fn::Noah (Nuh) &#8212; preached for 950 years. Built the Ark; the Flood destroyed those who rejected him.]</span>
+  + <span style="text-decoration: underline;"><a href="adam">[[adam]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ibrahim&gt;&gt;</span> Ibrahim \\ (&#1573;&#1576;&#1585;&#1575;&#1607;&#1610;&#1605;)
+  <span style="text-decoration: underline;">[fn::Ibrahim (Abraham) &#8212; Friend of God (Khalilullah). Destroyed idols, survived fire. Father of Ismail and Ishaaq; built the Kaaba.]</span>
+  + <span style="text-decoration: underline;"><a href="noah">[[noah]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;lut&gt;&gt;</span> Lut \\ (&#1604;&#1608;&#1591;)
+  <span style="text-decoration: underline;">[fn::Lut (Lot) &#8212; nephew of Ibrahim. Sent to the people of Sodom; they were destroyed for their transgressions.]</span>
+  + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ismail&gt;&gt;</span> Ismail \\ (&#1573;&#1587;&#1605;&#1575;&#1593;&#1610;&#1604;)
+  <span style="text-decoration: underline;">[fn::Ismail (Ishmael) &#8212; eldest son of Ibrahim; ancestor of the Arab peoples and of Muhammad &#65018;. He and Ibrahim built the Kaaba in Mecca.]</span>
+  + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ishaaq&gt;&gt;</span> Ishaaq \\ (&#1573;&#1587;&#1581;&#1575;&#1602;)
+  <span style="text-decoration: underline;">[fn::Ishaaq (Isaac) &#8212; son of Ibrahim and Sarah. Father of Yaqub; ancestor of the Israelite prophets.]</span>
+  + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;yaqub&gt;&gt;</span> Yaqub \\ (&#1610;&#1593;&#1602;&#1608;&#1576;)
+  <span style="text-decoration: underline;">[fn::Yaqub (Jacob / Israel) &#8212; son of Ishaaq. Father of the twelve tribes of Israel, including Yusuf.]</span>
+  + <span style="text-decoration: underline;"><a href="ishaaq">[[ishaaq]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;yusuf&gt;&gt;</span> Yusuf \\ (&#1610;&#1608;&#1587;&#1601;)
+  <span style="text-decoration: underline;">[fn::Yusuf (Joseph) &#8212; son of Yaqub. Sold into slavery by brothers; rose to power in Egypt. His beauty is legendary &#8212; Layla invoked it at Karbala.]</span>
+  + <span style="text-decoration: underline;"><a href="yaqub">[[yaqub]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ayyub&gt;&gt;</span> Ayyub \\ (&#1571;&#1610;&#1608;&#1576;)
+  <span style="text-decoration: underline;">[fn::Ayyub (Job) &#8212; prophet of patience. Afflicted with severe trials for years; restored after steadfast faith.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;shuayb&gt;&gt;</span> Shuayb \\ (&#1588;&#1593;&#1610;&#1576;)
+  <span style="text-decoration: underline;">[fn::Shuayb (Jethro) &#8212; sent to the people of Midian; warned against dishonest trade. Some traditions identify him as father-in-law of Moses.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;yunus&gt;&gt;</span> Yunus \\ (&#1610;&#1608;&#1606;&#1587;)
+  <span style="text-decoration: underline;">[fn::Yunus (Jonah) &#8212; swallowed by a whale after leaving his people without permission. Remembered for his repentance (Dhul-Nun).]</span>
++ <span style="text-decoration: underline;">&lt;&lt;moses&gt;&gt;</span> Moses \\ (&#1605;&#1608;&#1587;&#1609;)
+  <span style="text-decoration: underline;">[fn::Moses (Musa) &#8212; the prophet most mentioned in the Quran. Led the Exodus; received the Torah on Mount Sinai. Lineage traced through Ismail's descendants.]</span>
+  + <span style="text-decoration: underline;"><a href="ismail">[[ismail]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;aaron&gt;&gt;</span> Aaron \\ (&#1607;&#1575;&#1585;&#1608;&#1606;)
+  <span style="text-decoration: underline;">[fn::Aaron (Harun) &#8212; brother of Moses; assisted him in the mission to Pharaoh.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;dawood&gt;&gt;</span> Dawood \\ (&#1583;&#1575;&#1608;&#1583;)
+  <span style="text-decoration: underline;">[fn::Dawood (David) &#8212; king and prophet of Israel. Slew Goliath; given the Psalms (Zabur). Father of Sulayman.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;sulayman&gt;&gt;</span> Sulayman \\ (&#1587;&#1604;&#1610;&#1605;&#1575;&#1606;)
+  <span style="text-decoration: underline;">[fn::Sulayman (Solomon) &#8212; son of Dawood; given extraordinary wisdom, control over jinn and wind, and speech with animals.]</span>
+  + <span style="text-decoration: underline;"><a href="dawood">[[dawood]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ilyas&gt;&gt;</span> Ilyas \\ (&#1573;&#1604;&#1610;&#1575;&#1587;)
+  <span style="text-decoration: underline;">[fn::Ilyas (Elias) &#8212; prophet of Israel; called his people to abandon the idol Baal.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;alyasa&gt;&gt;</span> Al-Yasa \\ (&#1575;&#1604;&#1610;&#1587;&#1593;)
+  <span style="text-decoration: underline;">[fn::Al-Yasa (Elisha) &#8212; successor of Ilyas; praised in the Quran among the best.]</span>
+  + <span style="text-decoration: underline;"><a href="ilyas">[[ilyas]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;zakariya&gt;&gt;</span> Zakariya \\ (&#1586;&#1603;&#1585;&#1610;&#1575;)
+  <span style="text-decoration: underline;">[fn::Zakariya (Zechariah) &#8212; prayed for a son in old age; miraculously given Yahya as a gift from God.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;yahya&gt;&gt;</span> Yahya \\ (&#1610;&#1581;&#1610;&#1609;)
+  <span style="text-decoration: underline;">[fn::Yahya (John the Baptist) &#8212; son of Zakariya; forerunner to Jesus. Praised in the Quran as wise from childhood.]</span>
+  + <span style="text-decoration: underline;"><a href="zakariya">[[zakariya]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;jesus&gt;&gt;</span> Jesus \\ (&#1593;&#1610;&#1587;&#1609;)
+  <span style="text-decoration: underline;">[fn::Jesus (Isa) &#8212; born miraculously to Maryam; given the Gospel (Injil). Performed miracles; raised to heaven; will return before the Day of Judgment.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;dhulkifl&gt;&gt;</span> Dhul-Kifl \\ (&#1584;&#1608; &#1575;&#1604;&#1603;&#1601;&#1604;)
+  <span style="text-decoration: underline;">[fn::Dhul-Kifl &#8212; mentioned twice in the Quran among the patient and righteous. Identity debated; some identify with Ezekiel or another prophet.]</span>
+# Pre-Ibrahim tribal prophets &#8212; sent to regional peoples (&#703;&#256;d, Thamud)
+#+rank: hud salih
+# Contemporaries of Ibrahim's immediate family
+#+rank: lut ismail ishaaq
+# Next generation: Yaqub, and roughly contemporary regional prophets
+#+rank: yaqub ayyub shuayb yunus
+# Moses and Aaron &#8212; the Exodus era
+#+rank: moses aaron
+# Israelite king-prophets
+#+rank: dawood ilyas
+# Sulayman (son of Dawood), Al-Yasa (successor of Ilyas), Zakariya
+#+rank: sulayman alyasa zakariya
+# Late Israelite prophets &#8212; Yahya (John the Baptist), Jesus, and Dhul-Kifl
+#+rank: yahya jesus dhulkifl
+#+end_cluster
+
+# Hadith: the four greatest women of paradise &#8212; Khadija, Fatimah, Maryam, Asiya
+#+begin_cluster Ladies of Heaven (&#1587;&#1610;&#1583;&#1575;&#1578; &#1575;&#1604;&#1580;&#1606;&#1577;) :style filled :fillcolor #fff0f5 :color #aa3366 :fontcolor #660033
++ <span style="text-decoration: underline;">&lt;&lt;khadija&gt;&gt;</span> Khadija \\ (&#1582;&#1583;&#1610;&#1580;&#1577;) \\ First wife of Muhammad
+  <span style="text-decoration: underline;">[fn::Khadija bint Khuwaylid &#8212; the first Muslim and the Prophet's most beloved wife. A wealthy merchant; she proposed to Muhammad &#65018;. He took no other wife while she lived.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:married:</span>
++ <span style="text-decoration: underline;">&lt;&lt;fatimah&gt;&gt;</span> Fatimah \\ (&#1601;&#1575;&#1591;&#1605;&#1577;) \\ Daughter of Muhammad
+  <span style="text-decoration: underline;">[fn::Fatimah al-Zahra ('the Radiant') &#8212; daughter of Muhammad &#65018; and Khadija; wife of Ali; mother of Hasan, Hussain, and Zaynab. The Prophet said: 'Fatimah is a part of me &#8212; whoever angers her angers me.' In Shia tradition: after Abu Bakr's succession, Umar led a party to her house to force Ali's pledge of allegiance; the door was set alight or forced open, Fatimah was struck, and she miscarried her unborn son Muhsin (the fifth child of Ali and Fatimah). She died ~75&#8211;95 days after the Prophet &#8212; at most 18 years old &#8212; and was buried secretly at night, her grave kept hidden from the new government. Fadak (a fertile estate the Prophet had gifted her) was confiscated by Abu Bakr on the grounds that prophets leave no inheritance, a hadith Shia scholars hold as fabricated. She never spoke to Abu Bakr again until her death.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span>
+  + <span style="font-weight: bold;">Fadak / Muhsin ::</span> <span style="text-decoration: underline;"><a href="abubakr">[[abubakr]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+  + <span style="font-weight: bold;">door incident ::</span> <span style="text-decoration: underline;"><a href="umar">[[umar]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;maryam&gt;&gt;</span> Maryam \\ (&#1605;&#1585;&#1610;&#1605;) \\ Mother of Jesus
+  <span style="text-decoration: underline;">[fn::Maryam (Mary) &#8212; the only woman named directly in the Quran, with a full chapter (Sura 19) devoted to her. Gave birth to Jesus without a father; a virgin chosen above all women.]</span>
+  + <span style="text-decoration: underline;"><a href="jesus">[[jesus]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
++ <span style="text-decoration: underline;">&lt;&lt;asiya&gt;&gt;</span> Asiya \\ (&#1570;&#1587;&#1610;&#1577;) \\ Wife of Pharaoh
+  <span style="text-decoration: underline;">[fn::Asiya bint Muzahim &#8212; wife of Pharaoh who adopted Moses as an infant. Believed in God and was tortured to death by Pharaoh; her prayer for a house in Paradise is in Quran 66:11.]</span>
+#+end_cluster
+
++ <span style="text-decoration: underline;">&lt;&lt;hashim&gt;&gt;</span> Hashim \\ (&#1607;&#1575;&#1588;&#1605;)
+  <span style="text-decoration: underline;">[fn::Hashim ibn Abd Manaf &#8212; great-grandfather of Muhammad &#65018;; ancestor of the Hashimite clan of Quraysh. Known for feeding pilgrims in Mecca.]</span>
+  + <span style="text-decoration: underline;"><a href="ismail">[[ismail]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;abdmutallib&gt;&gt;</span> Abd Al Mutallib \\ (&#1593;&#1576;&#1583; &#1575;&#1604;&#1605;&#1591;&#1604;&#1576;)
+  <span style="text-decoration: underline;">[fn::Abd al-Muttalib &#8212; grandfather of Muhammad &#65018; and guardian after Abdullah's death. He discovered the Zamzam well and led the Quraysh against Abraha's elephant army.]</span>
+  + <span style="text-decoration: underline;"><a href="hashim">[[hashim]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;abdullah&gt;&gt;</span> Abdullah \\ (&#1593;&#1576;&#1583;&#1575;&#1604;&#1604;&#1607;)
+  <span style="text-decoration: underline;">[fn::Abdullah ibn Abd al-Muttalib &#8212; father of Muhammad &#65018;. Died before Muhammad's birth; his death and that of Aminah left Muhammad an orphan in infancy.]</span>
+  + <span style="text-decoration: underline;"><a href="abdmutallib">[[abdmutallib]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;abutalib&gt;&gt;</span> Abu Talib \\ (&#1571;&#1576;&#1608; &#1591;&#1575;&#1604;&#1576;)
+  <span style="text-decoration: underline;">[fn::Abu Talib ibn Abd al-Muttalib &#8212; paternal uncle and guardian of Muhammad &#65018; after age 8; father of Ali. Protected the Prophet for decades though he did not publicly accept Islam.]</span>
+  + <span style="text-decoration: underline;"><a href="abdmutallib">[[abdmutallib]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;aqil&gt;&gt;</span> Aqil \\ (&#1593;&#1602;&#1610;&#1604;) \\ brother of Ali
+  <span style="text-decoration: underline;">[fn::Aqil ibn Abi Talib &#8212; elder brother of Ali; son of Abu Talib. Renowned for his genealogical knowledge. Father of Muslim ibn Aqil, Hussain's envoy to Kufa. Initially supported Muawiya after the arbitration, though this is a contested point in Shia sources.]</span>
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;jafaribnabutalib&gt;&gt;</span> Ja'far \\ (&#1580;&#1593;&#1601;&#1585;) \\ brother of Ali
+  <span style="text-decoration: underline;">[fn::Ja'far ibn Abi Talib &#8212; brother of Ali; led the early Muslim emigration to Abyssinia and presented Islam to the Negus. Died at the Battle of Mu'ta (629 CE) fighting Byzantine forces; called 'Dhu'l-Janahayn' (the one with two wings) for his bravery.]</span>
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;aminah&gt;&gt;</span> Aminah \\ (&#1570;&#1605;&#1606;&#1577;) \\ Mother of Muhammad
+  <span style="text-decoration: underline;">[fn::Aminah bint Wahb &#8212; mother of Muhammad &#65018;. Died when Muhammad was ~6 years old; he was left in the care of his grandfather Abd al-Muttalib. Her grave is in al-Abwa' on the road between Mecca and Medina.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
++ <span style="text-decoration: underline;">&lt;&lt;muhammad&gt;&gt;</span> Muhammad &#65018; \\ (&#1605;&#1581;&#1605;&#1583;)
+  <span style="text-decoration: underline;">[fn::Muhammad ibn Abdullah &#65018; &#8212; the Seal of the Prophets. Born ~570 CE in Mecca; received the Quran over 23 years. United the Arabian peninsula through both preaching and key battles: Badr (624 CE), Uhud (625 CE), Khandaq (627 CE), and the Conquest of Mecca (630 CE). His family (Ahl al-Bayt) are central to both Sunni and Shia Islam.]</span>
+  | shape     | doublecircle |
+  | fillcolor | #2d6a1f      |
+  | color     | #1a4d00      |
+  | fontcolor | #ffffff      |
+  + <span style="text-decoration: underline;"><a href="abdullah">[[abdullah]]</a></span>
+  + <span style="font-weight: bold;">declared Ali his successor ::</span> <span style="text-decoration: underline;"><a href="ghadir">[[ghadir]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+# Ghadir Khumm is the theological fulcrum of Shia Islam &#8212; the moment Muhammad &#65018; explicitly
+# designated Ali as his successor, making the Saqifa succession a wilful violation in Shia eyes.
++ <span style="text-decoration: underline;">&lt;&lt;ghadir&gt;&gt;</span> Ghadir Khumm \\ (&#1594;&#1583;&#1610;&#1585; &#1582;&#1605;) \\ 18 Dhul-Hijja 10 AH
+  <span style="text-decoration: underline;">[fn::Ghadir Khumm &#8212; 18 Dhul-Hijja 10 AH (March 632 CE), three months before the Prophet's death. Returning from the Farewell Pilgrimage, Muhammad &#65018; halted 100,000+ pilgrims at a pond (ghadir) near Khumm and declared: 'Whoever takes me as their mawla (master/guardian), Ali is also their mawla.' In Shia Islam this is the unambiguous designation of Ali as successor &#8212; the foundational event of the Imamate. Sunni tradition interprets 'mawla' as 'friend/ally' rather than 'leader.' The Saqifa assembly two months later &#8212; while Ali was preparing the Prophet's body for burial &#8212; is viewed in Shia tradition as a deliberate circumvention of this declaration.]</span>
+  | shape     | rectangle |
+  | fillcolor | #e8f4e8   |
+  | color     | #006600   |
+  | fontcolor | #004400   |
+  + <span style="font-weight: bold;">designated successor ::</span> <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
++ <span style="text-decoration: underline;">&lt;&lt;shahrbanu&gt;&gt;</span> Shahr Banu \\ (&#1588;&#1607;&#1585;&#1576;&#1575;&#1606;&#1608;) \\ wife of Hussain
+  <span style="text-decoration: underline;">[fn::Shahr Banu &#8212; Persian princess, daughter of Yazdegerd III (last Sasanid emperor). Married Hussain after her father's defeat; mother of Ali al-Sajjad (4th Imam). Her lineage connects the Imam line to Persian royalty.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;rabab&gt;&gt;</span> Rabab \\ (&#1585;&#1576;&#1575;&#1576;) \\ wife of Hussain
+  <span style="text-decoration: underline;">[fn::Rabab bint Imru al-Qays &#8212; wife of Hussain; mother of Ali Asghar (the infant martyr) and Sukaynah. She was present at Karbala and held her son as he was martyred by an arrow.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;layla&gt;&gt;</span> Layla \\ (&#1604;&#1610;&#1604;&#1609;) \\ wife of Hussain
+  <span style="text-decoration: underline;">[fn::Layla bint Abi Murra &#8212; mother of Ali al-Akbar. At Karbala, pleading for her son's life, she invoked Prophet Yusuf's legendary beauty to describe Ali al-Akbar &#8212; 'there is no youth more like the Prophet.']</span>
+  + <span style="font-weight: bold;">mentioned @ Karbala ::</span> <span style="text-decoration: underline;"><a href="yusuf">[[yusuf]]</a></span> <span style="font-weight: bold;">:mention:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ummsalamah&gt;&gt;</span> Umm Salamah \\ (&#1571;&#1605; &#1587;&#1604;&#1605;&#1577;) \\ wife of Muhammad
+  <span style="text-decoration: underline;">[fn::Umm Salamah (Hind bint Abi Umayyah) &#8212; one of Muhammad's wives; survived him by decades. Deeply close to Ahl al-Bayt; transmitted many hadith about Fatimah and the Imams. When Hussain departed for Karbala she wept, recalling a prophecy of his martyrdom.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:married:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ummalbanin&gt;&gt;</span> Umm al-Banin \\ (&#1571;&#1605; &#1575;&#1604;&#1576;&#1606;&#1610;&#1606;) \\ wife of Ali
+  <span style="text-decoration: underline;">[fn::Umm al-Banin (Fatimah bint Hizam) &#8212; second wife of Ali; mother of Abbas and three other sons, all martyred at Karbala alongside Hussain. Renowned for her elegies mourning them.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;ali&gt;&gt;</span> Ali \\ (&#1593;&#1604;&#1610;)
+  <span style="text-decoration: underline;">[fn::Ali ibn Abi Talib &#8212; cousin and son-in-law of Muhammad &#65018;; 1st Imam (Shia) and 4th Caliph (Sunni). Renowned for justice, bravery, and wisdom. Assassinated in the mosque of Kufa, 661 CE.]</span>
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
+  + <span style="text-decoration: underline;"><a href="fatimah">[[fatimah]]</a></span> <span style="font-weight: bold;">:married:</span>
+  + <span style="text-decoration: underline;"><a href="ummalbanin">[[ummalbanin]]</a></span> <span style="font-weight: bold;">:married:</span>
+  + <span style="text-decoration: underline;">&lt;&lt;hussain&gt;&gt;</span> Hussain \\ (&#1575;&#1604;&#1581;&#1587;&#1610;&#1606;)
+    <span style="text-decoration: underline;">[fn::Hussain ibn Ali &#8212; 3rd Imam; grandson of Muhammad &#65018;. Refused to pledge allegiance to Yazid. Martyred with 72 companions at Karbala (10 Muharram 61 AH / 680 CE). His stand is the axis of Shia commemoration.]</span>
+    | shape | diamond |
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+    + <span style="text-decoration: underline;"><a href="shahrbanu">[[shahrbanu]]</a></span> <span style="font-weight: bold;">:married:</span>
+    + <span style="text-decoration: underline;"><a href="rabab">[[rabab]]</a></span> <span style="font-weight: bold;">:married:</span>
+    + <span style="text-decoration: underline;"><a href="layla">[[layla]]</a></span> <span style="font-weight: bold;">:married:</span>
+    + <span style="text-decoration: underline;"><a href="shimr">[[shimr]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+    + <span style="text-decoration: underline;"><a href="amribnsaad">[[amribnsaad]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+    + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad]]</a></span>
+      | :edge.color | red    |
+      | :edge.style | dashed |
+      | :edge.dir   | back   |
+    + <span style="text-decoration: underline;">&lt;&lt;sajjad&gt;&gt;</span> Ali Al-Sajjad \\ (&#1575;&#1604;&#1587;&#1580;&#1575;&#1583;) \\ 4th Imam
+      <span style="text-decoration: underline;">[fn::Ali ibn Hussain al-Sajjad (Zayn al-Abidin) &#8212; 4th Imam; survived Karbala as he was too ill to fight. His Sahifa al-Sajjadiyya (the Psalms of the Ahl al-Bayt) is a landmark of Islamic spirituality.]</span>
+    + <span style="text-decoration: underline;">&lt;&lt;sukaynah&gt;&gt;</span> Sukaynah \\ (&#1587;&#1603;&#1610;&#1606;&#1577;)
+      <span style="text-decoration: underline;">[fn::Sukaynah bint Hussain &#8212; known for her piety and eloquence. Witnessed Karbala as a child; taken captive to Kufa and Damascus. She famously mourned her father's severed head.]</span>
+    + <span style="text-decoration: underline;">&lt;&lt;ruqayyah&gt;&gt;</span> Ruqayyah \\ (&#1585;&#1602;&#1610;&#1577;)
+      <span style="text-decoration: underline;">[fn::Ruqayyah bint Hussain &#8212; the young daughter of Hussain taken captive after Karbala. Tradition holds she died in the dungeon of Damascus from grief after seeing her father's head.]</span>
+    + <span style="text-decoration: underline;">&lt;&lt;abbas&gt;&gt;</span> Abbas \\ (&#1575;&#1604;&#1593;&#1576;&#1575;&#1587;)
+      <span style="text-decoration: underline;">[fn::Abbas ibn Ali (Abu al-Fadl) &#8212; half-brother of Hussain; son of Umm al-Banin. Standard-bearer at Karbala. Martyred at the Euphrates trying to fetch water for the children; his shrine in Karbala stands beside Hussain's.]</span>
+      + <span style="text-decoration: underline;"><a href="ummalbanin">[[ummalbanin]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
+    + <span style="text-decoration: underline;">&lt;&lt;aliakbar&gt;&gt;</span> Ali Al-Akbar \\ (&#1575;&#1604;&#1571;&#1603;&#1576;&#1585;)
+      <span style="text-decoration: underline;">[fn::Ali al-Akbar ibn Hussain &#8212; eldest son of Hussain; son of Layla. The Prophet's companions said no youth resembled the Prophet more in appearance and character. Martyred at Karbala aged ~18.]</span>
+    + <span style="text-decoration: underline;">&lt;&lt;qasim&gt;&gt;</span> Qasim \\ (&#1602;&#1575;&#1587;&#1605;)
+      <span style="text-decoration: underline;">[fn::Qasim ibn Hasan &#8212; son of Hasan; nephew of Hussain. Betrothed to Hussain's daughter before Karbala; martyred in battle there. His marriage and martyrdom on the same day is a poignant motif in Shia lamentation.]</span>
+    + <span style="text-decoration: underline;">&lt;&lt;aliasghar&gt;&gt;</span> Ali Asghar \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1571;&#1589;&#1594;&#1585;) \\ infant martyr
+      <span style="text-decoration: underline;">[fn::Ali Asghar ibn Hussain &#8212; the infant son of Hussain and Rabab; only months old at Karbala. Hussain held him up to the enemy army asking for water; he was killed by a three-pronged arrow. The youngest martyr of Karbala.]</span>
+      | fillcolor | #aaffaa |
+      | color     | #007700 |
+      + <span style="text-decoration: underline;"><a href="rabab">[[rabab]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
+  + <span style="text-decoration: underline;">&lt;&lt;hasan&gt;&gt;</span> Hasan \\ (&#1575;&#1604;&#1581;&#1587;&#1606;) \\ 2nd Imam
+    <span style="text-decoration: underline;">[fn::Hasan ibn Ali &#8212; 2nd Imam; grandson of Muhammad &#65018;. Abdicated the caliphate to Muawiya to prevent civil war, under a treaty. Died 670 CE, reportedly poisoned; buried in Medina.]</span>
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;zaynab&gt;&gt;</span> Zaynab \\ (&#1586;&#1610;&#1606;&#1576;)
+    <span style="text-decoration: underline;">[fn::Zaynab bint Ali &#8212; sister of Hussain; survived Karbala and became its voice. Her speech before Yazid in Damascus is celebrated as one of the most defiant addresses in Islamic history. Called 'the heroine of Karbala.']</span>
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ummkulthum&gt;&gt;</span> Umm Kulthum \\ (&#1571;&#1605; &#1603;&#1604;&#1579;&#1608;&#1605;)
+    <span style="text-decoration: underline;">[fn::Umm Kulthum bint Ali &#8212; sister of Hussain and Zaynab; also taken captive after Karbala. She delivered passionate elegies in Kufa and Damascus alongside Zaynab.]</span>
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+#+rank: hussain hasan zaynab ummkulthum
+#+rank: sajjad sukaynah ruqayyah abbas aliakbar qasim aliasghar
+
+# Muslim was Hussain's envoy to Kufa &#8212; executed before Karbala.
+# Hurr was the Umayyad commander who defected to Hussain's side on Ashura morning.
++ <span style="text-decoration: underline;">&lt;&lt;muslibinaqil&gt;&gt;</span> Muslim ibn Aqil \\ (&#1605;&#1587;&#1604;&#1605; &#1576;&#1606; &#1593;&#1602;&#1610;&#1604;) \\ Hussain's envoy
+  <span style="text-decoration: underline;">[fn::Muslim ibn Aqil &#8212; cousin of Hussain (son of Aqil ibn Abi Talib); sent as envoy to Kufa to assess support before Karbala. Initially received pledges from thousands; abandoned when Ibn Ziyad arrived and crushed the uprising. Executed on Ibn Ziyad's orders in 680 CE.]</span>
+  + <span style="text-decoration: underline;"><a href="aqil">[[aqil]]</a></span>
+  + <span style="text-decoration: underline;"><a href="hussain">[[hussain]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;hurr&gt;&gt;</span> Hurr al-Riyahi \\ (&#1575;&#1604;&#1581;&#1585; &#1575;&#1604;&#1585;&#1610;&#1575;&#1581;&#1610;) \\ Defected to Hussain
+  <span style="text-decoration: underline;">[fn::Hurr ibn Yazid al-Riyahi &#8212; Umayyad cavalry commander sent to intercept Hussain. On the morning of Ashura, he defected to Hussain's side, knowing it meant death. His repentance is one of the most celebrated acts in Shia literature; he was martyred in the battle.]</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
+  + <span style="text-decoration: underline;"><a href="hussain">[[hussain]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+
+# Zayd and Ismail are sons of Imams whose followings became separate Shia branches.
+# Their placement here, adjacent to the Imam chain, shows where the sectarian splits occurred.
++ <span style="text-decoration: underline;">&lt;&lt;zayd&gt;&gt;</span> Zayd ibn Ali \\ (&#1586;&#1610;&#1583; &#1576;&#1606; &#1593;&#1604;&#1610;) \\ Zaydi Shia eponym
+  <span style="text-decoration: underline;">[fn::Zayd ibn Ali &#8212; son of Imam Sajjad (4th Imam); brother of Imam Baqir. Led an armed uprising against Umayyad Caliph Hisham in Kufa, 740 CE. Was killed in battle, but his followers became Zaydi ('Fiver') Shia &#8212; the branch that holds Imams must be active, just rulers willing to fight for their rights.]</span>
+  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span>
+  + <span style="text-decoration: underline;"><a href="hisham">[[hisham]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ismailbnjafar&gt;&gt;</span> Ismail ibn Jafar \\ (&#1573;&#1587;&#1605;&#1575;&#1593;&#1610;&#1604; &#1576;&#1606; &#1580;&#1593;&#1601;&#1585;) \\ Ismaili Shia eponym
+  <span style="text-decoration: underline;">[fn::Ismail ibn Jafar &#8212; eldest son of Imam Sadiq (6th Imam). Died before his father, yet a group held the Imamate passed through him to his son Muhammad ibn Ismail. This became Ismaili ('Sevener') Shia Islam &#8212; the branch behind the Fatimid Caliphate, and today the Nizari (Aga Khanis), Dawoodi Bohoras, and others.]</span>
+  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span>
+#+rank: zayd ismailbnjafar
+
+# Muhammad al-Nafs al-Zakiyya is a Hasanid martyr &#8212; grandson of Hasan, not in the Husayni Imam chain,
+# but his uprising against al-Mansur shows the Abbasids targeted the entire Alid family, not just the Imams.
++ <span style="text-decoration: underline;">&lt;&lt;nafs&gt;&gt;</span> Muhammad al-Nafs al-Zakiyya \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1606;&#1601;&#1587; &#1575;&#1604;&#1586;&#1603;&#1610;&#1577;) \\ Hasanid Martyr
+  <span style="text-decoration: underline;">[fn::Muhammad ibn Abdullah al-Mahd al-Nafs al-Zakiyya ('the Pure Soul') &#8212; grandson of Imam Hasan (2nd Imam). Led an armed uprising in Medina, 762 CE, against Abbasid Caliph al-Mansur, who had his family imprisoned. Many believed him to be the awaited Mahdi. Killed in battle; his brother Ibrahim's simultaneous revolt in Basra was also crushed. Venerated as a martyr; pivotal in Zaydi tradition.]</span>
+  + <span style="text-decoration: underline;"><a href="hasan">[[hasan]]</a></span>
+  + <span style="text-decoration: underline;"><a href="almansur">[[almansur]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+
+# The first 4 Imams (Ali, Hasan, Hussain, Sajjad) are declared above as standalone
+# nodes; this cluster adds Imams 5&#8211;12 as a chain descending from Ali Al-Sajjad.
+# All 12 are descendants of Ali ibn Abi Talib through the line of Hussain.
+#+begin_cluster The Twelve Imams (&#1593;&#1604;&#1610;&#1607;&#1605; &#1575;&#1604;&#1587;&#1604;&#1575;&#1605;)
+| style     | filled  |
+| fillcolor | #eeffee |
+| color     | #006600 |
+| fontcolor | #004400 |
+#+node:
+| fillcolor | #ccffcc |
+| color     | #006600 |
++ <span style="text-decoration: underline;">&lt;&lt;baqir&gt;&gt;</span> Muhammad al-Baqir \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1576;&#1575;&#1602;&#1585;) \\ 5th Imam
+  <span style="text-decoration: underline;">[fn::Muhammad al-Baqir ('the one who opens up knowledge') &#8212; son of Sajjad; 5th Imam. Renowned for expansive religious scholarship; established the foundations of Shia jurisprudence in Medina.]</span>
+  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;sadiq&gt;&gt;</span> Jafar al-Sadiq \\ (&#1580;&#1593;&#1601;&#1585; &#1575;&#1604;&#1589;&#1575;&#1583;&#1602;) \\ 6th Imam
+  <span style="text-decoration: underline;">[fn::Jafar al-Sadiq ('the truthful') &#8212; son of Baqir; 6th Imam. The most prolific scholarly Imam; his students included Abu Hanifa and Malik ibn Anas. Shia fiqh is called the Ja'fari school in his honor.]</span>
+  + <span style="text-decoration: underline;"><a href="baqir">[[baqir]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;kadhim&gt;&gt;</span> Musa al-Kadhim \\ (&#1605;&#1608;&#1587;&#1609; &#1575;&#1604;&#1603;&#1575;&#1592;&#1605;) \\ 7th Imam
+  <span style="text-decoration: underline;">[fn::Musa al-Kadhim ('the forbearing') &#8212; son of Sadiq; 7th Imam. Imprisoned repeatedly by the Abbasid caliphs Mahdi and Harun al-Rashid; died in prison in Baghdad, 799 CE.]</span>
+  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;ridha&gt;&gt;</span> Ali al-Ridha \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1585;&#1590;&#1575;) \\ 8th Imam
+  <span style="text-decoration: underline;">[fn::Ali al-Ridha ('the pleased one') &#8212; son of Kadhim; 8th Imam. Appointed heir-apparent by Abbasid Caliph al-Ma'mun (a political move). His shrine in Mashhad, Iran is one of the largest mosques in the world.]</span>
+  + <span style="text-decoration: underline;"><a href="kadhim">[[kadhim]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;taqi&gt;&gt;</span> Muhammad al-Taqi \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1578;&#1602;&#1610;) \\ 9th Imam
+  <span style="text-decoration: underline;">[fn::Muhammad al-Taqi ('the pious') &#8212; son of Ridha; 9th Imam. Became Imam at age 8 after his father's death. Married a daughter of the Abbasid caliph al-Ma'mun. Died aged ~25, reportedly poisoned.]</span>
+  + <span style="text-decoration: underline;"><a href="ridha">[[ridha]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;hadi&gt;&gt;</span> Ali al-Hadi \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1607;&#1575;&#1583;&#1610;) \\ 10th Imam
+  <span style="text-decoration: underline;">[fn::Ali al-Hadi ('the guide') &#8212; son of Taqi; 10th Imam. Placed under house arrest in Samarra by Abbasid authorities for most of his life. Father of Hasan al-Askari.]</span>
+  + <span style="text-decoration: underline;"><a href="taqi">[[taqi]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;askari&gt;&gt;</span> Hasan al-Askari \\ (&#1575;&#1604;&#1581;&#1587;&#1606; &#1575;&#1604;&#1593;&#1587;&#1603;&#1585;&#1610;) \\ 11th Imam
+  <span style="text-decoration: underline;">[fn::Hasan al-Askari &#8212; son of Hadi; 11th Imam. Named 'al-Askari' for the military garrison city of Samarra where he was confined. Father of the 12th Imam. Died 874 CE, reportedly poisoned.]</span>
+  + <span style="text-decoration: underline;"><a href="hadi">[[hadi]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;mahdi&gt;&gt;</span> Muhammad al-Mahdi \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1605;&#1607;&#1583;&#1610;) \\ 12th Imam
+  <span style="text-decoration: underline;">[fn::Muhammad al-Mahdi &#8212; son of Askari; 12th and final Imam. Believed to be in 'occultation' (ghayba) since 874 CE &#8212; hidden from sight but alive, to return at the end of times as the Mahdi who establishes justice.]</span>
+  + <span style="text-decoration: underline;"><a href="askari">[[askari]]</a></span>
+#+end_cluster
+
+# Narjis Khatun is theologically indispensable &#8212; as mother of the 12th Imam, she anchors the eschatological
+# narrative of the Major Occultation. Her Byzantine origin and conversion are part of the tradition's telling.
++ <span style="text-decoration: underline;">&lt;&lt;narjis&gt;&gt;</span> Narjis Khatun \\ (&#1606;&#1585;&#1580;&#1587; &#1582;&#1575;&#1578;&#1608;&#1606;) \\ Mother of the Mahdi
+  <span style="text-decoration: underline;">[fn::Narjis Khatun &#8212; wife of Imam Hasan al-Askari (11th Imam); mother of Imam Muhammad al-Mahdi (12th Imam). Of Byzantine/Roman origin; the tradition holds she was a princess who converted to Islam and was brought to Samarra. Her role as mother of the hidden Imam makes her a figure of profound theological significance in Twelver Shia eschatology.]</span>
+  + <span style="text-decoration: underline;"><a href="askari">[[askari]]</a></span> <span style="font-weight: bold;">:married:</span>
+  + <span style="text-decoration: underline;"><a href="mahdi">[[mahdi]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
+
+# Companions of Ali &#8212; figures whose loyalty to the Ahl al-Bayt defined early Shia social identity.
+# Salman's hadith ("Salman is from us, Ahl al-Bayt"), Ammar's martyrdom at Siffin, and
+# Malik al-Ashtar's generalship are cornerstones of Shia historical memory.
+#+begin_cluster Companions of Ali
+| style     | filled  |
+| fillcolor | #fef3c7 |
+| color     | #92400e |
+| fontcolor | #78350f |
+#+node:
+| fillcolor | #fde68a |
+| color     | #92400e |
++ <span style="text-decoration: underline;">&lt;&lt;salman&gt;&gt;</span> Salman al-Farisi \\ (&#1587;&#1604;&#1605;&#1575;&#1606; &#1575;&#1604;&#1601;&#1575;&#1585;&#1587;&#1610;) \\ Persian Companion
+  <span style="text-decoration: underline;">[fn::Salman al-Farisi &#8212; Persian companion of the Prophet; converted from Zoroastrianism after a long spiritual quest. The Prophet declared: 'Salman is from us, Ahl al-Bayt.' Became a close companion of Ali and later Governor of Ctesiphon (al-Madain) under him. Considered the first Persian Muslim of note.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;ammar&gt;&gt;</span> Ammar ibn Yasir \\ (&#1593;&#1605;&#1575;&#1585; &#1576;&#1606; &#1610;&#1575;&#1587;&#1585;) \\ Martyr of Siffin
+  <span style="text-decoration: underline;">[fn::Ammar ibn Yasir &#8212; one of the earliest Muslims; his mother Sumayyah was the first martyr of Islam. The Prophet foretold: 'Ammar will be killed by the transgressing group.' Fought for Ali at the Battle of Siffin (657 CE) and was killed by Muawiya's forces &#8212; fulfilling the prophecy and cementing Ali's legitimacy in Shia eyes.]</span>
+  + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;malikashtar&gt;&gt;</span> Malik al-Ashtar \\ (&#1605;&#1575;&#1604;&#1603; &#1575;&#1604;&#1571;&#1588;&#1578;&#1585;) \\ Ali's Foremost General
+  <span style="text-decoration: underline;">[fn::Malik ibn al-Harith al-Ashtar &#8212; Ali's most trusted and capable general; appointed Governor of Egypt by Ali. Reportedly poisoned by Muawiya's agents (via honey laced with poison) before he could take up his Egyptian post. Ali mourned him: 'Malik was to me as I was to the Prophet.' An unrivalled figure in Shia military and moral tradition.]</span>
+  + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+#+end_cluster
+
+# The Rashidun (Rightly Guided) Caliphs &#8212; Sunni Islam's first four successors to Muhammad.
+# Ali (4th Caliph) is already in the graph above; Muawiya (1st Umayyad) is in Antagonists.
+# Aisha (daughter of Abu Bakr, wife of Muhammad) was a major hadith transmitter and
+# political figure &#8212; she led opposition to Ali at the Battle of the Camel (656 CE).
+#+begin_cluster Rashidun Caliphs (&#1575;&#1604;&#1582;&#1604;&#1601;&#1575;&#1569; &#1575;&#1604;&#1585;&#1575;&#1588;&#1583;&#1608;&#1606;)
+| style     | filled  |
+| fillcolor | #fff8e1 |
+| color     | #aa7700 |
+| fontcolor | #664400 |
+#+node:
+| fillcolor | #ffe082 |
+| color     | #aa7700 |
++ <span style="text-decoration: underline;">&lt;&lt;abubakr&gt;&gt;</span> Abu Bakr \\ (&#1571;&#1576;&#1608; &#1576;&#1603;&#1585;) \\ 1st Caliph
+  <span style="text-decoration: underline;">[fn::Abu Bakr al-Siddiq &#8212; 1st Caliph (632&#8211;634 CE). Sunni tradition venerates him as the Prophet's closest companion and first successor. In Shia tradition: the Saqifa assembly that chose him convened while Ali was still washing and shrouding Muhammad &#65018; for burial &#8212; bypassing the Prophet's explicit designation of Ali at Ghadir Khumm (18 Dhul-Hijja 10 AH). He confiscated Fadak from Fatimah, citing a solitary hadith ('prophets leave no inheritance') that Shia scholars hold as fabricated. Fatimah never reconciled with him; she died unreconciled and was buried secretly.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;umar&gt;&gt;</span> Umar ibn al-Khattab \\ (&#1593;&#1605;&#1585;) \\ 2nd Caliph
+  <span style="text-decoration: underline;">[fn::Umar ibn al-Khattab &#8212; 2nd Caliph (634&#8211;644 CE). Sunni tradition credits him with vast Islamic expansion into Persia, Syria, and Egypt, and with administrative reform. In Shia tradition: Umar was the driving force behind the Saqifa succession that sidelined Ali. He led the party to Fatimah's house to compel Ali's pledge of allegiance &#8212; in Shia narrations, the door was forced or set alight, Fatimah was struck by the door or directly, and she miscarried Muhsin. He also enforced the confiscation of Fadak. These events are among the deepest grievances in Shia historical memory.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;uthman&gt;&gt;</span> Uthman ibn Affan \\ (&#1593;&#1579;&#1605;&#1575;&#1606;) \\ 3rd Caliph
+  <span style="text-decoration: underline;">[fn::Uthman ibn Affan &#8212; 3rd Caliph (644&#8211;656 CE). Compiled the standard Quran text (Uthmanic codex). His favoritism toward Umayyad relatives bred rebellion; he was assassinated in his home in Medina.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;aisha&gt;&gt;</span> Aisha \\ (&#1593;&#1575;&#1574;&#1588;&#1577;) \\ wife of Muhammad
+  <span style="text-decoration: underline;">[fn::Aisha bint Abi Bakr &#8212; youngest and most prominent wife of Muhammad &#65018;; 'Mother of the Believers.' The primary transmitter of thousands of hadith. Led the Battle of the Camel (656 CE) against Ali &#8212; a defining Sunni-Shia fault line.]</span>
+  + <span style="font-weight: bold;">daughter ::</span> <span style="text-decoration: underline;"><a href="abubakr">[[abubakr]]</a></span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:married:</span>
+#+end_cluster
+
+# Umayyad caliphs who oppressed the early Imams after the Karbala period.
+# The Umayyad dynasty (661&#8211;750 CE) persecuted Imams 4&#8211;6.
+#+begin_cluster Umayyad Caliphs (&#1575;&#1604;&#1571;&#1605;&#1608;&#1610;&#1608;&#1606;)
+| style     | filled  |
+| fillcolor | #fff3e0 |
+| color     | #b34700 |
+| fontcolor | #7a2e00 |
+#+node:
+| fillcolor | #ffe0b2 |
+| color     | #b34700 |
++ <span style="text-decoration: underline;">&lt;&lt;abdmalik&gt;&gt;</span> Abd al-Malik \\ (&#1593;&#1576;&#1583; &#1575;&#1604;&#1605;&#1604;&#1603;) \\ Umayyad Caliph
+  <span style="text-decoration: underline;">[fn::Abd al-Malik ibn Marwan &#8212; 5th Umayyad Caliph (685&#8211;705 CE). The dominant caliph during Imam Sajjad's era; sent al-Hajjaj ibn Yusuf to crush Iraqi uprisings. Centralised power and Arabised the administration.]</span>
+  + <span style="font-weight: bold;">oppressed ::</span> <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span> <span style="font-weight: bold;">:imprisoned:</span>
++ <span style="text-decoration: underline;">&lt;&lt;walid1&gt;&gt;</span> al-Walid I \\ (&#1575;&#1604;&#1608;&#1604;&#1610;&#1583; &#1575;&#1604;&#1571;&#1608;&#1604;) \\ Umayyad Caliph
+  <span style="text-decoration: underline;">[fn::al-Walid ibn Abd al-Malik &#8212; 6th Umayyad Caliph (705&#8211;715 CE). Son of Abd al-Malik; continued his father's oppressive policies. Imam Sajjad died during his reign, reportedly at his instigation.]</span>
+  + <span style="text-decoration: underline;"><a href="abdmalik">[[abdmalik]]</a></span>
+  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;hisham&gt;&gt;</span> Hisham \\ (&#1607;&#1588;&#1575;&#1605;) \\ Umayyad Caliph
+  <span style="text-decoration: underline;">[fn::Hisham ibn Abd al-Malik &#8212; 10th Umayyad Caliph (724&#8211;743 CE). The main political oppressor of Imams Baqir and Sadiq; summoned both Imams to Damascus and subjected them to interrogation. Reportedly had Imam Baqir poisoned.]</span>
+  + <span style="text-decoration: underline;"><a href="abdmalik">[[abdmalik]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="baqir">[[baqir]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+  + <span style="font-weight: bold;">oppressed ::</span> <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span> <span style="font-weight: bold;">:imprisoned:</span>
+#+end_cluster
+
+# The Abbasids overthrew the Umayyads in 750 CE but continued &#8212; and intensified &#8212;
+# persecution of the Imams, shifting from open warfare to imprisonment and poisoning.
+# Each node here is the primary oppressor of the corresponding Imam.
+#+begin_cluster Abbasid Caliphs (&#1575;&#1604;&#1593;&#1576;&#1575;&#1587;&#1610;&#1608;&#1606;)
+| style     | filled  |
+| fillcolor | #f3e5f5 |
+| color     | #6a0dad |
+| fontcolor | #3d0066 |
+#+node:
+| fillcolor | #e1bee7 |
+| color     | #6a0dad |
++ <span style="text-decoration: underline;">&lt;&lt;almansur&gt;&gt;</span> al-Mansur \\ (&#1575;&#1604;&#1605;&#1606;&#1589;&#1608;&#1585;) \\ 2nd Abbasid
+  <span style="text-decoration: underline;">[fn::Abu Ja'far al-Mansur &#8212; 2nd Abbasid Caliph (754&#8211;775 CE). Founded Baghdad. Repeatedly summoned and interrogated Imam Sadiq; according to most Shia sources, had him poisoned in 765 CE.]</span>
+  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;harun&gt;&gt;</span> Harun al-Rashid \\ (&#1607;&#1575;&#1585;&#1608;&#1606; &#1575;&#1604;&#1585;&#1588;&#1610;&#1583;) \\ 5th Abbasid
+  <span style="text-decoration: underline;">[fn::Harun al-Rashid &#8212; 5th Abbasid Caliph (786&#8211;809 CE). Famous for the tales of 1001 Nights. Imprisoned Imam Kadhim repeatedly in Baghdad; the Imam died in prison in 799 CE, most likely by Harun's order.]</span>
+  + <span style="text-decoration: underline;"><a href="almansur">[[almansur]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="kadhim">[[kadhim]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;mamun&gt;&gt;</span> al-Ma'mun \\ (&#1575;&#1604;&#1605;&#1571;&#1605;&#1608;&#1606;) \\ 7th Abbasid
+  <span style="text-decoration: underline;">[fn::al-Ma'mun &#8212; 7th Abbasid Caliph (813&#8211;833 CE). Son of Harun. Appointed Imam Ridha as heir-apparent (a political manoeuvre to co-opt Shia support), then likely had him poisoned in 818 CE in Khurasan.]</span>
+  + <span style="text-decoration: underline;"><a href="harun">[[harun]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="ridha">[[ridha]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;mutasim&gt;&gt;</span> al-Mu'tasim \\ (&#1575;&#1604;&#1605;&#1593;&#1578;&#1589;&#1605;) \\ 8th Abbasid
+  <span style="text-decoration: underline;">[fn::al-Mu'tasim &#8212; 8th Abbasid Caliph (833&#8211;842 CE). Brother of al-Ma'mun. Summoned Imam Taqi to Baghdad and reportedly had him poisoned; Imam Taqi died aged ~25 in 835 CE.]</span>
+  + <span style="text-decoration: underline;"><a href="mamun">[[mamun]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="taqi">[[taqi]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;mutawakkil&gt;&gt;</span> al-Mutawakkil \\ (&#1575;&#1604;&#1605;&#1578;&#1608;&#1603;&#1604;) \\ 10th Abbasid
+  <span style="text-decoration: underline;">[fn::al-Mutawakkil &#8212; 10th Abbasid Caliph (847&#8211;861 CE). Notorious for anti-Shia policies: demolished the Karbala shrine, forbade pilgrimage, and forcibly relocated Imam Hadi to the garrison city of Samarra under house arrest.]</span>
+  + <span style="text-decoration: underline;"><a href="mutasim">[[mutasim]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="font-weight: bold;">imprisoned ::</span> <span style="text-decoration: underline;"><a href="hadi">[[hadi]]</a></span> <span style="font-weight: bold;">:imprisoned:</span>
++ <span style="text-decoration: underline;">&lt;&lt;mutamid&gt;&gt;</span> al-Mu'tamid \\ (&#1575;&#1604;&#1605;&#1593;&#1578;&#1605;&#1583;) \\ 15th Abbasid
+  <span style="text-decoration: underline;">[fn::al-Mu'tamid &#8212; 15th Abbasid Caliph (870&#8211;892 CE). Kept Imam Askari under strict house arrest in Samarra; the Imam died under suspicious circumstances in 874 CE during his reign, triggering the Major Occultation of the 12th Imam.]</span>
+  + <span style="text-decoration: underline;"><a href="mutawakkil">[[mutawakkil]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="askari">[[askari]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+#+end_cluster
+
+# Hamza is Muhammad's paternal uncle &#8212; a son of Abd al-Muttalib, same as Abu Talib.
+# Green fill marks him as a hero; his martyrdom at Uhud is mourned alongside Hussain in Shia tradition.
++ <span style="text-decoration: underline;">&lt;&lt;hamza&gt;&gt;</span> Hamza ibn Abd al-Muttalib \\ (&#1581;&#1605;&#1586;&#1577;) \\ Lion of God
+  <span style="text-decoration: underline;">[fn::Hamza ibn Abd al-Muttalib &#8212; uncle of Muhammad &#65018;; among the earliest and fiercest converts to Islam. Called 'Asad Allah' (Lion of God) and 'Sayyid al-Shuhada' (Master of Martyrs). Martyred at Uhud (625 CE) by Wahshi ibn Harb, a spear-thrower hired by Hind bint Utbah for personal revenge (her father was killed at Badr). Hind then mutilated his body. His martyrdom is mourned alongside Hussain in Shia tradition.]</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="uhud">[[uhud]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
+
+# Khalid converted after years as a foe; amber fill signals moral ambiguity &#8212; neither pure hero nor villain.
+# His flanking maneuver at Uhud broke the Muslim line; his later conquests were under Abu Bakr and Umar.
++ <span style="text-decoration: underline;">&lt;&lt;khalid&gt;&gt;</span> Khalid ibn al-Walid \\ (&#1582;&#1575;&#1604;&#1583; &#1576;&#1606; &#1575;&#1604;&#1608;&#1604;&#1610;&#1583;) \\ Sword of God
+  <span style="text-decoration: underline;">[fn::Khalid ibn al-Walid &#8212; 'Sayf Allah al-Maslul' (the Drawn Sword of God). Fought against Muslims at Uhud (his flanking maneuver broke the Muslim line). Converted to Islam in 629 CE; became Islam's greatest military commander. Conquered much of Persia and Syria under Abu Bakr and Umar. Complex figure in Shia tradition: celebrated for military genius, yet his loyal service to the caliphs who sidelined Ali colours his legacy.]</span>
+  | fillcolor | #fff3cc |
+  | color     | #886600 |
+  + <span style="font-weight: bold;">fought against Muslims ::</span> <span style="text-decoration: underline;"><a href="uhud">[[uhud]]</a></span> <span style="font-weight: bold;">:mention:</span>
+  + <span style="text-decoration: underline;"><a href="fath">[[fath]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+
+# The four key battles of the Prophet's life &#8212; each a turning point in the narrative arc from
+# persecuted minority in Mecca to unified force that transformed the Arabian peninsula.
+#+begin_cluster Battles of the Prophet
+| style     | filled  |
+| fillcolor | #f0f4ff |
+| color     | #334499 |
+| fontcolor | #1a2266 |
+#+node:
+| fillcolor | #dce8ff |
+| color     | #334499 |
++ <span style="text-decoration: underline;">&lt;&lt;badr&gt;&gt;</span> Battle of Badr \\ (&#1594;&#1586;&#1608;&#1577; &#1576;&#1583;&#1585;) \\ 624 CE
+  <span style="text-decoration: underline;">[fn::Battle of Badr &#8212; first major battle of Islam (17 Ramadan 2 AH / 624 CE). ~313 Muslims vs. ~1,000 Quraysh; decisive Muslim victory. Abu Jahl killed here. The Quran calls it 'the Day of Distinction' (&#1610;&#1608;&#1605; &#1575;&#1604;&#1601;&#1585;&#1602;&#1575;&#1606;). This victory established the Muslim community as a political and military force.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;uhud&gt;&gt;</span> Battle of Uhud \\ (&#1594;&#1586;&#1608;&#1577; &#1571;&#1581;&#1583;) \\ 625 CE
+  <span style="text-decoration: underline;">[fn::Battle of Uhud &#8212; Quraysh retaliation for Badr (7 Shawwal 3 AH / 625 CE). Initial Muslim advantage reversed when archers abandoned their post for plunder. Hamza martyred; Muhammad &#65018; wounded. Khalid ibn al-Walid's flanking maneuver decided the day. A Quranic lesson in discipline and the cost of disobedience.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;khandaq&gt;&gt;</span> Battle of Khandaq \\ (&#1594;&#1586;&#1608;&#1577; &#1575;&#1604;&#1582;&#1606;&#1583;&#1602;) \\ 627 CE
+  <span style="text-decoration: underline;">[fn::Battle of Khandaq ('the Trench', also Ahzab) &#8212; Quraysh-led coalition of ~10,000 besieged Medina (5 AH / 627 CE). Salman al-Farisi proposed the Persian tactic of digging a defensive trench. The siege collapsed after ~20 days; a turning point that ended Quraysh's ability to threaten Medina.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="font-weight: bold;">Salman's idea ::</span> <span style="text-decoration: underline;"><a href="salman">[[salman]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;fath&gt;&gt;</span> Conquest of Mecca \\ (&#1601;&#1578;&#1581; &#1605;&#1603;&#1577;) \\ 630 CE
+  <span style="text-decoration: underline;">[fn::Conquest of Mecca (&#1601;&#1578;&#1581; &#1605;&#1603;&#1577;) &#8212; 20 Ramadan 8 AH / January 630 CE. 10,000-strong Muslim force entered Mecca with near-zero bloodshed. Muhammad &#65018; granted general amnesty; Abu Sufyan converted at the last moment. The Kaaba was purified of idols. Khalid ibn al-Walid commanded the right flank.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="font-weight: bold;">surrendered ::</span> <span style="text-decoration: underline;"><a href="abusufyan">[[abusufyan]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+#+end_cluster
+#+rank: badr uhud khandaq fath
+
+#+begin_cluster Antagonists
+| style     | filled  |
+| fillcolor | #ffeeee |
+| color     | #cc0000 |
+| fontcolor | #990000 |
+#+node:
+| fillcolor | #ff9999 |
+| color     | #cc0000 |
+| fontcolor | #660000 |
++ <span style="text-decoration: underline;">&lt;&lt;abusufyan&gt;&gt;</span> Abu Sufyan \\ (&#1571;&#1576;&#1608; &#1587;&#1601;&#1610;&#1575;&#1606;)
+  <span style="text-decoration: underline;">[fn::Abu Sufyan ibn Harb &#8212; leader of the Quraysh and chief opponent of Muhammad &#65018; for two decades. Accepted Islam only at the conquest of Mecca (630 CE). Father of Muawiya; progenitor of the Umayyad dynasty.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;muawiya&gt;&gt;</span> Muawiya \\ (&#1605;&#1593;&#1575;&#1608;&#1610;&#1577;)
+  <span style="text-decoration: underline;">[fn::Muawiya ibn Abi Sufyan &#8212; 1st Umayyad Caliph (661&#8211;680 CE). Fought Ali at the Battle of Siffin; gained control through the arbitration. His decision to appoint his son Yazid as successor broke the principle of the Shura and set up the Karbala tragedy.]</span>
+  + <span style="text-decoration: underline;"><a href="abusufyan">[[abusufyan]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;yazid&gt;&gt;</span> Yazid \\ (&#1610;&#1586;&#1610;&#1583;)
+  <span style="text-decoration: underline;">[fn::Yazid ibn Muawiya &#8212; 2nd Umayyad Caliph. His demand that Hussain pledge allegiance triggered the march to Karbala. His forces massacred Hussain and his companions on Ashura, 680 CE &#8212; an act condemned even by many Sunni scholars.]</span>
+  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;ziyad&gt;&gt;</span> Ziyad ibn Abih \\ (&#1586;&#1610;&#1575;&#1583; &#1576;&#1606; &#1571;&#1576;&#1610;&#1607;)
+  <span style="text-decoration: underline;">[fn::Ziyad ibn Abih ('son of his father' &#8212; his paternity disputed) &#8212; powerful governor under Muawiya; claimed as a half-brother by Muawiya's decree. Father of Ibn Ziyad; notorious for harsh governance of Iraq.]</span>
+  + <span style="font-weight: bold;">claimed half-brother ::</span> <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span>
+    | :edge.style | dashed |
++ <span style="text-decoration: underline;">&lt;&lt;ibnziyad&gt;&gt;</span> Ibn Ziyad \\ (&#1593;&#1576;&#1610;&#1583; &#1575;&#1604;&#1604;&#1607; &#1576;&#1606; &#1586;&#1610;&#1575;&#1583;) \\ Governor of Kufa
+  <span style="text-decoration: underline;">[fn::Ubayd Allah ibn Ziyad &#8212; Governor of Kufa at the time of Karbala; the logistical architect of the massacre. He sent Muslim ibn Aqil (Hussain's envoy) to execution, then dispatched the army that surrounded Karbala.]</span>
+  | shape | diamond |
+  + <span style="text-decoration: underline;"><a href="ziyad">[[ziyad]]</a></span>
+  + <span style="text-decoration: underline;"><a href="yazid">[[yazid]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
++ <span style="text-decoration: underline;">&lt;&lt;amribnsaad&gt;&gt;</span> Amr ibn Sa'd \\ (&#1593;&#1605;&#1585; &#1576;&#1606; &#1587;&#1593;&#1583;) \\ Commander at Karbala
+  <span style="text-decoration: underline;">[fn::Amr ibn Sa'd ibn Abi Waqqas &#8212; field commander of the Umayyad army at Karbala; son of a revered companion. He wavered before obeying Ibn Ziyad's orders; his complicity haunted him. He was later killed by Mukhtar al-Thaqafi in revenge.]</span>
+  | shape | diamond |
+  + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;shimr&gt;&gt;</span> Shimr \\ (&#1588;&#1605;&#1585;) \\ Killed Hussain
+  <span style="text-decoration: underline;">[fn::Shimr ibn Dhi al-Jawshan &#8212; the man who delivered the killing blow to Hussain at Karbala, severing his head. Reviled across Islamic traditions; killed in revenge by Mukhtar al-Thaqafi shortly after.]</span>
+  | shape | diamond |
+  + <span style="text-decoration: underline;"><a href="amribnsaad">[[amribnsaad]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;ibnmuljam&gt;&gt;</span> Ibn Muljam \\ (&#1575;&#1576;&#1606; &#1605;&#1604;&#1580;&#1605;) \\ Assassin of Ali
+  <span style="text-decoration: underline;">[fn::Abd al-Rahman ibn Muljam al-Muradi &#8212; Kharijite assassin who struck Ali with a poisoned sword in the mosque of Kufa on 19 Ramadan 40 AH (661 CE). Ali died two days later. His act split the caliphate and deepened the Sunni-Shia divide permanently.]</span>
+  | shape | diamond |
+  + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;abujahl&gt;&gt;</span> Abu Jahl \\ (&#1571;&#1576;&#1608; &#1580;&#1607;&#1604;) \\ Pharaoh of the Nation
+  <span style="text-decoration: underline;">[fn::Abu Jahl ibn Hisham al-Makhzumi &#8212; chief persecutor of early Muslims in Mecca; Muhammad &#65018; called him 'the Pharaoh of this nation.' Led Quraysh forces at Badr; killed there (624 CE) &#8212; his death was a pivotal blow to Qurayshi leadership. Of the rival Makhzum clan, not the Umayyad line.]</span>
+  + <span style="text-decoration: underline;"><a href="badr">[[badr]]</a></span> <span style="font-weight: bold;">:killed-by:</span>
++ <span style="text-decoration: underline;">&lt;&lt;hind&gt;&gt;</span> Hind bint Utbah \\ (&#1607;&#1606;&#1583; &#1576;&#1606;&#1578; &#1593;&#1578;&#1576;&#1577;)
+  <span style="text-decoration: underline;">[fn::Hind bint Utbah &#8212; wife of Abu Sufyan; mother of Muawiya. Her father was killed at Badr, fuelling her hatred. At Uhud she hired Wahshi ibn Harb to kill Hamza (personal revenge), then mutilated his body and bit into his liver. Accepted Islam at the Conquest of Mecca. Her conversion, and Muawiya's parentage through her, are a recurrent irony in Shia historical memory.]</span>
+  + <span style="font-weight: bold;">wife ::</span> <span style="text-decoration: underline;"><a href="abusufyan">[[abusufyan]]</a></span> <span style="font-weight: bold;">:ancestry:</span>
+  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span> <span style="font-weight: bold;">:motherhood:</span>
+  + <span style="text-decoration: underline;"><a href="uhud">[[uhud]]</a></span> <span style="font-weight: bold;">:mention:</span>
+#+end_cluster
+#+rank: muawiya ali
+
+# Mukhtar al-Thaqafi is the avenger of Karbala &#8212; the man who hunted down and killed the architects
+# of the massacre. Green fill matches Hurr al-Riyahi (the other figure who redeemed himself at Karbala).
++ <span style="text-decoration: underline;">&lt;&lt;mukhtar&gt;&gt;</span> Mukhtar al-Thaqafi \\ (&#1575;&#1604;&#1605;&#1582;&#1578;&#1575;&#1585; &#1575;&#1604;&#1579;&#1602;&#1601;&#1610;) \\ Avenger of Karbala
+  <span style="text-decoration: underline;">[fn::Mukhtar ibn Abi Ubaid al-Thaqafi &#8212; led the uprising of 685&#8211;687 CE to avenge Hussain. He captured and killed Ubaydullah ibn Ziyad (the architect of Karbala) in 686 CE, and hunted down Shimr and other perpetrators. His forces were eventually defeated by Abd al-Malik. A complex figure: celebrated avenger in popular Shia piety, yet theologically controversial in some Shia scholarly circles for his messianic claims on behalf of Muhammad ibn al-Hanafiyya.]</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
+  + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad]]</a></span>
+    | :edge.color     | red  |
+    | :edge.style     | bold |
+    | :edge.arrowhead | dot  |
+  + <span style="text-decoration: underline;"><a href="shimr">[[shimr]]</a></span>
+    | :edge.color     | red  |
+    | :edge.style     | bold |
+    | :edge.arrowhead | dot  |
+
+#+begin_cluster Legend &#8212; Edge Types
+| style     | filled  |
+| fillcolor | #f5f5dc |
+| color     | #555555 |
+| fontsize  | 11      |
+#+node:
+| shape     | plaintext |
+| style     | filled    |
+| fillcolor | #f5f5dc   |
++ <span style="text-decoration: underline;">&lt;&lt;leg-marriage&gt;&gt;</span> Pink bidirectional arrow = Marriage
++ <span style="text-decoration: underline;">&lt;&lt;leg-mother&gt;&gt;</span> Green arrow = Motherhood
++ <span style="text-decoration: underline;">&lt;&lt;leg-killed&gt;&gt;</span> Red bold dot-arrow = Killed by / ordered
++ <span style="text-decoration: underline;">&lt;&lt;leg-ancestry&gt;&gt;</span> Dashed grey = Ancestry / descent
++ <span style="text-decoration: underline;">&lt;&lt;leg-parent&gt;&gt;</span> Brown solid = Direct parentage
++ <span style="text-decoration: underline;">&lt;&lt;leg-mention&gt;&gt;</span> Purple dashed = Historical mention
++ <span style="text-decoration: underline;">&lt;&lt;leg-imprisoned&gt;&gt;</span> Orange dashed = Imprisoned / politically oppressed
+#+end_cluster
+# Rank hints to reduce cross-cluster edge chaos
+#+rank: abdmalik almansur
+#+rank: hisham harun
+#+rank: mamun mutasim
+#+rank: mutawakkil mutamid
+<span style="color: #a0a1a7;">#+end_graph
+</span><span style="color: #a0a1a7;">#+RESULTS:</span>
+<span style="text-decoration: underline;"><a href="file:~/Downloads/karbala.png">file:~/Downloads/karbala.png</a></span>
+</pre>
+  </body>
+</html>
