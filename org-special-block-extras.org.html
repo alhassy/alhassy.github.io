@@ -803,7 +803,7 @@ mimic the usual ~src~-block syntax for argument passing to support special block
 For instance, here is a sample declaration.
 
 #+begin_src emacs-lisp :tangle no
-(org-defblock stutter (nil nil reps 2 &amp;context contents)
+(org-defblock stutter (&amp;key (reps 2) &amp;context contents)
   "Output the CONTENTS of the block REPS many times"
   (org-parse (s-repeat reps contents)))
 #+end_src
@@ -1292,14 +1292,13 @@ The PHRASE is taken literally; no regexp operators are recognised."
     <span style="font-weight: bold;">:END:</span>
 
  For export purposes, an Org link can be thought of as a string-valued function
- whose inputs are the link's label, description, and the export backend.  Since
- the input arguments are fixed, the ~org-deflink~ interface is similar to ~cl-defun~ in
- that it takes a name, (no input arguments), an optional docstring, and a body
- which may make use of (the unchanging input) names ~o-label, o-description,
- o-backend~. Moreover, after the documentation string, it may take an optional
- vector of display settings: Org links can be declared to look aesthetically
- pleasing within Emacs and to behave (via clicks/hovers/key-bindings) in
- meaningful ways.
+ whose inputs are the link's label, description, and the export backend.  Hence,
+ the ~org-deflink~ interface is similar to ~cl-defun~: it takes a name, an arglist
+ naming those inputs ---in that order, such as ~(label &amp;optional description backend)~---
+ an optional docstring, and a body which may make use of those names. Moreover,
+ after the documentation string, it may take an optional vector of display
+ settings: Org links can be declared to look aesthetically pleasing within Emacs
+ and to behave (via clicks/hovers/key-bindings) in meaningful ways.
 
 <span style="color: #a0a1a7;"> #+attr_html: :width 100% :height 100%</span>
  <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/org-deflink.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/org-deflink.png</a></span>
@@ -1310,13 +1309,13 @@ The PHRASE is taken literally; no regexp operators are recognised."
  (3) the HTML export of the Org buffer will render the label ~hello~ as capitalised
  red text.
 <span style="color: #a0a1a7;"> #+begin_src emacs-lisp :tangle no
-</span>(<span style="color: #a626a4;">org-deflink</span> shout
+</span>(<span style="color: #a626a4;">org-deflink</span> shout (label <span style="color: #c18401;">&amp;optional</span> description)
   <span style="color: #50a14f;">"Capitalise the link description, if any, otherwise capitalise the label.
 
 The link text appears as red bold in both Emacs and in HTML export."</span>
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"red"</span> <span style="color: #e44649;">:weight</span> bold)]
   (format <span style="color: #50a14f;">"&lt;span style=\"<a href="color:red">color:red</a>\"&gt; %s &lt;/span&gt;"</span>
-          (upcase (<span style="color: #a626a4;">or</span> o-description o-label))))
+          (upcase (<span style="color: #a626a4;">or</span> description label))))
 <span style="color: #a0a1a7;"> #+end_src
 </span> <span style="font-weight: bold;">:Example_uses:</span>
 
@@ -1443,7 +1442,7 @@ In particular, the use case &#8220;name:o-label&#8221; means that o-description 
 Example use:
 
    ;; In a Lisp buffer, press &#8220;C-x C-e&#8221; to load this definition
-   (org-deflink shout (upcase (or o-description o-label)))
+   (org-deflink shout (label &amp;optional description) (upcase (or description label)))
 
    ;; In an Org-buffer, press &#8220;C-c C-e h o&#8221; to see how this exports
    &lt;shout: hello world!&gt;
@@ -1460,14 +1459,14 @@ Here is a more complex, involved, example that makes use of
 renders as the word &#8220;hello&#8221; with a tooltip defining the word; the
 definition is obtained from the command line tool &#8216;wn&#8217;.
 
-  (org-deflink define
+  (org-deflink define (word)
     \"Define the given word using WordNet, along with synonyms and coordinate terms.\"
-    [:let (definition (shell-command-to-string (format \"wn %s -over -synsn -coorn\" o-label)))
+    [:let (definition (shell-command-to-string (format \"wn %s -over -synsn -coorn\" word)))
      :help-echo definition]
     (--&gt; definition
       (s-replace-regexp \"\\\\\\\"\" \"''\" it) ;; The presence of &#8216;\\\"&#8217; in tooltips breaks things, so omit them.
       (s-replace-regexp \"\\n\" \"&lt;br&gt;\" it)
-      (format \"&lt;abbr class=\\\"tooltip\\\" title=\\\"%s\\\"&gt;%s&lt;/abbr&gt;\" it o-label)))
+      (format \"&lt;abbr class=\\\"tooltip\\\" title=\\\"%s\\\"&gt;%s&lt;/abbr&gt;\" it word)))
 
 For HTML tooltips, see `org-osbe-html-export-preserving-whitespace'.
 
@@ -1618,18 +1617,18 @@ is displayed in Emacs Org buffers. The keys are as follows.
 
  Let's have some sanity tests...
  #+begin_src emacs-lisp :tangle tests.el :comments link
-(org-deflink shout
+(org-deflink shout (label &amp;optional description)
   "Capitalise the link description, if any, otherwise capitalise the label.
 
 The link text appears as red bold in both Emacs and in HTML export."
   [:face '(:foreground "red" :weight bold)
-   ;; :help-echo (org-link/shout o-label o-description 'html)
+   ;; :help-echo (org-link/shout label description 'html)
    :display 'full
    :keymap (C-m (message-box "hola"))
    :follow (message-box "%s and %s" pre current-prefix-arg)
    ]
   (format "&lt;span style=\"<span style="color: #ff0000;"><a href="color:red">color:red</a></span>\"&gt; %s &lt;/span&gt;"
-          (upcase (or o-description o-label))))
+          (upcase (or description label))))
 
 (deftest "org-deflink makes documented functions"
   [org-deflink]
@@ -1669,16 +1668,16 @@ number of the package, if possible/convenient. For instance,
 <span style="color: #a0a1a7;">#+begin_details "One possible arcane implementation"
 </span>
 #+begin_src emacs-lisp
-(org-deflink melpa
- "Produce a Melpa badge for a given pacakge O-LABEL, which links to the Melpa page.
-We try to get the package's version from a constant &#8220;&#10216;O-LABEL&#10217;-version&#8221; if it exists."
+(org-deflink melpa (package)
+ "Produce a Melpa badge for a given pacakge PACKAGE, which links to the Melpa page.
+We try to get the package's version from a constant &#8220;&#10216;PACKAGE&#10217;-version&#8221; if it exists."
  [:face '(:box "purple" :foreground "purple")]
  (format (concat "&lt;a href=\"<span style="text-decoration: underline;"><a href="https://melpa.org/#/%s">https://melpa.org/#/%s</a></span>\"&gt;"
                  "&lt;img alt=\"MELPA\" src=\"<span style="text-decoration: underline;"><a href="https://img.shields.io/badge/%s-%s-green?logo=Gnu-Emacs">https://img.shields.io/badge/%s-%s-green?logo=Gnu-Emacs</a></span>\"&gt;&lt;/img&gt;"
                  "&lt;/a&gt;")
-         o-label
-         (s-replace "<span style="text-decoration: underline;">_" "__</span>" (s-replace "-" "--" o-label)) ;; shields.io conventions
-         (or (ignore-errors (eval (intern (concat o-label "-version")))) "Melpa")))
+         package
+         (s-replace "<span style="text-decoration: underline;">_" "__</span>" (s-replace "-" "--" package)) ;; shields.io conventions
+         (or (ignore-errors (eval (intern (concat package "-version")))) "Melpa")))
 #+end_src
 
 <span style="color: #a0a1a7;">#+end_details
@@ -1689,25 +1688,25 @@ We try to get the package's version from a constant &#8220;&#10216;O-LABEL&#1021
      <span style="font-weight: bold;">:END:</span>
 
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-deflink</span> define
+</span>(<span style="color: #a626a4;">org-deflink</span> define (word)
   <span style="color: #50a14f;">"Define the given word using WordNet, along with synonyms and coordinate terms."</span>
-  [<span style="color: #e44649;">:help-echo</span> (shell-command-to-string (format <span style="color: #50a14f;">"wn %s -over -synsn -coorn"</span> o-label))]
-  (<span style="color: #a626a4;">--&gt;</span> o-label
+  [<span style="color: #e44649;">:help-echo</span> (shell-command-to-string (format <span style="color: #50a14f;">"wn %s -over -synsn -coorn"</span> word))]
+  (<span style="color: #a626a4;">--&gt;</span> word
     (shell-command-to-string (format <span style="color: #50a14f;">"wn %s -over -coorn"</span> it))
     (s-replace-regexp <span style="color: #50a14f;">"\\\""</span> <span style="color: #50a14f;">"''"</span> it) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The presence of &#8216;</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">\"</span><span style="color: #a0a1a7;">&#8217; in tooltips breaks things, so omit them.
 </span>    (s-replace-regexp <span style="color: #50a14f;">"\n"</span> <span style="color: #50a14f;">"&lt;br&gt;"</span> it)
-    (format <span style="color: #50a14f;">"&lt;abbr class=\"tooltip\" title=\"%s\"&gt;%s&lt;/abbr&gt;"</span> it o-label)))
+    (format <span style="color: #50a14f;">"&lt;abbr class=\"tooltip\" title=\"%s\"&gt;%s&lt;/abbr&gt;"</span> it word)))
 
 <span style="color: #a0a1a7;">#+end_src
 </span>
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-deflink</span> shout
+</span>(<span style="color: #a626a4;">org-deflink</span> shout (label)
   <span style="color: #50a14f;">"Capitalise the link description, if any, otherwise capitalise the label.
 
 The link text appears as red bold in both Emacs and in HTML export."</span>
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"red"</span> <span style="color: #e44649;">:weight</span> bold)]
   (format <span style="color: #50a14f;">"&lt;span style=\"<a href="color:red">color:red</a>\"&gt; %s &lt;/span&gt;"</span>
-          (upcase o-label)))
+          (upcase label)))
 <span style="color: #a0a1a7;">  #+end_src
 </span>
 
@@ -1825,7 +1824,8 @@ Example declaration, with all possible features shown:
    (setq angry-red '(:foreground \"red\" :weight bold))
 
    (org-defblock remark
-     (editor \"Editor Remark\" :face angry-red) (color \"red\" signoff \"\")
+     (&amp;optional (editor \"Editor Remark\") &amp;key (color \"red\") (signoff \"\")
+      :link [:face angry-red] &amp;context backend contents)
      \"Top level (HTML &amp; LaTeX) editorial remarks; in Emacs they're angry red.\"
      (format (if (equal backend 'html)
                \"&lt;strong style=\\\"color: %s;\\\"&gt;&#10214;%s:  %s%s&#10215;&lt;/strong&gt;\"
@@ -1869,11 +1869,11 @@ Three example uses:
        (list
       ,(org--create-defmethod-of-defblock name docstring (plist-get kwds :backend) kwds body)
        ;; &#8680; The link type support
-      (eval (backquote (org-deflink ,name
-                   ,(vconcat `[:help-echo (format "%s:%s\n\n%s" (quote ,name) o-label ,docstring)] (or link-display (cdr (assoc name org--block--link-display))))
+      (eval (backquote (org-deflink ,name (label &amp;optional description backend)
+                   ,(vconcat `[:help-echo (format "%s:%s\n\n%s" (quote ,name) label ,docstring)] (or link-display (cdr (assoc name org--block--link-display))))
                    ;; s-replace-all `((,(format "@@%s:" backend) . "") ("#+end_export" . "") (,(format "#+begin_export %s" backend) . ""))
                    (s-replace-regexp "@@" ""
-                                     (,(intern (format "org-block/%s" name)) o-backend (or o-description o-label) o-label :o-link? t)))))))))
+                                     (,(intern (format "org-block/%s" name)) backend (or description label) label :o-link? t)))))))))
 
 ;; WHERE ...
 
@@ -2257,7 +2257,7 @@ Perhaps an example will clarify things ...
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">it takes two arguments: &#8220;color&#8221; and &#8220;signoff&#8221;
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">with default values being "red" and "".
 </span>(<span style="color: #a626a4;">org-defblock</span> rremark
-  (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"red"</span> signoff <span style="color: #50a14f;">""</span> <span style="color: #c18401;">&amp;context</span> backend contents)
+  (<span style="color: #c18401;">&amp;optional</span> (editor <span style="color: #50a14f;">"Editor Remark"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"red"</span>) (signoff <span style="color: #50a14f;">""</span>) <span style="color: #c18401;">&amp;context</span> backend contents)
   (vector <span style="color: #e44649;">:face</span> angry-red)
   <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) editorial remarks; in Emacs they're angry red."</span>
   (format (<span style="color: #a626a4;">if</span> (equal backend 'html)
@@ -2316,7 +2316,7 @@ has more bells and whistles &#8230; keep reading ;-)
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">it takes two arguments: &#8220;color&#8221; and &#8220;signoff&#8221;
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">with default values being "red" and "".
 </span>(<span style="color: #a626a4;">org-defblock</span> rremark
-  (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"red"</span> signoff <span style="color: #50a14f;">""</span> <span style="color: #c18401;">&amp;context</span> backend contents)
+  (<span style="color: #c18401;">&amp;optional</span> (editor <span style="color: #50a14f;">"Editor Remark"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"red"</span>) (signoff <span style="color: #50a14f;">""</span>) <span style="color: #c18401;">&amp;context</span> backend contents)
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"red"</span> <span style="color: #e44649;">:weight</span> bold)]
   <span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">:please-preserve-new-lines
 </span>  <span style="color: #50a14f;">"Top level (HTML &amp; LaTeX) editorial remarks; in Emacs they're angry red."</span>
@@ -2400,7 +2400,7 @@ between conseqeuctive blockcalls.
 
 A full example:
 
-    (org-defblock nesting (name nil)
+    (org-defblock nesting (&amp;optional name &amp;context raw-contents)
       \"Show text in a box, within details, which contains a box.\"
 
       (org-thread-blockcall raw-contents
@@ -2434,8 +2434,9 @@ text before seeing the answer ----this works well in HTML, not so in LaTeX.
 
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">org-defblock</span> solution
-  (title <span style="color: #50a14f;">"Solution"</span> reprimand <span style="color: #50a14f;">"Did you actually try? Maybe see the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">hints</span><span style="color: #50a14f;">&#8217; above!"</span>
-   really <span style="color: #50a14f;">"Solution, for real"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
+  (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Solution"</span>)
+   <span style="color: #c18401;">&amp;key</span> (reprimand <span style="color: #50a14f;">"Did you actually try? Maybe see the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">hints</span><span style="color: #50a14f;">&#8217; above!"</span>) (really <span style="color: #50a14f;">"Solution, for real"</span>)
+   <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Show the answers to a problem, but with a reprimand in case no attempt was made."</span>
   (<span style="color: #a626a4;">org-thread-blockcall</span> raw-contents
                     (details really <span style="color: #e44649;">:title-color</span> <span style="color: #50a14f;">"red"</span>)
@@ -2617,7 +2618,7 @@ woah, I'm repeated 5 times!woah, I'm repeated 5 times!woah, I'm repeated 5 times
 <span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
 <span style="color: #a0a1a7;">#+begin_solution
 </span>#+begin_src emacs-lisp
-(org-defblock stutter (reps 2 &amp;context contents)
+(org-defblock stutter (&amp;optional (reps 2) &amp;context contents)
   "Output the CONTENTS of the block REPS many times"
   (-let [num (if (numberp reps) reps (string-to-number reps))]
     (s-repeat num contents)))
@@ -2675,7 +2676,7 @@ Genesis 41-17: Firaun said unto Yusuf, <span style="font-style: italic;">/In my 
 
 <span style="color: #a0a1a7;">#+begin_solution
 </span>#+begin_src emacs-lisp
-(org-defblock rename (list "" &amp;context contents)
+(org-defblock rename (&amp;optional (list "") &amp;context contents)
   "Perform the given LIST of substitutions on the text.
 The LIST is a comma separated list of &#8216;to&#8217; separated symbols.
 In a link, no quotes are needed.
@@ -2785,7 +2786,7 @@ Whereas, the following begins with ~#+begin_spoiler orange~ ...
 --------------------------------------------------------------------------------
 
 #+begin_src emacs-lisp
-(org-defblock spoiler (color "grey" left "((" right "))" &amp;context backend contents)
+(org-defblock spoiler (&amp;optional (color "grey") &amp;key (left "((") (right "))") &amp;context backend contents)
   "Hide text enclosed in double parens ((like this)) as if it were spoilers.
    LEFT and RIGHT may be other kinds of delimiters.
    The main argument, COLOR, indicates which color to use.
@@ -2893,7 +2894,7 @@ Possibly using ID's as the current working solution above.
                 conclusion
                 (if named? (format "[\\text{%s}]" name) "")))))))
 
-(org-defblock tree (main-arg &amp;context raw-contents)
+(org-defblock tree (&amp;context raw-contents)
   "Write a proof tree using Org-lists.
 
 To get
@@ -3224,7 +3225,7 @@ Bye!
 <span style="color: #a0a1a7;">#</span>
 <span style="color: #a0a1a7;">#+begin_src elisp :tangle "tests.el"
 </span>(<span style="color: #a626a4;">org-defblock</span> scream
-  (speaker <span style="color: #50a14f;">"Default_Speaker"</span>)
+  (<span style="color: #c18401;">&amp;optional</span> (speaker <span style="color: #50a14f;">"Default_Speaker"</span>))
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"green"</span> <span style="color: #e44649;">:weight</span> bold)]
   <span style="color: #50a14f;">"Capitalise the contents! Seen in red bold in Emacs!"</span>
   (format <span style="color: #50a14f;">"%s: %s"</span> speaker (upcase contents)))
@@ -3288,7 +3289,7 @@ Consider the source and how it exports ...
 This could be declared via ...
 <span style="color: #a0a1a7;">#+begin_src elisp :tangle no
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Declare the new defblock, along with how it should be displayed as an org link
-</span>(<span style="color: #a626a4;">org-defblock</span> shout0 (speaker)
+</span>(<span style="color: #a626a4;">org-defblock</span> shout0 (<span style="color: #c18401;">&amp;optional</span> speaker)
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"orange"</span> <span style="color: #e44649;">:weight</span> bold) <span style="color: #e44649;">:display</span> 'full]
   <span style="color: #50a14f;">"Capitalise the contents! Seen in orange bold in Emacs!"</span>
   (<span style="color: #a626a4;">pcase</span> backend
@@ -3305,19 +3306,19 @@ declaring a new defblock in <span style="font-style: italic;">/your own code/</s
 <span style="color: #a0a1a7;">#+name: startup-code</span>
 <span style="color: #a0a1a7;">#+begin_src elisp :tangle no
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Declare the new defblock, along with how it should be displayed as an org link
-</span>(<span style="color: #a626a4;">org-defblock</span> shout (speaker)
+</span>(<span style="color: #a626a4;">org-defblock</span> shout (<span style="color: #c18401;">&amp;optional</span> speaker)
   [<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"orange"</span> <span style="color: #e44649;">:weight</span> bold) <span style="color: #e44649;">:display</span> 'full]
   <span style="color: #50a14f;">"Capitalise the contents! Seen in orange bold in Emacs!"</span>)
 
 
 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Specialise its definition for when we export to the HTML backend
-</span>(<span style="color: #a626a4;">org-defblock</span> shout (speaker nil <span style="color: #e44649;">:backend</span> html)
+</span>(<span style="color: #a626a4;">org-defblock</span> shout (<span style="color: #c18401;">&amp;optional</span> speaker <span style="color: #e44649;">:backend</span> html)
    <span style="color: #50a14f;">"To shout is to be bold; i.e., strong."</span>
   (format <span style="color: #50a14f;">"%s: &lt;strong&gt;%s&lt;/strong&gt;"</span> speaker contents))
 
 
 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Specialise its definition for when we export to the LaTeX backend
-</span>(<span style="color: #a626a4;">org-defblock</span> shout (speaker nil <span style="color: #e44649;">:backend</span> latex)
+</span>(<span style="color: #a626a4;">org-defblock</span> shout (<span style="color: #c18401;">&amp;optional</span> speaker <span style="color: #e44649;">:backend</span> latex)
   <span style="color: #50a14f;">"Shouting is a what LARGE brutes do"</span>
   (format <span style="color: #50a14f;">"%s: \\emph{\\LARGE %s}"</span> speaker contents))
 <span style="color: #a0a1a7;">#+end_src
@@ -3370,8 +3371,7 @@ Reading in glare?  <span style="background-color: #ffffff;"><a href="palette:">P
   <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">switches</a></span>.
 - <span style="text-decoration: underline;"><a href="badge:Hello|World">badge:Hello|World</a></span> Use <span style="font-weight: bold;">*badge-style links*</span> to embed GitHub stars, Reddit subs, or custom  project metadata via =shields.io=.
 - <span style="font-weight: bold;">*&#128736; Use </span><span style="font-weight: bold;">=org-defblock=</span><span style="font-weight: bold;">, </span><span style="font-weight: bold;">=org-deflink=</span><span style="font-weight: bold;"> and </span><span style="font-weight: bold;">=org-deftag=*</span> ---Org, extended as one extends Lisp:
-  each is declared like a ~cl-defun~, with =&amp;optional= and =&amp;key= arguments; or, for the
-  terse-minded, with a flattened arglist.
+  each is declared like a ~cl-defun~, with =&amp;optional= and =&amp;key= arguments.
   + Create powerful custom blocks with ~org-defblock~: Define a block once and export to
     LaTeX <span style="font-style: italic;">/and/</span> HTML effortlessly. With <span style="font-style: italic;">/header-args/</span> support like
     =:color red :signoff "Thanks!"= for locally customised exports. Each block is also a
@@ -3891,28 +3891,28 @@ or the useful &#12308;<a href="kbd:M-s h .">M-s h .</a>&#12309;.
 <span style="color: #a0a1a7;">#+begin_details Implementation
 </span>
 #+begin_src emacs-lisp
-(org-deflink kbd
-  "Show keysequence O-LABEL in a nice grey button-like font, along with a tooltip of its documentation, if any.
+(org-deflink kbd (keys &amp;optional description backend)
+  "Show keysequence KEYS in a nice grey button-like font, along with a tooltip of its documentation, if any.
 
 Such links do not get folded in <span style="text-decoration: underline;"><a href="bracket">bracket</a></span> style, and are rendered as buttons within Emacs.
 
-Moreover, O-LABEL may use &#8216;_&#8217; in-lieu of spaces or <span style="text-decoration: underline;"><a href="bracket">bracket</a></span> link notation.
+Moreover, KEYS may use &#8216;_&#8217; in-lieu of spaces or <span style="text-decoration: underline;"><a href="bracket">bracket</a></span> link notation.
 
 Examples:
     &#12308;<a href="kbd:C-x C-s">C-x C-s</a>&#12309;
   &#8776; &#12308;<a href="kbd: C-x C-s">C-x C-s</a>&#12309;
   &#8776; &#12308;<a href="kbd:C-x_C-s">C-x</a> <a href="kbd:C-x_C-s">C-</a>s&#12309;"
   [:display 'full
-   :let (the-label  (s-trim (s-replace "_" " " o-label))
+   :let (the-label  (s-trim (s-replace "_" " " keys))
          lisp-func  (ignore-errors (cl-second (help--analyze-key (kbd the-label) the-label)))
-         tooltip    (or o-description (ignore-errors (documentation lisp-func)) "")
+         tooltip    (or description (ignore-errors (documentation lisp-func)) "")
          tooltip?   (not (equal tooltip ""))
          style      (if tooltip? "border-color: red" "")
          keystrokes (format "&lt;kbd style=\"%s\"&gt;%s&lt;/kbd&gt;" style the-label))
-   ;; o-description is always nil when it comes to deciding the :face.
+   ;; description is always nil when it comes to deciding the :face.
    :face (list :inherit 'custom-button :box (if tooltip? "red" t))
    :help-echo (format "%s &#8759; %s\n%s" the-label (or lisp-func "") tooltip)]
-  (if (equal o-backend 'latex)
+  (if (equal backend 'latex)
       (format "\\texttt{%s}" the-label)
     (if tooltip?
         ;; The style=&#8943; is to remove the underlining caused by &lt;abbr&gt;.
@@ -6184,7 +6184,10 @@ margins, so there our margin notes, tooltips, and Org's footnotes are beamer's o
 Mind the gap.
 #+end_note
 <span style="color: #a0a1a7;">  #+end_example
-</span>
+</span>  As with ~cl-defun~, a header argument the block does not declare ---say, a misspelt
+  =:colour red=--- is an export-time error, unless the arglist writes =&amp;allow-other-keys=, as
+  the package's own blocks do; so, =()= takes no arguments at all.
+
   For any backend derived from HTML or LaTeX ---org-reveal's, ox-hugo's, ox-gfm's, beamer's, or
   our own--- ~backend~ is =html= or =latex=, so one rendering serves them all. To single one out,
   we ask Org's own ~org-export-current-backend~; by way of example, a docsy alert in Hugo:
@@ -6303,12 +6306,6 @@ Mind the gap.
 </span>  where a REGEXP that is a function is a font-lock matcher, and a face that is a function is called,
   with the match data at hand, for the face.
 
-  <span style="font-style: italic;">/Convenience:/</span> For the terse-minded, the arglist may be flattened into the main argument
-  and its default, followed by key-value pairs. The block above is then
-<span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-defblock</span> note (title <span style="color: #50a14f;">"Note"</span> color <span style="color: #50a14f;">"teal"</span>) &#8230;)
-<span style="color: #a0a1a7;">  #+end_src
-</span>
   The full story is at =C-h o org-defblock=.
 
 <span style="color: #8b4513; font-weight: bold;">** Make your own links with </span><span style="color: #8b4513; font-weight: bold;">=org-deflink=</span>
@@ -6331,18 +6328,11 @@ Mind the gap.
 </span>
   Then =shout:hello= and =<span style="text-decoration: underline;"><a href="shout:hello">[[shout:hello][hey there]]</a></span>= export as <span style="font-weight: bold;">*HELLO*</span> and <span style="font-weight: bold;">*HEY THERE*</span>.
   The arglist names the label, description, and export backend, in that order; any may be
-  omitted from the end, and =(description "&#8230;")= gives a default. Besides =:export=, the
+  omitted from the end ---a link that needs none has the arglist =()=--- and =(description "&#8230;")=
+  gives a default. Besides =:export=, the
   keys =:face=, =:help-echo=, =:follow=, =:keymap=, =:display= and =:let= customise the link
   within Emacs; =C-h o org-deflink= has the details.
 
-  <span style="font-style: italic;">/Convenience:/</span> The arglist may be omitted, whence the anaphoric names ~o-label~,
-  ~o-description~ and ~o-backend~ are used instead:
-<span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-deflink</span> shout
-  <span style="color: #50a14f;">"Shout the description, else the label."</span>
-  <span style="color: #e44649;">:export</span> (upcase (<span style="color: #a626a4;">or</span> o-description o-label)))
-<span style="color: #a0a1a7;">  #+end_src
-</span>
 <span style="color: #8b4513; font-weight: bold;">** Tags are functions of Org sections: </span><span style="color: #8b4513; font-weight: bold;">=org-deftag=</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">tags-are-functions-of-org-sections</span>
@@ -6375,9 +6365,6 @@ Mind the gap.
 :END:
 <span style="color: #a0a1a7;">  #+end_example
 </span>  When both the tag and a property give an argument, the tag wins.
-
-  <span style="font-style: italic;">/Convenience:/</span> The arglist may be flattened into name-default pairs, all positional;
-  ~(org-deftag quote (color "black") &#8230;)~ is the above, sans =cite=.
 
   The body runs at export time, with point where the heading used to be ---it has been
   erased, along with its property drawer, so we reinsert ~o-heading~ if we want it. The body may mention
@@ -6671,7 +6658,7 @@ e.g., <a href="doc:org-block/color">color</a> and <a href="doc:org-block/teal">t
 
 (cl-loop for colour in org--named-colors
          do (eval `(org-defblock ,colour
-                     (the-color "black" &amp;context backend contents)
+                     (&amp;optional (the-color "black") &amp;context backend contents)
                      (vector :face `(:foreground ,(format "%s" (quote ,colour))))
                      ,(format "Show text in %s color." colour)
                      (let ()
@@ -6738,7 +6725,7 @@ Let's have some sanity tests...
 
     #+begin_src emacs-lisp
 (org-defblock color
-  (color black &amp;context backend contents)
+  (&amp;optional (color black) &amp;context backend contents)
   (vector :face (lambda (colour) `(:foreground ,(format "%s" colour))))
   "Format text according to a given COLOR, which is black by default."
   (format (pcase backend
@@ -6749,7 +6736,7 @@ Let's have some sanity tests...
 
 [Posterity] Old version which did <span style="font-style: italic;">/not/</span> allow ~wombo~ colour:
     #+begin_src emacs-lisp :tangle no
-(org-defblock color (color black    :face (lambda (colour)
+(org-defblock color (&amp;optional (color black) :face (lambda (colour)
            (if (member (intern colour) org--named-colors)
                `(:foreground ,(format "%s" colour))
              `(:height 300
@@ -6922,7 +6909,7 @@ Let's have some sanity tests...
   "Should editor comments be shown in the output or not.")
 
 (org-defblock remark
-      (editor "Editor Remark" color "black" signoff "" strong nil &amp;context backend contents)
+      (&amp;optional (editor "Editor Remark") &amp;key (color "black") (signoff "") strong &amp;context backend contents)
 ; :inline-please__see_margin_block_for_a_similar_incantation ; &#8658; crashes!
 [:face '(:foreground "red" :weight bold)]
 "Format CONTENTS as an first-class editor comment according to BACKEND.
@@ -7576,16 +7563,16 @@ E.g., to create a badge named &#8220;go&#8221;:
 Then the following exports nicely from an Org file:
 
      go:key|value|blue||gnu-emacs"
-  `(org-deflink ,(intern name)
+  `(org-deflink ,(intern name) (label &amp;optional _description backend)
     "Export a Shields.io badge, with general Syntax:  <span style="text-decoration: underline;"><a href="badge:key|value|colour|url|logo">badge:key|value|colour|url|logo</a></span>.
 Precise details for each argument are shown in the Emacs tooltip for this badge."
     [:display 'full
      :follow (--&gt; (s-split "|" path)
-               (or (nth 3 it) o-label)
+               (or (nth 3 it) label)
                (browse-url it))
     :help-echo
-      (-let [ (key value color url logo)  (mapcar #'s-trim (s-split "|" o-label)) ]
-        (lf-string "${o-label}
+      (-let [ (key value color url logo)  (mapcar #'s-trim (s-split "|" label)) ]
+        (lf-string "${label}
                     \nGeneral Syntax:  <span style="text-decoration: underline;"><a href="badge:key|value|colour|url|logo">badge:key|value|colour|url|logo</a></span>
                            Key    : ${key}
                            Value  : ${(or value \"\")}
@@ -7621,23 +7608,23 @@ Precise details for each argument are shown in the Emacs tooltip for this badge.
                    See also: <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras#Common-Project-Badges">https://alhassy.com/org-special-block-extras#Common-Project-Badges</a></span>"))]
 
     ;; :export #'org--link--badge
-    (if (equal o-backend 'latex) ""
-      (-let [ (key value color url logo)  (mapcar #'s-trim (s-split "|" o-label)) ]
+    (if (equal backend 'latex) ""
+      (-let [ (key value color url logo)  (mapcar #'s-trim (s-split "|" label)) ]
         (format
-         (pcase ,(if social-shields-name `(format ,social-url o-label) 'url)
+         (pcase ,(if social-shields-name `(format ,social-url label) 'url)
            ("here" (format "&lt;a id=\"%s\" href=\"#%s\"&gt;%%s&lt;/a&gt;" (s-replace "%" "%%" key) (s-replace "%" "%%" key)))
            (""      "%s") ;; e.g., <span style="text-decoration: underline;"><a href="badge:key|value|color||logo">badge:key|value|color||logo</a></span>
            ('nil    "%s") ;; e.g., <span style="text-decoration: underline;"><a href="badge:key|value|color">badge:key|value|color</a></span>
            (_ (format "&lt;a href=\"%s\"&gt;%%s&lt;/a&gt;"
                       (s-replace "%" "%%"
                                  ,(if social-shields-name
-                                      `(format ,social-url o-label)
+                                      `(format ,social-url label)
                                     'url)))))
          ,(if social-shields-name
               (if social-shields-url
-                  `(format ,social-shields-url o-label)
+                  `(format ,social-shields-url label)
                 `(format "&lt;img src=\"<span style="text-decoration: underline;"><a href="https://img.shields.io/%s/%s?style=social">https://img.shields.io/%s/%s?style=social</a></span>\"&gt;"
-                         ,social-shields-name o-label))
+                         ,social-shields-name label))
             '(format "&lt;img src=\"<span style="text-decoration: underline;"><a href="https://img.shields.io/badge/%s-%s-%s?logo=%s">https://img.shields.io/badge/%s-%s-%s?logo=%s</a></span>\"&gt;"
                      (url-hexify-string (s-replace "-" "--" key))
                      (url-hexify-string (s-replace "-" "--" (or value "")))
@@ -9123,19 +9110,19 @@ time. E.g., upon export =<a href="doc:wombo">doc:wombo</a>= will produce a no-en
 <span style="color: #a0a1a7;">#+begin_details &#8216;doc&#8217; link implementation
 </span>#+name: startup-code
 #+begin_src emacs-lisp
-(org-deflink doc
- "Export O-LABEL as itself, or as the provided O-DESCRIPTION,
+(org-deflink doc (label &amp;optional description backend)
+ "Export LABEL as itself, or as the provided DESCRIPTION,
  along with a tooltip that shows the user's
- documentation-glossary for o-LABEL and using that entry's name
- when no O-DESCRIPTION is provided."
- [:let (entry (org-docs-get o-label)
+ documentation-glossary for LABEL and using that entry's name
+ when no DESCRIPTION is provided."
+ [:let (entry (org-docs-get label)
         name (cl-first entry)
         docs (cl-second entry)
-        display-name (or o-description name))
-  :help-echo (format "[%s] %s :: %s" o-label name docs)
+        display-name (or description name))
+  :help-echo (format "[%s] %s :: %s" label name docs)
   :face '(custom-button)]
-   (add-to-list 'org--docs-actually-used (list o-label name docs))
-   (pcase o-backend
+   (add-to-list 'org--docs-actually-used (list label name docs))
+   (pcase backend
      (`html  (format "&lt;abbr class=\"tooltip\" title=\"%s\"&gt;%s&lt;/abbr&gt;"
                      (org-osbe-html-export-preserving-whitespace docs)
                      display-name))
@@ -9210,8 +9197,8 @@ the problem of <span style="font-weight: bold;">*producing*</span> documentation
 <span style="color: #a0a1a7;">#+begin_details &#8216;documentation&#8217; Implementation: An Example of Mandatory Arguments and Using &#8216;raw-contents&#8217;
 </span>#+BEGIN_SRC emacs-lisp
 (org-defblock documentation
-  (name (error "Documentation block: Name must be provided")
-       label nil show nil color "green" &amp;context raw-contents)
+  (&amp;optional (name (error "Documentation block: Name must be provided")) &amp;key label show (color "green")
+   &amp;context raw-contents)
   "Register the dictionary entries in CONTENTS to the dictionary variable.
 
 The dictionary variable is &#8216;org--docs&#8217;.
@@ -9463,7 +9450,7 @@ With that in-hand, let's define our theorem block.
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span>(<span style="color: #a626a4;">setq</span> my/theorem-counter 0)
 
-(<span style="color: #a626a4;">org-defblock</span> theorem (title <span style="color: #c18401;">&amp;context</span> raw-contents)
+(<span style="color: #a626a4;">org-defblock</span> theorem (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Show block contents prefixed with &#8220;Theorem &#119951;&#8221;, where the &#119951;umbering automatically increments."</span>
   (format <span style="color: #50a14f;">"&lt;div class=\"theorem\"&gt;&lt;b&gt;Theorem %s%s.&lt;/b&gt;&amp;nbsp;%s&lt;/div&gt;"</span>
           (<span style="color: #a626a4;">cl-incf</span> my/theorem-counter)
@@ -9565,7 +9552,7 @@ Then, provide support for a new type of special block, say re-using the ~src~
 blocks that, say, folds up all such blocks in HTML export, by declaring the
 following.
 <span style="color: #a0a1a7;">#+BEGIN_SRC emacs-lisp :tangle no
-</span>(<span style="color: #a626a4;">org-defblock</span> src (lang nil title nil exports nil file nil <span style="color: #c18401;">&amp;context</span> raw-contents)
+</span>(<span style="color: #a626a4;">org-defblock</span> src (<span style="color: #c18401;">&amp;optional</span> lang <span style="color: #c18401;">&amp;key</span> title exports file <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Fold-away all &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">src</span><span style="color: #50a14f;">&#8217; blocks as &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">&lt;details&gt;</span><span style="color: #50a14f;">&#8217; HTML export.
 If a block has a &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">:title</span><span style="color: #50a14f;">&#8217;, use that to title the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">&lt;details&gt;</span><span style="color: #50a14f;">&#8217;."</span>
   (format <span style="color: #50a14f;">"&lt;details&gt; &lt;summary&gt; %s &lt;/summary&gt; &lt;pre&gt; %s &lt;/pre&gt;&lt;/details&gt;"</span>

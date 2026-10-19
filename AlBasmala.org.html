@@ -284,7 +284,7 @@ that section's text; =[:subsections ignore]= leaves any subsection outside the b
 choking on a heading the box cannot hold.
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A section tagged :abstract: is boxed too; its subsections stay outside the box, as a block cannot hold a heading.
-</span>(<span style="color: #a626a4;">org-defblock</span> abstract (main nil <span style="color: #e44649;">:tag</span> [<span style="color: #e44649;">:subsections</span> ignore] <span style="color: #c18401;">&amp;context</span> contents) nil
+</span>(<span style="color: #a626a4;">org-defblock</span> abstract (<span style="color: #e44649;">:tag</span> [<span style="color: #e44649;">:subsections</span> ignore] <span style="color: #c18401;">&amp;context</span> contents)
   <span style="color: #50a14f;">"Render a block in a slightly narrowed blueish box, titled \"Abstract\".
 
    Supported backends: HTML. "</span>
@@ -2357,18 +2357,18 @@ broken image.  <span style="text-decoration: underline;"><a href="file:arabic-ro
 
 <span style="color: #a0a1a7;">#+name: arabic-link</span>
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp
-</span>(<span style="color: #a626a4;">org-deflink</span> arabic
+</span>(<span style="color: #a626a4;">org-deflink</span> arabic (label)
  <span style="color: #50a14f;">"Show one of 6 hardcoded phrases as a small inline image."</span>
  (<span style="color: #a626a4;">-let</span> [url
-        (<span style="color: #a626a4;">pcase</span> o-label
+        (<span style="color: #a626a4;">pcase</span> label
           (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-take-a-break.png">https://alhassy.com/resources/iraqi-sign-take-a-break.png</a>"</span>)
           (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-yes.png">https://alhassy.com/resources/iraqi-sign-yes.png</a>"</span>)
           (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-no.png">https://alhassy.com/resources/iraqi-sign-no.png</a>"</span>)
           (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-agree.png">https://alhassy.com/resources/iraqi-sign-agree.png</a>"</span>)
           (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-disagree.png">https://alhassy.com/resources/iraqi-sign-disagree.png</a>"</span>)
           (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-question.png">https://alhassy.com/resources/iraqi-sign-question.png</a>"</span>)
-          (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"<a href="arabic:%s">arabic:%s</a> is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> o-label)))]
-   (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url o-label url)))
+          (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"<a href="arabic:%s">arabic:%s</a> is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> label)))]
+   (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url label url)))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 The Arabic articles cite =<a href="doc:arabic-root">doc:arabic-root</a>= and friends, from <span style="text-decoration: underline;"><a href="file:arabic-glossary.org">the glossary of Arabic linguistic terms</a></span>;
@@ -3924,7 +3924,7 @@ A quick way to embed clickable images, along with tooltip credits and other conf
   <span style="color: #e44649;">:config</span> (org-special-block-extras-mode t))
 
 
-(<span style="color: #a626a4;">org-deflink</span> image
+(<span style="color: #a626a4;">org-deflink</span> image (label)
              <span style="color: #50a14f;">"Provide a quick way to insert images along with credits via tooltips.
 
 Example usage:
@@ -3933,8 +3933,7 @@ Example usage:
 
 <a href="image:URL|WIDTH|HEIGHT|CENTER?|CREDIT">image:URL|WIDTH|HEIGHT|CENTER?|CREDIT</a>?
 "</span>
-<span style="color: #a0a1a7; font-weight: bold;">;;             </span><span style="color: #a0a1a7;">(upcase (or o-description o-label))
-</span>  (<span style="color: #a626a4;">-let</span> [(image width height center? credit?) (s-split <span style="color: #50a14f;">"|"</span> o-label)]
+  (<span style="color: #a626a4;">-let</span> [(image width height center? credit?) (s-split <span style="color: #50a14f;">"|"</span> label)]
     (<span style="color: #a626a4;">let</span> ((it (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;"</span>
                       image
@@ -4160,17 +4159,17 @@ tree.
 
 <span style="color: #a0a1a7;">#+begin_src emacs-lisp :exports code
 </span>
-(<span style="color: #a626a4;">org-deflink</span> card
+(<span style="color: #a626a4;">org-deflink</span> card (label)
   <span style="color: #50a14f;">"Show one of 6 hardcoded phrases as a small inline image."</span>
   (<span style="color: #a626a4;">-let</span> [url
-         (<span style="color: #a626a4;">pcase</span> o-label
+         (<span style="color: #a626a4;">pcase</span> label
            (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-take-a-break.png">https://alhassy.com/resources/iraqi-sign-take-a-break.png</a>"</span>)
            (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-yes.png">https://alhassy.com/resources/iraqi-sign-yes.png</a>"</span>)
            (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-no.png">https://alhassy.com/resources/iraqi-sign-no.png</a>"</span>)
            (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-agree.png">https://alhassy.com/resources/iraqi-sign-agree.png</a>"</span>)
            (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-disagree.png">https://alhassy.com/resources/iraqi-sign-disagree.png</a>"</span>)
            (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"<a href="https://alhassy.com/resources/iraqi-sign-question.png">https://alhassy.com/resources/iraqi-sign-question.png</a>"</span>))]
-    (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url o-label url)))
+    (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url label url)))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 <span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #a626a4; font-weight: bold;">  Ideas</span>

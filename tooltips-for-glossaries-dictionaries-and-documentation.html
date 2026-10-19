@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:57 -->
+<!-- 2026-10-19 Mon 22:06 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tooltips for Glossaries, Dictionaries, and Documentation</title>
@@ -1763,19 +1763,19 @@ time. E.g., upon export <code>doc:wombo</code> will produce a no-entry error.
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">‘doc’ link implementation</font></strong></summary>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp" id="startup-code"><code>(<span style="color: #a626a4;">org-deflink</span> doc
- <span style="color: #50a14f;">"Export O-LABEL as itself, or as the provided O-DESCRIPTION,
+<pre class="src src-emacs-lisp" id="startup-code"><code>(<span style="color: #a626a4;">org-deflink</span> doc (label <span style="color: #c18401;">&amp;optional</span> description backend)
+ <span style="color: #50a14f;">"Export LABEL as itself, or as the provided DESCRIPTION,
  along with a tooltip that shows the user's
- documentation-glossary for o-LABEL and using that entry's name
- when no O-DESCRIPTION is provided."</span>
- [<span style="color: #e44649;">:let</span> (entry (org-docs-get o-label)
+ documentation-glossary for LABEL and using that entry's name
+ when no DESCRIPTION is provided."</span>
+ [<span style="color: #e44649;">:let</span> (entry (org-docs-get label)
         name (cl-first entry)
         docs (cl-second entry)
-        display-name (<span style="color: #a626a4;">or</span> o-description name))
-  <span style="color: #e44649;">:help-echo</span> (format <span style="color: #50a14f;">"[%s] %s :: %s"</span> o-label name docs)
+        display-name (<span style="color: #a626a4;">or</span> description name))
+  <span style="color: #e44649;">:help-echo</span> (format <span style="color: #50a14f;">"[%s] %s :: %s"</span> label name docs)
   <span style="color: #e44649;">:face</span> '(custom-button)]
-   (add-to-list 'org--docs-actually-used (list o-label name docs))
-   (<span style="color: #a626a4;">pcase</span> o-backend
+   (add-to-list 'org--docs-actually-used (list label name docs))
+   (<span style="color: #a626a4;">pcase</span> backend
      (`html  (format <span style="color: #50a14f;">"&lt;abbr class=\"tooltip\" title=\"%s\"&gt;%s&lt;/abbr&gt;"</span>
                      (org-osbe-html-export-preserving-whitespace docs)
                      display-name))
@@ -1850,8 +1850,8 @@ the problem of <b>producing</b> documentation entries with a block type interfac
 <summary><strong><font face="Courier" size="3" color="green">‘documentation’ Implementation: An Example of Mandatory Arguments and Using ‘raw-contents’</font></strong></summary>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> documentation
-  (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)
-       label nil show nil color <span style="color: #50a14f;">"green"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
+  (<span style="color: #c18401;">&amp;optional</span> (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)) <span style="color: #c18401;">&amp;key</span> label show (color <span style="color: #50a14f;">"green"</span>)
+   <span style="color: #c18401;">&amp;context</span> raw-contents)
   <span style="color: #50a14f;">"Register the dictionary entries in CONTENTS to the dictionary variable.
 
 The dictionary variable is &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org--docs</span><span style="color: #50a14f;">&#8217;.

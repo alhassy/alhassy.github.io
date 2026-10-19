@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:57 -->
+<!-- 2026-10-19 Mon 22:06 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: demos that are tests, rather than docs</title>
@@ -658,14 +658,14 @@ causes ‘font-lock-specified-p’ to return non-nil, which means
 the major mode specifies support for Font Lock.</pre></template></abbr>
 </p></li>
 </ol> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> kbd
-  <span style="color: #50a14f;">"Show keysequence O-LABEL in a nice grey button-like font, along with a tooltip of its documentation, if any.
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> kbd (keys <span style="color: #c18401;">&amp;optional</span> description backend)
+  <span style="color: #50a14f;">"Show keysequence KEYS in a nice grey button-like font, along with a tooltip of its documentation, if any.
 
 Such links do not get folded in [[bracket]] style, and are rendered as buttons within Emacs; clicking one
 runs its keys, so readers may try them out.  Keys may run any command, so we first ask, as `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">elisp</span><span style="color: #50a14f;">' links
 do, via `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org-link-elisp-confirm-function</span><span style="color: #50a14f;">'.
 
-Moreover, O-LABEL may use &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">_</span><span style="color: #50a14f;">&#8217; in-lieu of spaces or [[bracket]] link notation.
+Moreover, KEYS may use &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">_</span><span style="color: #50a14f;">&#8217; in-lieu of spaces or [[bracket]] link notation.
 
 Examples:
     [[kbd:C-x C-s]]
@@ -673,18 +673,18 @@ Examples:
   &#8776; kbd:C-x_C-s"</span>
   <span style="color: #e44649;">:display</span> 'full
   <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#nice-keystroke-renditions"</span>
-  <span style="color: #e44649;">:let</span> (the-label  (s-trim (s-replace <span style="color: #50a14f;">"_"</span> <span style="color: #50a14f;">" "</span> o-label))
+  <span style="color: #e44649;">:let</span> (the-label  (s-trim (s-replace <span style="color: #50a14f;">"_"</span> <span style="color: #50a14f;">" "</span> keys))
         lisp-func  (<span style="color: #a626a4;">ignore-errors</span> (key-binding (kbd the-label)))
-        tooltip    (<span style="color: #a626a4;">or</span> o-description (<span style="color: #a626a4;">ignore-errors</span> (documentation lisp-func)) <span style="color: #50a14f;">""</span>)
+        tooltip    (<span style="color: #a626a4;">or</span> description (<span style="color: #a626a4;">ignore-errors</span> (documentation lisp-func)) <span style="color: #50a14f;">""</span>)
         tooltip?   (not (equal tooltip <span style="color: #50a14f;">""</span>))
         style      (<span style="color: #a626a4;">if</span> tooltip? <span style="color: #50a14f;">"border-color: red"</span> <span style="color: #50a14f;">""</span>)
         keystrokes (<span style="color: #a626a4;">progn</span> (org-html-head-require 'org--kbd-html-head)
                           (format <span style="color: #50a14f;">"&lt;kbd style=\"%s\"&gt;%s&lt;/kbd&gt;"</span> style the-label)))
-  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">o-description is always nil when it comes to deciding the :face.
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The description is always nil when it comes to deciding the :face.
 </span>  <span style="color: #e44649;">:face</span> (list <span style="color: #e44649;">:inherit</span> 'custom-button <span style="color: #e44649;">:box</span> (<span style="color: #a626a4;">if</span> tooltip? <span style="color: #50a14f;">"red"</span> t))
   <span style="color: #e44649;">:help-echo</span> (format <span style="color: #50a14f;">"%s &#8759; %s\n%s\n\nClick to run these keys."</span> the-label (<span style="color: #a626a4;">or</span> lisp-func <span style="color: #50a14f;">""</span>) tooltip)
   <span style="color: #e44649;">:follow</span> (org--kbd-run the-label)
-  <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">cond</span> ((equal o-backend 'latex) (format <span style="color: #50a14f;">"\\texttt{%s}"</span> the-label))
+  <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">cond</span> ((equal backend 'latex) (format <span style="color: #50a14f;">"\\texttt{%s}"</span> the-label))
                 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The style is to remove the underlining caused by &lt;abbr&gt;.
 </span>                (tooltip? (org--html-tooltip (format <span style="color: #50a14f;">"%s &#8759; %s\n%s"</span> the-label (<span style="color: #a626a4;">or</span> lisp-func <span style="color: #50a14f;">""</span>) tooltip) keystrokes
                                              <span style="color: #e44649;">:plain</span> <span style="color: #50a14f;">"border: none; text-decoration: none;"</span>))
@@ -725,8 +725,9 @@ Yacoub
 
 </details> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> solution
-              (title <span style="color: #50a14f;">"Solution"</span> reprimand <span style="color: #50a14f;">"Did you actually try? Maybe see the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">hints</span><span style="color: #50a14f;">&#8217; above!"</span>
-                     really <span style="color: #50a14f;">"Solution, for real"</span> <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
+              (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Solution"</span>)
+               <span style="color: #c18401;">&amp;key</span> (reprimand <span style="color: #50a14f;">"Did you actually try? Maybe see the &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">hints</span><span style="color: #50a14f;">&#8217; above!"</span>) (really <span style="color: #50a14f;">"Solution, for real"</span>)
+               <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
               <span style="color: #50a14f;">"Show the answers to a problem, but with a reprimand in case no attempt was made."</span>
               (<span style="color: #a626a4;">org-thread-blockcall</span> raw-contents
                                     (details really <span style="color: #e44649;">:title-color</span> <span style="color: #50a14f;">"red"</span>)
@@ -776,7 +777,8 @@ and the color of the hidden item. These default to <code>grey, ((, ))</code> res
 <span class="spoiler-orange"> Yusuf </span> said to his father <span class="spoiler-orange"> Yacoub </span>, <i>“O my father, indeed I have seen
 <span class="spoiler-orange"> eleven stars </span> and <span class="spoiler-orange"> the sun and the moon </span>; I saw them prostrating to me.”</i>
 </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> spoiler (color <span style="color: #50a14f;">"grey"</span> left <span style="color: #50a14f;">"(("</span> right <span style="color: #50a14f;">"))"</span> <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span> <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> spoiler (<span style="color: #c18401;">&amp;optional</span> (color <span style="color: #50a14f;">"grey"</span>) <span style="color: #c18401;">&amp;key</span> (left <span style="color: #50a14f;">"(("</span>) (right <span style="color: #50a14f;">"))"</span>) <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span>
+                      <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
               <span style="color: #50a14f;">"Hide text enclosed in double parens ((like this)) as if it were spoilers.
    LEFT and RIGHT may be other kinds of delimiters.
    The main argument, COLOR, indicates which color to use.
@@ -834,7 +836,7 @@ blanks with the answers folded away beneath them."</span>
 \[\frac{\displaystyle a : A \qquad f : A → B
 }{f(a) : B}[\text{Function Application}]\]\[\frac{\displaystyle p \qquad p ⇒ q}{q}[\text{Modus Ponens}]\]
 </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> tree (main-arg nil <span style="color: #e44649;">:html-head</span> (mathjax) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Aligned-equations"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> tree (<span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:html-head</span> (mathjax) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Aligned-equations"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
               <span style="color: #50a14f;">"Write a proof tree using Org-lists.
 
 To get

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:56 -->
+<!-- 2026-10-19 Mon 22:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -616,9 +616,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function DEA&gt;
+C-RET		#&lt;interpreted-function AC9&gt;
 
-C-x C-s		#&lt;interpreted-function 7F4&gt;
+C-x C-s		#&lt;interpreted-function A9C&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -1078,18 +1078,16 @@ Together, the main and keyword arguments form KWDS, written as a
    (&amp;optional (title "Details") &amp;key (color "green") style)
 
 declares main argument TITLE, defaulting to "Details", and
-keyword arguments COLOR and STYLE.  As a convenience, KWDS may
-instead be flattened into (main default key₀ value₀ … keyₙ valueₙ);
-the above is then (title "Details" color "green" style nil).
-As with ‘cl-defun’, a header line’s unknown keywords are an export-time
-error unless KWDS writes ‘&amp;allow-other-keys’; the flattened form always
-allows them.
+keyword arguments COLOR and STYLE.  As with ‘cl-defun’, a header
+line’s unknown keywords are an export-time error unless KWDS writes
+‘&amp;allow-other-keys’; so, () takes no arguments at all.
 
 KWDS may also carry options, which are not arguments:
 + ‘:block nil’ declines block support: #+begin_NAME is left to Org, yet the
   link and tag still work, through ‘org-block/NAME’.
 + ‘:link nil’ declines the link type NAME:; ‘:link t’ makes it; and ‘:link
-  [:face … :display …]’ makes it with that ‘org-deflink’ display; e.g.,
+  [:face … :display …]’ makes it with that ‘org-deflink’ display, which sees
+  the link’s arglist (label &amp;optional description backend); e.g.,
   [:face =’(:foreground "red")] shows such links in red.
 + ‘:tag nil’ declines the tag: otherwise a section tagged :NAME: exports as a
   NAME block around its text; the tag’s underscore-separated items form the
@@ -1154,7 +1152,7 @@ item not on offer, such as a misspelt contnets, is an error at once.
 An item may be bound under another name, ((:ITEM VAR)), as when KWDS
 already uses ITEM’s name; an item named both ways is an error:
 
-   (org-defblock quip (contents &amp;context ((:contents text)))
+   (org-defblock quip (&amp;optional contents &amp;context ((:contents text)))
      (format "%s, said of %s" contents text))  ;; #+begin_quip Ha! ⇒ “Ha!, said of …”
 
 See “Keyword Parameters” in Practical Common Lisp, a gentle tour of
@@ -1222,7 +1220,7 @@ choking on a heading the box cannot hold.
 </p>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A section tagged :abstract: is boxed too; its subsections stay outside the box, as a block cannot hold a heading.
-</span>(<span style="color: #a626a4;">org-defblock</span> abstract (main nil <span style="color: #e44649;">:tag</span> [<span style="color: #e44649;">:subsections</span> ignore] <span style="color: #c18401;">&amp;context</span> contents) nil
+</span>(<span style="color: #a626a4;">org-defblock</span> abstract (<span style="color: #e44649;">:tag</span> [<span style="color: #e44649;">:subsections</span> ignore] <span style="color: #c18401;">&amp;context</span> contents)
   <span style="color: #50a14f;">"Render a block in a slightly narrowed blueish box, titled \"Abstract\".
 
    Supported backends: HTML. "</span>
@@ -3876,18 +3874,18 @@ broken image.  <a href="arabic-roots.html">Arabic Roots</a> explains its design.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp" id="arabic-link"><code>(<span style="color: #a626a4;">org-deflink</span> arabic
+<pre class="src src-emacs-lisp" id="arabic-link"><code>(<span style="color: #a626a4;">org-deflink</span> arabic (label)
  <span style="color: #50a14f;">"Show one of 6 hardcoded phrases as a small inline image."</span>
  (<span style="color: #a626a4;">-let</span> [url
-        (<span style="color: #a626a4;">pcase</span> o-label
+        (<span style="color: #a626a4;">pcase</span> label
           (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-take-a-break.png"</span>)
           (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-yes.png"</span>)
           (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-no.png"</span>)
           (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-agree.png"</span>)
           (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-disagree.png"</span>)
           (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-question.png"</span>)
-          (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"arabic:%s is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> o-label)))]
-   (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url o-label url)))
+          (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"arabic:%s is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> label)))]
+   (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url label url)))
 </code></pre>
 </div>
 
@@ -5881,7 +5879,7 @@ A quick way to embed clickable images, along with tooltip credits and other conf
   <span style="color: #e44649;">:config</span> (org-special-block-extras-mode t))
 
 
-(<span style="color: #a626a4;">org-deflink</span> image
+(<span style="color: #a626a4;">org-deflink</span> image (label)
              <span style="color: #50a14f;">"Provide a quick way to insert images along with credits via tooltips.
 
 Example usage:
@@ -5890,8 +5888,7 @@ image:https://upload.wikimedia.org/wikipedia/commons/3/33/Heisokudachi.svg|100|1
 
 image:URL|WIDTH|HEIGHT|CENTER?|CREDIT?
 "</span>
-<span style="color: #a0a1a7; font-weight: bold;">;;             </span><span style="color: #a0a1a7;">(upcase (or o-description o-label))
-</span>  (<span style="color: #a626a4;">-let</span> [(image width height center? credit?) (s-split <span style="color: #50a14f;">"|"</span> o-label)]
+  (<span style="color: #a626a4;">-let</span> [(image width height center? credit?) (s-split <span style="color: #50a14f;">"|"</span> label)]
     (<span style="color: #a626a4;">let</span> ((it (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" alt=\"Article image\"
              width=\"%s\" height=\"%s\" align=\"top\"/&gt;&lt;/a&gt;"</span>
                       image
@@ -6029,9 +6026,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function DEA&gt;
+C-RET		#&lt;interpreted-function AC9&gt;
 
-C-x C-s		#&lt;interpreted-function 7F4&gt;
+C-x C-s		#&lt;interpreted-function A9C&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle

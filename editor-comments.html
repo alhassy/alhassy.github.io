@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:57 -->
+<!-- 2026-10-19 Mon 22:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Editor Comments</title>
@@ -465,7 +465,7 @@ separated by new lines from its surrounding text.
   <span style="color: #50a14f; font-style: italic;">"Should editor comments be shown in the output or not."</span>)
 
 (<span style="color: #a626a4;">org-defblock</span> remark
-      (editor <span style="color: #50a14f;">"Editor Remark"</span> color <span style="color: #50a14f;">"black"</span> signoff <span style="color: #50a14f;">""</span> strong nil <span style="color: #c18401;">&amp;context</span> backend contents)
+      (<span style="color: #c18401;">&amp;optional</span> (editor <span style="color: #50a14f;">"Editor Remark"</span>) <span style="color: #c18401;">&amp;key</span> (color <span style="color: #50a14f;">"black"</span>) (signoff <span style="color: #50a14f;">""</span>) strong <span style="color: #c18401;">&amp;context</span> backend contents)
 <span style="color: #a0a1a7; font-weight: bold;">; </span><span style="color: #a0a1a7;">:inline-please__see_margin_block_for_a_similar_incantation ; &#8658; crashes!
 </span>[<span style="color: #e44649;">:face</span> '(<span style="color: #e44649;">:foreground</span> <span style="color: #50a14f;">"red"</span> <span style="color: #e44649;">:weight</span> bold)]
 <span style="color: #50a14f;">"Format CONTENTS as an first-class editor comment according to BACKEND.
@@ -757,18 +757,16 @@ Together, the main and keyword arguments form KWDS, written as a
    (&amp;optional (title "Details") &amp;key (color "green") style)
 
 declares main argument TITLE, defaulting to "Details", and
-keyword arguments COLOR and STYLE.  As a convenience, KWDS may
-instead be flattened into (main default key₀ value₀ … keyₙ valueₙ);
-the above is then (title "Details" color "green" style nil).
-As with ‘cl-defun’, a header line’s unknown keywords are an export-time
-error unless KWDS writes ‘&amp;allow-other-keys’; the flattened form always
-allows them.
+keyword arguments COLOR and STYLE.  As with ‘cl-defun’, a header
+line’s unknown keywords are an export-time error unless KWDS writes
+‘&amp;allow-other-keys’; so, () takes no arguments at all.
 
 KWDS may also carry options, which are not arguments:
 + ‘:block nil’ declines block support: #+begin_NAME is left to Org, yet the
   link and tag still work, through ‘org-block/NAME’.
 + ‘:link nil’ declines the link type NAME:; ‘:link t’ makes it; and ‘:link
-  [:face … :display …]’ makes it with that ‘org-deflink’ display; e.g.,
+  [:face … :display …]’ makes it with that ‘org-deflink’ display, which sees
+  the link’s arglist (label &amp;optional description backend); e.g.,
   [:face =’(:foreground "red")] shows such links in red.
 + ‘:tag nil’ declines the tag: otherwise a section tagged :NAME: exports as a
   NAME block around its text; the tag’s underscore-separated items form the
@@ -833,7 +831,7 @@ item not on offer, such as a misspelt contnets, is an error at once.
 An item may be bound under another name, ((:ITEM VAR)), as when KWDS
 already uses ITEM’s name; an item named both ways is an error:
 
-   (org-defblock quip (contents &amp;context ((:contents text)))
+   (org-defblock quip (&amp;optional contents &amp;context ((:contents text)))
      (format "%s, said of %s" contents text))  ;; #+begin_quip Ha! ⇒ “Ha!, said of …”
 
 See “Keyword Parameters” in Practical Common Lisp, a gentle tour of

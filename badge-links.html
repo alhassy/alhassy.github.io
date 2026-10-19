@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:57 -->
+<!-- 2026-10-19 Mon 22:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Badge Links</title>
@@ -637,16 +637,16 @@ E.g., to create a badge named &#8220;go&#8221;:
 Then the following exports nicely from an Org file:
 
      go:key|value|blue||gnu-emacs"</span>
-  `(<span style="color: #a626a4;">org-deflink</span> ,(intern name)
+  `(<span style="color: #a626a4;">org-deflink</span> ,(intern name) (label <span style="color: #c18401;">&amp;optional</span> _description backend)
     <span style="color: #50a14f;">"Export a Shields.io badge, with general Syntax:  badge:key|value|colour|url|logo.
 Precise details for each argument are shown in the Emacs tooltip for this badge."</span>
     [<span style="color: #e44649;">:display</span> 'full
      <span style="color: #e44649;">:follow</span> (<span style="color: #a626a4;">--&gt;</span> (s-split <span style="color: #50a14f;">"|"</span> path)
-               (<span style="color: #a626a4;">or</span> (nth 3 it) o-label)
+               (<span style="color: #a626a4;">or</span> (nth 3 it) label)
                (browse-url it))
     <span style="color: #e44649;">:help-echo</span>
-      (<span style="color: #a626a4;">-let</span> [ (key value color url logo)  (mapcar #'s-trim (s-split <span style="color: #50a14f;">"|"</span> o-label)) ]
-        (lf-string <span style="color: #50a14f;">"${o-label}
+      (<span style="color: #a626a4;">-let</span> [ (key value color url logo)  (mapcar #'s-trim (s-split <span style="color: #50a14f;">"|"</span> label)) ]
+        (lf-string <span style="color: #50a14f;">"${label}
                     \nGeneral Syntax:  badge:key|value|colour|url|logo
                            Key    : ${key}
                            Value  : ${(or value \"\")}
@@ -682,23 +682,23 @@ Precise details for each argument are shown in the Emacs tooltip for this badge.
                    See also: https://alhassy.com/org-special-block-extras#Common-Project-Badges"</span>))]
 
     <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">:export #'org--link--badge
-</span>    (<span style="color: #a626a4;">if</span> (equal o-backend 'latex) <span style="color: #50a14f;">""</span>
-      (<span style="color: #a626a4;">-let</span> [ (key value color url logo)  (mapcar #'s-trim (s-split <span style="color: #50a14f;">"|"</span> o-label)) ]
+</span>    (<span style="color: #a626a4;">if</span> (equal backend 'latex) <span style="color: #50a14f;">""</span>
+      (<span style="color: #a626a4;">-let</span> [ (key value color url logo)  (mapcar #'s-trim (s-split <span style="color: #50a14f;">"|"</span> label)) ]
         (format
-         (<span style="color: #a626a4;">pcase</span> ,(<span style="color: #a626a4;">if</span> social-shields-name `(format ,social-url o-label) 'url)
+         (<span style="color: #a626a4;">pcase</span> ,(<span style="color: #a626a4;">if</span> social-shields-name `(format ,social-url label) 'url)
            (<span style="color: #50a14f;">"here"</span> (format <span style="color: #50a14f;">"&lt;a id=\"%s\" href=\"#%s\"&gt;%%s&lt;/a&gt;"</span> (s-replace <span style="color: #50a14f;">"%"</span> <span style="color: #50a14f;">"%%"</span> key) (s-replace <span style="color: #50a14f;">"%"</span> <span style="color: #50a14f;">"%%"</span> key)))
            (<span style="color: #50a14f;">""</span>      <span style="color: #50a14f;">"%s"</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">e.g., badge:key|value|color||logo
 </span>           ('nil    <span style="color: #50a14f;">"%s"</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">e.g., badge:key|value|color
 </span>           (_ (format <span style="color: #50a14f;">"&lt;a href=\"%s\"&gt;%%s&lt;/a&gt;"</span>
                       (s-replace <span style="color: #50a14f;">"%"</span> <span style="color: #50a14f;">"%%"</span>
                                  ,(<span style="color: #a626a4;">if</span> social-shields-name
-                                      `(format ,social-url o-label)
+                                      `(format ,social-url label)
                                     'url)))))
          ,(<span style="color: #a626a4;">if</span> social-shields-name
               (<span style="color: #a626a4;">if</span> social-shields-url
-                  `(format ,social-shields-url o-label)
+                  `(format ,social-shields-url label)
                 `(format <span style="color: #50a14f;">"&lt;img src=\"https://img.shields.io/%s/%s?style=social\"&gt;"</span>
-                         ,social-shields-name o-label))
+                         ,social-shields-name label))
             '(format <span style="color: #50a14f;">"&lt;img src=\"https://img.shields.io/badge/%s-%s-%s?logo=%s\"&gt;"</span>
                      (url-hexify-string (s-replace <span style="color: #50a14f;">"-"</span> <span style="color: #50a14f;">"--"</span> key))
                      (url-hexify-string (s-replace <span style="color: #50a14f;">"-"</span> <span style="color: #50a14f;">"--"</span> (<span style="color: #a626a4;">or</span> value <span style="color: #50a14f;">""</span>)))

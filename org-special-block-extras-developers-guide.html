@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:57 -->
+<!-- 2026-10-19 Mon 22:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Make your own blocks and links</title>
@@ -426,6 +426,11 @@ its default is used. The main argument may also be given by its name, as a keywo
 Mind the gap.
 #+end_note
 </pre>
+<p>
+As with <code>cl-defun</code>, a header argument the block does not declare &mdash;say, a misspelt
+<code>:colour red</code>&mdash; is an export-time error, unless the arglist writes <code>&amp;allow-other-keys</code>, as
+the package's own blocks do; so, <code>()</code> takes no arguments at all.
+</p>
 
 <p>
 For any backend derived from HTML or LaTeX &mdash;org-reveal's, ox-hugo's, ox-gfm's, beamer's, or
@@ -582,15 +587,6 @@ with the match data at hand, for the face.
 </p>
 
 <p>
-<i>Convenience:</i> For the terse-minded, the arglist may be flattened into the main argument
-and its default, followed by key-value pairs. The block above is then
-</p>
-<div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> note (title <span style="color: #50a14f;">"Note"</span> color <span style="color: #50a14f;">"teal"</span>) &#8230;)
-</code></pre>
-</div>
-
-<p>
 The full story is at <code>C-h o org-defblock</code>.
 </p>
 </div>
@@ -617,21 +613,11 @@ within Emacs.
 <p>
 Then <code>shout:hello</code> and <code>[[shout:hello][hey there]]</code> export as <b>HELLO</b> and <b>HEY THERE</b>.
 The arglist names the label, description, and export backend, in that order; any may be
-omitted from the end, and <code>(description "…")</code> gives a default. Besides <code>:export</code>, the
+omitted from the end &mdash;a link that needs none has the arglist <code>()</code>&mdash; and <code>(description "…")</code>
+gives a default. Besides <code>:export</code>, the
 keys <code>:face</code>, <code>:help-echo</code>, <code>:follow</code>, <code>:keymap</code>, <code>:display</code> and <code>:let</code> customise the link
 within Emacs; <code>C-h o org-deflink</code> has the details.
 </p>
-
-<p>
-<i>Convenience:</i> The arglist may be omitted, whence the anaphoric names <code>o-label</code>,
-<code>o-description</code> and <code>o-backend</code> are used instead:
-</p>
-<div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> shout
-  <span style="color: #50a14f;">"Shout the description, else the label."</span>
-  <span style="color: #e44649;">:export</span> (upcase (<span style="color: #a626a4;">or</span> o-description o-label)))
-</code></pre>
-</div>
 </div>
 </div>
 <div id="outline-container-tags-are-functions-of-org-sections" class="outline-2">
@@ -673,11 +659,6 @@ properties only &mdash;handy for lots of named info.
 </pre>
 <p>
 When both the tag and a property give an argument, the tag wins.
-</p>
-
-<p>
-<i>Convenience:</i> The arglist may be flattened into name-default pairs, all positional;
-<code>(org-deftag quote (color "black") …)</code> is the above, sans <code>cite</code>.
 </p>
 
 <p>
@@ -742,7 +723,7 @@ press, so Org does nothing else with it; nil declines it, leaving it to the bloc
 <p>
 For a complete worked example, we may mimic the <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
 
-MAIN-ARG is the graph’s title, its label.
+TITLE is the graph’s label.
 The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
 :directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
 wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
@@ -865,7 +846,7 @@ edited as ever.
 A block may instead choose its buffer's mode: the option <code>:edit-indirect-mode MODE</code> makes
 <code>C-c '</code> open the block's contents in a buffer in <code>MODE</code>. By way of example, the <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
 
-MAIN-ARG is the graph’s title, its label.
+TITLE is the graph’s label.
 The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
 :directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
 wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,

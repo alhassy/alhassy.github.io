@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:57 -->
+<!-- 2026-10-19 Mon 22:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -542,8 +542,9 @@ emphasises core information.
    emphasises core information.
    </p>
    </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> box (title <span style="color: #50a14f;">""</span> background-color nil shadow nil frame-color nil title-background-color nil
-                       <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span> <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> box (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">""</span>) <span style="color: #c18401;">&amp;key</span> background-color shadow frame-color title-background-color
+                  <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span>
+                  <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
               <span style="color: #50a14f;">"Enclose text in a box, possibly with a TITLE.
 
 By default, the box's BACKGROUND-COLOR is green for HTML and red for LaTeX;
@@ -656,8 +657,9 @@ Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "gree
    <p>
    Full syntax <code>#+begin_details "title" :background-color "cyan" :title-color "green"</code>.
    </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> details (title <span style="color: #50a14f;">"Details"</span> background-color <span style="color: #50a14f;">"#e5f5e5"</span> title-color <span style="color: #50a14f;">"green"</span>
-                              <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Folded-Details"</span> <span style="color: #c18401;">&amp;context</span> backend contents)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> details (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Details"</span>) <span style="color: #c18401;">&amp;key</span> (background-color <span style="color: #50a14f;">"#e5f5e5"</span>) (title-color <span style="color: #50a14f;">"green"</span>)
+                      <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Folded-Details"</span>
+                      <span style="color: #c18401;">&amp;context</span> backend contents)
               <span style="color: #50a14f;">"Enclose contents in a folded up box, for HTML.
 
 For LaTeX, this is just a boring, but centered, box.
@@ -1098,26 +1100,26 @@ definition via #+begin_documentation, then we try to look up its definition via 
   happiness
          =&gt; feeling</pre></template></abbr>
   </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> doc
-  <span style="color: #50a14f;">"Export O-LABEL as itself, or as the provided O-DESCRIPTION,
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> doc (label <span style="color: #c18401;">&amp;optional</span> description backend)
+  <span style="color: #50a14f;">"Export LABEL as itself, or as the provided DESCRIPTION,
  along with a tooltip that shows the user's
- documentation-glossary for o-LABEL and using that entry's name
- when no O-DESCRIPTION is provided."</span>
-  <span style="color: #e44649;">:let</span> (entry (org-docs-get o-label)
+ documentation-glossary for LABEL and using that entry's name
+ when no DESCRIPTION is provided."</span>
+  <span style="color: #e44649;">:let</span> (entry (org-docs-get label)
         name (cl-first entry)
         docs (cl-second entry)
-        display-name (<span style="color: #a626a4;">or</span> o-description name))
-  <span style="color: #e44649;">:help-echo</span> (format <span style="color: #50a14f;">"[%s] %s :: %s"</span> o-label name docs)
+        display-name (<span style="color: #a626a4;">or</span> description name))
+  <span style="color: #e44649;">:help-echo</span> (format <span style="color: #50a14f;">"[%s] %s :: %s"</span> label name docs)
   <span style="color: #e44649;">:face</span> '(custom-button)
   <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Glossaries"</span>
   <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">progn</span>
-            (add-to-list 'org--docs-actually-used (list o-label name docs))
-            (<span style="color: #a626a4;">pcase</span> o-backend
-              ('html (org--html-tooltip docs display-name (org--docs-plain-p o-label)))
+            (add-to-list 'org--docs-actually-used (list label name docs))
+            (<span style="color: #a626a4;">pcase</span> backend
+              ('html (org--html-tooltip docs display-name (org--docs-plain-p label)))
               <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Make the current word refer to its glossary entry, and declare the location
 </span>              <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">that the glossary should refer back to; see `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org--docs-glossary</span><span style="color: #a0a1a7;">'.
 </span>              ('latex (format <span style="color: #50a14f;">"\\hyperref[o-glossary-%s]{%s}\\label{o-glossary-declaration-site-%s}"</span>
-                              o-label display-name o-label))
+                              label display-name label))
               (_ display-name))))
 </code></pre>
 </div>
@@ -1189,10 +1191,10 @@ Then, doc:cat studies [[doc:mon][monoids]] and their kin.</pre> </div><div style
   </div>
   </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> documentation
-              (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)
-                    label nil show nil color <span style="color: #50a14f;">"green"</span>
-                    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A heading tagged :documentation: is an entry in its own right; see `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org--docs-read-buffer</span><span style="color: #a0a1a7;">'.
-</span>                    <span style="color: #e44649;">:tag</span> nil <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Glossaries"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
+              (<span style="color: #c18401;">&amp;optional</span> (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)) <span style="color: #c18401;">&amp;key</span> label show (color <span style="color: #50a14f;">"green"</span>)
+               <span style="color: #c18401;">&amp;allow-other-keys</span>
+               <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A heading tagged :documentation: is an entry in its own right; see `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org--docs-read-buffer</span><span style="color: #a0a1a7;">'.
+</span>               <span style="color: #e44649;">:tag</span> nil <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Glossaries"</span> <span style="color: #c18401;">&amp;context</span> raw-contents)
               <span style="color: #50a14f;">"A glossary entry: CONTENTS defines NAME, cited as doc:LABEL; a heading tagged :documentation: is one too.
 
 The entries live in &#8216;</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org--docs</span><span style="color: #50a14f;">&#8217;.
@@ -1446,7 +1448,8 @@ wasted on thin lines; instead, one could save space by using
      
           (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
      </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (cols <span style="color: #50a14f;">"2"</span> bar nil <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span> <span style="color: #c18401;">&amp;context</span> backend contents)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (<span style="color: #c18401;">&amp;optional</span> (cols <span style="color: #50a14f;">"2"</span>) <span style="color: #c18401;">&amp;key</span> bar <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span>
+                       <span style="color: #c18401;">&amp;context</span> backend contents)
               <span style="color: #50a14f;">"Place ideas side-by-side, possibly with a separator.
 
 There are COLS many columns, and they may be separated by solid
@@ -2390,11 +2393,11 @@ nesting makes an edge, and a two-column table styles the item above it.
 <p>
 Press <code>C-c C-c</code> inside the block to render it to a PNG; <code>C-u C-c C-c</code> shows the dot source instead.
 </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> graph (main-arg nil file nil svg nil <span style="color: #e44649;">:edit-indirect-mode</span> org-graph-edit-mode <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Graphs"</span>
-                    <span style="color: #c18401;">&amp;context</span> backend raw-contents args anchor)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> graph (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #c18401;">&amp;key</span> file svg <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:edit-indirect-mode</span> org-graph-edit-mode
+                    <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Graphs"</span> <span style="color: #c18401;">&amp;context</span> backend raw-contents args anchor)
   <span style="color: #50a14f;">"Render an Org list + tables as a Graphviz dot graph.
 
-MAIN-ARG is the graph's title, its label.
+TITLE is the graph's label.
 The header's other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
 :directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
 wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
@@ -2467,8 +2470,8 @@ Example:
 </span>         (inline-svg (<span style="color: #a626a4;">and</span> (eq backend 'html) (not anchor) (not (org-export-markdown-p))
                           (<span style="color: #a626a4;">or</span> svg (not (<span style="color: #a626a4;">or</span> smart (plist-member args <span style="color: #e44649;">:svg</span>))))))
          (org--graph-tips (<span style="color: #a626a4;">and</span> inline-svg (make-hash-table <span style="color: #e44649;">:test</span> #'equal)))
-         (dot     (<span style="color: #a626a4;">if</span> smart (org--smartdiagram raw main-arg args)
-                    (org--graph-raw-&gt;dot raw main-arg args)))
+         (dot     (<span style="color: #a626a4;">if</span> smart (org--smartdiagram raw title args)
+                    (org--graph-raw-&gt;dot raw title args)))
          (render  (<span style="color: #a626a4;">if</span> smart
                       (<span style="color: #a626a4;">lambda</span> (kind file) (org-graph--render-latex dot kind file (org-graph--dpi args)))
                     (<span style="color: #a626a4;">lambda</span> (kind file) (org-graph--render dot kind file))))
@@ -2495,7 +2498,7 @@ Example:
                  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">dot unavailable, or its output sans &lt;svg&gt;: emit the raw dot source in a &lt;pre&gt;, its tooltips as text.
 </span>                 (format <span style="color: #50a14f;">"&lt;pre&gt;%s&lt;/pre&gt;"</span> (s-replace <span style="color: #50a14f;">"&lt;"</span> <span style="color: #50a14f;">"&amp;lt;"</span> (<span style="color: #a626a4;">if</span> (<span style="color: #a626a4;">and</span> inline-svg (not smart))
                                                                     (<span style="color: #a626a4;">let</span> (org--graph-tips)
-                                                                      (org--graph-raw-&gt;dot raw main-arg args))
+                                                                      (org--graph-raw-&gt;dot raw title args))
                                                                   dot))))
            (delete-file tmp))))
       (_
@@ -2509,7 +2512,7 @@ Example:
 <p>
 The <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
 
-MAIN-ARG is the graph’s title, its label.
+TITLE is the graph’s label.
 The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
 :directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
 wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
@@ -3075,7 +3078,8 @@ A whole paragraph, gently set apart.
   </p>
   </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> highlight
-              (color <span style="color: #50a14f;">"yellow"</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Highlights"</span> <span style="color: #e44649;">:link</span> [<span style="color: #e44649;">:face</span> (list <span style="color: #e44649;">:background</span> (<span style="color: #a626a4;">or</span> (org-string-nw-p o-label) <span style="color: #50a14f;">"yellow"</span>))]
+              (<span style="color: #c18401;">&amp;optional</span> (color <span style="color: #50a14f;">"yellow"</span>) <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Highlights"</span>
+               <span style="color: #e44649;">:link</span> [<span style="color: #e44649;">:face</span> (list <span style="color: #e44649;">:background</span> (<span style="color: #a626a4;">or</span> (org-string-nw-p label) <span style="color: #50a14f;">"yellow"</span>))]
                <span style="color: #c18401;">&amp;context</span> backend raw-contents contents link?)
               <span style="color: #50a14f;">"Highlight text with a background of COLOR, which is yellow by default; as a link, it is so highlighted in Emacs too.
 

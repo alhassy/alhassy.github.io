@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 15:56 -->
+<!-- 2026-10-19 Mon 22:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Arabic Roots: The Power of Patterns</title>
@@ -1872,18 +1872,17 @@ credit the people who made the images.</li>
 <p>
 The docstring of <abbr class="tooltip" tabindex="0">org-deflink<template><pre>Make a new Org-link NAME that exports using form BODY.
 
-An optional ARGLIST may come first, naming the link’s label, description,
-and export backend ---in that order--- for use in BODY and DISPLAY:
+ARGLIST names the link’s label, description, and export backend ---in that
+order--- for use in BODY and DISPLAY:
 
    (org-deflink shout (label &amp;optional description)
      "Shout the description, else the label."
      :face =’(:weight bold)
      :export (upcase (or description label)))
 
-As a convenience, ARGLIST may be omitted; then BODY and DISPLAY refer to the
-anaphoric names o-label, o-description, and o-backend, which are always
-available.  An argument written (NAME DEFAULT) falls back to DEFAULT when
-absent; e.g., (label &amp;optional (description "…")).
+An argument written (NAME DEFAULT) falls back to DEFAULT when absent; e.g.,
+(label &amp;optional (description "…")).  A link that needs none of them
+has the ARGLIST ().
 
 Since Org links are essentially string-valued functions,
 a function ‘org-link/NAME’ is created.
@@ -1891,20 +1890,20 @@ a function ‘org-link/NAME’ is created.
 DOCSTRING is optional; it is visible with
    (documentation ’org-link/NAME)
 
-BODY is a string-valued expression, that may make use of the names
-o-label, o-description, o-backend. The final one refers to the export
-backend, such as ’html or ’latex. The first two are obtained from uses:
+BODY is a string-valued expression, that may make use of ARGLIST’s names.
+The backend is, e.g., =’html or =’latex; the label and description are
+obtained from uses:
 
-   [[name:o-label][o-description]]
+   [[name:label][description]]
 
-In particular, the use case “name:o-label” means that o-description is nil.
+In particular, the use case “name:label” means that the description is nil.
 
 ---------------------------------------------------------------------------
 
 Example use:
 
    ;; In a Lisp buffer, press “C-x C-e” to load this definition
-   (org-deflink shout (upcase (or o-description o-label)))
+   (org-deflink shout (label &amp;optional description) (upcase (or description label)))
 
    ;; In an Org-buffer, press “C-c C-e h o” to see how this exports
    &lt;shout: hello world!&gt;
@@ -1943,12 +1942,12 @@ Lisp documentation of the variable ‘user-mail-address’, or
 Besides :export, the following keys affect how the link is displayed in Emacs
 Org buffers.  They are given alongside :export, as above; in the deprecated
 style, they form a vector DISPLAY between the docstring and BODY, such as
-[:help-echo (format "%s" o-label)].
+[:help-echo (format "%s" label)].
 
 + :help-echo is a string-valued expression of the tooltip that should accompany
   the new link in Org buffers. It has access to o-format being one of ‘plain’,
   ‘angle’, ‘bracket’ which indicates the format of the link, as shown above.
-  It also has access to o-label and o-description.
+  It also has access to ARGLIST’s label and description.
 
   By default, the tooltip is the link name followed by the documentation
   of the link, and, finally, the HTML export of the link.
@@ -1967,7 +1966,7 @@ style, they form a vector DISPLAY between the docstring and BODY, such as
 
 + :face specifies how should these links be displayed within Emacs.
    It is a list-valued expression.
-   As usual, it may make use of O-LABEL (but O-DESCRIPTION has value nil).
+   As usual, it may make use of ARGLIST’s label (but the description is nil).
    Example:
                :face ’(:underline "green")
 
@@ -1977,8 +1976,8 @@ style, they form a vector DISPLAY between the docstring and BODY, such as
   folded away in Org buffers; i.e., “[[X][Y]]” does not render as just “Y”.
 
 + :follow is a form that is executed when you click on such links; e.g., to open
-   another buffer, browser, or other action. It makes use of (an implicit argument) ‘o-label’.
-   Be aware that ‘o-label’ is a string that may contain spaces; e.g., when the action is to open
+   another buffer, browser, or other action. It makes use of ARGLIST’s label.
+   Be aware that the label is a string that may contain spaces; e.g., when the action is to open
    a URL in a browser.
 
    If you are in need of providing similar, related, actions on a single link
@@ -1999,17 +1998,17 @@ style, they form a vector DISPLAY between the docstring and BODY, such as
 
 + :let is a list of alternating variable symbol name and value, which are then used to form
   a concrete ‘let*’ clause. This is useful for introducing local variables for use in the DISPLAY
-  as well as in the CONTENTS. Such local declarations may make use of O-LABEL and O-DESCRIPTION, as usual.
+  as well as in the CONTENTS. Such local declarations may make use of ARGLIST’s names, as usual.
 
 The preferred syntax supplies all keys — including :export for the export body — as a
 flat top-level plist with no enclosing vector:
 
-  (org-deflink shout
+  (org-deflink shout (label)
     "Shout the label."
     :face '(:weight bold)
-    :export (upcase o-label))
+    :export (upcase label))
 
-(fn NAME &amp;optional DOCSTRING DISPLAY &amp;rest BODY)</pre></template></abbr> has nice examples, so we quickly adapt the very first example for our needs: We look at
+(fn NAME ARGLIST &amp;optional DOCSTRING DISPLAY &amp;rest BODY)</pre></template></abbr> has nice examples, so we quickly adapt the very first example for our needs: We look at
 the label given to the link, then depending on that, we show an clickable image along with a tooltip.
 </p>
 
@@ -2017,18 +2016,18 @@ the label given to the link, then depending on that, we show an clickable image 
 It lives in AlBasmala, so every Arabic article can use it &mdash;§<a href="AlBasmala.html#link-types-and-glossaries-shared-by-every-article">shared link types</a>:
 </p>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp" id="arabic-link"><code>(<span style="color: #a626a4;">org-deflink</span> arabic
+<pre class="src src-emacs-lisp" id="arabic-link"><code>(<span style="color: #a626a4;">org-deflink</span> arabic (label)
  <span style="color: #50a14f;">"Show one of 6 hardcoded phrases as a small inline image."</span>
  (<span style="color: #a626a4;">-let</span> [url
-        (<span style="color: #a626a4;">pcase</span> o-label
+        (<span style="color: #a626a4;">pcase</span> label
           (<span style="color: #50a14f;">"Let's take a break"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-take-a-break.png"</span>)
           (<span style="color: #50a14f;">"Yes"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-yes.png"</span>)
           (<span style="color: #50a14f;">"No"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-no.png"</span>)
           (<span style="color: #50a14f;">"Agree"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-agree.png"</span>)
           (<span style="color: #50a14f;">"Disagree"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-disagree.png"</span>)
           (<span style="color: #50a14f;">"I have a question"</span> <span style="color: #50a14f;">"https://alhassy.com/resources/iraqi-sign-question.png"</span>)
-          (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"arabic:%s is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> o-label)))]
-   (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url o-label url)))
+          (_ (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"arabic:%s is not one of: Let's take a break, Yes, No, Agree, Disagree, I have a question"</span> label)))]
+   (format <span style="color: #50a14f;">"&lt;a href=\"%s\" class=\"tooltip\" title=\"%s\"&gt;&lt;img src=\"%s\" height=50&gt;&lt;/a&gt;"</span> url label url)))
 </code></pre>
 </div>
 
