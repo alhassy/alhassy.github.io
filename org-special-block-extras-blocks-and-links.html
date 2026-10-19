@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-18 Sun 23:41 -->
+<!-- 2026-10-19 Mon 00:07 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -294,7 +294,7 @@
 <li><a href="#Glossaries">5. Glossaries &mdash;Define a term once, cite it with <code>doc:𝒳</code></a></li>
 <li><a href="#Parallel">6. Parallel ---<i>Place ideas side-by-side, possibly with a separator</i></a></li>
 <li><a href="#math">7. Display maths ---<code>#+begin_math</code>, wherein <code>red:𝒳</code> colours a symbol</a></li>
-<li><a href="#Aligned-equations">8. Aligned equations ---<code>#+begin_align</code>, cited by <code>eqref:𝒳</code></a></li>
+<li><a href="#Aligned-equations">8. Aligned equations ---<code>&amp;</code> in a math block, cited by <code>eqref:𝒳</code></a></li>
 <li><a href="#Graphs">9. Graphs ---<i>Org lists, drawn by Graphviz</i></a></li>
 <li><a href="#Switches-for-every-block">10. Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></li>
 <li><a href="#Callouts">11. Callouts &mdash;Note, tip, important, warning, caution</a></li>
@@ -1311,10 +1311,10 @@ The rest of Org's markup is read as one would hope:
 <li>An Org table is a matrix &mdash;a <code>pmatrix</code>, or whichever environment <code>:matrix</code> names&mdash; whose
 columns <code>TAB</code> aligns for us. As in Org, a line that begins <code>|</code> is a table; so we write
 <code>\lvert x \rvert</code> for an absolute value.</li>
-<li>A line ending <code>:tag-COLOUR: NAME</code> is tagged, as in an <a href="#Aligned-equations">align</a> block, and
+<li>A line ending <code>:tag-COLOUR: NAME</code> is tagged &mdash;see <a href="#Aligned-equations">aligned equations</a>&mdash; and
 <code>[[eqref:NAME]]</code> cites it; <code>:numbered t</code> numbers the rest.</li>
-<li>Lines that end in <code>\\</code> are gathered, each centred on a line of its own; to line them up at
-<code>&amp;</code>, we reach for an <a href="#Aligned-equations">align</a> block.</li>
+<li>Lines with an <code>&amp;</code> are <a href="#Aligned-equations">aligned</a> at it; else, lines that end in <code>\\</code> are
+gathered, each centred on a line of its own.</li>
 <li>In Emacs, the block looks as a <code>#+begin_src latex</code> block does, with each <code>red:ATOM</code> in red, as
 the maths reads it; <code>C-c C-c</code> shows the maths as an image atop the block, until <code>C-c C-c</code> again,
 or an edit; and <code>C-c '</code> edits it in <code>latex-mode</code>.</li>
@@ -1330,61 +1330,30 @@ R_{teal:\theta} =
 </div>
 </div>
 <div id="outline-container-Aligned-equations" class="outline-2">
-<h2 id="Aligned-equations"><span class="section-number-2">8.</span> <a href="#Aligned-equations">Aligned equations ---<code>#+begin_align</code>, cited by <code>eqref:𝒳</code></a></h2>
+<h2 id="Aligned-equations"><span class="section-number-2">8.</span> <a href="#Aligned-equations">Aligned equations ---<code>&amp;</code> in a math block, cited by <code>eqref:𝒳</code></a></h2>
 <div class="outline-text-2" id="text-Aligned-equations">
 <p>
-An <abbr class="tooltip" tabindex="0">align<template><pre>Equations aligned at each &amp;, numbered when NUMBERED; a line may end in a coloured tag, “:tag-blue: Name”.
-
-  #+begin_align :let (-&gt; "\\Rightarrow" == "\\equiv")
-  p -&gt; q &amp;== \neg p \lor q          :tag-blue: Implication
-  p \land q &amp;== p == q == p \lor q  :tag-orange: Golden Rule
-  #+end_align
-
-Then [[eqref:Golden Rule]] refers to the second line, as (Golden Rule) in orange; following that
-link in Emacs visits the line.
-
-+ The contents are LaTeX, wherein our links and Org’s emphasis are read as a math block reads them, ‘org-block/math’;
-  as in LaTeX, a line sans a tag ends in \\.
-+ “:tag-COLOUR: NAME” ≈ “\tag{$\color{COLOUR}{\text{NAME}}$} \label{NAME} \\”, for any xcolor COLOUR.
-+ Shorthands, such as -&gt; above, come from the :let switch, which every block has; :let NAME shares them, from
-  the table #+name: NAME or the variable NAME.
-+ In Markdown, the equations are a fenced math block.
-
-Regarding the Lisp function:
-+ BACKEND refers to the current export backend.
-+ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
-
-For example, upon LaTeX export, the Org special block
-
-     #+begin_align
-     Hello, world
-     #+end_align
-
- is rewritten to the result of the call
-
-     (org-block/align ‘latex "Hello, world")</pre></template></abbr> block's contents are LaTeX, aligned at each <code>&amp;</code>; as in LaTeX, a line ends in
-<code>\\</code>, unless it ends in a tag <code>:tag-COLOUR: NAME</code>, which is <code>NAME</code> in that colour and is what
-<code>[[eqref:NAME]]</code> cites. Following such a link in Emacs visits the line; failing that, any
-<code>\tag{…NAME…}</code>, as in a <a href="#math">math</a> block. An <code>align :numbered t</code> numbers its untagged lines too.
-The contents are LaTeX, read as a math block's are, so <code>red:𝒳</code> colours a symbol; shorthands are
-welcome too: the <a href="#Switches-for-every-block">:let switch</a> gives them, as below.
+A <a href="#math">math</a> block whose lines have an <code>&amp;</code> is LaTeX's <code>align</code>: its lines line up at each <code>&amp;</code>. As
+in LaTeX, a line ends in <code>\\</code>, unless it ends in a tag <code>:tag-COLOUR: NAME</code>, which is <code>NAME</code> in that
+colour and is what <code>[[eqref:NAME]]</code> cites. Following such a link in Emacs visits the line; failing
+that, any <code>\tag{…NAME…}</code>. With <code>:numbered t</code>, the untagged lines are numbered too. Only the block's
+own <code>&amp;</code> counts: one within a <code>{group}</code> or a <code>\begin{cases}…\end{cases}</code> belongs to it, so a
+piecewise definition is one equation, unless its line aligns at an <code>&amp;</code> of its own. Shorthands
+are welcome too: the <a href="#Switches-for-every-block">:let switch</a> gives them, as below.
 </p>
 
 <p>
-<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">An ~align~ block lines equations up at each =&=; a line may end in a coloured tag, to which an
-=eqref:= link refers. Shorthands, such as =->= below, come from the =:let= switch every block has.
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">A ~math~ block aligns its lines at each =&=; a line may end in a coloured tag,
+to which an =eqref:= link refers. Shorthands, such as =->= below, come from the =:let= switch every block has.
 
-#+begin_align :let (-> "\\Rightarrow" == "\\equiv")
+#+begin_math :let (-> "\\Rightarrow" == "\\equiv")
 p -> q &== \neg p \lor q          :tag-blue: Implication
 p \land q &== p == q == p \lor q  :tag-orange: Golden Rule
-#+end_align
+#+end_math
 
 By [[eqref:Golden Rule]], conjunction is defined by equivalence and disjunction.</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
-An <code>align</code> block lines equations up at each <code>&amp;</code>; a line may end in a
-coloured tag, to which an
-<code>eqref:</code> link refers. Shorthands, such as <code>-&gt;</code> below, come from the
+A <code>math</code> block aligns its lines at each <code>&amp;</code>; a line may
+end in a coloured tag, to which an <code>eqref:</code> link refers. Shorthands, such as <code>-&gt;</code> below, come from the
 <code>:let</code> switch every block has.
 </p>
 
@@ -1408,9 +1377,9 @@ By \eqref{Golden Rule}, conjunction is defined by equivalence and disjunction.
 To share shorthands among many blocks, name them once, in a table that need not itself export:
 </p>
 <pre class="example">
-#+begin_align :let logic
+#+begin_math :let logic
 p -&gt; q &amp;== \neg p \lor q
-#+end_align
+#+end_math
 
 * Shorthands :noexport:
 #+name: logic
@@ -1551,8 +1520,8 @@ For example, upon LaTeX export, the Org special block
 
      (org-block/graph ‘latex "Hello, world")</pre></template></abbr> block is opt-in, so we load it separately with
 <code>(require 'org-graph-block)</code>. Rendering needs the <code>dot</code> executable from <a href="https://graphviz.org">Graphviz</a>:
-HTML export embeds a PNG &mdash;or an inline SVG, with tooltips intact, via <code>:svg t</code>&mdash; whereas
-other backends receive the dot source. Inside the block, <code>#+graph:</code>, <code>#+node:</code> and <code>#+edge:</code>
+HTML export embeds an inline SVG, whose tooltips hover as any other's do &mdash;or a PNG, sans
+tooltips, via <code>:svg nil</code>&mdash; whereas other backends receive the dot source. Inside the block, <code>#+graph:</code>, <code>#+node:</code> and <code>#+edge:</code>
 tables set Graphviz's defaults; <code>C-h o org-block/graph</code> documents every option.
 </p>
 
