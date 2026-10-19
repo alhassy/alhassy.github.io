@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 00:07 -->
+<!-- 2026-10-19 Mon 14:23 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
@@ -226,6 +226,123 @@
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
 </script>
 
+<style>
+/* tooltips.css ---The look of tooltips.js: tooltipster's Punk theme, a dark box over a pink rule. */
+
+/* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
+.tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
+/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+mjx-container .tooltip { color: inherit; }
+
+.tooltip-box {
+  position: absolute; z-index: 1000;
+  max-width: min(40em, calc(100vw - 16px)); /* A phone's screen, less the margins `place' keeps. */
+  padding: 8px 16px; border-radius: 5px; border-bottom: 3px solid #f71169;
+  background: #2a2a2a; color: #fff; font-size: 0.9em; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow-wrap: anywhere;
+  animation: tooltip-grow 0.15s ease-out; transform-origin: center bottom;
+}
+.tooltip-box[hidden] { display: none; }
+.tooltip-box a { color: #ff8ab8; }
+.tooltip-box p { margin: 0.4em 0; }
+/* A docstring keeps its line breaks and indentation, yet wraps rather than overflowing a phone's screen. */
+.tooltip-box pre { margin: 0; white-space: pre-wrap; background: none; color: inherit; border: none; box-shadow: none; }
+
+@keyframes tooltip-grow { from { opacity: 0; transform: scale(0.8); } }
+</style>
+<script>
+// tooltips.js ---Tooltips for org-special-block-extras: hover on a desktop, tap on a phone.
+//
+// By way of example, the exported Org `[[doc:cat]]` becomes
+//
+//     <abbr class="tooltip" tabindex="0">Category Theory<template><p>A theory of composition.</p></template></abbr>
+//
+// and we show the <template>'s HTML in one shared box, positioned beside the word.  The box is ordinary HTML, so its
+// links are clickable: hovering from the word into the box keeps it open.
+//
+// We replace tooltipster ---and the jQuery it needs--- since it opened only on mouseenter, which no phone fires, and
+// fetched its bundle cross-origin per page; see https://github.com/alhassy/org-special-block-extras/issues/53.
+// This file is inlined into each exported page, sans any request.
+//
+// | Action                                   | Effect                    |
+// |------------------------------------------+---------------------------|
+// | Hover a word, with a mouse               | Open, after a beat        |
+// | Leave the word and the box               | Close, after a beat       |
+// | Tap, or click, a word                    | Open; again to close      |
+// | Tap, or click, anywhere else; or Escape  | Close                     |
+// | Tab onto a word                          | Open; Escape to close     |
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.className = 'tooltip-box';
+  box.setAttribute('role', 'tooltip');
+  box.hidden = true;
+  document.body.append(box);
+
+  let owner = null; // The .tooltip whose box is open, if any.
+  let timer;        // A pending open or close; the newest intent wins.
+  const later = (action, ms) => { clearTimeout(timer); timer = setTimeout(action, ms); };
+
+  const open = (word) => {
+    clearTimeout(timer);
+    if (owner === word) return;
+    close();
+    owner = word;
+    box.innerHTML = tipOf(word)?.innerHTML ?? '';
+    box.hidden = false;
+    place(word);
+  };
+
+  const close = () => { clearTimeout(timer); owner = null; box.hidden = true; };
+
+  // A word's tip is its <template>; else, in maths or a graph's <svg>, which keep no <template> within, the one its
+  // osbe-tip-ID class names, beside them: \class{tooltip osbe-tip-g1}{x} … <template id="osbe-tip-g1">.
+  const tipOf = (word) => word.querySelector(':scope > template')
+    ?? document.getElementById([...word.classList].find((c) => c.startsWith('osbe-tip-')));
+
+  // Above the word when there is room, else below; centred on it, yet never past the screen's edges ---a phone's
+  // screen being narrower than most tooltips.
+  const place = (word) => {
+    const at = word.getBoundingClientRect(), gap = 8;
+    const centred = at.left + at.width / 2 - box.offsetWidth / 2;
+    const left = Math.min(Math.max(gap, centred), innerWidth - box.offsetWidth - gap);
+    const above = at.top > box.offsetHeight + gap;
+    box.style.left = `${left + scrollX}px`;
+    box.style.top = `${(above ? at.top - box.offsetHeight - gap : at.bottom + gap) + scrollY}px`;
+  };
+
+  const wordAt = (node) => node instanceof Element ? node.closest('.tooltip') : null;
+
+  // Hover is for mice alone: a phone fires pointerover on each tap, which the click handler below already serves.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const word = wordAt(e.target);
+    if (word) later(() => open(word), 100);
+    else if (box.contains(e.target)) clearTimeout(timer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse' || !owner) return;
+    const into = e.relatedTarget;
+    if (!(box.contains(into) || wordAt(into) === owner)) later(close, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (box.contains(e.target)) return; // A link in the box does as links do.
+    const word = wordAt(e.target);
+    if (word && word !== owner) open(word);
+    else close();
+  });
+
+  // A tap focuses the word too; only keyboard focus, which is visible, opens it ---else the tap's click would close it.
+  document.addEventListener('focusin', (e) => {
+    const word = wordAt(e.target);
+    if (word?.matches(':focus-visible')) open(word);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // A phone resizes the page whenever its address bar slides away mid-scroll; so we follow the word, not close.
+  addEventListener('resize', () => owner && place(owner));
+});
+</script>
+
           <style>
           /* From: https://endlessparentheses.com/public/css/endless.css */
           /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
@@ -252,12 +369,7 @@
 
             box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
           }
-          </style>
-<style>
-</style>
-<script>
-</script>
-</head>
+          </style></head>
 <body>
 <div id="content" class="content">
 <div class="header">
@@ -326,6 +438,12 @@ Here are some of my latest thoughts on emacs&hellip; <a href="https://alhassy.gi
 <ol style="display:inline-block;text-align:left;margin-top:0.5em">
 <li><a href="https://alhassy.com/personal-glossary">Musa Al-hassy's Personal Glossary</a></li>
 <li><a href="https://alhassy.com/emacs-conf-2020">Powering-up Special Blocks: EmacsConf 2020 slides</a></li>
+<li><a href="https://alhassy.com/tooltips-for-glossaries-dictionaries-and-documentation">Tooltips for Glossaries, Dictionaries, and Documentation</a></li>
+<li><a href="https://alhassy.com/badge-links">Badge Links</a></li>
+<li><a href="https://alhassy.com/permalinks">Permalinks ---Org's own =<<X>>=, made visible---</a></li>
+<li><a href="https://alhassy.com/editor-comments">Editor Comments</a></li>
+<li><a href="https://alhassy.com/html-export-styles-as-links"> :fire: HTML Export Styles ---=#+html_export_style: THEME=</a></li>
+<li><a href="https://alhassy.com/colours">Colours</a></li>
 <li><a href="https://alhassy.com/org-special-block-extras-developers-guide">org-special-block-extras: Make your own blocks and links</a></li>
 <li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links">org-special-block-extras: The block and link types</a></li>
 <li><a href="https://alhassy.com/org-special-block-extras">org-special-block-extras: Write Once, Export Everywhere</a></li>
@@ -368,6 +486,230 @@ Here are some of my latest thoughts on emacs&hellip; <a href="https://alhassy.gi
 <hr>
 </p>
 
+<h2 class="title"><a href="https://alhassy.com/tooltips-for-glossaries-dictionaries-and-documentation">Tooltips for Glossaries, Dictionaries, and Documentation</a></h2>
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
+<center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+
+<p>
+Sometimes I want to use the same <abbr class="tooltip" tabindex="0">tooltip<template><pre>A remark, CONTENTS, on MARKER in the text: in HTML, a tooltip on MARKER, hovered on a desktop, tapped on a
+phone; in LaTeX, MARKER followed by CONTENTS as a margin note, numbered by COUNTER, as footnotes are; in beamer, whose
+slides have no margins, a footnote.  Sans MARKER, the note’s number alone in LaTeX, and “°” in HTML.
+
+  It’s a                                   /Allah[[margin:][The God of Abraham]] does not burden a soul …/
+  #+begin_tooltip simple
+  Squint, and Maybe ℕ is ℕ.
+  #+end_tooltip
+  exercise.
+
+The block is one-off, “inline footnotes”; Org’s own [fn::…] are such remarks too.  For a note used repeatedly, consider
+declaring it with ‘documentation’ and citing it with ‘doc’.
+
+WIDTH, COUNTER, and COLOR are LaTeX’s: the note is WIDTH wide, coloured COLOR, its number in black.  Since verbatim
+environments fail as arguments to \marginpar, CONTENTS is saved in a minipage within a LaTeX box, then unfolded in the
+margin; hence, src blocks may appear within margin notes (•̀ᴗ•́)و  For LaTeX, a ‘#+resize:’ line has the rest of the
+note resized, to 1.3 the margin’s width ---requiring \usepackage{adjustbox}.
+
+‘tooltip’ is an alias, for when we think in HTML rather than LaTeX.
+
+An alias of ‘org-block/margin’.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_tooltip
+     Hello, world
+     #+end_tooltip
+
+ is rewritten to the result of the call
+
+     (org-block/tooltip ‘latex "Hello, world")</pre></template></abbr> multiple times, so I write
+the tooltip content once in a <abbr class="tooltip" tabindex="0">documentation<template><pre>A glossary entry: CONTENTS defines NAME, cited as doc:LABEL; a heading tagged :documentation: is one too.
+
+The entries live in ‘org--docs’.
+
+A documentation entry may have its LABEL, its primary identifier,
+be:
+1. Omitted
+2. Given as a single symbol
+3. Given as a many aliases ’(lbl₀ lbl₁ … lblₙ)
+
+The third case is for when there is no canonical label to refer to
+an entry, or it is convenient to use multiple labels for the same
+entry.
+
+In all of the above cases, two additional labels are included:
+The entry name with spaces replaced by underscores, and again but
+all lower case.
+
+Documentation blocks are not shown upon export;
+unless SHOW is non-nil, in which case they are shown
+using the ‘box’ block, with the provided COLOR passed to it.
+
+Alternatively, a heading tagged :documentation: is an entry, which
+exports as an ordinary section: its title is the NAME, its :DOC_KEYS:
+property holds the labels, and its own text is the entry.
+
+  * Category Theory                                  :documentation:
+    :PROPERTIES:
+    :DOC_KEYS: cat cats
+    :END:
+    A theory of typed composition; e.g., typed monoids.
+
+Entries are read afresh before each export, so they may be cited before
+they are defined; see ‘org--docs-prepare’.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_documentation
+     Hello, world
+     #+end_documentation
+
+ is rewritten to the result of the call
+
+     (org-block/documentation ‘latex "Hello, world")</pre></template></abbr> block and then
+reference it using the the <abbr class="tooltip" tabindex="0">doc<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> link type.
+</p>
+
+
+<p>
+<p style="text-align:right"> <a href="https://alhassy.com/tooltips-for-glossaries-dictionaries-and-documentation"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+</p>
+
+<p>
+<hr>
+</p>
+
+<h2 class="title"><a href="https://alhassy.com/badge-links">Badge Links</a></h2>
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
+<center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+
+<p>
+Badges provide a quick and colourful summary of key features of a project,
+such as whether it's maintained, its license, and if it's documented.
+</p>
+
+<p>
+<p style="text-align:right"> <a href="https://alhassy.com/badge-links"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+</p>
+
+<p>
+<hr>
+</p>
+
+<h2 class="title"><a href="https://alhassy.com/permalinks">Permalinks ---Org's own =<<X>>=, made visible---</a></h2>
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
+<center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+
+<p>
+Sometimes we want to point explicitly at a particular location in an article, such as within a <code>#+begin_details</code>
+block.  Org already has two kinds of <i>target</i> for this; we merely make the first one visible.
+</p>
+
+
+<p>
+<p style="text-align:right"> <a href="https://alhassy.com/permalinks"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+</p>
+
+<p>
+<hr>
+</p>
+
+<h2 class="title"><a href="https://alhassy.com/editor-comments">Editor Comments</a></h2>
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
+<center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+
+<p>
+“Editor Comments” are intended to be top-level first-class comments in an
+article that are inline with the surrounding text and are delimited in such a
+way that they are visible but drawing attention.  I first learned about this
+idea from Wolfram Kahl &mdash;who introduced me to Emacs many years ago.  We
+</p>
+
+<p>
+<p style="text-align:right"> <a href="https://alhassy.com/editor-comments"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+</p>
+
+<p>
+<hr>
+</p>
+
+<h2 class="title"><a href="https://alhassy.com/html-export-styles-as-links"> :fire: HTML Export Styles ---=#+html_export_style: THEME=</a></h2>
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
+<center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+
+<p>
+It's annoying to have to introduce HTML into your Org &mdash;especially when
+you don't know HTML and don't want to learn it just to have a pretty webpage.
+</p>
+
+<p>
+<p style="text-align:right"> <a href="https://alhassy.com/html-export-styles-as-links"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+</p>
+
+<p>
+<hr>
+</p>
+
+<h2 class="title"><a href="https://alhassy.com/colours">Colours</a></h2>
+<center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
+<center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
+
+<p>
+Let's develop blocks for colouring text and link types for inline colouring;
+e.g., <abbr class="tooltip" tabindex="0">color<template><pre>Format text according to a given COLOR, which is black by default.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_color
+     Hello, world
+     #+end_color
+
+ is rewritten to the result of the call
+
+     (org-block/color ‘latex "Hello, world")</pre></template></abbr> and <abbr class="tooltip" tabindex="0">teal<template><pre>Show text in teal color.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_teal
+     Hello, world
+     #+end_teal
+
+ is rewritten to the result of the call
+
+     (org-block/teal ‘latex "Hello, world")</pre></template></abbr>.
+</p>
+
+<p>
+<p style="text-align:right"> <a href="https://alhassy.com/colours"><img src="https://img.shields.io/badge/Read-more-green?logo=read-the-docs"></a> </p>
+</p>
+
+<p>
+<hr>
+</p>
+
 <h2 class="title"><a href="https://alhassy.com/org-special-block-extras-developers-guide">org-special-block-extras: Make your own blocks and links</a></h2>
 <center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-packages.html"><img src="https://img.shields.io/badge/-packages-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center>
 <center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
@@ -391,16 +733,8 @@ Every block and link above is made with the very tools below, so a new one of ou
 <center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center>
 
 <p>
-<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">It can be useful to draw attention to some important text by
-enclosing it in a [[doc:org-block/box][box]].
-
-#+begin_box Uses of callout boxes
-Such boxes often callout tips, warnings, cautionary info or
-emphasises core information.
-#+end_box</pre> </div> <div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
 It can be useful to draw attention to some important text by
-enclosing it in a <abbr class="tooltip"
-tabindex="0">box<template><pre>Enclose text in a box, possibly with a TITLE.
+enclosing it in a <abbr class="tooltip" tabindex="0">box<template><pre>Enclose text in a box, possibly with a TITLE.
 
 By default, the box’s BACKGROUND-COLOR is green for HTML and red for LaTeX;
 for LaTeX, there are also FRAME-COLOR and TITLE-BACKGROUND-COLOR.
@@ -441,19 +775,6 @@ For example, upon LaTeX export, the Org special block
  is rewritten to the result of the call
 
      (org-block/box ‘latex "Hello, world")</pre></template></abbr>.
-</p>
-
-<div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Uses
-of callout boxes</h3> 
-<p>
-Such boxes often callout tips, warnings, cautionary info or
-emphasises core information.
-</p>
-</div> </div></div> <br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>
-</code></pre>
-</div>
- </details>
 </p>
 
 

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 00:07 -->
+<!-- 2026-10-19 Mon 14:22 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -229,8 +229,120 @@
 </script>
 
 <style>
+/* tooltips.css ---The look of tooltips.js: tooltipster's Punk theme, a dark box over a pink rule. */
+
+/* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
+.tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
+/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+mjx-container .tooltip { color: inherit; }
+
+.tooltip-box {
+  position: absolute; z-index: 1000;
+  max-width: min(40em, calc(100vw - 16px)); /* A phone's screen, less the margins `place' keeps. */
+  padding: 8px 16px; border-radius: 5px; border-bottom: 3px solid #f71169;
+  background: #2a2a2a; color: #fff; font-size: 0.9em; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow-wrap: anywhere;
+  animation: tooltip-grow 0.15s ease-out; transform-origin: center bottom;
+}
+.tooltip-box[hidden] { display: none; }
+.tooltip-box a { color: #ff8ab8; }
+.tooltip-box p { margin: 0.4em 0; }
+/* A docstring keeps its line breaks and indentation, yet wraps rather than overflowing a phone's screen. */
+.tooltip-box pre { margin: 0; white-space: pre-wrap; background: none; color: inherit; border: none; box-shadow: none; }
+
+@keyframes tooltip-grow { from { opacity: 0; transform: scale(0.8); } }
 </style>
 <script>
+// tooltips.js ---Tooltips for org-special-block-extras: hover on a desktop, tap on a phone.
+//
+// By way of example, the exported Org `[[doc:cat]]` becomes
+//
+//     <abbr class="tooltip" tabindex="0">Category Theory<template><p>A theory of composition.</p></template></abbr>
+//
+// and we show the <template>'s HTML in one shared box, positioned beside the word.  The box is ordinary HTML, so its
+// links are clickable: hovering from the word into the box keeps it open.
+//
+// We replace tooltipster ---and the jQuery it needs--- since it opened only on mouseenter, which no phone fires, and
+// fetched its bundle cross-origin per page; see https://github.com/alhassy/org-special-block-extras/issues/53.
+// This file is inlined into each exported page, sans any request.
+//
+// | Action                                   | Effect                    |
+// |------------------------------------------+---------------------------|
+// | Hover a word, with a mouse               | Open, after a beat        |
+// | Leave the word and the box               | Close, after a beat       |
+// | Tap, or click, a word                    | Open; again to close      |
+// | Tap, or click, anywhere else; or Escape  | Close                     |
+// | Tab onto a word                          | Open; Escape to close     |
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.className = 'tooltip-box';
+  box.setAttribute('role', 'tooltip');
+  box.hidden = true;
+  document.body.append(box);
+
+  let owner = null; // The .tooltip whose box is open, if any.
+  let timer;        // A pending open or close; the newest intent wins.
+  const later = (action, ms) => { clearTimeout(timer); timer = setTimeout(action, ms); };
+
+  const open = (word) => {
+    clearTimeout(timer);
+    if (owner === word) return;
+    close();
+    owner = word;
+    box.innerHTML = tipOf(word)?.innerHTML ?? '';
+    box.hidden = false;
+    place(word);
+  };
+
+  const close = () => { clearTimeout(timer); owner = null; box.hidden = true; };
+
+  // A word's tip is its <template>; else, in maths or a graph's <svg>, which keep no <template> within, the one its
+  // osbe-tip-ID class names, beside them: \class{tooltip osbe-tip-g1}{x} … <template id="osbe-tip-g1">.
+  const tipOf = (word) => word.querySelector(':scope > template')
+    ?? document.getElementById([...word.classList].find((c) => c.startsWith('osbe-tip-')));
+
+  // Above the word when there is room, else below; centred on it, yet never past the screen's edges ---a phone's
+  // screen being narrower than most tooltips.
+  const place = (word) => {
+    const at = word.getBoundingClientRect(), gap = 8;
+    const centred = at.left + at.width / 2 - box.offsetWidth / 2;
+    const left = Math.min(Math.max(gap, centred), innerWidth - box.offsetWidth - gap);
+    const above = at.top > box.offsetHeight + gap;
+    box.style.left = `${left + scrollX}px`;
+    box.style.top = `${(above ? at.top - box.offsetHeight - gap : at.bottom + gap) + scrollY}px`;
+  };
+
+  const wordAt = (node) => node instanceof Element ? node.closest('.tooltip') : null;
+
+  // Hover is for mice alone: a phone fires pointerover on each tap, which the click handler below already serves.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const word = wordAt(e.target);
+    if (word) later(() => open(word), 100);
+    else if (box.contains(e.target)) clearTimeout(timer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse' || !owner) return;
+    const into = e.relatedTarget;
+    if (!(box.contains(into) || wordAt(into) === owner)) later(close, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (box.contains(e.target)) return; // A link in the box does as links do.
+    const word = wordAt(e.target);
+    if (word && word !== owner) open(word);
+    else close();
+  });
+
+  // A tap focuses the word too; only keyboard focus, which is visible, opens it ---else the tap's click would close it.
+  document.addEventListener('focusin', (e) => {
+    const word = wordAt(e.target);
+    if (word?.matches(':focus-visible')) open(word);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // A phone resizes the page whenever its address bar slides away mid-scroll; so we follow the word, not close.
+  addEventListener('resize', () => owner && place(owner));
+});
 </script>
 
           <style>
@@ -466,7 +578,7 @@ a draft until you remove it before publishing.</pre></template></abbr>).</li>
 
 Binds:
   C-x C-s  ---assign :CUSTOM_ID: slugs to fresh container headings, stamp
-             section anchors, vendor :REDIRECT: sources, bump #+modified: /
+             section anchors, kebab-case existing ids (and their [[#id]] links), vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
   C-u C-x C-s ---likewise, but repeated section ids become &lt;slug&gt;--placeholder-N;
@@ -504,9 +616,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 005&gt;
+C-RET		#&lt;interpreted-function BF1&gt;
 
-C-x C-s		#&lt;interpreted-function 89B&gt;
+C-x C-s		#&lt;interpreted-function 4EA&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -715,11 +827,11 @@ and to have a <a href="https://alhassy.com/cartoon">tiny web-app for Arabic show
 <h2 id="goal-driven-development"><span class="section-number-2">3.</span> <a href="#goal-driven-development">Anatomy of an article</a></h2>
 <div class="outline-text-2" id="text-goal-driven-development">
 <p>
-<a id="new-article"></a>
+<a class="anchor" id="new-article" href="#new-article" aria-label="Permalink to new-article"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
-<a id="initial-setup"></a>
+<a class="anchor" id="initial-setup" href="#initial-setup" aria-label="Permalink to initial-setup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -750,7 +862,7 @@ used for index/tag-page generation.
 </p>
 
 <p>
-<a id="unfurling"></a>
+<a class="anchor" id="unfurling" href="#unfurling" aria-label="Permalink to unfurling"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -882,7 +994,9 @@ If ‘vc-make-backup-files’ is nil, which is the default,
 See the subroutine ‘basic-save-buffer’ for more information.
 
 (fn &amp;optional ARG)</pre></template></abbr> stamps a missing one
-with <code>blog--make-slug</code> of the title, so later title edits never shift the URL.</li>
+with <code>blog--make-slug</code> of the title, so later title edits never shift the URL; an
+existing id that isn't lower-case kebab-case &mdash;e.g., a <code>:REDIRECT:</code>'s <code>Next_Steps</code>&mdash; becomes
+so, <code>next-steps</code>, along with every <code>[[#Next_Steps]]</code> link to it.</li>
 <li><code>blog--validate-slugs</code> refuses a slug that isn't lower-case kebab-case, or that another
 article &mdash;container or standalone&mdash; already owns, naming both.</li>
 </ul>
@@ -1003,8 +1117,13 @@ KWDS may also carry options, which are not arguments:
 + ‘:fontify [:begin STRING :end STRING :face FACE]’ says how the block looks in Org buffers;
   e.g., [:begin "Proof." :end "⏹" :face =’italic] shows “#+begin_proof” as “Proof.”,
   “#+end_proof” as “⏹”, and the contents in italics too.  Moreover, :keywords =’((REGEXP GROUP FACE) …) shows
-  each REGEXP match in the contents in FACE; e.g., the ‘align’ block’s “:tag-blue:” shows as a tag, in blue.
-  Each part is optional; see ‘org--fontify-blocks’.
+  each REGEXP match in the contents in FACE; e.g., the ‘math’ block’s “blue:&lt;&lt;Fold&gt;&gt;” shows as a tag, in blue.
+  And :language "latex" shows the contents as a #+begin_src latex block’s.  Each part is optional; see
+  ‘org--fontify-blocks’.
++ ‘:hover STRING’ is prose that eldoc shows, on hovering the block’s #+begin_ line, beneath its docstring’s
+  first line; e.g., a tip too long for that line.  See ‘org--special-block-eldoc’.
++ ‘:manual URL’ is where the block is documented, which eldoc offers as “See the manual”; a URL of #ANCHOR is
+  that section of ‘org-special-block-extras-manual’; e.g., :manual "#math".
 
 After that is an optional DOCSTRING, a familar feature of DEFUN.
 The docstring is displayed as part of the tooltip for the
@@ -1440,15 +1559,16 @@ on with the GitHub tip &mdash;whose bugs we may have just fixed, unpushed!
 </div>
 
 <p>
-A single <code>.el</code> isn't always enough.  <code>org-special-block-extras.org</code> shows <code>osbe-example:box</code>,
-an <code>org-defblock</code> in <code>tests/examples/README.el</code> that reads <code>tests/examples/box.el</code> beside it
-and scans the repo's <code>*.el</code> for <code>box</code>'s definition; fetched alone, it finds neither.  So a
+A single <code>.el</code> isn't always enough: one that reads files beside it &mdash;say, a link type whose
+examples live in the repo's <code>examples/*.org</code>&mdash; finds none when fetched alone.  So a
 <code>:LOAD:</code> that's neither a URL nor an absolute path is relative to the <code>:REDIRECT:</code>'s GitHub
 repo, which we shallow-clone to the git-ignored <code>.redirect-clones/&lt;repo&gt;/</code> &mdash;refetched each
 publish, with last time's clone as the offline fallback&mdash; and load from there; e.g.,
-<code>:LOAD: tests/examples/README.el</code>.  The directory is hidden, so it's neither scanned for
-articles nor copied to the site, where a nested <code>.git</code> would break GitHub Pages.  One-off
-link types thus stay with their article, rather than piling up in AlBasmala.org.
+<code>:LOAD: lisp/examples.el</code>.  The directory is hidden, so it's neither scanned for articles
+nor copied to the site, where a nested <code>.git</code> would break GitHub Pages.  One-off link types
+thus stay with their article, rather than piling up in AlBasmala.org.
+(<code>org-special-block-extras.org</code> needs none: its <code>:demo</code> blocks carry their own snapshots,
+and CI installs the package itself.)
 </p>
 
 <p>
@@ -1820,7 +1940,7 @@ registry, validates slugs, and only then saves and previews.  <kbd style="">C-RE
 
 Binds:
   C-x C-s  ---assign :CUSTOM_ID: slugs to fresh container headings, stamp
-             section anchors, vendor :REDIRECT: sources, bump #+modified: /
+             section anchors, kebab-case existing ids (and their [[#id]] links), vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
   C-u C-x C-s ---likewise, but repeated section ids become &lt;slug&gt;--placeholder-N;
@@ -2611,7 +2731,8 @@ Example use:  (@tags (seq-elt blog-posts 0))
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Badges implementation
 </span>   (concat
     (format <span style="color: #50a14f;">"&lt;a href=\"https://alhassy.github.io/tags.html\"&gt; %s &lt;/a&gt;"</span>
-            (org-link/octoicon <span style="color: #50a14f;">"tag"</span> nil 'html))
+            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">GitHub's &#8220;tag&#8221; OctoIcon; org-special-block-extras axed its octoicon: link.
+</span>            <span style="color: #50a14f;">"&lt;svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 15 16\" width=\"15\" height=\"16\"&gt;&lt;path fill-rule=\"evenodd\" d=\"M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z\"&gt;&lt;/path&gt;&lt;/svg&gt;"</span>)
     (s-join <span style="color: #50a14f;">" "</span>
             (<span style="color: #a626a4;">--map</span>  (<span style="color: #a626a4;">let</span> ((slug (blog--tag-slug it)))
                       (org-link/badge
@@ -2631,7 +2752,7 @@ Example use:  (@tags (seq-elt blog-posts 0))
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <p>
-<a id="Images"></a>
+<a class="anchor" id="Images" href="#Images" aria-label="Permalink to Images"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -3493,7 +3614,7 @@ A top-level section ends at the next top-level heading, so plain regex suffices 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <p>
-<a id="footers"></a>
+<a class="anchor" id="footers" href="#footers" aria-label="Permalink to footers"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <div class="org-src-container">
@@ -3778,7 +3899,7 @@ What every page's <code>&lt;head&gt;</code> loads:
 <h3 id="html-header"><span class="section-number-3">7.1.</span> <a href="#html-header"><i>Style</i>! ✨ What do we want to be inserted into the head of every page?</a></h3>
 <div class="outline-text-3" id="text-html-header">
 <p>
-<a id="the-html-header"></a>
+<a class="anchor" id="the-html-header" href="#the-html-header" aria-label="Permalink to the-html-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -3899,7 +4020,7 @@ LaTeX-style notation to write mathematics, §<a href="#MathJax-Support">7.4</a>.
 <h4 id="blog-banner"><span class="section-number-4">7.1.3.</span> <a href="#blog-banner">Blog Banner and Dynamic Code Highlighting</a></h4>
 <div class="outline-text-4" id="text-blog-banner">
 <p>
-<a id="blog-banner"></a>
+<a class="anchor" id="blog-banner" href="#blog-banner" aria-label="Permalink to blog-banner"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -4037,7 +4158,7 @@ Smaller touches follow: curvy source blocks, pink inline code and tables, and gr
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <p>
-<a id="curvy-blocks"></a>
+<a class="anchor" id="curvy-blocks" href="#curvy-blocks" aria-label="Permalink to curvy-blocks"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -4210,7 +4331,7 @@ This is part of <code>org-special-block-extras</code>, and it's something like t
 <h3 id="floating-toc"><span class="section-number-3">7.2.</span> <a href="#floating-toc">Ξ: Floating <i>Table of Contents</i></a></h3>
 <div class="outline-text-3" id="text-floating-toc">
 <p>
-<a id="floating-toc"></a>
+<a class="anchor" id="floating-toc" href="#floating-toc" aria-label="Permalink to floating-toc"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -4405,7 +4526,7 @@ every later save logs each placeholder to <code>*Messages*</code> ---<kbd style=
   <span style="color: #50a14f; font-style: italic;">"Matches a placeholder CUSTOM_ID; `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--make-slug</span><span style="color: #50a14f; font-style: italic;">' collapses dash runs, so no real slug contains &#8220;--&#8221;."</span>)
 
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--ensure-useful-section-anchors</span> (<span style="color: #c18401;">&amp;optional</span> placeholders)
-  <span style="color: #50a14f; font-style: italic;">"Org sections without a CUSTOM_ID are given one derived from the heading title.
+  <span style="color: #50a14f; font-style: italic;">"Org sections without a CUSTOM_ID are given one derived from the heading title; existing ones are kebab-cased.
 
 Uses `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--make-slug</span><span style="color: #50a14f; font-style: italic;">' so the result is lowercase kebab-case, consistent with
 URL slugs.  On a collision, pops a message-box and undoes ---unless PLACEHOLDERS
@@ -4415,6 +4536,18 @@ E.g., &#8623; We'll go on a &#8704;&#8707;&#8645; adventure
    &#8614;  well-go-on-a-adventure
    &#8614;  well-go-on-a-adventure--placeholder-2, when repeated with PLACEHOLDERS"</span>
   (<span style="color: #a626a4;">interactive</span> <span style="color: #50a14f;">"P"</span>)
+  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Hand-written ids become lower-case kebab-case too, e.g., Next_Steps &#8614; next-steps, as do the [[#id]] links naming them.
+</span>  (org-map-entries
+   (<span style="color: #a626a4;">lambda</span> ()
+     (<span style="color: #a626a4;">let*</span> ((old (org-entry-get nil <span style="color: #50a14f;">"CUSTOM_ID"</span>))
+            (new (blog--make-slug (string-replace <span style="color: #50a14f;">"_"</span> <span style="color: #50a14f;">" "</span> old))))
+       (<span style="color: #a626a4;">unless</span> (equal old new)
+         (org-entry-put nil <span style="color: #50a14f;">"CUSTOM_ID"</span> new)
+         (<span style="color: #a626a4;">save-excursion</span>
+           (goto-char (point-min))
+           (<span style="color: #a626a4;">while</span> (search-forward (format <span style="color: #50a14f;">"[[#%s]"</span> old) nil t)
+             (replace-match (format <span style="color: #50a14f;">"[[#%s]"</span> new) t t))))))
+   <span style="color: #50a14f;">"CUSTOM_ID={.}"</span>)
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Existing ids count too, else a fresh slug could silently clash with a hand-written one.
 </span>  (<span style="color: #a626a4;">let</span> ((ids (org-map-entries (<span style="color: #a626a4;">lambda</span> () (org-entry-get nil <span style="color: #50a14f;">"CUSTOM_ID"</span>)) <span style="color: #50a14f;">"CUSTOM_ID={.}"</span>)))
     (org-map-entries
@@ -4501,7 +4634,7 @@ links cannot nest.
 <h3 id="mathjax-support"><span class="section-number-3">7.4.</span> <a href="#mathjax-support">MathJax Support ---\(e^{i \cdot \pi} + 1 = 0\)</a></h3>
 <div class="outline-text-3" id="text-mathjax-support">
 <p>
-<a id="MathJax-Support"></a>
+<a class="anchor" id="MathJax-Support" href="#MathJax-Support" aria-label="Permalink to MathJax-Support"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -4509,15 +4642,7 @@ Org loads the <a href="https://math.meta.stackexchange.com/questions/5020/mathja
 <code>\[...\]</code>. Here is an example.
 </p>
 
-<div style="column-count: 2;">
-<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
-<div ><pre class="src src-org">\[ p ⊓ q = p \quad ≡ \quad p ⊔ q = q \label{Golden-Rule}\tag{Golden-Rule}\]
-
-Look at \ref{Golden-Rule}, it says, when specialised to numbers, /the minimum
-of two items is the first precisely when the maximum of the two is the second/
----d'uh!</pre></div>
-</div>
-<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<div class="org-demo">
 <p>
 \[ p ⊓ q = p \quad ≡ \quad p ⊔ q = q \label{Golden-Rule}\tag{Golden-Rule}\]
 </p>
@@ -4527,7 +4652,7 @@ Look at \ref{Golden-Rule}, it says, when specialised to numbers, <i>the minimum
 of two items is the first precisely when the maximum of the two is the second</i>
 &mdash;d'uh!
 </p>
-</div>
+
 </div>
 </div>
 <div id="outline-container-unicode-warning" class="outline-4">
@@ -4540,13 +4665,7 @@ both its tag and label and goes nowhere, whereas \ref{Order-Definition}, labelle
 takes you to its formula.
 </p>
 
-<div style="column-count: 2;">
-<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
-<div ><pre class="src src-org">\[ p ⊑ q \quad ≡ \quad p ⊓ q = p \tag{⊑-Definition}\label{⊑-Definition} \]
-
-\[ p ⊑ q \quad ≡ \quad p ⊔ q = q \tag{⊑-Definition}\label{Order-Definition} \]</pre></div>
-</div>
-<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<div class="org-demo">
 <p>
 \[ p ⊑ q \quad ≡ \quad p ⊓ q = p \tag{⊑-Definition}\label{⊑-Definition} \]
 </p>
@@ -4554,7 +4673,7 @@ takes you to its formula.
 <p>
 \[ p ⊑ q \quad ≡ \quad p ⊔ q = q \tag{⊑-Definition}\label{Order-Definition} \]
 </p>
-</div>
+
 </div>
 </div>
 </div>
@@ -4620,14 +4739,7 @@ To understand <i>why</i> these styling rules work, see this website:
 </details>
 
 <br>
-<div style="column-count: 2;">
-<div style="padding: 1em;background-color: white;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
-<div ><pre class="src src-org">For example,
-+ Inline: اهلاً وسهلاً
-+ Within a table:
-    |  اهلاً وسهلاً |</pre></div>
-</div>
-<div style="padding: 1em;background-color: white;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<div class="org-demo">
 <p>
 For example,
 </p>
@@ -4649,8 +4761,9 @@ Within a table:
 </tbody>
 </table></li>
 </ul>
+
 </div>
-</div>
+
 <p>
 As the above left source demonstrates, unless some explicit action is taken, Arabic fonts are by default rendered
 hideously small.
@@ -4672,7 +4785,7 @@ and their RSS feeds &mdash;all from <code>blog-posts</code>.
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Details</font></strong></summary>
 <p>
-<a id="Index"></a>
+<a class="anchor" id="Index" href="#Index" aria-label="Permalink to Index"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 </p>
 
 <p>
@@ -5858,7 +5971,7 @@ When blogging, I see live HTML previews whenever I save thanks to
 
 Binds:
   C-x C-s  ---assign :CUSTOM_ID: slugs to fresh container headings, stamp
-             section anchors, vendor :REDIRECT: sources, bump #+modified: /
+             section anchors, kebab-case existing ids (and their [[#id]] links), vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
   C-u C-x C-s ---likewise, but repeated section ids become &lt;slug&gt;--placeholder-N;
@@ -5896,9 +6009,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function 005&gt;
+C-RET		#&lt;interpreted-function BF1&gt;
 
-C-x C-s		#&lt;interpreted-function 89B&gt;
+C-x C-s		#&lt;interpreted-function 4EA&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle
@@ -5922,6 +6035,8 @@ The REGION argument is non-nil if called interactively; in that
 case, if Transient Mark mode is enabled and the mark is active,
 fill each of the elements in the active region, instead of just
 filling the current element.
+
+This function has :before-until advice: ‘org--math-fill-hint’.
 
 (fn &amp;optional JUSTIFY REGION)</pre></template></abbr>
 will format my paragraphs to wrap nicely into this 80-column width.

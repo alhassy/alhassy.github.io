@@ -34,7 +34,7 @@ Here are some notable features of my blog.
 + Tags and per-tag RSS feeds ---&#167;<span style="text-decoration: underline;"><a href="#rss-feeds-one-per-tag-plus-a-global-one">RSS feeds</a></span>
 + A nice blog banner ---&#167;<span style="text-decoration: underline;"><a href="blog-banner">blog-banner</a></span>
 + <span style="font-style: italic;">/Dynamically/</span> highlighting code from references in prose ---&#167;<span style="text-decoration: underline;"><a href="blog-banner">blog-banner</a></span>
-+ Tooltips, folded regions, and badges ---<a href="badge:org-special-block-extras|2.0|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs">badge:org-special-block-extras|2.0|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs</a>
++ Tooltips, folded regions, and badges ---<span style="text-decoration: underline;"><a href="badge:org-special-block-extras|2.0|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs">badge:org-special-block-extras|2.0|informational|https://alhassy.github.io/org-special-block-extras/|Gnu-Emacs</a></span>
 + Overall nice looking HTML style ---<span style="text-decoration: underline;"><a href="http://taopeng.me/org-notes-style/">org-notes-style</a></span>
 + Beautiful math using LaTeX notation, $\forall \phi &#8658; \exists \phi$
   ---&#167;<span style="text-decoration: underline;"><a href="MathJax-Support">MathJax-Support</a></span>
@@ -238,7 +238,9 @@ By way of example, the heading =* Quick Emacs Tip: visual-line-mode= is publishe
 =alhassy.com/quick-emacs-tip-visual-line-mode=.
 
 - A container heading's slug is its =:CUSTOM_ID:=; &#12308;<a href="kbd:C-x_C-s">C-x</a> <a href="kbd:C-x_C-s">C-</a>s&#12309; stamps a missing one
-  with =blog--make-slug= of the title, so later title edits never shift the URL.
+  with =blog--make-slug= of the title, so later title edits never shift the URL; an
+  existing id that isn't lower-case kebab-case ---e.g., a =:REDIRECT:='s =Next_Steps=--- becomes
+  so, =next-steps=, along with every =<span style="text-decoration: underline;"><a href="#Next_Steps">[[#Next_Steps]]</a></span>= link to it.
 - =blog--validate-slugs= refuses a slug that isn't lower-case kebab-case, or that another
   article ---container or standalone--- already owns, naming both.
 
@@ -519,15 +521,16 @@ on with the GitHub tip ---whose bugs we may have just fixed, unpushed!
 <span style="font-weight: bold;">:END:</span>
 <span style="color: #a0a1a7;">#+end_src
 </span>
-A single =.el= isn't always enough.  =org-special-block-extras.org= shows =osbe-example:box=,
-an =org-defblock= in =tests/examples/README.el= that reads =tests/examples/box.el= beside it
-and scans the repo's =*.el= for =box='s definition; fetched alone, it finds neither.  So a
+A single =.el= isn't always enough: one that reads files beside it ---say, a link type whose
+examples live in the repo's =examples/*.org=--- finds none when fetched alone.  So a
 =:LOAD:= that's neither a URL nor an absolute path is relative to the =:REDIRECT:='s GitHub
 repo, which we shallow-clone to the git-ignored =.redirect-clones/&lt;repo&gt;/= ---refetched each
 publish, with last time's clone as the offline fallback--- and load from there; e.g.,
-=:LOAD: tests/examples/README.el=.  The directory is hidden, so it's neither scanned for
-articles nor copied to the site, where a nested =.git= would break GitHub Pages.  One-off
-link types thus stay with their article, rather than piling up in AlBasmala.org.
+=:LOAD: lisp/examples.el=.  The directory is hidden, so it's neither scanned for articles
+nor copied to the site, where a nested =.git= would break GitHub Pages.  One-off link types
+thus stay with their article, rather than piling up in AlBasmala.org.
+(=org-special-block-extras.org= needs none: its =:demo= blocks carry their own snapshots,
+and CI installs the package itself.)
 
 Finally, a redirected article on GitHub opens with a banner inviting readers to star the
 repo or discuss it in its issues ---at the top, where it's seen, rather than after a long
@@ -836,7 +839,7 @@ registry, validates slugs, and only then saves and previews.  &#12308;<a href="k
 
 Binds:
   C-x C-s  ---assign :CUSTOM_ID: slugs to fresh container headings, stamp
-             section anchors, vendor :REDIRECT: sources, bump #+modified: /
+             section anchors, kebab-case existing ids (and their <a href="#id">[[#id]]</a> links), vendor :REDIRECT: sources, bump #+modified: /
              :MODIFIED: to today (if present), refresh the posts registry,
              validate slugs (kebab-case, unique), then save + live preview
   C-u C-x C-s ---likewise, but repeated section ids become &lt;slug&gt;--placeholder-N;
@@ -1418,7 +1421,8 @@ Example use:  (@tags (seq-elt blog-posts 0))
   <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Badges implementation
 </span>   (concat
     (format <span style="color: #50a14f;">"&lt;a href=\"<a href="https://alhassy.github.io/tags.html">https://alhassy.github.io/tags.html</a>\"&gt; %s &lt;/a&gt;"</span>
-            (org-link/octoicon <span style="color: #50a14f;">"tag"</span> nil 'html))
+            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">GitHub's &#8220;tag&#8221; OctoIcon; org-special-block-extras axed its octoicon: link.
+</span>            <span style="color: #50a14f;">"&lt;svg xmlns=\"<a href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>\" viewBox=\"0 0 15 16\" width=\"15\" height=\"16\"&gt;&lt;path fill-rule=\"evenodd\" d=\"M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z\"&gt;&lt;/path&gt;&lt;/svg&gt;"</span>)
     (s-join <span style="color: #50a14f;">" "</span>
             (<span style="color: #a626a4;">--map</span>  (<span style="color: #a626a4;">let</span> ((slug (blog--tag-slug it)))
                       (org-link/badge
@@ -2347,8 +2351,8 @@ jQuery that org-special-block-extras already loads; see <span style="text-decora
 A link type, or glossary, that one article defines for itself is invisible to CI, which never runs an
 article's own code; its links would then be broken.  So the ones our articles share live here.
 
-=<a href="arabic:&#10216;phrase">arabic:&#10216;phrase</a>&#10217;= shows one of six classroom phrases as a small inline sign, linking to its source and
-translated in a tooltip; e.g., =<a href="arabic:Let's take a break">[[arabic:Let's take a break]]</a>=.  An unknown phrase is an error, not a
+=<span style="text-decoration: underline;"><a href="arabic:&#10216;phrase">arabic:&#10216;phrase</a></span>&#10217;= shows one of six classroom phrases as a small inline sign, linking to its source and
+translated in a tooltip; e.g., =<span style="text-decoration: underline;"><a href="arabic:Let's take a break">[[arabic:Let's take a break]]</a></span>=.  An unknown phrase is an error, not a
 broken image.  <span style="text-decoration: underline;"><a href="file:arabic-roots.org">Arabic Roots</a></span> explains its design.
 
 <span style="color: #a0a1a7;">#+name: arabic-link</span>
@@ -2412,20 +2416,20 @@ Firstly, we want some styling rules to be loaded.
 <span style="color: #50a14f;">"&lt;link rel=\"icon\" href=\"<a href="https://alhassy.com/resources/favicon.png">https://alhassy.com/resources/favicon.png</a>\"&gt;"</span>)
 <span style="color: #a0a1a7;">#+end_src
 </span>
-+ <span style="font-weight: bold; text-decoration: underline;"><a href="(usualCSS)">usual-org-front-matter.css</a></span><span style="font-weight: bold;"> <a href="badge:||success|resources/usual-org-front-matter.css|css3">badge:||success|resources/usual-org-front-matter.css|css3</a> ::</span>
++ <span style="font-weight: bold; text-decoration: underline;"><a href="(usualCSS)">usual-org-front-matter.css</a></span><span style="font-weight: bold;"> </span><span style="font-weight: bold; text-decoration: underline;"><a href="badge:||success|resources/usual-org-front-matter.css|css3">badge:||success|resources/usual-org-front-matter.css|css3</a></span><span style="font-weight: bold;"> ::</span>
   Org's default HTML front-matter styles, captured by exporting a file with
   &#12308;<a href="kbd:C-c_C-e_h_o">C-c</a> <a href="kbd:C-c_C-e_h_o">C-e</a> <a href="kbd:C-c_C-e_h_o">h</a> o&#12309; and saving the CSS it produced.
 
-+ <span style="font-weight: bold; text-decoration: underline;"><a href="(orgNotesCSS)">org-notes-style.css</a></span><span style="font-weight: bold;"> <a href="badge:||success|resources/org-notes-style.css|css3">badge:||success|resources/org-notes-style.css|css3</a> ::</span>
++ <span style="font-weight: bold; text-decoration: underline;"><a href="(orgNotesCSS)">org-notes-style.css</a></span><span style="font-weight: bold;"> </span><span style="font-weight: bold; text-decoration: underline;"><a href="badge:||success|resources/org-notes-style.css|css3">badge:||success|resources/org-notes-style.css|css3</a></span><span style="font-weight: bold;"> ::</span>
 
   We vendor the rose-style <span style="text-decoration: underline;"><a href="http://taopeng.me/org-notes-style/">org-notes-style</a></span>, since hot-linking it from its homepage fails.
 
-+ <span style="font-weight: bold; text-decoration: underline;"><a href="(tocCSS)">floating-toc.css</a></span><span style="font-weight: bold;"> <a href="badge:||success|resources/floating-toc.css|css3">badge:||success|resources/floating-toc.css|css3</a> ::</span>
++ <span style="font-weight: bold; text-decoration: underline;"><a href="(tocCSS)">floating-toc.css</a></span><span style="font-weight: bold;"> </span><span style="font-weight: bold; text-decoration: underline;"><a href="badge:||success|resources/floating-toc.css|css3">badge:||success|resources/floating-toc.css|css3</a></span><span style="font-weight: bold;"> ::</span>
 
   I want to have an unobtrusive floating table of contents, see
   &#167;<span style="text-decoration: underline;"><a href="floating-toc">floating-toc</a></span>.
 
-+ <span style="font-weight: bold; text-decoration: underline;"><a href="(bannerCSS)">blog-banner.css</a></span><span style="font-weight: bold;"> <a href="badge:||success|resources/blog-banner.css|css3">badge:||success|resources/blog-banner.css|css3</a> ::</span>
++ <span style="font-weight: bold; text-decoration: underline;"><a href="(bannerCSS)">blog-banner.css</a></span><span style="font-weight: bold;"> </span><span style="font-weight: bold; text-decoration: underline;"><a href="badge:||success|resources/blog-banner.css|css3">badge:||success|resources/blog-banner.css|css3</a></span><span style="font-weight: bold;"> ::</span>
 
   Finally, we want a beautiful welcome mat, see &#167;<span style="text-decoration: underline;"><a href="blog-banner">blog-banner</a></span>.
 
@@ -2826,7 +2830,7 @@ every later save logs each placeholder to =*Messages*= ---&#12308;<a href="kbd:C
   "Matches a placeholder CUSTOM_ID; `blog--make-slug' collapses dash runs, so no real slug contains &#8220;--&#8221;.")
 
 (defun blog--ensure-useful-section-anchors (&amp;optional placeholders)
-  "Org sections without a CUSTOM_ID are given one derived from the heading title.
+  "Org sections without a CUSTOM_ID are given one derived from the heading title; existing ones are kebab-cased.
 
 Uses `blog--make-slug' so the result is lowercase kebab-case, consistent with
 URL slugs.  On a collision, pops a message-box and undoes ---unless PLACEHOLDERS
@@ -2836,6 +2840,18 @@ E.g., &#8623; We'll go on a &#8704;&#8707;&#8645; adventure
    &#8614;  well-go-on-a-adventure
    &#8614;  well-go-on-a-adventure--placeholder-2, when repeated with PLACEHOLDERS"
   (interactive "P")
+  ;; Hand-written ids become lower-case kebab-case too, e.g., Next_Steps &#8614; next-steps, as do the <span style="text-decoration: underline;"><a href="#id">#id</a></span> links naming them.
+  (org-map-entries
+   (lambda ()
+     (let* ((old (org-entry-get nil "CUSTOM_ID"))
+            (new (blog--make-slug (string-replace "_" " " old))))
+       (unless (equal old new)
+         (org-entry-put nil "CUSTOM_ID" new)
+         (save-excursion
+           (goto-char (point-min))
+           (while (search-forward (format "[[#%s]" old) nil t)
+             (replace-match (format "[[#%s]" new) t t))))))
+   "CUSTOM_ID={.}")
   ;; Existing ids count too, else a fresh slug could silently clash with a hand-written one.
   (let ((ids (org-map-entries (lambda () (org-entry-get nil "CUSTOM_ID")) "CUSTOM_ID={.}")))
     (org-map-entries
@@ -4167,7 +4183,7 @@ tree.
 <span style="color: #a0a1a7;"># (maybe-clone "<a href="https://github.com/alhassy/alhassy.github.io.git">https://github.com/alhassy/alhassy.github.io.git</a>" "~/blog")</span>
 
 
-<span style="color: #a0a1a7;"># <a href="teal:TODO">teal:TODO</a>: Make C-u C-c C-b switch to a particular theme so all exported html stuffs</span>
+<span style="color: #a0a1a7;"># <a href="teal:TODO">TODO</a>: Make C-u C-c C-b switch to a particular theme so all exported html stuffs</span>
 <span style="color: #a0a1a7;"># look the same ^_^</span>
 
 

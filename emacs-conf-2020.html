@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 00:07 -->
+<!-- 2026-10-19 Mon 14:23 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Powering-up Special Blocks: EmacsConf 2020 slides</title>
@@ -233,8 +233,120 @@ A modular interface for special blocks and links: defblock" />
 </script>
 
 <style>
+/* tooltips.css ---The look of tooltips.js: tooltipster's Punk theme, a dark box over a pink rule. */
+
+/* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
+.tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
+/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+mjx-container .tooltip { color: inherit; }
+
+.tooltip-box {
+  position: absolute; z-index: 1000;
+  max-width: min(40em, calc(100vw - 16px)); /* A phone's screen, less the margins `place' keeps. */
+  padding: 8px 16px; border-radius: 5px; border-bottom: 3px solid #f71169;
+  background: #2a2a2a; color: #fff; font-size: 0.9em; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow-wrap: anywhere;
+  animation: tooltip-grow 0.15s ease-out; transform-origin: center bottom;
+}
+.tooltip-box[hidden] { display: none; }
+.tooltip-box a { color: #ff8ab8; }
+.tooltip-box p { margin: 0.4em 0; }
+/* A docstring keeps its line breaks and indentation, yet wraps rather than overflowing a phone's screen. */
+.tooltip-box pre { margin: 0; white-space: pre-wrap; background: none; color: inherit; border: none; box-shadow: none; }
+
+@keyframes tooltip-grow { from { opacity: 0; transform: scale(0.8); } }
 </style>
 <script>
+// tooltips.js ---Tooltips for org-special-block-extras: hover on a desktop, tap on a phone.
+//
+// By way of example, the exported Org `[[doc:cat]]` becomes
+//
+//     <abbr class="tooltip" tabindex="0">Category Theory<template><p>A theory of composition.</p></template></abbr>
+//
+// and we show the <template>'s HTML in one shared box, positioned beside the word.  The box is ordinary HTML, so its
+// links are clickable: hovering from the word into the box keeps it open.
+//
+// We replace tooltipster ---and the jQuery it needs--- since it opened only on mouseenter, which no phone fires, and
+// fetched its bundle cross-origin per page; see https://github.com/alhassy/org-special-block-extras/issues/53.
+// This file is inlined into each exported page, sans any request.
+//
+// | Action                                   | Effect                    |
+// |------------------------------------------+---------------------------|
+// | Hover a word, with a mouse               | Open, after a beat        |
+// | Leave the word and the box               | Close, after a beat       |
+// | Tap, or click, a word                    | Open; again to close      |
+// | Tap, or click, anywhere else; or Escape  | Close                     |
+// | Tab onto a word                          | Open; Escape to close     |
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.className = 'tooltip-box';
+  box.setAttribute('role', 'tooltip');
+  box.hidden = true;
+  document.body.append(box);
+
+  let owner = null; // The .tooltip whose box is open, if any.
+  let timer;        // A pending open or close; the newest intent wins.
+  const later = (action, ms) => { clearTimeout(timer); timer = setTimeout(action, ms); };
+
+  const open = (word) => {
+    clearTimeout(timer);
+    if (owner === word) return;
+    close();
+    owner = word;
+    box.innerHTML = tipOf(word)?.innerHTML ?? '';
+    box.hidden = false;
+    place(word);
+  };
+
+  const close = () => { clearTimeout(timer); owner = null; box.hidden = true; };
+
+  // A word's tip is its <template>; else, in maths or a graph's <svg>, which keep no <template> within, the one its
+  // osbe-tip-ID class names, beside them: \class{tooltip osbe-tip-g1}{x} … <template id="osbe-tip-g1">.
+  const tipOf = (word) => word.querySelector(':scope > template')
+    ?? document.getElementById([...word.classList].find((c) => c.startsWith('osbe-tip-')));
+
+  // Above the word when there is room, else below; centred on it, yet never past the screen's edges ---a phone's
+  // screen being narrower than most tooltips.
+  const place = (word) => {
+    const at = word.getBoundingClientRect(), gap = 8;
+    const centred = at.left + at.width / 2 - box.offsetWidth / 2;
+    const left = Math.min(Math.max(gap, centred), innerWidth - box.offsetWidth - gap);
+    const above = at.top > box.offsetHeight + gap;
+    box.style.left = `${left + scrollX}px`;
+    box.style.top = `${(above ? at.top - box.offsetHeight - gap : at.bottom + gap) + scrollY}px`;
+  };
+
+  const wordAt = (node) => node instanceof Element ? node.closest('.tooltip') : null;
+
+  // Hover is for mice alone: a phone fires pointerover on each tap, which the click handler below already serves.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const word = wordAt(e.target);
+    if (word) later(() => open(word), 100);
+    else if (box.contains(e.target)) clearTimeout(timer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse' || !owner) return;
+    const into = e.relatedTarget;
+    if (!(box.contains(into) || wordAt(into) === owner)) later(close, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (box.contains(e.target)) return; // A link in the box does as links do.
+    const word = wordAt(e.target);
+    if (word && word !== owner) open(word);
+    else close();
+  });
+
+  // A tap focuses the word too; only keyboard focus, which is visible, opens it ---else the tap's click would close it.
+  document.addEventListener('focusin', (e) => {
+    const word = wordAt(e.target);
+    if (word?.matches(':focus-visible')) open(word);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // A phone resizes the page whenever its address bar slides away mid-scroll; so we follow the word, not close.
+  addEventListener('resize', () => owner && place(owner));
+});
 </script>
 
           <style>
@@ -680,9 +792,9 @@ When ARG is ‘C-u C-u’, display the asynchronous export stack.
 </tr>
 
 <tr>
-<td class="org-left">OctoIcons &amp; Link Here</td>
-<td class="org-left"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M0 2a1 1 0 011-1h14a1 1 0 011 1v9a1 1 0 01-1 1H7l-4 4v-4H1a1 1 0 01-1-1V2zm1 0h14v9H6.5L4 13.5V11H1V2zm6 6h2v2H7V8zm0-5h2v4H7V3z"></path></svg> <a class="anchor" aria-hidden="true" id="Overview" href="#Overview"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a></td>
-<td class="org-left"><code>octoicon</code>, <code>link-here</code></td>
+<td class="org-left">OctoIcons &amp; Permalinks</td>
+<td class="org-left">octoicon:report <a class="anchor" id="Overview" href="#Overview" aria-label="Permalink to Overview"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a></td>
+<td class="org-left"><code>octoicon</code>, <code>&lt;&lt;X&gt;&gt;</code></td>
 </tr>
 
 <tr>
@@ -759,32 +871,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">org-demo<template><pre>Output the CONTENTS of the block as both parsed Org and unparsed.
-
-Label the source text by SOURCE and the result text by RESULT
-
-finally, the source-result fragments can be shown in a STYLE
-that is either “parallel” (default) or “sequential”.
-
-SEP is the separator; e.g., a rule ‘&lt;hr&gt;’.
-
-In Markdown, the source is a fenced org block above its result, each under its label in bold.
-
-Regarding the Lisp function:
-+ BACKEND refers to the current export backend.
-+ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
-
-For example, upon LaTeX export, the Org special block
-
-     #+begin_org-demo
-     Hello, world
-     #+end_org-demo
-
- is rewritten to the result of the call
-
-     (org-block/org-demo ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">stutter<template><pre>Output the CONTENTS of the block REPS many times
+     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">org-demo<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">stutter<template><pre>Output the CONTENTS of the block REPS many times
 
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
@@ -800,28 +887,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/stutter ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">rename<template><pre>Perform the given LIST of substitutions on the text.
-The LIST is a comma separated list of ‘to’ separated symbols.
-In a link, no quotes are needed.
-
-Substitution is handy enough that every block has it: the :let switch, much as a src block’s :var, replaces
-whole words and operators by the values of Lisp forms; e.g., #+begin_box :let (Yusuf "Joseph" -&gt; "⇒").
-
-Regarding the Lisp function:
-+ BACKEND refers to the current export backend.
-+ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
-
-For example, upon LaTeX export, the Org special block
-
-     #+begin_rename
-     Hello, world
-     #+end_rename
-
- is rewritten to the result of the call
-
-     (org-block/rename ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">spoiler<template><pre>Hide text enclosed in double parens ((like this)) as if it were spoilers.
+     (org-block/stutter ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">rename<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">spoiler<template><pre>Hide text enclosed in double parens ((like this)) as if it were spoilers.
    LEFT and RIGHT may be other kinds of delimiters.
    The main argument, COLOR, indicates which color to use.
 
@@ -920,11 +986,11 @@ Sacha wrote an Org file and wanted some <b>feedback</b>
 <summary><strong><font face="Courier" size="3" color="green">Source for this slide!</font></strong></summary>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
-Three friends ---<span style="color: #00ff00;"><a href="green:Amin">green:Amin</a></span>, <span style="color: #ff0000;"><a href="red:Sacha">red:Sacha</a></span>,
-and <span style="color: #0000ff;"><a href="blue:Corwin---">blue:Corwin---</a></span> were organising a conference
+Three friends ---<span style="color: #00ff00;"><a href="green:Amin">Amin</a></span>, <span style="color: #ff0000;"><a href="red:Sacha">Sacha</a></span>,
+and <span style="color: #0000ff;"><a href="blue:Corwin---">Corwin---</a></span> were organising a conference
 
 <span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
-... <span style="font-weight: bold;">*</span><span style="color: #ffa500; font-weight: bold;"><a href="orange:EmacsConf2020">orange:EmacsConf2020</a></span><span style="font-weight: bold;">!*</span>
+... <span style="font-weight: bold;">*</span><span style="color: #ffa500; font-weight: bold;"><a href="orange:EmacsConf2020">EmacsConf2020</a></span><span style="font-weight: bold;">!*</span>
 
 <span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
 <span style="color: #a0a1a7;">#+ATTR_REVEAL: :frag (appear)</span>
@@ -987,28 +1053,7 @@ For example, upon LaTeX export, the Org special block
 <br></li>
 
 <li><p>
-<abbr class="tooltip" tabindex="0">translate<template><pre>Perform the given LIST of substitutions on the text.
-The LIST is a comma separated list of ‘to’ separated symbols.
-In a link, no quotes are needed.
-
-Substitution is handy enough that every block has it: the :let switch, much as a src block’s :var, replaces
-whole words and operators by the values of Lisp forms; e.g., #+begin_box :let (Yusuf "Joseph" -&gt; "⇒").
-
-Regarding the Lisp function:
-+ BACKEND refers to the current export backend.
-+ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
-
-For example, upon LaTeX export, the Org special block
-
-     #+begin_rename
-     Hello, world
-     #+end_rename
-
- is rewritten to the result of the call
-
-     (org-block/rename ‘latex "Hello, world")</pre></template></abbr> in the export
+<abbr class="tooltip" tabindex="0">translate<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> in the export
 </p>
 
 <p>
@@ -1032,16 +1077,13 @@ text
 <p>
 Sacha …
 </p>
-<div style="column-count: 2;">
-<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Writes</h3> 
-<div ><pre class="src src-org">Let's begin at $\sqrt{3 + \sum_{i = 0}^{12} i}$ in the *morning*.</pre></div>
-</div>
-<div style="padding: 1em;background-color: cyan;border-radius: 15px;font-size: 0.9em;"> <h3>Sees</h3> 
+<div class="org-demo">
 <p>
 Let's begin at \(\sqrt{3 + \sum_{i = 0}^{12} i}\) in the <b>morning</b>.
 </p>
+
 </div>
-</div>
+
 <p>
 She gets feedback …
 </p>
@@ -1591,8 +1633,13 @@ KWDS may also carry options, which are not arguments:
 + ‘:fontify [:begin STRING :end STRING :face FACE]’ says how the block looks in Org buffers;
   e.g., [:begin "Proof." :end "⏹" :face =’italic] shows “#+begin_proof” as “Proof.”,
   “#+end_proof” as “⏹”, and the contents in italics too.  Moreover, :keywords =’((REGEXP GROUP FACE) …) shows
-  each REGEXP match in the contents in FACE; e.g., the ‘align’ block’s “:tag-blue:” shows as a tag, in blue.
-  Each part is optional; see ‘org--fontify-blocks’.
+  each REGEXP match in the contents in FACE; e.g., the ‘math’ block’s “blue:&lt;&lt;Fold&gt;&gt;” shows as a tag, in blue.
+  And :language "latex" shows the contents as a #+begin_src latex block’s.  Each part is optional; see
+  ‘org--fontify-blocks’.
++ ‘:hover STRING’ is prose that eldoc shows, on hovering the block’s #+begin_ line, beneath its docstring’s
+  first line; e.g., a tip too long for that line.  See ‘org--special-block-eldoc’.
++ ‘:manual URL’ is where the block is documented, which eldoc offers as “See the manual”; a URL of #ANCHOR is
+  that section of ‘org-special-block-extras-manual’; e.g., :manual "#math".
 
 After that is an optional DOCSTRING, a familar feature of DEFUN.
 The docstring is displayed as part of the tooltip for the
@@ -2027,32 +2074,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, and <abbr class="tooltip" tabindex="0">org-demo<template><pre>Output the CONTENTS of the block as both parsed Org and unparsed.
-
-Label the source text by SOURCE and the result text by RESULT
-
-finally, the source-result fragments can be shown in a STYLE
-that is either “parallel” (default) or “sequential”.
-
-SEP is the separator; e.g., a rule ‘&lt;hr&gt;’.
-
-In Markdown, the source is a fenced org block above its result, each under its label in bold.
-
-Regarding the Lisp function:
-+ BACKEND refers to the current export backend.
-+ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
-  ⇒ You may mention CONTENTS to refer to the ‘org parsed’ version of user text.
-  ⇒ CONTENTS and RAW-CONTENTS are identical whenever key CONTENTS-OCCUR-AS-LINK-DESCRIPTION is non-nil.
-
-For example, upon LaTeX export, the Org special block
-
-     #+begin_org-demo
-     Hello, world
-     #+end_org-demo
-
- is rewritten to the result of the call
-
-     (org-block/org-demo ‘latex "Hello, world")</pre></template></abbr></li>
+     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, and <abbr class="tooltip" tabindex="0">org-demo<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></li>
 </ul>
 
 <p>

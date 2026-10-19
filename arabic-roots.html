@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 00:07 -->
+<!-- 2026-10-19 Mon 14:22 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Arabic Roots: The Power of Patterns</title>
@@ -197,8 +197,120 @@
 </style>
 
 <style>
+/* tooltips.css ---The look of tooltips.js: tooltipster's Punk theme, a dark box over a pink rule. */
+
+/* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
+.tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
+/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+mjx-container .tooltip { color: inherit; }
+
+.tooltip-box {
+  position: absolute; z-index: 1000;
+  max-width: min(40em, calc(100vw - 16px)); /* A phone's screen, less the margins `place' keeps. */
+  padding: 8px 16px; border-radius: 5px; border-bottom: 3px solid #f71169;
+  background: #2a2a2a; color: #fff; font-size: 0.9em; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow-wrap: anywhere;
+  animation: tooltip-grow 0.15s ease-out; transform-origin: center bottom;
+}
+.tooltip-box[hidden] { display: none; }
+.tooltip-box a { color: #ff8ab8; }
+.tooltip-box p { margin: 0.4em 0; }
+/* A docstring keeps its line breaks and indentation, yet wraps rather than overflowing a phone's screen. */
+.tooltip-box pre { margin: 0; white-space: pre-wrap; background: none; color: inherit; border: none; box-shadow: none; }
+
+@keyframes tooltip-grow { from { opacity: 0; transform: scale(0.8); } }
 </style>
 <script>
+// tooltips.js ---Tooltips for org-special-block-extras: hover on a desktop, tap on a phone.
+//
+// By way of example, the exported Org `[[doc:cat]]` becomes
+//
+//     <abbr class="tooltip" tabindex="0">Category Theory<template><p>A theory of composition.</p></template></abbr>
+//
+// and we show the <template>'s HTML in one shared box, positioned beside the word.  The box is ordinary HTML, so its
+// links are clickable: hovering from the word into the box keeps it open.
+//
+// We replace tooltipster ---and the jQuery it needs--- since it opened only on mouseenter, which no phone fires, and
+// fetched its bundle cross-origin per page; see https://github.com/alhassy/org-special-block-extras/issues/53.
+// This file is inlined into each exported page, sans any request.
+//
+// | Action                                   | Effect                    |
+// |------------------------------------------+---------------------------|
+// | Hover a word, with a mouse               | Open, after a beat        |
+// | Leave the word and the box               | Close, after a beat       |
+// | Tap, or click, a word                    | Open; again to close      |
+// | Tap, or click, anywhere else; or Escape  | Close                     |
+// | Tab onto a word                          | Open; Escape to close     |
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.className = 'tooltip-box';
+  box.setAttribute('role', 'tooltip');
+  box.hidden = true;
+  document.body.append(box);
+
+  let owner = null; // The .tooltip whose box is open, if any.
+  let timer;        // A pending open or close; the newest intent wins.
+  const later = (action, ms) => { clearTimeout(timer); timer = setTimeout(action, ms); };
+
+  const open = (word) => {
+    clearTimeout(timer);
+    if (owner === word) return;
+    close();
+    owner = word;
+    box.innerHTML = tipOf(word)?.innerHTML ?? '';
+    box.hidden = false;
+    place(word);
+  };
+
+  const close = () => { clearTimeout(timer); owner = null; box.hidden = true; };
+
+  // A word's tip is its <template>; else, in maths or a graph's <svg>, which keep no <template> within, the one its
+  // osbe-tip-ID class names, beside them: \class{tooltip osbe-tip-g1}{x} … <template id="osbe-tip-g1">.
+  const tipOf = (word) => word.querySelector(':scope > template')
+    ?? document.getElementById([...word.classList].find((c) => c.startsWith('osbe-tip-')));
+
+  // Above the word when there is room, else below; centred on it, yet never past the screen's edges ---a phone's
+  // screen being narrower than most tooltips.
+  const place = (word) => {
+    const at = word.getBoundingClientRect(), gap = 8;
+    const centred = at.left + at.width / 2 - box.offsetWidth / 2;
+    const left = Math.min(Math.max(gap, centred), innerWidth - box.offsetWidth - gap);
+    const above = at.top > box.offsetHeight + gap;
+    box.style.left = `${left + scrollX}px`;
+    box.style.top = `${(above ? at.top - box.offsetHeight - gap : at.bottom + gap) + scrollY}px`;
+  };
+
+  const wordAt = (node) => node instanceof Element ? node.closest('.tooltip') : null;
+
+  // Hover is for mice alone: a phone fires pointerover on each tap, which the click handler below already serves.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const word = wordAt(e.target);
+    if (word) later(() => open(word), 100);
+    else if (box.contains(e.target)) clearTimeout(timer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse' || !owner) return;
+    const into = e.relatedTarget;
+    if (!(box.contains(into) || wordAt(into) === owner)) later(close, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (box.contains(e.target)) return; // A link in the box does as links do.
+    const word = wordAt(e.target);
+    if (word && word !== owner) open(word);
+    else close();
+  });
+
+  // A tap focuses the word too; only keyboard focus, which is visible, opens it ---else the tap's click would close it.
+  document.addEventListener('focusin', (e) => {
+    const word = wordAt(e.target);
+    if (word?.matches(':focus-visible')) open(word);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // A phone resizes the page whenever its address bar slides away mid-scroll; so we follow the word, not close.
+  addEventListener('resize', () => owner && place(owner));
+});
 </script>
 
           <style>
@@ -1448,14 +1560,7 @@ cards).
 </p>
 
 <hr />
-<div style="column-count: 2;">
-<div style="padding: 1em;background-color: white;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
-<div ><pre class="src src-org">[[arabic:I have a question]] How was this article written? green:Emacs!
-
-arabic:Yes With Emacs, I type /phonetically/ (based on sounds) to get Arabic; e.g.,
-typing  *musy$ alHsaIY* gives me *موسیٰ الحسائي*, my name /Musa Al-hassy/.</pre></div>
-</div>
-<div style="padding: 1em;background-color: white;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<div class="org-demo">
 <p>
 <a href="https://alhassy.com/resources/iraqi-sign-question.png" class="tooltip" title="I have a question"><img src="https://alhassy.com/resources/iraqi-sign-question.png" height=50></a> How was this article written? <span style="color:green;">Emacs</span>!
 </p>
@@ -1464,8 +1569,9 @@ typing  *musy$ alHsaIY* gives me *موسیٰ الحسائي*, my name /Musa Al-h
 <a href="https://alhassy.com/resources/iraqi-sign-yes.png" class="tooltip" title="Yes"><img src="https://alhassy.com/resources/iraqi-sign-yes.png" height=50></a> With Emacs, I type <i>phonetically</i> (based on sounds) to get Arabic; e.g.,
 typing  <b>musy$ alHsaIY</b> gives me <b>موسیٰ الحسائي</b>, my name <i>Musa Al-hassy</i>.
 </p>
+
 </div>
-</div>
+
 <p>
 Moreover, this is how Arabic looks like within Emacs:
 </p>
@@ -1888,6 +1994,9 @@ style, they form a vector DISPLAY between the docstring and BODY, such as
 
   By default, C-n and C-p are for moving to next and previous occruances of the same link type.
 
++ :hover and :manual are as for ‘org-defblock’: prose eldoc shows beneath the docstring’s first line, and the URL,
+  or #ANCHOR of ‘org-special-block-extras-manual’, of where the link is documented.
+
 + :let is a list of alternating variable symbol name and value, which are then used to form
   a concrete ‘let*’ clause. This is useful for introducing local variables for use in the DISPLAY
   as well as in the CONTENTS. Such local declarations may make use of O-LABEL and O-DESCRIPTION, as usual.
@@ -1928,16 +2037,7 @@ It lives in AlBasmala, so every Arabic article can use it &mdash;§<a href="AlBa
 Below is how I would go about actually using this new link type.  The left shows what I would write <i>within</i> Emacs, and
 the right is the resulting HTML (which I also see <i>within</i> Emacs, and the Chrome Browser.)
 </p>
-<div style="column-count: 2;">
-<div style="padding: 1em;background-color: white;border-radius: 15px;font-size: 0.9em;"> <h3>Source</h3> 
-<div ><pre class="src src-org">[[arabic:Let's take a break]]
-[[arabic:Yes]]
-[[arabic:No]]
-[[arabic:Agree]]
-[[arabic:Disagree]]
-[[arabic:I have a question]]</pre></div>
-</div>
-<div style="padding: 1em;background-color: white;border-radius: 15px;font-size: 0.9em;"> <h3>Result</h3> 
+<div class="org-demo">
 <p>
 <a href="https://alhassy.com/resources/iraqi-sign-take-a-break.png" class="tooltip" title="Let's take a break"><img src="https://alhassy.com/resources/iraqi-sign-take-a-break.png" height=50></a>
 <a href="https://alhassy.com/resources/iraqi-sign-yes.png" class="tooltip" title="Yes"><img src="https://alhassy.com/resources/iraqi-sign-yes.png" height=50></a>
@@ -1946,7 +2046,7 @@ the right is the resulting HTML (which I also see <i>within</i> Emacs, and the C
 <a href="https://alhassy.com/resources/iraqi-sign-disagree.png" class="tooltip" title="Disagree"><img src="https://alhassy.com/resources/iraqi-sign-disagree.png" height=50></a>
 <a href="https://alhassy.com/resources/iraqi-sign-question.png" class="tooltip" title="I have a question"><img src="https://alhassy.com/resources/iraqi-sign-question.png" height=50></a>
 </p>
-</div>
+
 </div>
 </div>
 </div>

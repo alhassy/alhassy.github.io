@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-19 Mon 00:07 -->
+<!-- 2026-10-19 Mon 14:22 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Write Once, Export Everywhere</title>
@@ -197,8 +197,120 @@
 <link href="https://alhassy.github.io/next-700-module-systems/prototype/org-notes-style.css" rel="stylesheet" type="text/css" />
 
 <style>
+/* tooltips.css ---The look of tooltips.js: tooltipster's Punk theme, a dark box over a pink rule. */
+
+/* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
+.tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
+/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+mjx-container .tooltip { color: inherit; }
+
+.tooltip-box {
+  position: absolute; z-index: 1000;
+  max-width: min(40em, calc(100vw - 16px)); /* A phone's screen, less the margins `place' keeps. */
+  padding: 8px 16px; border-radius: 5px; border-bottom: 3px solid #f71169;
+  background: #2a2a2a; color: #fff; font-size: 0.9em; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow-wrap: anywhere;
+  animation: tooltip-grow 0.15s ease-out; transform-origin: center bottom;
+}
+.tooltip-box[hidden] { display: none; }
+.tooltip-box a { color: #ff8ab8; }
+.tooltip-box p { margin: 0.4em 0; }
+/* A docstring keeps its line breaks and indentation, yet wraps rather than overflowing a phone's screen. */
+.tooltip-box pre { margin: 0; white-space: pre-wrap; background: none; color: inherit; border: none; box-shadow: none; }
+
+@keyframes tooltip-grow { from { opacity: 0; transform: scale(0.8); } }
 </style>
 <script>
+// tooltips.js ---Tooltips for org-special-block-extras: hover on a desktop, tap on a phone.
+//
+// By way of example, the exported Org `[[doc:cat]]` becomes
+//
+//     <abbr class="tooltip" tabindex="0">Category Theory<template><p>A theory of composition.</p></template></abbr>
+//
+// and we show the <template>'s HTML in one shared box, positioned beside the word.  The box is ordinary HTML, so its
+// links are clickable: hovering from the word into the box keeps it open.
+//
+// We replace tooltipster ---and the jQuery it needs--- since it opened only on mouseenter, which no phone fires, and
+// fetched its bundle cross-origin per page; see https://github.com/alhassy/org-special-block-extras/issues/53.
+// This file is inlined into each exported page, sans any request.
+//
+// | Action                                   | Effect                    |
+// |------------------------------------------+---------------------------|
+// | Hover a word, with a mouse               | Open, after a beat        |
+// | Leave the word and the box               | Close, after a beat       |
+// | Tap, or click, a word                    | Open; again to close      |
+// | Tap, or click, anywhere else; or Escape  | Close                     |
+// | Tab onto a word                          | Open; Escape to close     |
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.className = 'tooltip-box';
+  box.setAttribute('role', 'tooltip');
+  box.hidden = true;
+  document.body.append(box);
+
+  let owner = null; // The .tooltip whose box is open, if any.
+  let timer;        // A pending open or close; the newest intent wins.
+  const later = (action, ms) => { clearTimeout(timer); timer = setTimeout(action, ms); };
+
+  const open = (word) => {
+    clearTimeout(timer);
+    if (owner === word) return;
+    close();
+    owner = word;
+    box.innerHTML = tipOf(word)?.innerHTML ?? '';
+    box.hidden = false;
+    place(word);
+  };
+
+  const close = () => { clearTimeout(timer); owner = null; box.hidden = true; };
+
+  // A word's tip is its <template>; else, in maths or a graph's <svg>, which keep no <template> within, the one its
+  // osbe-tip-ID class names, beside them: \class{tooltip osbe-tip-g1}{x} … <template id="osbe-tip-g1">.
+  const tipOf = (word) => word.querySelector(':scope > template')
+    ?? document.getElementById([...word.classList].find((c) => c.startsWith('osbe-tip-')));
+
+  // Above the word when there is room, else below; centred on it, yet never past the screen's edges ---a phone's
+  // screen being narrower than most tooltips.
+  const place = (word) => {
+    const at = word.getBoundingClientRect(), gap = 8;
+    const centred = at.left + at.width / 2 - box.offsetWidth / 2;
+    const left = Math.min(Math.max(gap, centred), innerWidth - box.offsetWidth - gap);
+    const above = at.top > box.offsetHeight + gap;
+    box.style.left = `${left + scrollX}px`;
+    box.style.top = `${(above ? at.top - box.offsetHeight - gap : at.bottom + gap) + scrollY}px`;
+  };
+
+  const wordAt = (node) => node instanceof Element ? node.closest('.tooltip') : null;
+
+  // Hover is for mice alone: a phone fires pointerover on each tap, which the click handler below already serves.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const word = wordAt(e.target);
+    if (word) later(() => open(word), 100);
+    else if (box.contains(e.target)) clearTimeout(timer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse' || !owner) return;
+    const into = e.relatedTarget;
+    if (!(box.contains(into) || wordAt(into) === owner)) later(close, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (box.contains(e.target)) return; // A link in the box does as links do.
+    const word = wordAt(e.target);
+    if (word && word !== owner) open(word);
+    else close();
+  });
+
+  // A tap focuses the word too; only keyboard focus, which is visible, opens it ---else the tap's click would close it.
+  document.addEventListener('focusin', (e) => {
+    const word = wordAt(e.target);
+    if (word?.matches(':focus-visible')) open(word);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // A phone resizes the page whenever its address bar slides away mid-scroll; so we follow the word, not close.
+  addEventListener('resize', () => owner && place(owner));
+});
 </script>
 </head>
 <body>
@@ -299,7 +411,7 @@ colourful ASCII cows with fortune cookies.</li>
 <li><b>📦 Add interactive content</b>: from collapsible detail sections and parallel columns to spoiler tags and equational proofs.</li>
 <li><b>🎛 Switch any block</b>: <code>:when (eq backend 'html)</code>, <code>:noexport t</code>, <code>:let (N 7)</code>, <code>:boxed "Title"</code>, <code>:folded t</code>, and
 <code>:verbatim t</code>, and <code>:C-c_C-c ACTION</code> work on every block &mdash;ours, yours, or Org's own src and quote blocks; see
-<a href="https://alhassy.com/org-special-block-extras-blocks-and-links#Switches-for-every-block">switches</a>.</li>
+<a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">switches</a>.</li>
 <li><img src="https://img.shields.io/badge/Hello-World-green"> Use <b>badge-style links</b> to embed GitHub stars, Reddit subs, or custom  project metadata via <code>shields.io</code>.</li>
 <li><b>🛠 Use <code>org-defblock</code>, <code>org-deflink</code> and <code>org-deftag</code></b> &mdash;Org, extended as one extends Lisp:
 each is declared like a <code>cl-defun</code>, with <code>&amp;optional</code> and <code>&amp;key</code> arguments; or, for the
@@ -366,11 +478,6 @@ link and a tag, for free; and <code>:fontify</code> says how it looks in the buf
 </tr>
 
 <tr>
-<td class="org-left"><code>rename</code></td>
-<td class="org-left">Automated text substitution &mdash; great for translation or glossary effects.</td>
-</tr>
-
-<tr>
 <td class="org-left"><code>stutter</code></td>
 <td class="org-left">Repeat content multiple times &mdash; e.g., for emphasis or stylistic flair.</td>
 </tr>
@@ -381,18 +488,8 @@ link and a tag, for free; and <code>:fontify</code> says how it looks in the buf
 </tr>
 
 <tr>
-<td class="org-left"><code>org-demo</code></td>
-<td class="org-left">Show Org markup alongside its rendered result &mdash; ideal for tutorials.</td>
-</tr>
-
-<tr>
 <td class="org-left"><code>math</code></td>
-<td class="org-left">Display maths wherein <code>red:𝒳</code> colours a symbol, as it colours prose.</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>calc</code></td>
-<td class="org-left">Step-by-step equational reasoning &mdash; beautiful for math walkthroughs.</td>
+<td class="org-left">Display maths wherein <code>red:𝒳</code> colours a symbol; calculational proofs, with hints.</td>
 </tr>
 
 <tr>
@@ -408,16 +505,6 @@ link and a tag, for free; and <code>:fontify</code> says how it looks in the buf
 <tr>
 <td class="org-left"><code>highlight</code></td>
 <td class="org-left">Colour a paragraph's background, rather than its text.</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>package-docs</code></td>
-<td class="org-left">A table of a package's public API, each name a <code>doc:</code> tooltip.</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>style</code></td>
-<td class="org-left">Page-wide CSS, verbatim; nothing outside HTML.</td>
 </tr>
 </tbody>
 </table>
@@ -505,11 +592,6 @@ For more details, see Info node ‘(cl)Loop Facility’.
 </tr>
 
 <tr>
-<td class="org-left"><code>html-export-style:</code></td>
-<td class="org-left">Pick a visual theme for HTML exports &mdash; one click, new style.</td>
-</tr>
-
-<tr>
 <td class="org-left"><code>badge:</code></td>
 <td class="org-left">Embed project badges &mdash; e.g., GitHub stars, Reddit subs, versioning.</td>
 </tr>
@@ -520,18 +602,8 @@ For more details, see Info node ‘(cl)Loop Facility’.
 </tr>
 
 <tr>
-<td class="org-left"><code>octoicon:</code></td>
-<td class="org-left">GitHub-style icons &mdash; for styling and linking like a pro.</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>link-here:</code></td>
-<td class="org-left">Local anchors &mdash; create navigable sections anywhere.</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>show:</code></td>
-<td class="org-left">Show a variable value &mdash; dynamically insert content like your name or version.</td>
+<td class="org-left"><code>&lt;&lt;X&gt;&gt;</code></td>
+<td class="org-left">Permalinks &mdash; Org's own targets, made a visible 🔗 in HTML.</td>
 </tr>
 
 <tr>
@@ -541,6 +613,14 @@ For more details, see Info node ‘(cl)Loop Facility’.
 </tbody>
 </table>
 
+
+<p>
+Org's own <code>elisp:</code> links evaluate Lisp; e.g., <code>[[elisp:(find-file user-init-file)][Init]]</code> is a
+“link button” that visits our init file. Yet they do not export the value of their expression;
+for that, Org's own inline src blocks serve: <code>src_elisp[:results raw]{user-full-name}</code> exports as
+<i>Musa Al-hassy</i> on my machine, and <code>src_elisp{(* 2 (+ 3 4))}</code> as <code>14</code>. As for any Babel code, Org
+asks before running a stranger's Lisp; see <code>org-confirm-babel-evaluate</code>.
+</p>
 
 <hr />
 
@@ -583,471 +663,150 @@ again</i>.
 <h2 id="at-a-glance"><span class="section-number-2">2.</span> <a href="#at-a-glance">🗺 The package at a glance</a></h2>
 <div class="outline-text-2" id="text-at-a-glance">
 <p>
-Every node below leads to its section; hover, or tap, one for its gist. The map is itself a <a href="https://alhassy.com/org-special-block-extras-blocks-and-links#Graphs">graph</a>
+Every node below leads to its section; hover, or tap, one for its gist. The map is itself a <a href="https://alhassy.com/org-special-block-extras-blocks-and-links#graphs">graph</a>
 block &mdash;an Org list, coloured by <code>#+name:</code> tables folded in its <code>:TEMPLATES:</code> drawer, and laid out radially by <code>:layout twopi</code>.
 </p>
 
-<svg width="720pt" height="618pt"
- viewBox="0.00 0.00 720.00 618.45" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(0.61 0.61) rotate(0) translate(4 1003.8)">
-<title>%3</title>
-<polygon fill="white" stroke="transparent" points="-4,4 -4,-1003.8 1169.28,-1003.8 1169.28,4 -4,4"/>
-<!-- osbe -->
-<g id="node1" class="node">
-<title>osbe</title>
-<g id="a_node1"><a xlink:href="https://github.com/alhassy/org-special-block-extras" xlink:title="Blocks, links, and switches for Org, exported alike to HTML, LaTeX, and Markdown.">
-<path fill="white" stroke="black" d="M631.89,-517.4C631.89,-517.4 448.89,-517.4 448.89,-517.4 442.89,-517.4 436.89,-511.4 436.89,-505.4 436.89,-505.4 436.89,-493.4 436.89,-493.4 436.89,-487.4 442.89,-481.4 448.89,-481.4 448.89,-481.4 631.89,-481.4 631.89,-481.4 637.89,-481.4 643.89,-487.4 643.89,-493.4 643.89,-493.4 643.89,-505.4 643.89,-505.4 643.89,-511.4 637.89,-517.4 631.89,-517.4"/>
-<text text-anchor="start" x="444.89" y="-496.7" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">org&#45;special&#45;block&#45;extras</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write -->
-<g id="node2" class="node">
-<title>Blocks to write</title>
-<path fill="#e5f5e5" stroke="black" d="M747.5,-697.56C747.5,-697.56 652.5,-697.56 652.5,-697.56 646.5,-697.56 640.5,-691.56 640.5,-685.56 640.5,-685.56 640.5,-673.56 640.5,-673.56 640.5,-667.56 646.5,-661.56 652.5,-661.56 652.5,-661.56 747.5,-661.56 747.5,-661.56 753.5,-661.56 759.5,-667.56 759.5,-673.56 759.5,-673.56 759.5,-685.56 759.5,-685.56 759.5,-691.56 753.5,-697.56 747.5,-697.56"/>
-<text text-anchor="middle" x="700" y="-675.86" font-family="Helvetica,sans-Serif" font-size="14.00">Blocks to write</text>
-</g>
-<!-- osbe&#45;&#45;Blocks to write -->
-<g id="edge1" class="edge">
-<title>osbe&#45;&#45;Blocks to write</title>
-<path fill="none" stroke="#7f7f7f" d="M556.57,-517.67C587.24,-552.29 653.49,-627.07 684.01,-661.52"/>
-</g>
-<!-- Links to cite -->
-<g id="node10" class="node">
-<title>Links to cite</title>
-<path fill="#ffe8cc" stroke="black" d="M441.66,-715.49C441.66,-715.49 365.66,-715.49 365.66,-715.49 359.66,-715.49 353.66,-709.49 353.66,-703.49 353.66,-703.49 353.66,-691.49 353.66,-691.49 353.66,-685.49 359.66,-679.49 365.66,-679.49 365.66,-679.49 441.66,-679.49 441.66,-679.49 447.66,-679.49 453.66,-685.49 453.66,-691.49 453.66,-691.49 453.66,-703.49 453.66,-703.49 453.66,-709.49 447.66,-715.49 441.66,-715.49"/>
-<text text-anchor="middle" x="403.66" y="-693.79" font-family="Helvetica,sans-Serif" font-size="14.00">Links to cite</text>
-</g>
-<!-- osbe&#45;&#45;Links to cite -->
-<g id="edge9" class="edge">
-<title>osbe&#45;&#45;Links to cite</title>
-<path fill="none" stroke="#7f7f7f" d="M527.77,-517.68C501.72,-555.42 442.27,-641.55 416.24,-679.25"/>
-</g>
-<!-- Switches on any block -->
-<g id="node15" class="node">
-<title>Switches on any block</title>
-<path fill="#e0ecff" stroke="black" d="M352.69,-518.4C352.69,-518.4 246.69,-518.4 246.69,-518.4 240.69,-518.4 234.69,-512.4 234.69,-506.4 234.69,-506.4 234.69,-492.4 234.69,-492.4 234.69,-486.4 240.69,-480.4 246.69,-480.4 246.69,-480.4 352.69,-480.4 352.69,-480.4 358.69,-480.4 364.69,-486.4 364.69,-492.4 364.69,-492.4 364.69,-506.4 364.69,-506.4 364.69,-512.4 358.69,-518.4 352.69,-518.4"/>
-<text text-anchor="middle" x="299.69" y="-503.2" font-family="Helvetica,sans-Serif" font-size="14.00">Switches on any</text>
-<text text-anchor="middle" x="299.69" y="-488.2" font-family="Helvetica,sans-Serif" font-size="14.00">block</text>
-</g>
-<!-- osbe&#45;&#45;Switches on any block -->
-<g id="edge14" class="edge">
-<title>osbe&#45;&#45;Switches on any block</title>
-<path fill="none" stroke="#7f7f7f" d="M436.56,-499.4C412.26,-499.4 387.04,-499.4 364.97,-499.4"/>
-</g>
-<!-- Keys in Emacs -->
-<g id="node20" class="node">
-<title>Keys in Emacs</title>
-<path fill="#e0ecff" stroke="black" d="M449.66,-319.31C449.66,-319.31 357.66,-319.31 357.66,-319.31 351.66,-319.31 345.66,-313.31 345.66,-307.31 345.66,-307.31 345.66,-295.31 345.66,-295.31 345.66,-289.31 351.66,-283.31 357.66,-283.31 357.66,-283.31 449.66,-283.31 449.66,-283.31 455.66,-283.31 461.66,-289.31 461.66,-295.31 461.66,-295.31 461.66,-307.31 461.66,-307.31 461.66,-313.31 455.66,-319.31 449.66,-319.31"/>
-<text text-anchor="middle" x="403.66" y="-297.61" font-family="Helvetica,sans-Serif" font-size="14.00">Keys in Emacs</text>
-</g>
-<!-- osbe&#45;&#45;Keys in Emacs -->
-<g id="edge19" class="edge">
-<title>osbe&#45;&#45;Keys in Emacs</title>
-<path fill="none" stroke="#7f7f7f" d="M527.77,-481.12C501.72,-443.38 442.27,-357.24 416.24,-319.54"/>
-</g>
-<!-- Make your own -->
-<g id="node25" class="node">
-<title>Make your own</title>
-<path fill="#f3e0ff" stroke="black" d="M674.74,-292.34C674.74,-292.34 576.74,-292.34 576.74,-292.34 570.74,-292.34 564.74,-286.34 564.74,-280.34 564.74,-280.34 564.74,-268.34 564.74,-268.34 564.74,-262.34 570.74,-256.34 576.74,-256.34 576.74,-256.34 674.74,-256.34 674.74,-256.34 680.74,-256.34 686.74,-262.34 686.74,-268.34 686.74,-268.34 686.74,-280.34 686.74,-280.34 686.74,-286.34 680.74,-292.34 674.74,-292.34"/>
-<text text-anchor="middle" x="625.74" y="-270.64" font-family="Helvetica,sans-Serif" font-size="14.00">Make your own</text>
-</g>
-<!-- osbe&#45;&#45;Make your own -->
-<g id="edge24" class="edge">
-<title>osbe&#45;&#45;Make your own</title>
-<path fill="none" stroke="#7f7f7f" d="M547.23,-481.36C563.21,-439.22 602.85,-334.69 618.87,-292.46"/>
-</g>
-<!-- Options -->
-<g id="node30" class="node">
-<title>Options</title>
-<path fill="#f3e0ff" stroke="black" d="M788.95,-432.05C788.95,-432.05 741.95,-432.05 741.95,-432.05 735.95,-432.05 729.95,-426.05 729.95,-420.05 729.95,-420.05 729.95,-408.05 729.95,-408.05 729.95,-402.05 735.95,-396.05 741.95,-396.05 741.95,-396.05 788.95,-396.05 788.95,-396.05 794.95,-396.05 800.95,-402.05 800.95,-408.05 800.95,-408.05 800.95,-420.05 800.95,-420.05 800.95,-426.05 794.95,-432.05 788.95,-432.05"/>
-<text text-anchor="middle" x="765.45" y="-410.35" font-family="Helvetica,sans-Serif" font-size="14.00">Options</text>
-</g>
-<!-- osbe&#45;&#45;Options -->
-<g id="edge29" class="edge">
-<title>osbe&#45;&#45;Options</title>
-<path fill="none" stroke="#7f7f7f" d="M588.12,-481.3C630.44,-465.25 691.31,-442.16 729.6,-427.64"/>
-</g>
-<!-- Callouts note · tip · important · warning · caution -->
-<g id="node3" class="node">
-<title>Callouts note · tip · important · warning · caution</title>
-<g id="a_node3"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Callouts" xlink:title="GitHub&#39;s alerts: a coloured rule and a titled heading; Markdown gets the alerts themselves.">
-<path fill="#e5f5e5" stroke="black" d="M1153.28,-576.42C1153.28,-576.42 883.28,-576.42 883.28,-576.42 877.28,-576.42 871.28,-570.42 871.28,-564.42 871.28,-564.42 871.28,-550.42 871.28,-550.42 871.28,-544.42 877.28,-538.42 883.28,-538.42 883.28,-538.42 1153.28,-538.42 1153.28,-538.42 1159.28,-538.42 1165.28,-544.42 1165.28,-550.42 1165.28,-550.42 1165.28,-564.42 1165.28,-564.42 1165.28,-570.42 1159.28,-576.42 1153.28,-576.42"/>
-<text text-anchor="start" x="990.28" y="-561.22" font-family="Helvetica,sans-Serif" font-size="14.00">Callouts</text>
-<text text-anchor="start" x="879.28" y="-546.22" font-family="Helvetica,sans-Serif" font-size="14.00">note · tip · important · warning · caution</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Callouts note · tip · important · warning · caution -->
-<g id="edge2" class="edge">
-<title>Blocks to write&#45;&#45;Callouts note · tip · important · warning · caution</title>
-<path fill="none" stroke="#7f7f7f" d="M746.96,-661.54C806.36,-638.75 908.18,-599.68 968.76,-576.43"/>
-</g>
-<!-- Folding &amp; framing box · details · solution · spoiler · parallel -->
-<g id="node4" class="node">
-<title>Folding &amp; framing box · details · solution · spoiler · parallel</title>
-<g id="a_node4"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Boxed-Text" xlink:title="Draw attention to text, fold it away, or set ideas side by side.">
-<path fill="#e5f5e5" stroke="black" d="M1125.5,-689.1C1125.5,-689.1 855.5,-689.1 855.5,-689.1 849.5,-689.1 843.5,-683.1 843.5,-677.1 843.5,-677.1 843.5,-663.1 843.5,-663.1 843.5,-657.1 849.5,-651.1 855.5,-651.1 855.5,-651.1 1125.5,-651.1 1125.5,-651.1 1131.5,-651.1 1137.5,-657.1 1137.5,-663.1 1137.5,-663.1 1137.5,-677.1 1137.5,-677.1 1137.5,-683.1 1131.5,-689.1 1125.5,-689.1"/>
-<text text-anchor="start" x="927.5" y="-673.9" font-family="Helvetica,sans-Serif" font-size="14.00">Folding &amp; framing</text>
-<text text-anchor="start" x="851.5" y="-658.9" font-family="Helvetica,sans-Serif" font-size="14.00">box · details · solution · spoiler · parallel</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Folding &amp; framing box · details · solution · spoiler · parallel -->
-<g id="edge3" class="edge">
-<title>Blocks to write&#45;&#45;Folding &amp; framing box · details · solution · spoiler · parallel</title>
-<path fill="none" stroke="#7f7f7f" d="M759.84,-677.62C784.34,-676.82 813.87,-675.86 843.49,-674.89"/>
-</g>
-<!-- Remarks margin · tooltip · remark -->
-<g id="node5" class="node">
-<title>Remarks margin · tooltip · remark</title>
-<g id="a_node5"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#tooltip" xlink:title="Notes that stay out of the reader&#39;s way: in the margin in LaTeX, hovered or tapped in HTML. Org&#39;s own footnotes join them.">
-<path fill="#e5f5e5" stroke="black" d="M1017.07,-791.86C1017.07,-791.86 856.07,-791.86 856.07,-791.86 850.07,-791.86 844.07,-785.86 844.07,-779.86 844.07,-779.86 844.07,-765.86 844.07,-765.86 844.07,-759.86 850.07,-753.86 856.07,-753.86 856.07,-753.86 1017.07,-753.86 1017.07,-753.86 1023.07,-753.86 1029.07,-759.86 1029.07,-765.86 1029.07,-765.86 1029.07,-779.86 1029.07,-779.86 1029.07,-785.86 1023.07,-791.86 1017.07,-791.86"/>
-<text text-anchor="start" x="906.07" y="-776.66" font-family="Helvetica,sans-Serif" font-size="14.00">Remarks</text>
-<text text-anchor="start" x="852.07" y="-761.66" font-family="Helvetica,sans-Serif" font-size="14.00">margin · tooltip · remark</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Remarks margin · tooltip · remark -->
-<g id="edge4" class="edge">
-<title>Blocks to write&#45;&#45;Remarks margin · tooltip · remark</title>
-<path fill="none" stroke="#7f7f7f" d="M745.9,-697.66C786.88,-713.83 846.7,-737.42 888.37,-753.85"/>
-</g>
-<!-- Colour red · blue · … · highlight -->
-<g id="node6" class="node">
-<title>Colour red · blue · … · highlight</title>
-<g id="a_node6"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Highlights" xlink:title="19 named colours, each a block and a link, and a highlight that colours the background.">
-<path fill="#e5f5e5" stroke="black" d="M940.11,-878.73C940.11,-878.73 779.11,-878.73 779.11,-878.73 773.11,-878.73 767.11,-872.73 767.11,-866.73 767.11,-866.73 767.11,-852.73 767.11,-852.73 767.11,-846.73 773.11,-840.73 779.11,-840.73 779.11,-840.73 940.11,-840.73 940.11,-840.73 946.11,-840.73 952.11,-846.73 952.11,-852.73 952.11,-852.73 952.11,-866.73 952.11,-866.73 952.11,-872.73 946.11,-878.73 940.11,-878.73"/>
-<text text-anchor="start" x="836.61" y="-863.53" font-family="Helvetica,sans-Serif" font-size="14.00">Colour</text>
-<text text-anchor="start" x="775.11" y="-848.53" font-family="Helvetica,sans-Serif" font-size="14.00">red · blue · … · highlight</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Colour red · blue · … · highlight -->
-<g id="edge5" class="edge">
-<title>Blocks to write&#45;&#45;Colour red · blue · … · highlight</title>
-<path fill="none" stroke="#7f7f7f" d="M716.18,-697.83C746.54,-732.09 811.74,-805.69 842.67,-840.6"/>
-</g>
-<!-- Maths &amp; proofs math · calc · tree -->
-<g id="node7" class="node">
-<title>Maths &amp; proofs math · calc · tree</title>
-<g id="a_node7"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#math" xlink:title="Display maths wherein red:𝒳 colours a symbol, aligned at &amp;, with coloured tags that eqref:𝒳 cites; equational proofs and proof trees, as Org lists.">
-<path fill="#e5f5e5" stroke="black" d="M819.11,-944.66C819.11,-944.66 709.11,-944.66 709.11,-944.66 703.11,-944.66 697.11,-938.66 697.11,-932.66 697.11,-932.66 697.11,-918.66 697.11,-918.66 697.11,-912.66 703.11,-906.66 709.11,-906.66 709.11,-906.66 819.11,-906.66 819.11,-906.66 825.11,-906.66 831.11,-912.66 831.11,-918.66 831.11,-918.66 831.11,-932.66 831.11,-932.66 831.11,-938.66 825.11,-944.66 819.11,-944.66"/>
-<text text-anchor="start" x="711.11" y="-929.46" font-family="Helvetica,sans-Serif" font-size="14.00">Maths &amp; proofs</text>
-<text text-anchor="start" x="705.11" y="-914.46" font-family="Helvetica,sans-Serif" font-size="14.00">math · calc · tree</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Maths &amp; proofs math · calc · tree -->
-<g id="edge6" class="edge">
-<title>Blocks to write&#45;&#45;Maths &amp; proofs math · calc · tree</title>
-<path fill="none" stroke="#7f7f7f" d="M704.72,-697.66C716.48,-742.84 747.07,-860.26 759.12,-906.52"/>
-</g>
-<!-- Graphs graph -->
-<g id="node8" class="node">
-<title>Graphs graph</title>
-<g id="a_node8"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Graphs" xlink:title="Org lists drawn by Graphviz; this very map is one.">
-<path fill="#e5f5e5" stroke="black" d="M677.09,-985.81C677.09,-985.81 634.09,-985.81 634.09,-985.81 628.09,-985.81 622.09,-979.81 622.09,-973.81 622.09,-973.81 622.09,-959.81 622.09,-959.81 622.09,-953.81 628.09,-947.81 634.09,-947.81 634.09,-947.81 677.09,-947.81 677.09,-947.81 683.09,-947.81 689.09,-953.81 689.09,-959.81 689.09,-959.81 689.09,-973.81 689.09,-973.81 689.09,-979.81 683.09,-985.81 677.09,-985.81"/>
-<text text-anchor="start" x="630.09" y="-970.61" font-family="Helvetica,sans-Serif" font-size="14.00">Graphs</text>
-<text text-anchor="start" x="634.59" y="-955.61" font-family="Helvetica,sans-Serif" font-size="14.00">graph</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Graphs graph -->
-<g id="edge7" class="edge">
-<title>Blocks to write&#45;&#45;Graphs graph</title>
-<path fill="none" stroke="#7f7f7f" d="M697.16,-697.97C689.19,-749.48 666.73,-894.76 658.59,-947.43"/>
-</g>
-<!-- Glossaries documentation -->
-<g id="node9" class="node">
-<title>Glossaries documentation</title>
-<g id="a_node9"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Glossaries" xlink:title="Define a term once, cite it everywhere with doc:𝒳; show:GLOSSARY lists every citation.">
-<path fill="#e5f5e5" stroke="black" d="M588.89,-999.8C588.89,-999.8 491.89,-999.8 491.89,-999.8 485.89,-999.8 479.89,-993.8 479.89,-987.8 479.89,-987.8 479.89,-973.8 479.89,-973.8 479.89,-967.8 485.89,-961.8 491.89,-961.8 491.89,-961.8 588.89,-961.8 588.89,-961.8 594.89,-961.8 600.89,-967.8 600.89,-973.8 600.89,-973.8 600.89,-987.8 600.89,-987.8 600.89,-993.8 594.89,-999.8 588.89,-999.8"/>
-<text text-anchor="start" x="504.39" y="-984.6" font-family="Helvetica,sans-Serif" font-size="14.00">Glossaries</text>
-<text text-anchor="start" x="487.89" y="-969.6" font-family="Helvetica,sans-Serif" font-size="14.00">documentation</text>
-</a>
-</g>
-</g>
-<!-- Blocks to write&#45;&#45;Glossaries documentation -->
-<g id="edge8" class="edge">
-<title>Blocks to write&#45;&#45;Glossaries documentation</title>
-<path fill="none" stroke="#7f7f7f" d="M690.26,-697.95C661.9,-751.48 579.59,-906.82 550.62,-961.49"/>
-</g>
-<!-- doc:𝒳 show:𝒳 -->
-<g id="node11" class="node">
-<title>doc:𝒳 show:𝒳</title>
-<g id="a_node11"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Glossaries" xlink:title="A term&#39;s definition as a tooltip; or a Lisp expression&#39;s value, inline.">
-<path fill="#ffe8cc" stroke="black" d="M448.68,-985.81C448.68,-985.81 401.68,-985.81 401.68,-985.81 395.68,-985.81 389.68,-979.81 389.68,-973.81 389.68,-973.81 389.68,-959.81 389.68,-959.81 389.68,-953.81 395.68,-947.81 401.68,-947.81 401.68,-947.81 448.68,-947.81 448.68,-947.81 454.68,-947.81 460.68,-953.81 460.68,-959.81 460.68,-959.81 460.68,-973.81 460.68,-973.81 460.68,-979.81 454.68,-985.81 448.68,-985.81"/>
-<text text-anchor="start" x="401.68" y="-970.61" font-family="monospace" font-size="14.00">doc:𝒳</text>
-<text text-anchor="start" x="397.68" y="-955.61" font-family="monospace" font-size="14.00">show:𝒳</text>
-</a>
-</g>
-</g>
-<!-- Links to cite&#45;&#45;doc:𝒳 show:𝒳 -->
-<g id="edge10" class="edge">
-<title>Links to cite&#45;&#45;doc:𝒳 show:𝒳</title>
-<path fill="none" stroke="#7f7f7f" d="M405.1,-715.58C408.99,-764.29 419.67,-897.88 423.66,-947.73"/>
-</g>
-<!-- kbd:C&#45;x_C&#45;s -->
-<g id="node12" class="node">
-<title>kbd:C&#45;x_C&#45;s</title>
-<g id="a_node12"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#nice-keystroke-renditions" xlink:title="Keys as keycaps, their command&#39;s documentation as a tooltip; click one in Emacs to run it.">
-<path fill="#ffe8cc" stroke="black" d="M358.17,-943.66C358.17,-943.66 275.17,-943.66 275.17,-943.66 269.17,-943.66 263.17,-937.66 263.17,-931.66 263.17,-931.66 263.17,-919.66 263.17,-919.66 263.17,-913.66 269.17,-907.66 275.17,-907.66 275.17,-907.66 358.17,-907.66 358.17,-907.66 364.17,-907.66 370.17,-913.66 370.17,-919.66 370.17,-919.66 370.17,-931.66 370.17,-931.66 370.17,-937.66 364.17,-943.66 358.17,-943.66"/>
-<text text-anchor="start" x="271.17" y="-921.96" font-family="monospace" font-size="14.00">kbd:C&#45;x_C&#45;s</text>
-</a>
-</g>
-</g>
-<!-- Links to cite&#45;&#45;kbd:C&#45;x_C&#45;s -->
-<g id="edge11" class="edge">
-<title>Links to cite&#45;&#45;kbd:C&#45;x_C&#45;s</title>
-<path fill="none" stroke="#7f7f7f" d="M396.68,-715.78C380.36,-758.6 339.8,-865 323.56,-907.6"/>
-</g>
-<!-- Badges badge · melpa · github&#45;* -->
-<g id="node13" class="node">
-<title>Badges badge · melpa · github&#45;*</title>
-<g id="a_node13"><a xlink:href="doc:org-make-badge" xlink:title="Shields.io badges, for a project&#39;s README.">
-<path fill="#ffe8cc" stroke="black" d="M302.66,-878.73C302.66,-878.73 139.66,-878.73 139.66,-878.73 133.66,-878.73 127.66,-872.73 127.66,-866.73 127.66,-866.73 127.66,-852.73 127.66,-852.73 127.66,-846.73 133.66,-840.73 139.66,-840.73 139.66,-840.73 302.66,-840.73 302.66,-840.73 308.66,-840.73 314.66,-846.73 314.66,-852.73 314.66,-852.73 314.66,-866.73 314.66,-866.73 314.66,-872.73 308.66,-878.73 302.66,-878.73"/>
-<text text-anchor="start" x="195.16" y="-863.53" font-family="Helvetica,sans-Serif" font-size="14.00">Badges</text>
-<text text-anchor="start" x="135.66" y="-848.53" font-family="Helvetica,sans-Serif" font-size="14.00">badge · melpa · github&#45;*</text>
-</a>
-</g>
-</g>
-<!-- Links to cite&#45;&#45;Badges badge · melpa · github&#45;* -->
-<g id="edge12" class="edge">
-<title>Links to cite&#45;&#45;Badges badge · melpa · github&#45;*</title>
-<path fill="none" stroke="#7f7f7f" d="M383.08,-715.79C348.31,-746.7 278.26,-808.97 242.8,-840.5"/>
-</g>
-<!-- Every block, as a link -->
-<g id="node14" class="node">
-<title>Every block, as a link</title>
-<g id="a_node14"><a xlink:title="red:𝒳, [[box:Title][…]], and the like: a block&#39;s one&#45;line form.">
-<path fill="#ffe8cc" stroke="black" d="M193.21,-791.86C193.21,-791.86 95.21,-791.86 95.21,-791.86 89.21,-791.86 83.21,-785.86 83.21,-779.86 83.21,-779.86 83.21,-765.86 83.21,-765.86 83.21,-759.86 89.21,-753.86 95.21,-753.86 95.21,-753.86 193.21,-753.86 193.21,-753.86 199.21,-753.86 205.21,-759.86 205.21,-765.86 205.21,-765.86 205.21,-779.86 205.21,-779.86 205.21,-785.86 199.21,-791.86 193.21,-791.86"/>
-<text text-anchor="middle" x="144.21" y="-776.66" font-family="Helvetica,sans-Serif" font-size="14.00">Every block, as</text>
-<text text-anchor="middle" x="144.21" y="-761.66" font-family="Helvetica,sans-Serif" font-size="14.00">a link</text>
-</a>
-</g>
-</g>
-<!-- Links to cite&#45;&#45;Every block, as a link -->
-<g id="edge13" class="edge">
-<title>Links to cite&#45;&#45;Every block, as a link</title>
-<path fill="none" stroke="#7f7f7f" d="M353.63,-712.02C311.37,-724.3 250.68,-741.93 205.51,-755.06"/>
-</g>
-<!-- :when · :noexport -->
-<g id="node16" class="node">
-<title>:when · :noexport</title>
-<g id="a_node16"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Switches-for-every-block" xlink:title="Export a block only for some backends, or never.">
-<path fill="#e0ecff" stroke="black" d="M119.77,-689.1C119.77,-689.1 60.77,-689.1 60.77,-689.1 54.77,-689.1 48.77,-683.1 48.77,-677.1 48.77,-677.1 48.77,-663.1 48.77,-663.1 48.77,-657.1 54.77,-651.1 60.77,-651.1 60.77,-651.1 119.77,-651.1 119.77,-651.1 125.77,-651.1 131.77,-657.1 131.77,-663.1 131.77,-663.1 131.77,-677.1 131.77,-677.1 131.77,-683.1 125.77,-689.1 119.77,-689.1"/>
-<text text-anchor="middle" x="90.27" y="-673.9" font-family="Helvetica,sans-Serif" font-size="14.00">:when ·</text>
-<text text-anchor="middle" x="90.27" y="-658.9" font-family="Helvetica,sans-Serif" font-size="14.00">:noexport</text>
-</a>
-</g>
-</g>
-<!-- Switches on any block&#45;&#45;:when · :noexport -->
-<g id="edge15" class="edge">
-<title>Switches on any block&#45;&#45;:when · :noexport</title>
-<path fill="none" stroke="#7f7f7f" d="M276.07,-518.65C235.75,-551.52 154.07,-618.1 113.8,-650.92"/>
-</g>
-<!-- :let · :ignore -->
-<g id="node17" class="node">
-<title>:let · :ignore</title>
-<g id="a_node17"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Switches-for-every-block" xlink:title="Substitute variables beforehand; or drop the block&#39;s behaviour, keeping its text.">
-<path fill="#e0ecff" stroke="black" d="M100.5,-575.42C100.5,-575.42 24.5,-575.42 24.5,-575.42 18.5,-575.42 12.5,-569.42 12.5,-563.42 12.5,-563.42 12.5,-551.42 12.5,-551.42 12.5,-545.42 18.5,-539.42 24.5,-539.42 24.5,-539.42 100.5,-539.42 100.5,-539.42 106.5,-539.42 112.5,-545.42 112.5,-551.42 112.5,-551.42 112.5,-563.42 112.5,-563.42 112.5,-569.42 106.5,-575.42 100.5,-575.42"/>
-<text text-anchor="middle" x="62.5" y="-553.72" font-family="Helvetica,sans-Serif" font-size="14.00">:let · :ignore</text>
-</a>
-</g>
-</g>
-<!-- Switches on any block&#45;&#45;:let · :ignore -->
-<g id="edge16" class="edge">
-<title>Switches on any block&#45;&#45;:let · :ignore</title>
-<path fill="none" stroke="#7f7f7f" d="M234.56,-515.33C196.16,-524.73 148.3,-536.43 112.82,-545.12"/>
-</g>
-<!-- :boxed · :folded -->
-<g id="node18" class="node">
-<title>:boxed · :folded</title>
-<g id="a_node18"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Switches-for-every-block" xlink:title="Box the result, or fold it away; on src and quote blocks too.">
-<path fill="#e0ecff" stroke="black" d="M113,-459.37C113,-459.37 12,-459.37 12,-459.37 6,-459.37 0,-453.37 0,-447.37 0,-447.37 0,-435.37 0,-435.37 0,-429.37 6,-423.37 12,-423.37 12,-423.37 113,-423.37 113,-423.37 119,-423.37 125,-429.37 125,-435.37 125,-435.37 125,-447.37 125,-447.37 125,-453.37 119,-459.37 113,-459.37"/>
-<text text-anchor="middle" x="62.5" y="-437.67" font-family="Helvetica,sans-Serif" font-size="14.00">:boxed · :folded</text>
-</a>
-</g>
-</g>
-<!-- Switches on any block&#45;&#45;:boxed · :folded -->
-<g id="edge17" class="edge">
-<title>Switches on any block&#45;&#45;:boxed · :folded</title>
-<path fill="none" stroke="#7f7f7f" d="M234.56,-483.47C200.41,-475.11 158.78,-464.93 125.03,-456.67"/>
-</g>
-<!-- :verbatim -->
-<g id="node19" class="node">
-<title>:verbatim</title>
-<g id="a_node19"><a xlink:href="https://alhassy.com/org-special-block-extras-blocks-and-links#Switches-for-every-block" xlink:title="Show the block&#39;s source; with demo, beside its result.">
-<path fill="#e0ecff" stroke="black" d="M119.77,-346.69C119.77,-346.69 60.77,-346.69 60.77,-346.69 54.77,-346.69 48.77,-340.69 48.77,-334.69 48.77,-334.69 48.77,-322.69 48.77,-322.69 48.77,-316.69 54.77,-310.69 60.77,-310.69 60.77,-310.69 119.77,-310.69 119.77,-310.69 125.77,-310.69 131.77,-316.69 131.77,-322.69 131.77,-322.69 131.77,-334.69 131.77,-334.69 131.77,-340.69 125.77,-346.69 119.77,-346.69"/>
-<text text-anchor="middle" x="90.27" y="-324.99" font-family="Helvetica,sans-Serif" font-size="14.00">:verbatim</text>
-</a>
-</g>
-</g>
-<!-- Switches on any block&#45;&#45;:verbatim -->
-<g id="edge18" class="edge">
-<title>Switches on any block&#45;&#45;:verbatim</title>
-<path fill="none" stroke="#7f7f7f" d="M276.07,-480.15C235.32,-446.93 152.33,-379.28 112.53,-346.84"/>
-</g>
-<!-- C&#45;c C&#45;c -->
-<g id="node21" class="node">
-<title>C&#45;c C&#45;c</title>
-<g id="a_node21"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#C-c-C-c-for-your-own-blocks" xlink:title="A block&#39;s action: render a graph, run a :C&#45;cC&#45;c form.">
-<path fill="#e0ecff" stroke="black" d="M165.21,-243.93C165.21,-243.93 123.21,-243.93 123.21,-243.93 117.21,-243.93 111.21,-237.93 111.21,-231.93 111.21,-231.93 111.21,-219.93 111.21,-219.93 111.21,-213.93 117.21,-207.93 123.21,-207.93 123.21,-207.93 165.21,-207.93 165.21,-207.93 171.21,-207.93 177.21,-213.93 177.21,-219.93 177.21,-219.93 177.21,-231.93 177.21,-231.93 177.21,-237.93 171.21,-243.93 165.21,-243.93"/>
-<text text-anchor="middle" x="144.21" y="-222.23" font-family="Helvetica,sans-Serif" font-size="14.00">C&#45;c C&#45;c</text>
-</a>
-</g>
-</g>
-<!-- Keys in Emacs&#45;&#45;C&#45;c C&#45;c -->
-<g id="edge20" class="edge">
-<title>Keys in Emacs&#45;&#45;C&#45;c C&#45;c</title>
-<path fill="none" stroke="#7f7f7f" d="M345.43,-284.39C293.59,-269.33 219.59,-247.83 177.28,-235.54"/>
-</g>
-<!-- C&#45;c &#39; -->
-<g id="node22" class="node">
-<title>C&#45;c &#39;</title>
-<g id="a_node22"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#C-c-quote-for-your-own-blocks" xlink:title="Edit any special block&#39;s contents in a buffer of their own.">
-<path fill="#e0ecff" stroke="black" d="M236.16,-157.07C236.16,-157.07 206.16,-157.07 206.16,-157.07 200.16,-157.07 194.16,-151.07 194.16,-145.07 194.16,-145.07 194.16,-133.07 194.16,-133.07 194.16,-127.07 200.16,-121.07 206.16,-121.07 206.16,-121.07 236.16,-121.07 236.16,-121.07 242.16,-121.07 248.16,-127.07 248.16,-133.07 248.16,-133.07 248.16,-145.07 248.16,-145.07 248.16,-151.07 242.16,-157.07 236.16,-157.07"/>
-<text text-anchor="middle" x="221.16" y="-135.37" font-family="Helvetica,sans-Serif" font-size="14.00">C&#45;c &#39;</text>
-</a>
-</g>
-</g>
-<!-- Keys in Emacs&#45;&#45;C&#45;c &#39; -->
-<g id="edge21" class="edge">
-<title>Keys in Emacs&#45;&#45;C&#45;c &#39;</title>
-<path fill="none" stroke="#7f7f7f" d="M383.08,-283.01C347.93,-251.77 276.76,-188.49 241.67,-157.3"/>
-</g>
-<!-- C&#45;c C&#45;v C&#45;d -->
-<g id="node23" class="node">
-<title>C&#45;c C&#45;v C&#45;d</title>
-<g id="a_node23"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#C-c-C-v-C-d-to-split-a-block" xlink:title="Split any special block in two at point.">
-<path fill="#e0ecff" stroke="black" d="M352.17,-91.14C352.17,-91.14 281.17,-91.14 281.17,-91.14 275.17,-91.14 269.17,-85.14 269.17,-79.14 269.17,-79.14 269.17,-67.14 269.17,-67.14 269.17,-61.14 275.17,-55.14 281.17,-55.14 281.17,-55.14 352.17,-55.14 352.17,-55.14 358.17,-55.14 364.17,-61.14 364.17,-67.14 364.17,-67.14 364.17,-79.14 364.17,-79.14 364.17,-85.14 358.17,-91.14 352.17,-91.14"/>
-<text text-anchor="middle" x="316.67" y="-69.44" font-family="Helvetica,sans-Serif" font-size="14.00">C&#45;c C&#45;v C&#45;d</text>
-</a>
-</g>
-</g>
-<!-- Keys in Emacs&#45;&#45;C&#45;c C&#45;v C&#45;d -->
-<g id="edge22" class="edge">
-<title>Keys in Emacs&#45;&#45;C&#45;c C&#45;v C&#45;d</title>
-<path fill="none" stroke="#7f7f7f" d="M396.68,-283.02C380.36,-240.19 339.8,-133.8 323.56,-91.2"/>
-</g>
-<!-- eldoc -->
-<g id="node24" class="node">
-<title>eldoc</title>
-<g id="a_node24"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#eldoc-for-blocks-and-links" xlink:title="Hover a #+begin_ line, or a link, for its arguments and gist.">
-<path fill="#e0ecff" stroke="black" d="M440.18,-49.99C440.18,-49.99 410.18,-49.99 410.18,-49.99 404.18,-49.99 398.18,-43.99 398.18,-37.99 398.18,-37.99 398.18,-25.99 398.18,-25.99 398.18,-19.99 404.18,-13.99 410.18,-13.99 410.18,-13.99 440.18,-13.99 440.18,-13.99 446.18,-13.99 452.18,-19.99 452.18,-25.99 452.18,-25.99 452.18,-37.99 452.18,-37.99 452.18,-43.99 446.18,-49.99 440.18,-49.99"/>
-<text text-anchor="middle" x="425.18" y="-28.29" font-family="Helvetica,sans-Serif" font-size="14.00">eldoc</text>
-</a>
-</g>
-</g>
-<!-- Keys in Emacs&#45;&#45;eldoc -->
-<g id="edge23" class="edge">
-<title>Keys in Emacs&#45;&#45;eldoc</title>
-<path fill="none" stroke="#7f7f7f" d="M405.1,-283.22C409.02,-234.16 419.83,-98.97 423.74,-50"/>
-</g>
-<!-- org&#45;defblock -->
-<g id="node26" class="node">
-<title>org&#45;defblock</title>
-<g id="a_node26"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#Make-your-own-blocks" xlink:title="A block, its link, and its tag, from one cl&#45;defun&#45;style definition.">
-<path fill="#f3e0ff" stroke="black" d="M580.39,-36C580.39,-36 500.39,-36 500.39,-36 494.39,-36 488.39,-30 488.39,-24 488.39,-24 488.39,-12 488.39,-12 488.39,-6 494.39,0 500.39,0 500.39,0 580.39,0 580.39,0 586.39,0 592.39,-6 592.39,-12 592.39,-12 592.39,-24 592.39,-24 592.39,-30 586.39,-36 580.39,-36"/>
-<text text-anchor="middle" x="540.39" y="-14.3" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;defblock</text>
-</a>
-</g>
-</g>
-<!-- Make your own&#45;&#45;org&#45;defblock -->
-<g id="edge25" class="edge">
-<title>Make your own&#45;&#45;org&#45;defblock</title>
-<path fill="none" stroke="#7f7f7f" d="M619.74,-256.32C604.07,-209.25 562.05,-83.05 546.38,-36.01"/>
-</g>
-<!-- org&#45;deflink -->
-<g id="node27" class="node">
-<title>org&#45;deflink</title>
-<g id="a_node27"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#Make-your-own-links" xlink:title="A link type: how it looks in Emacs and how it exports.">
-<path fill="#f3e0ff" stroke="black" d="M689.59,-49.99C689.59,-49.99 621.59,-49.99 621.59,-49.99 615.59,-49.99 609.59,-43.99 609.59,-37.99 609.59,-37.99 609.59,-25.99 609.59,-25.99 609.59,-19.99 615.59,-13.99 621.59,-13.99 621.59,-13.99 689.59,-13.99 689.59,-13.99 695.59,-13.99 701.59,-19.99 701.59,-25.99 701.59,-25.99 701.59,-37.99 701.59,-37.99 701.59,-43.99 695.59,-49.99 689.59,-49.99"/>
-<text text-anchor="middle" x="655.59" y="-28.29" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;deflink</text>
-</a>
-</g>
-</g>
-<!-- Make your own&#45;&#45;org&#45;deflink -->
-<g id="edge26" class="edge">
-<title>Make your own&#45;&#45;org&#45;deflink</title>
-<path fill="none" stroke="#7f7f7f" d="M627.99,-256.13C633.53,-211.1 647.84,-94.98 653.37,-50.09"/>
-</g>
-<!-- org&#45;deftag -->
-<g id="node28" class="node">
-<title>org&#45;deftag</title>
-<g id="a_node28"><a xlink:href="https://alhassy.com/org-special-block-extras-developers-guide#tags-are-functions-of-org-sections" xlink:title="A heading tag as a function of its section.">
-<path fill="#f3e0ff" stroke="black" d="M796.61,-91.14C796.61,-91.14 731.61,-91.14 731.61,-91.14 725.61,-91.14 719.61,-85.14 719.61,-79.14 719.61,-79.14 719.61,-67.14 719.61,-67.14 719.61,-61.14 725.61,-55.14 731.61,-55.14 731.61,-55.14 796.61,-55.14 796.61,-55.14 802.61,-55.14 808.61,-61.14 808.61,-67.14 808.61,-67.14 808.61,-79.14 808.61,-79.14 808.61,-85.14 802.61,-91.14 796.61,-91.14"/>
-<text text-anchor="middle" x="764.11" y="-69.44" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;deftag</text>
-</a>
-</g>
-</g>
-<!-- Make your own&#45;&#45;org&#45;deftag -->
-<g id="edge27" class="edge">
-<title>Make your own&#45;&#45;org&#45;deftag</title>
-<path fill="none" stroke="#7f7f7f" d="M638.26,-256.13C664.61,-217.82 725.48,-129.31 751.71,-91.17"/>
-</g>
-<!-- org&#45;thread&#45;blockcall -->
-<g id="node29" class="node">
-<title>org&#45;thread&#45;blockcall</title>
-<g id="a_node29"><a xlink:href="doc:org-thread-blockcall" xlink:title="Compose blocks: solution is details of a box of details.">
-<path fill="#f3e0ff" stroke="black" d="M925.11,-157.07C925.11,-157.07 794.11,-157.07 794.11,-157.07 788.11,-157.07 782.11,-151.07 782.11,-145.07 782.11,-145.07 782.11,-133.07 782.11,-133.07 782.11,-127.07 788.11,-121.07 794.11,-121.07 794.11,-121.07 925.11,-121.07 925.11,-121.07 931.11,-121.07 937.11,-127.07 937.11,-133.07 937.11,-133.07 937.11,-145.07 937.11,-145.07 937.11,-151.07 931.11,-157.07 925.11,-157.07"/>
-<text text-anchor="middle" x="859.61" y="-135.37" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;thread&#45;blockcall</text>
-</a>
-</g>
-</g>
-<!-- Make your own&#45;&#45;org&#45;thread&#45;blockcall -->
-<g id="edge28" class="edge">
-<title>Make your own&#45;&#45;org&#45;thread&#45;blockcall</title>
-<path fill="none" stroke="#7f7f7f" d="M657.28,-256.1C702.04,-230.21 783.51,-183.09 828.2,-157.24"/>
-</g>
-<!-- org&#45;defblock&#45;evaluate&#45;switches -->
-<g id="node31" class="node">
-<title>org&#45;defblock&#45;evaluate&#45;switches</title>
-<g id="a_node31"><a xlink:title="May a document&#39;s :when, :let, and :C&#45;cC&#45;c run Lisp? Ask, by default.">
-<path fill="#f3e0ff" stroke="black" d="M1041.07,-243.93C1041.07,-243.93 832.07,-243.93 832.07,-243.93 826.07,-243.93 820.07,-237.93 820.07,-231.93 820.07,-231.93 820.07,-219.93 820.07,-219.93 820.07,-213.93 826.07,-207.93 832.07,-207.93 832.07,-207.93 1041.07,-207.93 1041.07,-207.93 1047.07,-207.93 1053.07,-213.93 1053.07,-219.93 1053.07,-219.93 1053.07,-231.93 1053.07,-231.93 1053.07,-237.93 1047.07,-243.93 1041.07,-243.93"/>
-<text text-anchor="middle" x="936.57" y="-222.23" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;defblock&#45;evaluate&#45;switches</text>
-</a>
-</g>
-</g>
-<!-- Options&#45;&#45;org&#45;defblock&#45;evaluate&#45;switches -->
-<g id="edge30" class="edge">
-<title>Options&#45;&#45;org&#45;defblock&#45;evaluate&#45;switches</title>
-<path fill="none" stroke="#7f7f7f" d="M781.85,-396.01C814.48,-360.14 887.17,-280.24 919.96,-244.19"/>
-</g>
-<!-- org&#45;special&#45;block&#45;add&#45;html&#45;extra -->
-<g id="node32" class="node">
-<title>org&#45;special&#45;block&#45;add&#45;html&#45;extra</title>
-<g id="a_node32"><a xlink:title="Inline the tooltips&#39; CSS and JS in HTML exports; on, by default.">
-<path fill="#f3e0ff" stroke="black" d="M1100.5,-346.69C1100.5,-346.69 880.5,-346.69 880.5,-346.69 874.5,-346.69 868.5,-340.69 868.5,-334.69 868.5,-334.69 868.5,-322.69 868.5,-322.69 868.5,-316.69 874.5,-310.69 880.5,-310.69 880.5,-310.69 1100.5,-310.69 1100.5,-310.69 1106.5,-310.69 1112.5,-316.69 1112.5,-322.69 1112.5,-322.69 1112.5,-334.69 1112.5,-334.69 1112.5,-340.69 1106.5,-346.69 1100.5,-346.69"/>
-<text text-anchor="middle" x="990.5" y="-324.99" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;special&#45;block&#45;add&#45;html&#45;extra</text>
-</a>
-</g>
-</g>
-<!-- Options&#45;&#45;org&#45;special&#45;block&#45;add&#45;html&#45;extra -->
-<g id="edge31" class="edge">
-<title>Options&#45;&#45;org&#45;special&#45;block&#45;add&#45;html&#45;extra</title>
-<path fill="none" stroke="#7f7f7f" d="M801.11,-400.52C839.41,-386 900.46,-362.84 942.86,-346.76"/>
-</g>
-<!-- org&#45;docs&#45;libraries -->
-<g id="node33" class="node">
-<title>org&#45;docs&#45;libraries</title>
-<g id="a_node33"><a xlink:title="Org files whose glossary entries every document may cite.">
-<path fill="#f3e0ff" stroke="black" d="M1075.28,-459.37C1075.28,-459.37 961.28,-459.37 961.28,-459.37 955.28,-459.37 949.28,-453.37 949.28,-447.37 949.28,-447.37 949.28,-435.37 949.28,-435.37 949.28,-429.37 955.28,-423.37 961.28,-423.37 961.28,-423.37 1075.28,-423.37 1075.28,-423.37 1081.28,-423.37 1087.28,-429.37 1087.28,-435.37 1087.28,-435.37 1087.28,-447.37 1087.28,-447.37 1087.28,-453.37 1081.28,-459.37 1075.28,-459.37"/>
-<text text-anchor="middle" x="1018.28" y="-437.67" font-family="Helvetica,sans-Serif" font-size="14.00">org&#45;docs&#45;libraries</text>
-</a>
-</g>
-</g>
-<!-- Options&#45;&#45;org&#45;docs&#45;libraries -->
-<g id="edge32" class="edge">
-<title>Options&#45;&#45;org&#45;docs&#45;libraries</title>
-<path fill="none" stroke="#7f7f7f" d="M801.13,-417.9C839.45,-422.04 901.27,-428.73 949.17,-433.9"/>
-</g>
-</g>
-</svg>
+<div class="graph">
+<ul class="org-ul">
+<li><a class="anchor" id="osbe" href="#osbe" aria-label="Permalink to osbe"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a> <a href="https://github.com/alhassy/org-special-block-extras"><b>org-special-block-extras</b></a> <sup><abbr class="tooltip" tabindex="0" id="fnr.1">1<template>Blocks, links, and switches for Org, exported alike to HTML, LaTeX, and Markdown.</template></abbr></sup>
+<ul class="org-ul">
+<li>Blocks to write :glance<sub>write</sub>:
+<ul class="org-ul">
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#callouts">Callouts</a> \\ note · tip · important · warning · caution <sup><abbr class="tooltip" tabindex="0" id="fnr.2">2<template>GitHub's alerts: a coloured rule and a titled heading; Markdown gets the alerts themselves.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#boxed-text">Folding &amp; framing</a> \\ box · details · solution · spoiler · parallel <sup><abbr class="tooltip" tabindex="0" id="fnr.3">3<template>Draw attention to text, fold it away, or set ideas side by side.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#tooltip">Remarks</a> \\ margin · tooltip · remark <sup><abbr class="tooltip" tabindex="0" id="fnr.4">4<template>Notes that stay out of the reader's way: in the margin in LaTeX, hovered or tapped in HTML. Org's own footnotes join them.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#highlights">Colour</a> \\ red · blue · … · highlight <sup><abbr class="tooltip" tabindex="0" id="fnr.5">5<template>19 named colours, each a block and a link, and a highlight that colours the background.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#math">Maths &amp; proofs</a> \\ math · tree <sup><abbr class="tooltip" tabindex="0" id="fnr.6">6<template>Display maths wherein <code>red:𝒳</code> colours a symbol, aligned at <code>&amp;</code>, with coloured tags that <code>[[𝒳]]</code> cites; calculational proofs, their hints folded by <code>TAB</code>; and proof trees, as Org lists.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#graphs">Graphs</a> \\ graph <sup><abbr class="tooltip" tabindex="0" id="fnr.7">7<template>Org lists drawn by Graphviz; this very map is one.</template></abbr></sup> :glance<sub>write</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#glossaries">Glossaries</a> \\ documentation <sup><abbr class="tooltip" tabindex="0" id="fnr.8">8<template>Define a term once &mdash;even as Org's own <code>&lt;&lt;&lt;radio target&gt;&gt;&gt;</code>, whose every mention is then a tooltip&mdash; and cite it everywhere with <code>doc:𝒳</code>; <code>#+print_glossary:</code> lists every citation.</template></abbr></sup> :glance<sub>write</sub>:</li>
+</ul></li>
+<li>Links to cite :glance<sub>read</sub>:
+<ul class="org-ul">
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#glossaries"><code>doc:𝒳</code></a> <sup><abbr class="tooltip" tabindex="0" id="fnr.9">9<template>A term's definition as a tooltip.</template></abbr></sup> :glance<sub>read</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#nice-keystroke-renditions"><code>kbd:C-x_C-s</code></a> <sup><abbr class="tooltip" tabindex="0" id="fnr.10">10<template>Keys as keycaps, their command's documentation as a tooltip; click one in Emacs to run it.</template></abbr></sup> :glance<sub>read</sub>:</li>
+<li><abbr class="tooltip" tabindex="0">Badges<template><pre>Make a link NAME whose export is presented as an SVG badge.
+
+If the link is intend to be a social badge, then, adhering to
+shield.io conventions, the appropriate SOCIAL-SHIELDS-NAME must
+be given.
+
+The SOCIAL-URL is a URL that the badge points to and it should
+have a single ‘%s’ where the link label argument will go.
+
+Some social badges have a uniform URL, but otherwise, such as
+twitter, deviate and so need their own SOCIAL-SHIELDS-URL,
+which has a single ‘%s’ for the link’s label argument.
+
+----------------------------------------------------------------------
+
+E.g., to create a badge named “go”:
+
+     (org-make-badge "go")
+
+Then the following exports nicely from an Org file:
+
+     go:key|value|blue||gnu-emacs
+
+(fn NAME &amp;optional SOCIAL-SHIELDS-NAME SOCIAL-URL SOCIAL-SHIELDS-URL)</pre></template></abbr> \\ badge · melpa · github-* <sup><abbr class="tooltip" tabindex="0" id="fnr.11">11<template>Shields.io badges, for a project's README.</template></abbr></sup> :glance<sub>read</sub>:</li>
+<li>Every block, as a link <sup><abbr class="tooltip" tabindex="0" id="fnr.12">12<template><code>red:𝒳</code>, <code>[[box:Title][…]]</code>, and the like: a block's one-line form.</template></abbr></sup> :glance<sub>read</sub>:</li>
+</ul></li>
+<li>Switches on any block :glance<sub>act</sub>:
+<ul class="org-ul">
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">:when · :noexport</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.13">13<template>Export a block only for some backends, or never.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">:let · :ignore</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.14">14<template>Substitute variables beforehand; or drop the block's behaviour, keeping its text.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">:boxed · :folded</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.15">15<template>Box the result, or fold it away; on src and quote blocks too.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">:verbatim</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.16">16<template>Show the block's source; with demo, beside its result.</template></abbr></sup> :glance<sub>act</sub>:</li>
+</ul></li>
+<li>Keys in Emacs :glance<sub>act</sub>:
+<ul class="org-ul">
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#c-c-c-c-for-your-own-blocks">C-c C-c</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.17">17<template>A block's action: render a graph, run a :C-c<sub>C</sub>-c form.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#c-c-quote-for-your-own-blocks">C-c '</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.18">18<template>Edit any special block's contents in a buffer of their own.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#c-c-c-v-c-d-to-split-a-block">C-c C-v C-d</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.19">19<template>Split any special block in two at point.</template></abbr></sup> :glance<sub>act</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#eldoc-for-blocks-and-links">eldoc</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.20">20<template>Hover a #+begin_ line, or a link, for its arguments and gist.</template></abbr></sup> :glance<sub>act</sub>:</li>
+</ul></li>
+<li>Make your own :glance<sub>make</sub>:
+<ul class="org-ul">
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#make-your-own-blocks">org-defblock</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.21">21<template>A block, its link, and its tag, from one cl-defun-style definition.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#make-your-own-links">org-deflink</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.22">22<template>A link type: how it looks in Emacs and how it exports.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li><a href="https://alhassy.com/org-special-block-extras-developers-guide#tags-are-functions-of-org-sections">org-deftag</a> <sup><abbr class="tooltip" tabindex="0" id="fnr.23">23<template>A heading tag as a function of its section.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li><abbr class="tooltip" tabindex="0">org-thread-blockcall<template><pre>(BODY, (b₁ a₁ …), …, (bₙ aₙ …)) ↦ BODY in block b₁, that in b₂, …, that in bₙ.
+
+(fn BODY &amp;rest FORMS)</pre></template></abbr> <sup><abbr class="tooltip" tabindex="0" id="fnr.24">24<template>Compose blocks: solution is details of a box of details.</template></abbr></sup> :glance<sub>make</sub>:</li>
+</ul></li>
+<li>Options :glance<sub>make</sub>:
+<ul class="org-ul">
+<li>org-defblock-evaluate-switches <sup><abbr class="tooltip" tabindex="0" id="fnr.25">25<template>May a document's :when, :let, and :C-c<sub>C</sub>-c run Lisp? Ask, by default.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li>org-special-block-add-html-extra <sup><abbr class="tooltip" tabindex="0" id="fnr.26">26<template>Inline the tooltips' CSS and JS in HTML exports; on, by default.</template></abbr></sup> :glance<sub>make</sub>:</li>
+<li>org-docs-libraries <sup><abbr class="tooltip" tabindex="0" id="fnr.27">27<template>Org files whose glossary entries every document may cite.</template></abbr></sup> :glance<sub>make</sub>:</li>
+</ul></li>
+</ul></li>
+</ul>
+
 </div>
 </div>
-<hr><center>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Blocks, links, and switches for Org, exported alike to HTML, LaTeX, and Markdown.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2" role="doc-backlink">2</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">GitHub's alerts: a coloured rule and a titled heading; Markdown gets the alerts themselves.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.3" class="footnum" href="#fnr.3" role="doc-backlink">3</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Draw attention to text, fold it away, or set ideas side by side.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.4" class="footnum" href="#fnr.4" role="doc-backlink">4</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Notes that stay out of the reader's way: in the margin in LaTeX, hovered or tapped in HTML. Org's own footnotes join them.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.5" class="footnum" href="#fnr.5" role="doc-backlink">5</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">19 named colours, each a block and a link, and a highlight that colours the background.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.6" class="footnum" href="#fnr.6" role="doc-backlink">6</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Display maths wherein <code>red:𝒳</code> colours a symbol, aligned at <code>&amp;</code>, with coloured tags that <code>[[𝒳]]</code> cites; calculational proofs, their hints folded by <code>TAB</code>; and proof trees, as Org lists.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.7" class="footnum" href="#fnr.7" role="doc-backlink">7</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Org lists drawn by Graphviz; this very map is one.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.8" class="footnum" href="#fnr.8" role="doc-backlink">8</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Define a term once &mdash;even as Org's own <code>&lt;&lt;&lt;radio target&gt;&gt;&gt;</code>, whose every mention is then a tooltip&mdash; and cite it everywhere with <code>doc:𝒳</code>; <code>#+print_glossary:</code> lists every citation.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.9" class="footnum" href="#fnr.9" role="doc-backlink">9</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A term's definition as a tooltip.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.10" class="footnum" href="#fnr.10" role="doc-backlink">10</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Keys as keycaps, their command's documentation as a tooltip; click one in Emacs to run it.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.11" class="footnum" href="#fnr.11" role="doc-backlink">11</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Shields.io badges, for a project's README.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.12" class="footnum" href="#fnr.12" role="doc-backlink">12</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara"><code>red:𝒳</code>, <code>[[box:Title][…]]</code>, and the like: a block's one-line form.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.13" class="footnum" href="#fnr.13" role="doc-backlink">13</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Export a block only for some backends, or never.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.14" class="footnum" href="#fnr.14" role="doc-backlink">14</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Substitute variables beforehand; or drop the block's behaviour, keeping its text.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.15" class="footnum" href="#fnr.15" role="doc-backlink">15</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Box the result, or fold it away; on src and quote blocks too.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.16" class="footnum" href="#fnr.16" role="doc-backlink">16</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Show the block's source; with demo, beside its result.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.17" class="footnum" href="#fnr.17" role="doc-backlink">17</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A block's action: render a graph, run a :C-c<sub>C</sub>-c form.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.18" class="footnum" href="#fnr.18" role="doc-backlink">18</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Edit any special block's contents in a buffer of their own.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.19" class="footnum" href="#fnr.19" role="doc-backlink">19</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Split any special block in two at point.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.20" class="footnum" href="#fnr.20" role="doc-backlink">20</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Hover a #+begin_ line, or a link, for its arguments and gist.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.21" class="footnum" href="#fnr.21" role="doc-backlink">21</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A block, its link, and its tag, from one cl-defun-style definition.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.22" class="footnum" href="#fnr.22" role="doc-backlink">22</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A link type: how it looks in Emacs and how it exports.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.23" class="footnum" href="#fnr.23" role="doc-backlink">23</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">A heading tag as a function of its section.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.24" class="footnum" href="#fnr.24" role="doc-backlink">24</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Compose blocks: solution is details of a box of details.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.25" class="footnum" href="#fnr.25" role="doc-backlink">25</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">May a document's :when, :let, and :C-c<sub>C</sub>-c run Lisp? Ask, by default.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.26" class="footnum" href="#fnr.26" role="doc-backlink">26</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Inline the tooltips' CSS and JS in HTML exports; on, by default.</p></div></div>
+
+<div class="footdef"><sup><a id="fn.27" class="footnum" href="#fnr.27" role="doc-backlink">27</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">Org files whose glossary entries every document may cite.</p></div></div>
+
+
+</div>
+</div><hr><center>
   <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
   <style>
      body {font-family: 'Amiri', sans-serif;}
