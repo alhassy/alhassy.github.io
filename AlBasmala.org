@@ -475,6 +475,16 @@ fixes them in the vendored copy:
    =[[https://raw.githubusercontent.com/alhassy/holy-books/main/images/short_example.png]]=,
    which Org still inlines as an image.  A local-path source keeps its links; in due time,
    we may resolve them against the source's git remote.
+
+   An image /drawn by a graph/ is the exception: Graphviz reads its =image= from a file, never
+   a URL, and a URL in a graph is a mere hyperlink.  So, within a =#+begin_graph=, a
+   description-less image link is fetched into the git-ignored =.redirect-images/=, mirrored by
+   its URL, and points there; e.g.,
+   =[[file:images/inference-rules.png]]= ↦
+   =[[file:/…/blog/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png]]=.
+   That path is meaningless to a reader, so =blog--mirrored-images-online=, a final-output
+   filter, turns each mirrored path back into its URL ---in the =<svg>='s =xlink:href=, for the
+   browser, and in a =:demo='s source, which then reads as any other re-rooted link.
 2. *File-level keywords.* The temp file already opens with the heading's =#+title:= and
    friends; an included =#+title: holy-books= would be concatenated onto ours, and
    =#+options: toc:nil= would hide our Ξ table of contents.  So we axe =#+title:=,
@@ -618,11 +628,30 @@ vendored for CI.  Relative path; must end with a trailing slash.")
 (defconst blog--redirect-axed-keywords '("TITLE" "SUBTITLE" "AUTHOR" "DATE" "OPTIONS" "EXPORT_FILE_NAME" "TOC")
   "A :REDIRECT: source's file-level keywords that would clash with its article's synthetic ones.")
 
+(defvar blog-redirect-images-subdir ".redirect-images/"
+  "Git-ignored subdirectory of `blog-posts-directory' mirroring each image a :REDIRECT:'s graphs draw, by its URL;
+e.g., https://raw…/images/x.png ↦ .redirect-images/raw…/images/x.png.")
+
+(defun blog--graph-image-p (link)
+  "LINK ↦ whether it is a description-less link to an image within a #+begin_graph, which Graphviz draws from a file."
+  (and (not (org-element-property :contents-begin link))
+       (string-match-p "\\.\\(png\\|jpe?g\\|gif\\|svg\\)\\'" (org-element-property :path link))
+       (seq-some (lambda (it) (and (eq 'special-block (org-element-type it))
+                                   (string-equal-ignore-case "graph" (org-element-property :type it))))
+                 (org-element-lineage link))))
+
+(defun blog--mirrored-images-online (output _backend _info)
+  "OUTPUT whose mirrored images ↦ their URLs, for the browser; e.g., an <svg>'s xlink:href=\"/…/.redirect-images/raw…/x.png\"
+↦ xlink:href=\"https://raw…/x.png\", and a :demo's [[file:/…/.redirect-images/raw…/x.png]] ↦ [[https://raw…/x.png]].
+Any machine's mirror, so a vendored copy kept from another machine's build reads right too."
+  (replace-regexp-in-string (concat "\\(?:file:\\)?/[^\"'<>[:space:]]*/" (regexp-quote blog-redirect-images-subdir))
+                            "https://" output t t))
+
 (defun blog--prepare-redirect (file redirect)
   "Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, file:images/x.png ↦ URL-dir/images/x.png.
 
 Axes `blog--redirect-axed-keywords', re-roots relative file links and #+fileimage: at REDIRECT's
-directory when it's a URL, and, in a container, points [[#id]] at the article holding id when
+directory when it's a URL ---save that an image a graph draws is mirrored locally, by `blog--graph-image-p'---, and, in a container, points [[#id]] at the article holding id when
 that's another one; see §“Making a source include-ready”."
   (with-temp-buffer
     (insert-file-contents file)
@@ -665,6 +694,17 @@ that's another one; see §“Making a source include-ready”."
               (delete-region beg (- end (org-element-property :post-blank el)))
               (goto-char beg)
               (insert (format "[[%s#%s][%s]]" (blog--url (map-elt homes path)) path desc))))
+           ((and base (equal type "file") (not (file-name-absolute-p path)) (blog--graph-image-p el))
+            ;; Graphviz draws an image from a file, never a URL: mirror it; `blog--mirrored-images-online' undoes this.
+            (let* ((url (url-expand-file-name path base))
+                   (local (expand-file-name (concat blog-redirect-images-subdir (replace-regexp-in-string "\\`https?://" "" url))
+                                            blog-posts-directory)))
+              (make-directory (file-name-directory local) t)
+              (condition-case err (blog--fetch-url url local)
+                (error (message "=> Couldn't mirror %s, so its graph draws no image: %s" url (error-message-string err))))
+              (goto-char beg)
+              (search-forward (org-element-property :raw-link el) end)
+              (replace-match (concat "file:" local) t t)))
            ((and base (equal type "file") (not (file-name-absolute-p path)))
             ;; Expand before searching: `url-expand-file-name' clobbers the match data.
             (let ((url (url-expand-file-name path base)))
@@ -1985,7 +2025,7 @@ That global aside, kbd:C-c_C-e_h_h on an unrelated Org file is untouched.
 (org-export-define-derived-backend 'blog-page 'html
   :options-alist '((:html-prefer-user-labels nil nil t))
   :filters-alist '((:filter-parse-tree . blog--stable-headline-ids)
-                   (:filter-final-output . blog--no-random-ids)))
+                   (:filter-final-output blog--no-random-ids blog--mirrored-images-online)))
 
 ;; Never export a broken link; e.g., a `doc:' link to nothing errors rather than shipping an empty tooltip.
 (setq org-export-with-broken-links nil)
