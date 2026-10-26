@@ -644,8 +644,19 @@ e.g., https://raw…/images/x.png ↦ .redirect-images/raw…/images/x.png.")
   "OUTPUT whose mirrored images ↦ their URLs, for the browser; e.g., an <svg>'s xlink:href=\"/…/.redirect-images/raw…/x.png\"
 ↦ xlink:href=\"https://raw…/x.png\", and a :demo's [[file:/…/.redirect-images/raw…/x.png]] ↦ [[https://raw…/x.png]].
 Any machine's mirror, so a vendored copy kept from another machine's build reads right too."
-  (replace-regexp-in-string (concat "\\(?:file:\\)?/[^\"'<>[:space:]]*/" (regexp-quote blog-redirect-images-subdir))
-                            "https://" output t t))
+  (with-temp-buffer
+    (insert output)
+    (goto-char (point-min))
+    ;; A literal search, then a step back over the path: a regexp opening with [^…]* overflows Emacs's matcher on an
+    ;; inline base64 image, a run of 100KB sans quote or space.
+    (while (search-forward (concat "/" blog-redirect-images-subdir) nil t)
+      (let ((end (point)))
+        (goto-char (match-beginning 0))
+        (skip-chars-backward "^\"'<>[(=:[:space:]")
+        (when (looking-back "file:" (- (point) 5)) (backward-char 5))
+        (delete-region (point) end)
+        (insert "https://")))
+    (buffer-string)))
 
 (defun blog--prepare-redirect (file redirect)
   "Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, file:images/x.png ↦ URL-dir/images/x.png.
