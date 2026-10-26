@@ -3766,8 +3766,12 @@ jobs:
 
       # org-special-block-extras' graph block, in its manual, draws with Graphviz.  The runner image's apt index
       # goes stale as Ubuntu supersedes packages ---then installs 404--- so we refresh it first, for poppler too.
+      # Since Ubuntu 26.04, as in Debian, unflatten ---which :unflatten N runs--- ships apart, in graphviz-tools.
       - name: Install Graphviz
-        run: sudo apt-get update && sudo apt-get install -y graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+          if apt-cache show graphviz-tools > /dev/null 2>&1; then sudo apt-get install -y graphviz-tools; fi
 
       # … and, under :smartdiagram, typesets with pdflatex, then pdftoppm (poppler) makes the PNG.
       # tlmgr resolves no dependencies, so we list what a smartdiagram's standalone document loads;
