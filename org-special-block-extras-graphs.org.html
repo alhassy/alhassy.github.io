@@ -23,8 +23,8 @@ reach for Graphviz ---and write that tree a second time, in a second language:
 <span style="color: #a0a1a7;">#+end_src
 </span>
 Every arc there restates what an outline's indentation already says. So we write the outline, and let
-the outline <span style="font-style: italic;">/be/</span> the graph:
-<span style="color: #a0a1a7;">#+begin_graph
+the outline <span style="font-style: italic;">/be/</span> the graph. Each demo in this README shows what we write, then what we get:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
 </span>+ -
   + +
     + *
@@ -36,7 +36,10 @@ the outline <span style="font-style: italic;">/be/</span> the graph:
 </span>
 That is the whole idea. A ~#+begin_graph~ block compiles the Org we already write ---nested lists,
 two-column tables, links, tags, footnotes--- into <span style="text-decoration: underline;"><a href="https://graphviz.org">Graphviz dot</a></span>. Nesting is an arc; the rest of this
-README refines that one sentence, one gap at a time.
+README refines that one sentence, one gap at a time, and every example stays with our running theme:
+parsing ~1 * 2 + 3 - 4~, from characters to tokens to trees.
+
+A wide graph shrinks to fit the page; a click on it shows it full size, and another shrinks it back.
 
 <span style="color: #8b4513; font-weight: bold;">** Setup</span>
 
@@ -51,76 +54,73 @@ Graphviz must be on our ~PATH~: ~dot -V~ should work in a terminal.
 <span style="color: #8b4513; font-weight: bold;">** A REPL for pictures</span>
 
 The fun part is how quickly a picture grows. Start with the seven tokens as a flat list, one item each,
-and press ~C-c C-c~ anywhere in the block: seven lonely nodes. Now ~M-S-&lt;right&gt;~ demotes an item,
-children and all ---Org's own list editing--- and another ~C-c C-c~ shows the new arc. A minute later,
-the flat list is the tree above. (Plain ~M-&lt;right&gt;~ demotes the item alone, leaving its children behind,
-as anywhere in Org.)
+and press ~C-c C-c~ anywhere in the block: seven lonely nodes.
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ 1
++ *
++ 2
++ +
++ 3
++ -
++ 4
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+Now ~M-S-&lt;right&gt;~ demotes an item, children and all ---Org's own list editing--- and another ~C-c C-c~
+shows the new arc. A minute later, the flat list is the tree above. (Plain ~M-&lt;right&gt;~ demotes the item
+alone, leaving its children behind, as anywhere in Org.)
 
 ~C-c C-c~ renders a PNG and links it beneath the block, under ~#+RESULTS:~. The file's name is made up,
-unless ~:file~ picks one:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+begin_graph :file parse-tree.png
-&#8230;
-,#+end_graph
-<span style="color: #a0a1a7;">#+end_src
-</span>
-When the picture surprises us, ~C-u C-c C-c~ shows the generated dot instead; see <span style="text-decoration: underline;"><a href="*Comforts while editing">Comforts while editing</a></span>.
+unless ~:file~ picks one, as in ~#+begin_graph :file parse-tree.png~. When the picture surprises us,
+~C-u C-c C-c~ shows the generated dot instead; see <span style="text-decoration: underline;"><a href="*Comforts while editing">Comforts while editing</a></span>.
 
 <span style="color: #0184bc; font-weight: bold;">* Arcs that speak: description lists</span>
 
-A bare arc says &#8220;related&#8221;, and little else. Explaining how Emacs starts up, we want each arc to say
-<span style="font-style: italic;">/how/</span>: Emacs <span style="font-style: italic;">/reads/</span> its init file, which <span style="font-style: italic;">/loads/</span> packages. Org's description list, ~- TERM :: DEFINITION~,
-already attaches a word to an item; in a graph, that word sits on the arc into the item. Read left to
-right, the line <span style="font-style: italic;">/is/</span> the arc ---Emacs, then <span style="font-style: italic;">/starts/</span>, then server:
-<span style="color: #a0a1a7;">#+begin_graph
-</span>+ Emacs
-  + <span style="font-weight: bold;">reads ::</span> init.el
-    + <span style="font-weight: bold;">loads ::</span> packages
-  + <span style="font-weight: bold;">starts ::</span> server
-    + <span style="font-weight: bold;">answers ::</span> emacsclient
+A bare arc says &#8220;related&#8221;, and little else. Explaining how our expression becomes a value, we want each
+arc to say <span style="font-style: italic;">/how/</span>: the source text is <span style="font-style: italic;">/lexed/</span> into tokens, which are <span style="font-style: italic;">/parsed/</span> into a tree. Org's description
+list, ~- TERM :: DEFINITION~, already attaches a word to an item; in a graph, that word sits on the arc
+into the item. Read left to right, the line <span style="font-style: italic;">/is/</span> the arc ---source, then <span style="font-style: italic;">/lexed into/</span>, then tokens:
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ ="1 * 2 + 3 - 4"=
+  + <span style="font-weight: bold;">lexed into ::</span> tokens
+    + <span style="font-weight: bold;">parsed into ::</span> syntax tree
+      + <span style="font-weight: bold;">evaluated to ::</span> -1
+      + <span style="font-weight: bold;">compiled to ::</span> bytecode
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-Two arcs between the same nodes are just two items; a client that both requests and retries reaches one
-server twice:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ client
-  + <span style="font-weight: bold;">request ::</span> server
-  + <span style="font-weight: bold; font-style: italic;">/retry/</span><span style="font-weight: bold;"> ::</span> server
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>client -&gt; server [ label=request ];
-client -&gt; server [ label=&lt;&lt;I&gt;retry&lt;/I&gt;&gt; ];
-<span style="color: #a0a1a7;">#+end_src
+Two arcs between the same nodes are just two items. A parser both <span style="font-style: italic;">/consumes/</span> its tokens and <span style="font-style: italic;">/peeks/</span> at the
+next one, unconsumed; two arcs, one stream:
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ parser
+  + <span style="font-weight: bold;">consumes ::</span> token stream
+  + <span style="font-weight: bold; font-style: italic;">/peeks at/</span><span style="font-weight: bold;"> ::</span> token stream
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-- The term may be marked up, as ~/retry/~ is; it is then an HTML-like label.
-- It is the terse spelling of ~| :edge.label | request |~, met <span style="text-decoration: underline;"><a href="*An arc's table: :edge.KEY">below</a></span>; an explicit ~:edge.label~ row wins.
+- The term may be marked up, as ~/peeks at/~ is; it is then an HTML-like label.
+- It is the terse spelling of ~| :edge.label | consumes |~, met <span style="text-decoration: underline;"><a href="*An arc's table: :edge.KEY">below</a></span>; an explicit ~:edge.label~ row wins.
 - A top-level item has no arc into it, so a term there is an error ---except for a legend entry, met
   <span style="text-decoration: underline;"><a href="*Legends are description lists">later</a></span>.
-- As in Org, the ~::~ needs whitespace on both sides: ~std::vector~ is a name, not a description.
+- As in Org, the ~::~ needs whitespace on both sides: ~std::vector~ is a name, not a description, and so
+  is BNF's ~expr ::= term~, as ~::=~ is not ~::~.
 
 <span style="color: #0184bc; font-weight: bold;">* Arcs that leave the tree: targets and links</span>
 
-A tree gives each node one parent; history is not so tidy. Lisp descends from &#955;-calculus <span style="font-style: italic;">/and/</span> from
-Fortran, so some arcs must reach a node declared elsewhere. Org already names places and points at
-them: ~<span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span>~ is a place we can link to, and ~<span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>~ points there. In a graph, the target is the
-node's id, and the link is an arc to it. Moreover, ~C-c C-o~ on the link jumps to its node:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
-  + church
-+ lisp <span style="text-decoration: underline;"><a href="lam">[[lam][inspired by]]</a></span> <span style="text-decoration: underline;"><a href="church">[[church]]</a></span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>lam [ label="&#955;-calculus" ];
-lam -&gt; church;
-lisp -&gt; lam [ label="inspired by" ];
-lisp -&gt; church;
-<span style="color: #a0a1a7;">#+end_src
+A tree gives each node one parent; grammars are not so tidy. An ~expr~ is made of ~term~'s, a ~term~ of
+~factor~'s, and a ~factor~ is a <span style="text-decoration: underline;">number</span> ---or a whole ~expr~ again, in parentheses. That last arc goes back
+<span style="font-style: italic;">/up/</span> the tree, so it must reach a node declared elsewhere. Org already names places and points at them:
+~<span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span>~ is a place we can link to, and ~<span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>~ points there. In a graph, the target is the node's
+id, and the link is an arc to it. Moreover, ~C-c C-o~ on the link jumps to its node:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + term
+    + factor <span style="text-decoration: underline;"><a href="expr">[[expr][( &#8230; )]]</a></span>
+      + <span style="text-decoration: underline;">number</span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-- The target and links vanish from the label; ~lisp~ above is labelled just ~lisp~.
-- ~<span style="text-decoration: underline;"><a href="T">[[T][L]]</a></span>~ labels the arc ~L~; an item may have any number of links. As in Org, an item's text is its
+- The target and links vanish from the label; ~factor~ above is labelled just ~factor~.
+- ~<span style="text-decoration: underline;"><a href="T">[[T][L]]</a></span>~ labels the arc ~L~; an item may have any <span style="text-decoration: underline;">number</span> of links. As in Org, an item's text is its
   whole first paragraph, so a long line of links may wrap onto the lines below it, before its table.
-- Inside a graph block, Org shows links in full: we see ~<span style="text-decoration: underline;"><a href="lam">[[lam][inspired by]]</a></span>~, not just ~inspired by~,
-  since both parts matter here. Links elsewhere in the buffer keep Org's usual display.
+- Inside a graph block, Org shows links in full: we see ~<span style="text-decoration: underline;"><a href="expr">[[expr][( &#8230; )]]</a></span>~, not just ~( &#8230; )~, since both
+  parts matter here. Links elsewhere in the buffer keep Org's usual display.
 - Only links to nodes are arcs; ~<span style="text-decoration: underline;"><a href="https://orgmode.org">[[https://orgmode.org][Org]]</a></span>~ makes its node clickable, and stays ~Org~ in
   the label. See <span style="text-decoration: underline;"><a href="*Web links are URLs, image links are images">Web links</a></span>.
 
@@ -129,103 +129,97 @@ lisp -&gt; church;
 An inline link is quick, but its arc has nowhere to keep a style of its own. So the arc graduates to a
 child item that is nothing but a link: a <span style="font-style: italic;">/reference/</span> to its target. Nesting makes the arc, and a
 description term labels it, exactly as for any other child:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
-+ Fortran
-+ Lisp
-  + <span style="font-weight: bold;">borrows ::</span> <span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>
-  + <span style="text-decoration: underline;"><a href="Fortran">[[Fortran]]</a></span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Lisp -&gt; lam [ label=borrows ];
-Lisp -&gt; Fortran;
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + term
+    + factor
+      + <span style="text-decoration: underline;">number</span>
+      + <span style="font-weight: bold;">in parentheses ::</span> <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 - A reference never declares its target: the target's own item names and labels it, even when that
   item comes later. Node attributes on a reference are an error; they belong on the target's item.
-- ~+ <span style="text-decoration: underline;"><a href="church">[[church][encodes]]</a></span>~ is a reference too, its arc labelled ~encodes~.
+- ~+ <span style="text-decoration: underline;"><a href="expr">[[expr][in parentheses]]</a></span>~ is a reference too, its arc labelled ~in parentheses~.
 - Two references to one target are two parallel arcs, each styled on its own.
-- A reference may name a record's port, ~<span style="text-decoration: underline;"><a href="struct1::mid">[[struct1::mid]]</a></span>~, or a cluster; both are met <span style="text-decoration: underline;"><a href="*Layout: ranks, boxes, and records">below</a></span>.
+- A reference may name a record's port, ~<span style="text-decoration: underline;"><a href="node::left">[[node::left]]</a></span>~, or a cluster; both are met <span style="text-decoration: underline;"><a href="*Layout: ranks, boxes, and records">below</a></span>.
 
 <span style="color: #8b4513; font-weight: bold;">** Radio targets: arcs from every mention</span>
 
-When one node is mentioned everywhere, bracketing each mention is a chore. In Org, a radio target
-~<span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;Church&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>~ stays visible, and every mention of &#8220;Church&#8221; elsewhere becomes a link to it, sans
-brackets. In a graph, the radio target is a node, and every item mentioning it ---in whatever case---
-has an arc to it:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;Church&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span> encodes numbers as Church numerals
-+ Lisp, after Church
-+ Haskell, after church and Lisp
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Church [ label="Church encodes numbers as Church numerals" ];
-"Lisp, after Church" -&gt; Church;
-"Haskell, after church and Lisp" -&gt; Church;
-<span style="color: #a0a1a7;">#+end_src
+When one node is mentioned everywhere, bracketing each mention is a chore. A grammar mentions its tokens
+in rule after rule. In Org, a radio target ~<span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;</span><span style="text-decoration: underline;">NUMBER</span><span style="text-decoration: underline;">&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>~ stays visible, and every mention of &#8220;<span style="text-decoration: underline;">NUMBER</span>&#8221;
+elsewhere becomes a link to it, sans brackets. In a graph, the radio target is a node, and every item
+mentioning it ---in whatever case--- has an arc to it:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ <span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;</span><span style="text-decoration: underline;">NUMBER</span><span style="text-decoration: underline;">&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>, a run of digits
++ <span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;</span><span style="text-decoration: underline;">PLUS</span><span style="text-decoration: underline;">&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>, the + sign
++ factor &#8594; <span style="text-decoration: underline;">NUMBER</span>
++ expr &#8594; factor <span style="text-decoration: underline;">PLUS</span> factor
++ a lone <span style="text-decoration: underline;">number</span>, too
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 The mention stays in the label, and the radio target's own item never arcs to itself. Mind that this is
-Org's semantics exactly: a casual &#8220;Church&#8221; draws an arc too.
+Org's semantics exactly: a casual &#8220;<span style="text-decoration: underline;">number</span>&#8221;, as in the last item, draws an arc too.
 
 <span style="color: #0184bc; font-weight: bold;">* Ids and labels</span>
 
 Links make us name things, and a name wants to be short where a label wants to be clear. So every node
 has an <span style="font-style: italic;">/id/</span>, which arcs and links name, and a <span style="font-style: italic;">/label/</span>, which is drawn. By default both are the item's
-text; these three items, spelling it out more and more, all declare one and the same node:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Lisp
+text, so these three items, spelling it out more and more, all declare one and the same node:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ expr
 
-+ <span style="text-decoration: underline;">&lt;&lt;Lisp&gt;&gt;</span> Lisp
++ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expr
 
-+ Lisp
-  | :id   | Lisp |
-  | label | Lisp |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Lisp [ label=Lisp ];
-<span style="color: #a0a1a7;">#+end_src
++ expr
+  | :id   | expr |
+  | label | expr |
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-When the two should differ, we set either one apart: a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ or an ~| :id |~ row gives the id,
-and a ~| label |~ row gives the label:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
-+ Combinatory Logic
-  | :id | combinatory |
-+ Church
-  | label | Alonzo Church |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>lam [ label="&#955;-calculus" ];
-combinatory [ label="Combinatory Logic" ];
-Church [ label="Alonzo Church" ];
-<span style="color: #a0a1a7;">#+end_src
+When the two should differ, we set either one apart: a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ or an ~| :id |~ row gives the id, and
+a ~| label |~ row gives the label:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> Expression
+  + Term
+    | :id | term |
+    + factor
+      | label | Factor: a <span style="text-decoration: underline;">number</span>, or ( expr ) |
+      + <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>
++ Sum
+  + <span style="text-decoration: underline;"><a href="term">[[term]]</a></span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-- The id is the ~:id~ row, else the ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, else the text ---sans markup, links, footnotes,
-  and tags.
+- The id is the ~:id~ row, else the ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, else the text ---sans markup, links, footnotes, and
+  tags.
 - The label is the ~label~ row, else the text; markup makes it an HTML-like one.
 - Two items with one id are one node, so an item may appear twice to gain more children.
 
 <span style="color: #0184bc; font-weight: bold;">* Styling: one key-value syntax</span>
 
-Out of the box, Graphviz draws black ellipses; soon we want a box here and a red arc there. Graphviz's
+Out of the box, Graphviz draws black ellipses; soon we want our tokens boxed and our rules round. Graphviz's
 attributes are key-value pairs, and Org's key-value syntax is the two-column table. So a table beneath an
 item styles that item: one syntax, from a single node up to the whole graph.
 
 <span style="color: #8b4513; font-weight: bold;">** A node's table, and two kinds of keys</span>
 
-By way of example, this item has one row of each kind:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Alonzo
-  | label | Alonzo Church |
-  | :id   | church        |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>church [ label="Alonzo Church" ];
-<span style="color: #a0a1a7;">#+end_src
+In a parse tree, the leaves are tokens, straight from the lexer; we box them, so they read apart from the
+grammar's rules:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ term
+  + factor
+    + <span style="text-decoration: underline;">NUMBER</span> 1
+      | shape | box   |
+      | :id   | one   |
+  + STAR
+    | shape | box |
+    | label | *   |
+  + factor
+    + <span style="text-decoration: underline;">NUMBER</span> 2
+      | shape | box |
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-A <span style="font-style: italic;">/plain/</span> key, such as ~label~, is a Graphviz attribute of the node, passed straight through. We quote
-its value for you, so ~Alonzo Church~, ~#00ff00~, and ~x -&gt; y~ all need no quotes; already-quoted values,
-and ~&lt;&#8230;&gt;~ HTML labels, are left alone.
+A <span style="font-style: italic;">/plain/</span> key, such as ~shape~, is a Graphviz attribute of the node, passed straight through. We quote its
+value for you, so ~<span style="text-decoration: underline;">NUMBER</span> 1~, ~#00ff00~, and ~x -&gt; y~ all need no quotes; already-quoted values, and ~&lt;&#8230;&gt;~
+HTML labels, are left alone.
 
 A key starting with a colon is <span style="font-style: italic;">/reserved/</span>: it means something to the ~graph~ block itself, never to
 Graphviz. A leading colon is never a Graphviz attribute, so the two kinds cannot clash. The reserved keys
@@ -243,30 +237,29 @@ An unknown ~:key~ is an error, rather than a silently ignored attribute.
 
 <span style="color: #8b4513; font-weight: bold;">** An arc's table: :edge.KEY</span>
 
-An arc is drawn from parent to child, so the child's table is where it is styled: an ~:edge.KEY~ row
-there is attribute ~KEY~ of the arc into the item. Every attribute is its own row, exactly like a node's.
-Our client's two arcs to one server now look different:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ client
-  + <span style="font-weight: bold;">request ::</span> server
-    | :edge.color | blue |
-  + <span style="font-weight: bold;">retry ::</span> server
+An arc is drawn from parent to child, so the child's table is where it is styled: an ~:edge.KEY~ row there
+is attribute ~KEY~ of the arc into the item. Every attribute is its own row, exactly like a node's. Peeking
+consumes nothing, so its arc should look tentative:
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ parser
+  + <span style="font-weight: bold;">consumes ::</span> token stream
+    | :edge.penwidth | 2 |
+  + <span style="font-weight: bold; font-style: italic;">/peeks at/</span><span style="font-weight: bold;"> ::</span> token stream
     | :edge.style | dashed |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>client -&gt; server [ label=request color=blue ];
-client -&gt; server [ label=retry style=dashed ];
-<span style="color: #a0a1a7;">#+end_src
+    | :edge.color | gray   |
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-A reference is styled just the same; this is why an inline link graduates to one:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Lisp
-  + <span style="font-weight: bold;">borrows ::</span> <span style="text-decoration: underline;"><a href="lam">[[lam]]</a></span>
-    | :edge.style | dotted |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Lisp -&gt; lam [ label=borrows style=dotted ];
-<span style="color: #a0a1a7;">#+end_src
+A reference is styled just the same; this is why an inline link graduates to one. The recursion back to
+~expr~ is the arc that makes our grammar interesting, so we paint it:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + term
+    + factor
+      + <span style="text-decoration: underline;">number</span>
+      + <span style="font-weight: bold;">in parentheses ::</span> <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>
+        | :edge.color     | red |
+        | :edge.fontcolor | red |
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 - A parallel arc is simply a second child, styled on its own; a ~KEY~ given twice is an error.
 - As in Org, an item's tables and directives may also follow its sub-items; they still belong to it.
@@ -274,18 +267,16 @@ A reference is styled just the same; this is why an inline link graduates to one
 <span style="color: #8b4513; font-weight: bold;">** The whole graph: the #+begin_graph line</span>
 
 Small graphs deserve no preamble at all. So the header line takes the graph's title and any graph
-attribute:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+begin_graph Lambda calculus :rankdir LR :node.shape box :edge.color grey
-+ &#955;
-  + Lisp
-,#+end_graph
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>graph [ label="Lambda calculus" rankdir=LR ]
-node [ shape=box ]
-edge [ color=grey ]
-<span style="color: #a0a1a7;">#+end_src
+attribute; a parse tree laid out left to right, every node boxed, every arc grey:
+<span style="color: #a0a1a7;">#+begin_graph How 1 * 2 + 3 - 4 parses :rankdir LR :node.shape box :edge.color grey :demo live
+</span>+ -
+  + +
+    + *
+      + 1
+      + 2
+    + 3
+  + 4
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 - The title, the words before the first ~:key~, is the graph's ~label~; ~:directed nil~ makes the graph
   undirected, with ~--~ arcs.
@@ -295,138 +286,169 @@ edge [ color=grey ]
   ~:fontname Helvetica,Arial~. A value with spaces does: ~:fontname "Helvetica Neue"~.
 - ~:file~, ~:svg~, ~:directed~, ~:wrap~, ~:notes~, ~:unflatten~, ~:unknown-tags~, ~:smartdiagram~, ~:dpi~,
   and ~:C-c_C-c~ belong to the block itself, never to Graphviz; each is met below. So do the Babel habits
-  ~:exports~ and ~:results~, which the block ignores.
+  ~:exports~ and ~:results~, which the block ignores; and ~:demo~, which every block of this package
+  understands.
 
 <span style="color: #8b4513; font-weight: bold;">** When the preamble outgrows the line</span>
 
 A real graph's settings outgrow one line. Then ~#+graph:~, ~#+node:~, and ~#+edge:~ name what the table
 below them styles ---the graph, every node, every arc--- and they override the header. A drawer of any
 name, ~:SETTINGS:~ or ~:PALETTE:~, folds them away with ~TAB~, along with ~#+rank:~ and ~#+name:~ lines:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+begin_graph Lambda calculus
-<span style="font-weight: bold;">:SETTINGS:</span>
-,#+graph:
-| rankdir | LR |
-,#+node:
-| shape | box |
+<span style="color: #a0a1a7;">#+begin_graph A compiler's front end :demo live
+</span><span style="font-weight: bold;">:SETTINGS:</span>
+#+graph:
+| rankdir  | LR        |
+| fontname | Helvetica |
+#+node:
+| shape    | box       |
+| style    | rounded   |
+| fontname | Helvetica |
+#+edge:
+| fontsize | 10   |
+| color    | gray |
 <span style="font-weight: bold;">:END:</span>
-+ &#955;
-  + Lisp
-,#+end_graph
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>graph [ label="Lambda calculus" rankdir=LR ]
-node [ shape=box ]
-<span style="color: #a0a1a7;">#+end_src
++ characters
+  + <span style="font-weight: bold;">lexer ::</span> tokens
+    + <span style="font-weight: bold;">parser ::</span> syntax tree
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #8b4513; font-weight: bold;">** Subtrees inherit #+node:, #+edge:, and #+rank:</span>
 
-Sometimes a style belongs to one branch, not the whole graph. Org's properties are inherited: a
-~:PROPERTIES:~ drawer on a heading reaches its subheadings. So it is with an item's ~#+node:~ and
-~#+edge:~ tables: they style every node and arc beneath the item, while the item itself keeps its own
-~| key | value |~ rows; its ~#+rank:~ lines apply there too. Graphviz scopes such defaults by an anonymous
-~subgraph~, which draws no box:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Weather
-  ,#+node:
-  | shape | box |
-  ,#+edge:
-  | style | dotted |
-  + Rain
-    + Umbrella
-  + Sun
-+ Climate
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Weather [ label=Weather ];
-subgraph {
-  node [ shape=box ]
-  edge [ style=dotted ]
-  Weather -&gt; Rain;
-  Rain [ label=Rain ];
-  Rain -&gt; Umbrella;
-  Umbrella [ label=Umbrella ];
-  Weather -&gt; Sun;
-  Sun [ label=Sun ];
-}
-Climate [ label=Climate ];
-<span style="color: #a0a1a7;">#+end_src
+Sometimes a style belongs to one branch, not the whole graph. A compiler folds constants: ~1 * 2~ is
+known before the program runs, so its whole subtree collapses to ~2~. We want that subtree shaded. Org's
+properties are inherited: a ~:PROPERTIES:~ drawer on a heading reaches its subheadings. So it is with an
+item's ~#+node:~ and ~#+edge:~ tables: they style every node and arc beneath the item, while the item
+itself keeps its own ~| key | value |~ rows; its ~#+rank:~ lines apply there too:
+<span style="color: #a0a1a7;">#+begin_graph Constant folding :demo live
+</span>+ -
+  + +
+    + *
+      | xlabel | folds to 2 |
+      #+node:
+      | style     | filled    |
+      | fillcolor | lightgrey |
+      #+edge:
+      | style | dotted |
+      + 1
+      + 2
+    + 3
+  + 4
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-A deeper item's tables override a shallower one's, as nested ~:PROPERTIES:~ do; a node first declared
-elsewhere keeps the defaults of where it was declared.
+Above, ~*~ keeps its plain look ---only what lies <span style="font-style: italic;">/beneath/</span> it is shaded--- just as a heading's own
+properties drawer is not one of its subheadings'. Graphviz scopes such defaults by an anonymous
+~subgraph~, which draws no box. A deeper item's tables override a shallower one's, as nested
+~:PROPERTIES:~ do; a node first declared elsewhere keeps the defaults of where it was declared.
 
 <span style="color: #0184bc; font-weight: bold;">* Saying it once: templates</span>
 
-A family tree repeats itself: every marriage is the same pink, two-headed arc, and every wife the same
-boxed node. Restating those rows each time is how styles drift apart. So we name them once: a ~#+name:~
-table is a reusable bundle of rows, and a tag applies it. On a headline, ~:work:urgent:~ classifies the
-entry; on an item, tags classify the node. After an item, a tag styles its node; after a reference, its
-arc:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+name: married
-| color | "#cc3399" |
-| dir   | both      |
-,#+name: wife
-| shape | box |
+A parse tree repeats itself: every token the same box, every rule the same ellipse. Restating those rows
+at each leaf is how styles drift apart. So we name them once: a ~#+name:~ table is a reusable bundle of
+rows, and a tag applies it. On a headline, ~:work:urgent:~ classifies the entry; on an item, tags classify
+the node:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>#+name: token
+| shape     | box       |
+| style     | filled    |
+| fillcolor | lightblue |
+#+name: rule
+| style | bold |
 
-+ Muhammad
-+ Khadija :wife:
-  + <span style="text-decoration: underline;"><a href="Muhammad">[[Muhammad]]</a></span> :married:
-    | :edge.color | red |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Muhammad [ label=Muhammad ];
-Khadija [ shape=box label=Khadija ];
-Khadija -&gt; Muhammad [ dir=both color=red ];
-<span style="color: #a0a1a7;">#+end_src
++ expr <span style="font-weight: bold;">:rule:</span>
+  + term <span style="font-weight: bold;">:rule:</span>
+    + <span style="text-decoration: underline;">NUMBER</span> 1 <span style="font-weight: bold;">:token:</span>
+    + STAR <span style="font-weight: bold;">:token:</span>
+      | label | * |
+    + <span style="text-decoration: underline;">NUMBER</span> 2 <span style="font-weight: bold;">:token:</span>
+  + <span style="text-decoration: underline;">PLUS</span> <span style="font-weight: bold;">:token:</span>
+    | fillcolor | pink |
+  + <span style="text-decoration: underline;">NUMBER</span> 3 <span style="font-weight: bold;">:token:</span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-Explicit rows win over a template's, so the marriage above is red. A line may carry several tags,
-~:married:faint:~, each a template, the earlier winning on a clash. The same rule reaches every other
-line a template could apply to:
+Explicit rows win over a template's, so ~<span style="text-decoration: underline;">PLUS</span>~ above is pink. A line may carry several tags,
+~:token:rule:~, each a template, the earlier winning on a clash. The same rule reaches every other line a
+template could apply to; after a reference, or a description term, a tag styles the arc:
 
-| Line                                | What its tags style                                           |
-|-------------------------------------+---------------------------------------------------------------|
-| ~+ Khadija :wife:~                  | the node                                                      |
-| ~+ <span style="text-decoration: underline;"><a href="Muhammad">[[</a><a href="Muhammad">Muhammad]</a><a href="Muhammad">]</a></span> :married:~          | the arc to the reference                                      |
-| ~+ wed :married: :: Khadija :wife:~ | the arc, by the description term's tags; the node, by its own |
-| ~#+node: :wife:~                    | every node; likewise ~#+edge:~ and ~#+graph:~                 |
-| ~#+name: wife :base1:base2:~        | the template ~wife~, which inherits ~base1~ and ~base2~       |
+| Line                                     | What its tags style                                           |
+|------------------------------------------+---------------------------------------------------------------|
+| ~+ <span style="text-decoration: underline;">NUMBER</span> 1 :token:~                     | the node                                                      |
+| ~+ <span style="text-decoration: underline;"><a href="expr">[[</a><a href="expr">expr]</a><a href="expr">]</a></span> :recursion:~                 | the arc to the reference                                      |
+| ~+ reduces :rule-arc: :: expr :rule:~    | the arc, by the description term's tags; the node, by its own |
+| ~#+node: :token:~                        | every node; likewise ~#+edge:~ and ~#+graph:~                 |
+| ~#+name: keyword :token:~                | the template ~keyword~, which inherits ~token~                |
 
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>#+name: recursion
+| color | red    |
+| style | dashed |
+#+name: keyword
+| fontname | Courier |
+#+node: <span style="font-weight: bold;">:keyword:</span>
+
++ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + term
+    + factor
+      + <span style="font-weight: bold;">in parentheses </span><span style="font-weight: bold;">:recursion:</span><span style="font-weight: bold;"> ::</span> <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>
+<span style="color: #a0a1a7;">#+end_graph
+</span>
 <span style="color: #8b4513; font-weight: bold;">** Tags are sugar for :inherit</span>
 
-Each tag is terse sugar for an ~:inherit~ row, which names one or more templates and is often the
-clearer choice in a long-lived graph: ~| :inherit | wife |~ in an item's table or under ~#+node:~,
-~| :edge.:inherit | married |~ for the arc into an item. Wherever it sits, the item's explicit rows still
-win.
+Each tag is terse sugar for an ~:inherit~ row, which names one or more templates and is often the clearer
+choice in a long-lived graph: ~| :inherit | token |~ in an item's table or under ~#+node:~,
+~| :edge.:inherit | recursion |~ for the arc into an item. Wherever it sits, the item's explicit rows
+still win:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>#+name: token
+| shape | box |
+#+name: recursion
+| color | red |
 
++ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + <span style="text-decoration: underline;">NUMBER</span>
+    | :inherit | token |
+  + <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>
+    | :edge.:inherit | recursion |
+    | :edge.label    | ( &#8230; )     |
+<span style="color: #a0a1a7;">#+end_graph
+</span>
 - A template may inherit others; one that, directly or not, inherits itself contributes nothing the
   second time.
 - A name that no ~#+name:~ defines is an error, rather than a silent nothing.
-- As with Babel's named tables, a ~#+name:~ table anywhere in the buffer, outside any graph, is a template
-  every graph in the buffer may use; so a house style ---~wife~, ~married~--- is named once per file
-  rather than once per graph. A graph's own template of the same name wins, and a template inside one
-  graph stays that graph's own.
 
+As with Babel's named tables, a ~#+name:~ table anywhere in the buffer, outside any graph, is a template
+every graph in the buffer may use; so a house style is named once per file rather than once per graph.
+A graph's own template of the same name wins, and a template inside one graph stays that graph's own:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>#+name: token
+| shape | box |
+
+#+begin_graph Lexing
++ 1 * 2 <span style="font-weight: bold;">:token:</span>
+  + <span style="text-decoration: underline;">NUMBER</span> 1 <span style="font-weight: bold;">:token:</span>
+  + STAR <span style="font-weight: bold;">:token:</span>
+  + <span style="text-decoration: underline;">NUMBER</span> 2 <span style="font-weight: bold;">:token:</span>
+#+end_graph
+<span style="color: #a0a1a7;">#+end_org
+</span>
 <span style="color: #8b4513; font-weight: bold;">** Which colons are tags</span>
 
-Tags are trailing ~:word:~ groups, exactly as on a headline; inside graph blocks, they wear Org's
-~org-tag~ face, so they do not read as part of the label. Colons anywhere else are just text, and a label
-that needs a trailing ~:word:~ of its own puts it in ~=verbatim=~, or in a ~| label |~ row:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Ratio 1:2
-+ std::vector
-+ Meeting at 12:30 :faint:
-+ Vim's =:wq:=
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>"Ratio 1:2" [ label="Ratio 1:2" ];
-"std::vector" [ label="std::vector" ];
-"Meeting at 12:30" [ style=dotted label="Meeting at 12:30" ];
-"Vim's :wq:" [ label=&lt;Vim's &lt;FONT FACE="monospace"&gt;:wq:&lt;/FONT&gt;&gt; ];
-<span style="color: #a0a1a7;">#+end_src
+Tags are trailing ~:word:~ groups, exactly as on a headline; inside graph blocks, they wear Org's ~org-tag~
+face, so they do not read as part of the label. Colons anywhere else are just text. A label that needs a
+trailing ~:word:~ of its own ---Smalltalk's ~at:put:~ selector, say--- puts it in ~=verbatim=~, or in a
+~| label |~ row:
+<span style="color: #a0a1a7;">#+begin_graph Colons that are just text :demo live
+</span>#+name: faint
+| style | dotted |
+
++ Python's xs[1:2]
++ C++'s std::vector
++ BNF's expr ::= term
++ Smalltalk's =at:put:=
++ a token, read at 12:30 <span style="font-weight: bold;">:faint:</span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-Unlike Org's, our tags may be kebab-case: ~:killed-by:~. A tag naming no template is an error, rather
-than a typo silently becoming part of the label.
+Unlike Org's, our tags may be kebab-case: ~:rule-arc:~. A tag naming no template is an error, rather than
+a typo silently becoming part of the label.
 
 <span style="color: #8b4513; font-weight: bold;">** Prototype first, name later</span>
 
@@ -435,18 +457,18 @@ shapes before names. ~#+begin_graph :unknown-tags random-templates~ makes up a t
 tag ---a colour, a shape, a font--- the same at every use, so the tags read at a glance. A legend entry
 gives each its meaning; when the design settles, ~#+name:~ tables replace the made-up templates, one tag
 at a time:
-<span style="color: #a0a1a7;">#+begin_graph Prototype first, name later :unknown-tags random-templates
+<span style="color: #a0a1a7;">#+begin_graph Prototype first, name later :unknown-tags random-templates :demo live
 </span>#+begin_cluster Legend
-- <span style="font-weight: bold;">:theory:</span><span style="font-weight: bold;"> ::</span> a calculus
-- <span style="font-weight: bold;">:language:</span><span style="font-weight: bold;"> ::</span> a programming language
-- <span style="font-weight: bold;">:editor:</span><span style="font-weight: bold;"> ::</span> an editor
+- <span style="font-weight: bold;">:rule:</span><span style="font-weight: bold;"> ::</span> a grammar rule
+- <span style="font-weight: bold;">:token:</span><span style="font-weight: bold;"> ::</span> a token
+- <span style="font-weight: bold;">:literal:</span><span style="font-weight: bold;"> ::</span> a literal
 #+end_cluster
-+ &#955;-calculus <span style="font-weight: bold;">:theory:</span>
-  + Combinatory logic <span style="font-weight: bold;">:theory:</span>
-  + Lisp <span style="font-weight: bold;">:language:</span>
-    + Scheme <span style="font-weight: bold;">:language:</span>
-    + Emacs Lisp <span style="font-weight: bold;">:language:</span>
-      + Emacs <span style="font-weight: bold;">:editor:</span>
++ expr <span style="font-weight: bold;">:rule:</span>
+  + term <span style="font-weight: bold;">:rule:</span>
+    + <span style="text-decoration: underline;">NUMBER</span> <span style="font-weight: bold;">:token:</span>
+      + 1 <span style="font-weight: bold;">:literal:</span>
+    + STAR <span style="font-weight: bold;">:token:</span>
+  + <span style="text-decoration: underline;">PLUS</span> <span style="font-weight: bold;">:token:</span>
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 The Nth unknown tag takes the Nth of ~org-graph-random-template-colours~, ~-shapes~, and ~-fonts~, so
@@ -454,59 +476,52 @@ renders are stable, and the first eight tags differ in every way.
 
 <span style="color: #8b4513; font-weight: bold;">** Legends are description lists</span>
 
-A reader meeting pink arcs asks what pink means. A legend answers: a glossary of templates. Org's
-glossary is the description list, so a top-level ~- :T: :: MEANING~ ---which has no parent to arc from---
-is a legend entry: a sample styled by template ~T~, captioned ~MEANING~. Wrap the entries in a
-~#+begin_cluster~ to box them:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+name: married
-| color | pink |
-| dir   | both |
-,#+name: wife
-| shape | box |
+A reader meeting blue boxes and red dashes asks what they mean. A legend answers: a glossary of
+templates. Org's glossary is the description list, so a top-level ~- :T: :: MEANING~ ---which has no
+parent to arc from--- is a legend entry: a sample styled by template ~T~, captioned ~MEANING~. Wrap the
+entries in a ~#+begin_cluster~ to box them:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>#+name: token
+| shape     | box       |
+| style     | filled    |
+| fillcolor | lightblue |
+#+name: recursion
+| color | red    |
+| style | dashed |
 
-+ Muhammad
-+ Khadija :wife:
-  + <span style="text-decoration: underline;"><a href="Muhammad">[[Muhammad]]</a></span> :married:
-,#+begin_cluster Legend
-- <span style="font-weight: bold;">:married: ::</span> marriage
-- <span style="font-weight: bold;">:wife: ::</span> <span style="font-style: italic;">/wife/</span>
-,#+end_cluster
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>subgraph cluster_Legend {
-  label=Legend
-  legend_1 [ shape=point style=invis ];
-  legend_1_end [ shape=point style=invis ];
-  legend_1 -&gt; legend_1_end [ color=pink dir=both label=marriage ];
-  legend_2 [ shape=box label=&lt;&lt;I&gt;wife&lt;/I&gt;&gt; ];
-}
-<span style="color: #a0a1a7;">#+end_src
++ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + term
+    + factor
+      + <span style="text-decoration: underline;">NUMBER</span> <span style="font-weight: bold;">:token:</span>
+      + <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span> <span style="font-weight: bold;">:recursion:</span>
+#+begin_cluster Legend
+- <span style="font-weight: bold;">:token:</span><span style="font-weight: bold;"> ::</span> a token, from the lexer
+- <span style="font-weight: bold;">:recursion:</span><span style="font-weight: bold;"> ::</span> <span style="font-style: italic;">/back/</span> to an enclosing rule
+#+end_cluster
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-- The legend can never drift from the graph: change ~married~, and its sample changes too.
+- The legend can never drift from the graph: change ~recursion~, and its sample changes too.
 - A template that styles some arc in the graph ---by a reference's or a term's tags, an ~:edge.:inherit~
   row, or an ~#+edge:~ line--- is sampled as an arc; any other, as a node.
-- <span style="font-weight: bold;">Several tags, </span><span style="font-weight: bold;">~- :married:faint: ::</span> &#8230;~, sample their templates together.
+- <span style="font-weight: bold;">Several tags, </span><span style="font-weight: bold;">~- :token:faint: ::</span> &#8230;~, sample their templates together.
 - The sample drops ~constraint~, which shapes the layout rather than the arc.
 
 <span style="color: #8b4513; font-weight: bold;">** Checkboxes are templates</span>
 
-A checkbox says how far along a thing is; so a graph of tasks is just a checklist. ~[X]~, ~[-]~, and ~[ ]~
-apply the templates ~checked~, ~partial~, and ~unchecked~, as a ~:checked:~ tag would; and ~C-c C-c~ on a
-checkbox toggles it, as Org's own does, then renders the graph:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+name: unchecked
+A checkbox says how far along a thing is; so a graph of tasks is just a checklist. Our calculator's
+compiler is half built. ~[X]~, ~[-]~, and ~[ ]~ apply the templates ~checked~, ~partial~, and ~unchecked~,
+as a ~:checked:~ tag would; and ~C-c C-c~ on a checkbox toggles it, as Org's own does, then renders the
+graph:
+<span style="color: #a0a1a7;">#+begin_graph Our calculator, so far :demo live
+</span>#+name: unchecked
 | style | dashed |
 
-+ <span style="font-weight: bold;">[-]</span> compile
-  + <span style="font-weight: bold;">[X]</span> parse
-  + <span style="font-weight: bold;">[ ]</span> typecheck
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>compile [ color=darkorange fontcolor=darkorange label=compile ];
-parse [ color=forestgreen fontcolor=forestgreen label=parse ];
-typecheck [ style=dashed label=typecheck ];
-<span style="color: #a0a1a7;">#+end_src
++ <span style="font-weight: bold;">[-]</span> compiler
+  + <span style="font-weight: bold;">[X]</span> lexer
+  + <span style="font-weight: bold;">[X]</span> parser
+  + <span style="font-weight: bold;">[-]</span> type checker
+  + <span style="font-weight: bold;">[ ]</span> code generator
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 ~checked~ and ~partial~ default to green and orange, by ~org-graph-checkbox-templates~; a graph's own
 ~#+name:~ template wins. A checkbox whose template exists nowhere, such as ~unchecked~ by default, styles
@@ -514,37 +529,39 @@ nothing.
 
 <span style="color: #8b4513; font-weight: bold;">** Macros name single values</span>
 
-Templates name whole bundles of rows; sometimes we want to name one value. A palette repeats itself,
-and Org's ~#+macro:~ names a value once, so ~<span style="text-decoration: underline;">{{{name}}}</span>~ uses it ---in a table, an item, a cluster's
-header, anywhere in the block:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+macro: gold #f9e2af
-,#+begin_graph
-+ Church
-  + Turing
-    | :edge.color     | <span style="text-decoration: underline;">{{{gold}}}</span> |
-    | :edge.fontcolor | <span style="text-decoration: underline;">{{{gold}}}</span> |
-,#+end_graph
-<span style="color: #a0a1a7;">#+end_src
+Templates name whole bundles of rows; sometimes we want to name one value. A palette repeats itself, and
+Org's ~#+macro:~ names a value once, so ~<span style="text-decoration: underline;">{{{name}}}</span>~ uses it ---in a table, an item, a cluster's header,
+anywhere in the block:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>#+macro: token-colour #a6e3a1
+
+#+begin_graph Tokens, in one colour
++ 1 * 2
+  + <span style="text-decoration: underline;">NUMBER</span>
+    | color | <span style="text-decoration: underline;">{{{token-colour}}}</span> |
+  + STAR
+    | :edge.color | <span style="text-decoration: underline;">{{{token-colour}}}</span> |
+    | color       | <span style="text-decoration: underline;">{{{token-colour}}}</span> |
+#+end_graph
+<span style="color: #a0a1a7;">#+end_org
 </span>
-An undefined macro is an error. In similar spirit, inline ~src_LANG{&#8230;}~ blocks and ~call_NAME()~ calls
-run at export, as anywhere in Org, their results landing in the label; ~C-c C-c~ shows them as written.
+An undefined macro is an error. In similar spirit, inline ~src_LANG{&#8230;}~ blocks and ~call_NAME()~ calls run
+at export, as anywhere in Org, their results landing in the label; ~C-c C-c~ shows them as written.
 
 <span style="color: #0184bc; font-weight: bold;">* Richer labels</span>
 
-A label is more than a name: we want a word in bold, a type in monospace, a formula, a second line.
+A label is more than a name: we want a rule in bold, a token in monospace, a formula, a second line.
 Again, Org already has the syntax.
 
 <span style="color: #8b4513; font-weight: bold;">** Markup makes rich labels</span>
 
 ~*bold*~, ~/italic/~, ~_underline_~, ~+strike+~, ~=code=~, and =~pre~= in an item's text make its label an
 HTML-like one, while its id stays the plain text:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="font-weight: bold;">*Church*</span> encodes =Bool=
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>"Church encodes Bool" [ label=&lt;&lt;B&gt;Church&lt;/B&gt; encodes &lt;FONT FACE="monospace"&gt;Bool&lt;/FONT&gt;&gt; ];
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ <span style="font-weight: bold;">*expr*</span> is =term= <span style="font-style: italic;">/op/</span> =term=
+  + <span style="font-weight: bold; text-decoration: underline;">_left_</span><span style="font-weight: bold;"> operand ::</span> =term=
+  + <span style="font-weight: bold; text-decoration: line-through;">+ambiguous+</span><span style="font-weight: bold;"> ::</span> <span style="font-style: italic;">/fixed by precedence/</span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 We escape ~&amp;~, ~&lt;~, ~&gt;~, and ~"~ for you. Graphviz has no way to tell ~=code=~ from =~pre~=, so both are
 monospace. A ~#+record:~ table's cells keep their markup too. Names such as ~a_b~, ~C++~, and
@@ -555,16 +572,12 @@ monospace. A ~#+record:~ table's cells keep their markup too. Names such as ~a_b
 Org's entities are their characters, and braced sub- and superscripts are Graphviz's own; as under Org's
 ~#+options: ^:{}~, an unbraced ~a_b~ stays text, so ~snake_case~ ids are safe. For whatever Org has no
 markup for, a ~<span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&#8230;<span style="color: #a0a1a7;">@@</span>~ export snippet is raw label HTML; a snippet for any other backend vanishes:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ \alpha \to \beta
-+ x^{2} H_{2}O
-+ <span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&lt;FONT COLOR="red"&gt;<span style="color: #a0a1a7;">@@</span>Alert<span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&lt;/FONT&gt;<span style="color: #a0a1a7;">@@</span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>"&#945; &#8594; &#946;" [ label="&#945; &#8594; &#946;" ];
-"x2 H2O" [ label=&lt;x&lt;SUP&gt;2&lt;/SUP&gt; H&lt;SUB&gt;2&lt;/SUB&gt;O&gt; ];
-Alert [ label=&lt;&lt;FONT COLOR="red"&gt;Alert&lt;/FONT&gt;&gt; ];
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ x^{2} \to pow(x, 2)
++ parse : String \to Tree \times String
++ token_stream
++ <span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&lt;FONT COLOR="red"&gt;<span style="color: #a0a1a7;">@@</span>syntax error<span style="color: #a0a1a7;">@@</span><span style="font-weight: bold;">dot:</span>&lt;/FONT&gt;<span style="color: #a0a1a7;">@@</span> at line 3
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 - Timestamps, statistics cookies, and citations show as written; LaTeX fragments too, since Graphviz has
   no math.
@@ -576,54 +589,42 @@ Alert [ label=&lt;&lt;FONT COLOR="red"&gt;Alert&lt;/FONT&gt;&gt; ];
 A long label makes a wide node, and a wide node a sprawling graph. In Org, a ~\\~ ending a line is a hard
 line break; in a graph, it breaks the node's label. Since a label seldom wants a literal ~\\~, it may sit
 mid-line too, so a two-line node stays one terse line:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Emacs
-  + <span style="font-weight: bold;">provides ::</span> <span style="text-decoration: underline;">&lt;&lt;closures&gt;&gt;</span> Closures \\ (lexical scope)
-  + <span style="font-weight: bold;">*Lisp*</span> \\
-    McCarthy, 1958
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Emacs -&gt; closures [ label=provides ];
-closures [ label=&lt;Closures&lt;BR/&gt;(lexical scope)&gt; ];
-Emacs -&gt; "Lisp McCarthy, 1958";
-"Lisp McCarthy, 1958" [ label=&lt;&lt;B&gt;Lisp&lt;/B&gt;&lt;BR/&gt;McCarthy, 1958&gt; ];
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ parser
+  + <span style="font-weight: bold;">reports ::</span> <span style="text-decoration: underline;">&lt;&lt;err&gt;&gt;</span> Unexpected token =)= \\ at line 3, column 7
+  + <span style="font-weight: bold;">*Recursive descent*</span> \\
+    one function per rule
+  + <span style="font-weight: bold;">every grammar \\ needs a lexer ::</span> lexer
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-The label becomes an HTML-like one, as with markup; the id joins the lines with a space, so a node
-reached by a link usually wants a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, as ~closures~ above.
+The label becomes an HTML-like one, as with markup; the id joins the lines with a space, so a node reached
+by a link usually wants a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, as ~err~ above. It is the one line break wherever a label is
+written: a description term, as above; a table value, ~| :edge.label | consumes \\ tokens |~; a
+~#+record:~ cell.
 
-It is the one line break wherever a label is written: a description term, a table value, a ~#+record:~
-cell. So an arc's label breaks just as its node's does:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Monad
-  + <span style="font-weight: bold;">every monad \\ is an adjunction ::</span> Adjunction
-  + Turing
-    | :edge.label | Church&#8211; \\ Turing thesis |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Monad -&gt; Adjunction [ label=&lt;every monad&lt;BR/&gt;is an adjunction&gt; ];
-Monad -&gt; Turing [ label="Church&#8211;\nTuring thesis" ];
-<span style="color: #a0a1a7;">#+end_src
+Breaking every long label by hand is tedious, though. ~#+begin_graph :wrap N~ fills node and arc labels to
+lines of ~N~ characters, so long item text needs no ~\\~ at all; a label already broken by ~\\~ stays as
+written:
+<span style="color: #a0a1a7;">#+begin_graph :wrap 20 :rankdir LR :demo live
+</span>+ A parser turns a flat stream of tokens into a tree
+  + <span style="font-weight: bold;">by repeatedly asking which grammar rule the next token can begin ::</span> recursive descent
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-Breaking every long label by hand is tedious, though. ~#+begin_graph :wrap N~ fills node and arc labels
-to lines of ~N~ characters, so long item text needs no ~\\~ at all; a label already broken by ~\\~ stays as
-written.
-
 <span style="color: #0184bc; font-weight: bold;">* Asides: footnotes, notes, and links</span>
 
-A label should be short; the story behind it belongs somewhere we reach on demand. Org has three
-places for such asides ---footnotes, paragraphs, links--- and each keeps its meaning in a graph.
+A label should be short; the story behind it belongs somewhere we reach on demand. Org has three places
+for such asides ---footnotes, paragraphs, links--- and each keeps its meaning in a graph. Hover over the
+nodes below to read them.
 
 <span style="color: #8b4513; font-weight: bold;">** Footnotes are tooltips</span>
 
 A footnote is an aside we read when we want it; so is a tooltip. An inline footnote leaves the label and
-becomes the node's ~tooltip~ ---shown on hover in an ~:svg t~ HTML export, and in Emacs too:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Lisp <span style="text-decoration: underline;">[fn::McCarthy, 1958]</span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Lisp [ tooltip="McCarthy, 1958" label=Lisp ];
-<span style="color: #a0a1a7;">#+end_src
+becomes the node's ~tooltip~ ---shown on hover in an HTML export, and in Emacs too:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ -
+  + +
+  + 4 <span style="text-decoration: underline;">[fn::A </span><span style="text-decoration: underline;">NUMBER</span><span style="text-decoration: underline;"> token: lexeme "4", line 1, column 13.]</span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 A named footnote serves too: ~<span style="text-decoration: underline;">[fn:NAME: NOTE]</span>~ inline, or a bare ~<span style="text-decoration: underline;">[fn:NAME]</span>~ whose ~<span style="text-decoration: underline;">[fn:NAME]</span> NOTE~
 definition sits elsewhere in the buffer ---say, below the graph. An explicit ~| tooltip | &#8230; |~ row wins.
@@ -634,39 +635,35 @@ A footnote is awkward for more than a line. An item's text is its first paragrap
 paragraph after it is a note, the tooltip of whatever its item's line describes: a node, or ---under a
 reference--- an arc. ~#+begin_note :edge~, sitting in an item as a ~#+begin_cluster~ may, describes the
 arc into the item instead; it is the one place we need the block:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Lisp <span style="text-decoration: underline;">[fn::1958]</span>
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ parser <span style="text-decoration: underline;">[fn::Recursive descent.]</span>
 
-  McCarthy's <span style="font-style: italic;">/list processor/</span>:
-  code is data.
-  + Scheme
-    ,#+begin_note :edge
-    Steele and Sussman distilled it.
-    ,#+end_note
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Lisp [ tooltip="1958\nMcCarthy's list processor: code is data." label=Lisp ];
-Lisp -&gt; Scheme [ tooltip="Steele and Sussman distilled it." ];
-<span style="color: #a0a1a7;">#+end_src
+  One function per grammar rule;
+  each calls the others, as the grammar's rules mention each other.
+  + syntax tree
+    #+begin_note :edge
+    What every call returns: the subtree for its rule.
+    #+end_note
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-The blank line matters: without it, ~McCarthy's list processor:~ continues the first paragraph, and so
-the label. Likewise ~+ <span style="text-decoration: underline;">&lt;&lt;lisp&gt;&gt;</span> Lisp, the list processor~ names its node ~lisp~ and labels it with the
-whole line; a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ names, but only a new paragraph begins a note.
+The blank line matters: without it, the second paragraph continues the first, and so the label. Likewise
+~+ <span style="text-decoration: underline;">&lt;&lt;p&gt;&gt;</span> parser, by recursive descent~ names its node ~p~ and labels it with the whole line; a
+~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ names, but only a new paragraph begins a note.
 
 <span style="color: #a0a1a7;"># &#128162; Having two newlines before an item breaks things! Having two lines after</span>
 <span style="color: #a0a1a7;"># omits everything else: this is how org lists work, but we don't need this</span>
 <span style="color: #a0a1a7;"># stringent behaviour...?</span>
 
 Tooltips need a hover, and a PNG pasted into an email has none. ~#+begin_graph :notes inline~ shows every
-note beneath its label instead, in a smaller font, its markup kept and its lines filled to ~:wrap~
----else 40--- characters:
-<span style="color: #a0a1a7;">#+begin_graph Lisp's family :notes inline :wrap 24 :rankdir LR
-</span>+ Lisp <span style="text-decoration: underline;">[fn::1958]</span>
+note beneath its label instead, in a smaller font, its markup kept and its lines filled to ~:wrap~ ---else
+40--- characters:
+<span style="color: #a0a1a7;">#+begin_graph How a parser works :notes inline :wrap 28 :rankdir LR :demo live
+</span>+ parser <span style="text-decoration: underline;">[fn::Recursive descent.]</span>
 
-  McCarthy's <span style="font-style: italic;">/list processor/</span>: code is data.
-  + <span style="font-weight: bold;">distils ::</span> Scheme
+  One function per grammar rule; each calls the others, as the rules <span style="font-style: italic;">/mention/</span> each other.
+  + <span style="font-weight: bold;">returns ::</span> syntax tree
     #+begin_note :edge
-    Steele and Sussman.
+    The subtree for its rule.
     #+end_note
 <span style="color: #a0a1a7;">#+end_graph
 </span>
@@ -680,58 +677,61 @@ note beneath its label instead, in a smaller font, its markup kept and its lines
 <span style="color: #8b4513; font-weight: bold;">** Web links are URLs, image links are images</span>
 
 A link to anything but a node keeps its Org meaning. A web or file link makes the node clickable in an
-~:svg t~ HTML export, its description staying in the label; a description-less link to an image draws
-that image:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="text-decoration: underline;"><a href="https://orgmode.org">[[https://orgmode.org][Org]]</a></span> mode
-+ <span style="text-decoration: underline;">&lt;&lt;emacs&gt;&gt;</span> Emacs <span style="text-decoration: underline;"><a href="file:emacs.png">[[file:emacs.png]]</a></span>
-+ <span style="text-decoration: underline;"><a href="file:gnu.png">[[file:gnu.png]]</a></span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>"Org mode" [ URL="<a href="https://orgmode.org">https://orgmode.org</a>" label="Org mode" ];
-emacs [ image="emacs.png" label=Emacs ];
-"gnu.png" [ image="gnu.png" label="" ];
-<span style="color: #a0a1a7;">#+end_src
-</span>
-A node has one ~URL~, so an item with two web links is an error. Graphviz finds the image relative to the
-Org file, as Org does; an explicit ~URL~ or ~image~ row wins.
-
-So a graph of screenshots is a tour. A lone image is its own node, drawn sans text, so the arc into it
-carries the words; ~imagescale~ fits each picture to its node's fixed size:
-<span style="color: #a0a1a7;">#+begin_graph This package, at a glance :rankdir LR :node.shape box :node.fixedsize true :node.width 2.4 :node.height 1.6 :node.imagescale true
-</span>+ org-special-block-extras
-  + <span style="font-weight: bold;">folds ::</span> <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/details.png">[[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/details.png]]</a></span>
-  + <span style="font-weight: bold;">sets side by side ::</span> <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/parallel.png">[[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/parallel.png]]</a></span>
-  + <span style="font-weight: bold;">explains on hover ::</span> <span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/tooltips_emacs.png">[[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/tooltips_emacs.png]]</a></span>
+HTML export, its description staying in the label; a description-less link to an image draws that image.
+So a graph of parsing techniques doubles as a reading list, and a typing judgement may appear as a
+picture of the rules it follows:
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ parsing
+  + <span style="text-decoration: underline;"><a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">[[https://en.wikipedia.org/wiki/Recursive_descent_parser][Recursive descent]]</a></span>
+  + <span style="text-decoration: underline;"><a href="https://en.wikipedia.org/wiki/LR_parser">[[https://en.wikipedia.org/wiki/LR_parser][LR]]</a></span> parsing
+  + <span style="font-weight: bold;">then, typing by ::</span> <span style="text-decoration: underline;"><a href="file:/home/runner/work/alhassy.github.io/alhassy.github.io/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png">[[file:/home/runner/work/alhassy.github.io/alhassy.github.io/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png]]</a></span>
+    | shape  | box |
 <span style="color: #a0a1a7;">#+end_graph
 </span>
+A node has one ~URL~, so an item with two web links is an error. Graphviz finds the image relative to the
+Org file, as Org does; an explicit ~URL~ or ~image~ row wins. A lone image is its own node, drawn sans
+text, so the arc into it carries the words; for a tour of screenshots, ~:node.imagescale true~, with a
+fixed ~width~ and ~height~, fits each picture to its node.
+
 <span style="color: #8b4513; font-weight: bold;">** Section links make a map of the document</span>
 
 A link to a section, ~<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>~, is a URL too ---not an arc, since nodes are named without a star.
-In an ~:svg t~ HTML export it leads to that section's anchor, which only Org knows; and in Emacs, a click
-on the rendered node opens the section. So a graph may be a map of its own document:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,#+begin_graph This section :svg t :rankdir LR
-+ <span style="text-decoration: underline;"><a href="*Asides: footnotes, notes, and links">[[*Asides: footnotes, notes, and links][Asides]]</a></span>
-  + <span style="text-decoration: underline;"><a href="*Footnotes are tooltips">[[*Footnotes are tooltips][Footnotes]]</a></span>
-  + <span style="text-decoration: underline;"><a href="*Notes are longer tooltips">[[*Notes are longer tooltips][Notes]]</a></span>
-,#+end_graph
-<span style="color: #a0a1a7;">#+end_src
-</span>A bare ~<span style="text-decoration: underline;"><a href="*Footnotes are tooltips">[[*Footnotes are tooltips]]</a></span>~ labels its node with the heading's title; ~<span style="text-decoration: underline;"><a href="#custom-id">[[#custom-id]]</a></span>~ and
-~<span style="text-decoration: underline;"><a href="id:&#8230;">[[id:&#8230;]]</a></span>~ links work alike.
+In an HTML export it leads to that section's anchor, which only Org knows; and in Emacs, a click on the
+rendered node opens the section. So a graph may be a map of its own document; click a node below:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>#+begin_graph This document :rankdir LR
++ <span style="text-decoration: underline;"><a href="#lexing">[[#lexing][Lexing]]</a></span>
+  + <span style="text-decoration: underline;"><a href="#parsing">[[#parsing]]</a></span>
+#+end_graph
+
+,* Lexing
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">lexing</span>
+<span style="font-weight: bold;">:END:</span>
+Characters become tokens.
+
+,* Parsing
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">parsing</span>
+<span style="font-weight: bold;">:END:</span>
+Tokens become trees.
+<span style="color: #a0a1a7;">#+end_org
+</span>
+~<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>~, ~<span style="text-decoration: underline;"><a href="#custom-id">[[#custom-id]]</a></span>~, and ~<span style="text-decoration: underline;"><a href="id:&#8230;">[[id:&#8230;]]</a></span>~ links work alike; a bare one, as ~<span style="text-decoration: underline;"><a href="#parsing">[[#parsing]]</a></span>~ above,
+labels its node with the heading's title.
 
 <span style="color: #0184bc; font-weight: bold;">* Layout: ranks, boxes, and records</span>
 
-Graphviz lays out the graph for us, and mostly well; but sometimes the layout says something the
-graph does not mean. Here is how we take the wheel back.
+Graphviz lays out the graph for us, and mostly well; but sometimes the layout says something the graph
+does not mean. Here is how we take the wheel back.
 
 <span style="color: #8b4513; font-weight: bold;">** Ordered lists keep their order</span>
 
 Look again at our parse tree: ~1 * 2 + 3 - 4~ subtracts ~4~ from the rest, never the other way around, yet
 nothing in an unordered list promises Graphviz will draw ~4~ on the right. Org's ~+ - *~ bullets say
-&#8220;these things&#8221;; ~1. 2. 3.~ say &#8220;first, second, third&#8221;. So ordered children sit side by side, on one
-rank, in the order written ---Graphviz no longer reshuffles them to save a crossing:
-<span style="color: #a0a1a7;">#+begin_src org
+&#8220;these things&#8221;; ~1. 2. 3.~ say &#8220;first, second, third&#8221;. So ordered children sit side by side, on one rank,
+in the order written ---Graphviz no longer reshuffles them to save a crossing:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
 </span>+ -
   1. +
      1. *
@@ -739,14 +739,7 @@ rank, in the order written ---Graphviz no longer reshuffles them to save a cross
         2. 2
      2. 3
   2. 4
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>"-" [ ordering=out label="-" ];
-"-" -&gt; "+";
-"-" -&gt; 4;
-{ rank=same; "+"; 4 }
-&#8230;
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 - An ordered top-level list, or one inside a cluster, shares a rank too.
 - An explicit ~| :children-rank | min |~ wins over the ~rank=same~; a lone ordered child gets no rank at
@@ -754,136 +747,131 @@ rank, in the order written ---Graphviz no longer reshuffles them to save a cross
 - For one rank <span style="font-style: italic;">/without/</span> the fixed order, use ~| :children-rank | same |~ with ~+~ bullets.
 
 Nodes with no common parent share a rank by ~#+rank:~, which takes bare ids or links; a link spares a
-multi-word id its quotes:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Logic
-  + &#955; calculus
-+ Lisp
-,#+rank: Lisp <span style="text-decoration: underline;"><a href="&#955; calculus">[[&#955; calculus]]</a></span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>{ rank=same; "&#955; calculus"; Lisp }
-<span style="color: #a0a1a7;">#+end_src
+multi-word id its quotes. Every token is a leaf, so we line them all up, as the lexer emitted them:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ -
+  + +
+    + *
+      + 1
+      + 2
+    + 3
+  + 4
+#+rank: 1 2 3 4
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-Under ~splines=curved~, Graphviz drops the label of an arc between two nodes on one rank; so there, such
-an arc's label becomes an ~xlabel~, which it still draws.
+Under ~splines=curved~, Graphviz drops the label of an arc between two nodes on one rank; so there, such an
+arc's label becomes an ~xlabel~, which it still draws.
 
 <span style="color: #8b4513; font-weight: bold;">** Clusters draw boxes</span>
 
-Some nodes belong together ---Emacs's packages, say--- and a box around them says so. A cluster is a
-<span style="font-style: italic;">/subgraph/</span>, so it gets the graph's own spelling: a ~#+begin_cluster~ block takes a title and ~:KEY V~
+Some nodes belong together ---a compiler's front end, say--- and a box around them says so. A cluster is
+a <span style="font-style: italic;">/subgraph/</span>, so it gets the graph's own spelling: a ~#+begin_cluster~ block takes a title and ~:KEY V~
 attributes, ~:node.KEY~ and ~:edge.KEY~ defaults included, exactly as the ~#+begin_graph~ line does; and,
 being a block, it folds with ~TAB~:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Emacs
-  ,#+begin_cluster Packages :bgcolor lightgrey :node.shape box
-  + Org
-    ,#+begin_cluster
-    + agenda
-    + babel
-    ,#+end_cluster
-  + Magit
-  ,#+end_cluster
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>graph [ compound=true ]
-subgraph cluster_Packages {
-  label=Packages
-  bgcolor=lightgrey
-  node [ shape=box ]
-  Org [ label=Org ];
-  subgraph cluster_anonymous_1 { label="" agenda; babel; }
-  Org -&gt; agenda [ lhead=cluster_anonymous_1 ];
-  Magit [ label=Magit ];
-}
-Emacs -&gt; Org [ lhead=cluster_Packages ];
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ compiler
+  #+begin_cluster Front end :bgcolor lightgrey :node.shape box
+  + lexer
+    + parser
+      #+begin_cluster
+      + syntax tree
+      + symbol table
+      #+end_cluster
+  #+end_cluster
+  #+begin_cluster Back end :style dashed
+  + code generator
+  #+end_cluster
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-- A cluster block inside an item is that item's child: above, ~Emacs~ has an arc to ~Packages~. An arc to
-  or from a cluster lands on the cluster's first node, clipped at its border, as ~lhead~ shows.
+- A cluster block inside an item is that item's child: above, ~compiler~ has an arc to ~Front end~. An arc
+  to or from a cluster lands on the cluster's first node, clipped at its border.
 - An untitled cluster is an anonymous box, with no label and no name to draw arcs to.
 - The title runs up to the first ~:KEY~; ~#+begin_cluster Time 12:30~ is titled ~Time 12:30~.
-- When the attributes outgrow the line, a table opening the block styles the box, as an item's table
-  styles its node; ~#+node:~ and ~#+edge:~ tables set defaults inside it, as usual:
-<span style="color: #a0a1a7;">  #+begin_src org
-</span>  ,#+begin_cluster Prophets
-  | style     | filled  |
-  | fillcolor | #ddeeff |
-  ,#+node:
-  | fillcolor | #aaccff |
-  + Adam
-  ,#+end_cluster
-<span style="color: #a0a1a7;">  #+end_src
+- When the attributes outgrow the line, a table opening the block styles the box, as an item's table styles
+  its node; ~#+node:~ and ~#+edge:~ tables set defaults inside it, as usual:
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>#+begin_cluster Tokens
+| style     | filled  |
+| fillcolor | #ddeeff |
+#+node:
+| shape | box |
++ <span style="text-decoration: underline;">NUMBER</span>
++ <span style="text-decoration: underline;">PLUS</span>
++ STAR
+#+end_cluster
+<span style="color: #a0a1a7;">#+end_graph
 </span>- ~C-c C-c~, ~C-M-i~, and eldoc work inside a cluster block just as anywhere else in the graph.
 
 <span style="color: #8b4513; font-weight: bold;">** Records: a #+record: table</span>
 
-Some nodes have insides: a C ~struct~ has fields, a UML class has members, and an arc may want to leave
-from one particular field. A record is a node drawn as a table, and Org already has tables: under
+Some nodes have insides: an AST node has a left operand, an operator, and a right operand, and each arc
+should leave from its own field. A record is a node drawn as a table, and Org already has tables: under
 ~#+record:~, an item's table is its label, laid out exactly as written ---just as ~#+graph:~, ~#+node:~,
 and ~#+edge:~ name what the table below them is. A cell's ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ is its <span style="font-style: italic;">/port/</span>, a cell's ~<span style="text-decoration: underline;"><a href="link">[[link]]</a></span>~
 is an arc from that port, and an arc reaches a port by ~record::port~ ---just as Org's
 ~<span style="text-decoration: underline;"><a href="file:notes.org::target">[[file:notes.org::target]]</a></span>~ reaches into a file:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ struct1
-  ,#+record:
-  | left | <span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span> middle <span style="text-decoration: underline;"><a href="struct2::one">[[</a><a href="struct2::one">struct2::one]</a><a href="struct2::one">]</a></span> | right |
-+ struct2
-  ,#+record:
-  | <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> one | two   |
-  |<span style="font-weight: bold; font-style: italic;"> ^           | three </span>|
-+ reader
-  + <span style="text-decoration: underline;"><a href="struct1::mid">[[struct1::mid]]</a></span>
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>struct1 [ shape=plain label=&lt;&lt;TABLE &#8230;&gt;&lt;TR&gt;&lt;TD&gt;left&lt;/TD&gt;&lt;TD PORT="mid"&gt;middle&lt;/TD&gt;&lt;TD&gt;right&lt;/TD&gt;&lt;/TR&gt;&lt;/TABLE&gt;&gt; ];
-struct1:mid -&gt; struct2:one;
-struct2 [ shape=plain label=&lt;&lt;TABLE &#8230;&gt;&lt;TR&gt;&lt;TD PORT="one" ROWSPAN="2"&gt;one&lt;/TD&gt;&lt;TD&gt;two&lt;/TD&gt;&lt;/TR&gt;&lt;TR&gt;&lt;TD&gt;three&lt;/TD&gt;&lt;/TR&gt;&lt;/TABLE&gt;&gt; ];
-reader -&gt; struct1:mid;
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph Our expression, as an AST :demo live
+</span>+ minus
+  #+record:
+  | <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">]</a><a href="plus">]</a></span> | - | <span style="text-decoration: underline;">&lt;&lt;r&gt;&gt;</span> right <span style="text-decoration: underline;"><a href="four">[[</a><a href="four">four]</a><a href="four">]</a></span> |
++ <span style="text-decoration: underline;">plus</span>
+  #+record:
+  | <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="times">[[</a><a href="times">times]</a><a href="times">]</a></span> | + | <span style="text-decoration: underline;">&lt;&lt;r&gt;&gt;</span> right <span style="text-decoration: underline;"><a href="three">[[</a><a href="three">three]</a><a href="three">]</a></span> |
++ times
+  #+record:
+  | <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="one">[[</a><a href="one">one]</a><a href="one">]</a></span> | * | <span style="text-decoration: underline;">&lt;&lt;r&gt;&gt;</span> right <span style="text-decoration: underline;"><a href="two">[[</a><a href="two">two]</a><a href="two">]</a></span> |
++ <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> 1
++ <span style="text-decoration: underline;">&lt;&lt;two&gt;&gt;</span> 2
++ <span style="text-decoration: underline;">&lt;&lt;three&gt;&gt;</span> 3
++ <span style="text-decoration: underline;">&lt;&lt;four&gt;&gt;</span> 4
++ evaluator
+  + <span style="font-weight: bold;">starts at ::</span> <span style="text-decoration: underline;"><a href="minus::l">[[minus::l]]</a></span>
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-Org tables have no merged cells, so two markers stand in for them: ~^~ continues the cell above, as ~one~
-does, and an empty cell continues the cell to its left ---or, in the first column, the one above.
-Together they draw any layout that Graphviz's old ~{ }~ nesting could:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ struct3
-  ,#+record:
-  | hello \\ world | b |            |   | g | h |
-  |<span style="font-weight: bold; font-style: italic;"> ^              | c | </span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">&lt;&lt;here&gt;&gt;</span><span style="font-weight: bold; font-style: italic;"> d | e | ^ | ^ </span>|
-  |<span style="font-weight: bold; font-style: italic;"> ^              | f |            |   | ^ | ^ </span>|
-<span style="color: #a0a1a7;">#+end_src
-</span>Here ~b~ and ~f~ span three columns, ~hello~, ~g~, and ~h~ three rows; a ~\\~ breaks a line, as in an item.
-The gallery has <span style="text-decoration: underline;"><a href="*Records, hands on">both records live</a></span>.
-
-Hlines and column cookies mean what they mean to Org. An hline draws a rule between rows, and a table
-with any hline draws one outer border rather than a box around every cell ---so a UML class is just the
-table we would write anyway. A row of ~&lt;l&gt;~, ~&lt;c&gt;~, and ~&lt;r&gt;~ cookies aligns its columns, and cells keep
-their markup:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Person
-  ,#+record:
-  | <span style="font-weight: bold; font-style: italic;">&lt;l&gt;</span>            |
-  | <span style="font-weight: bold;">*Person*</span>       |
-  |----------------|
-  | name: =String= |
-  | age: =Int=     |
-  |----------------|
-  | greet()        |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Person [ shape=plain label=&lt;&lt;TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"&gt;&lt;TR&gt;&lt;TD ALIGN="LEFT" BALIGN="LEFT"&gt;&lt;B&gt;Person&lt;/B&gt;&lt;/TD&gt;&lt;/TR&gt;&lt;HR/&gt;&#8230;&lt;/TABLE&gt;&gt; ];
-<span style="color: #a0a1a7;">#+end_src
+Org tables have no merged cells, so two markers stand in for them: ~^~ continues the cell above, and an
+empty cell continues the cell to its left ---or, in the first column, the one above. Together they draw
+any layout that Graphviz's old ~{ }~ nesting could. A grammar rule with three alternatives spans its name
+over three rows; a token's heading spans its two fields:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ expr
+  #+record:
+  | expr \\ ::= | term =+= expr |
+  |<span style="font-weight: bold; font-style: italic;"> ^           | term </span><span style="font-weight: bold; font-style: italic;">=-=</span><span style="font-weight: bold; font-style: italic;"> expr </span>|
+  |<span style="font-weight: bold; font-style: italic;"> ^           | term          </span>|
++ token
+  #+record:
+  | Token  |        |
+  | <span style="text-decoration: underline;">&lt;&lt;kind&gt;&gt;</span> kind | lexeme |
+  | <span style="text-decoration: underline;">NUMBER</span> | <span style="font-weight: bold; font-style: italic;">="42"=</span><span style="font-weight: bold; font-style: italic;"> </span>|
+<span style="color: #a0a1a7;">#+end_graph
 </span>
-- A record is otherwise an ordinary node: its children are nodes of their own, and its attributes,
-  tags, and templates apply as usual; ~color~, ~fillcolor~, and ~fontcolor~ colour the table. Its
-  attribute table goes <span style="font-style: italic;">/above/</span> ~#+record:~, since rows right below the record table are part of it.
+Hlines and column cookies mean what they mean to Org. An hline draws a rule between rows, and a table with
+any hline draws one outer border rather than a box around every cell ---so a UML class is just the table
+we would write anyway. A row of ~&lt;l&gt;~, ~&lt;c&gt;~, and ~&lt;r&gt;~ cookies aligns its columns, and cells keep their
+markup:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ Parser
+  #+record:
+  | <span style="font-weight: bold; font-style: italic;">&lt;l&gt;</span>                  |
+  | <span style="font-weight: bold;">*Parser*</span>             |
+  |----------------------|
+  | tokens: =List Token= |
+  | position: =Int=      |
+  |----------------------|
+  | parse(): =Tree=      |
+  | peek(): =Token=      |
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+- A record is otherwise an ordinary node: its children are nodes of their own, and its attributes, tags,
+  and templates apply as usual; ~color~, ~fillcolor~, and ~fontcolor~ colour the table. Its attribute
+  table goes <span style="font-style: italic;">/above/</span> ~#+record:~, since rows right below the record table are part of it.
 - A record is ~shape=plain~, the table being its whole outline; an explicit ~shape~ row wins.
-- A cell with a link but no target is ported by its text, spaces as underscores; ~<span style="text-decoration: underline;">&lt;&lt;x marks the spot&gt;&gt;</span>~
-  is likewise reached as ~<span style="text-decoration: underline;"><a href="struct3::x marks the spot">[[struct3::x marks the spot]]</a></span>~.
-- Ports belong to their record, so two records may both have a ~head~ port: ~r1::head~ and ~r2::head~.
+- A cell with a link but no target is ported by its text, spaces as underscores; ~<span style="text-decoration: underline;">&lt;&lt;left operand&gt;&gt;</span>~ is
+  likewise reached as ~<span style="text-decoration: underline;"><a href="minus::left operand">[[minus::left operand]]</a></span>~.
+- Ports belong to their record, so all three records above have an ~l~ port: ~minus::l~, ~<span style="text-decoration: underline;">plus</span>::l~.
 - A cell's trailing tags style its arcs, as a reference's style its arc:
-  ~| <span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span> middle <span style="text-decoration: underline;"><a href="struct2::one">[[struct2::one]]</a></span> :dashed: |~ draws a dashed arc. A cell with tags but no link is an error; write ~=:x:=~
-  for literal text.
+  ~| <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">]]</a></span> :dashed: |~ draws a dashed arc. A cell with tags but no link is an error; write
+  ~=:x:=~ for literal text.
 - ~a::b~ names a port only when ~a~ names a record; otherwise it is an ordinary node, such as
   ~std::vector~. Record and port names may contain dots: ~<span style="text-decoration: underline;"><a href="org.el::v1.2">[[org.el::v1.2]]</a></span>~.
 - Graphviz spells ports ~record:port~; that is the spelling in the generated dot.
@@ -893,64 +881,83 @@ their markup:
 Every graph so far flows top to bottom; a mind map grows outward from its centre. Graphviz's ~layout~
 attribute picks its engine, so the header line turns a tree into a mind map: ~twopi~ places ~root~ in the
 middle and each generation on a ring around it. With ~:wrap~, long labels stay compact:
-<span style="color: #a0a1a7;">#+begin_graph Org mode, radially :layout twopi :root "Org mode" :wrap 12 :directed nil :node.shape box :node.style rounded
-</span>+ Org mode
-  + Agenda
-    + TODO keywords
-    + Scheduling and deadlines
-  + Babel
-    + Tangling
-    + Evaluating source blocks
-  + Export
-    + HTML
-    + LaTeX
+<span style="color: #a0a1a7;">#+begin_graph Parsing, radially :layout twopi :root Parsing :wrap 12 :directed nil :node.shape box :node.style rounded :demo live
+</span>+ Parsing
+  + Top-down
+    + Recursive descent
+    + LL(k)
+    + Packrat
+  + Bottom-up
+    + LR(0)
+    + LALR(1)
+    + Shift-reduce
+  + Chart
+    + Earley
+    + CYK
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 Sans ~:root~, ~twopi~ picks a centre itself. ~neato~, ~fdp~, and ~circo~ suit graphs that are not trees.
 
 <span style="color: #8b4513; font-weight: bold;">** Wide trees: :unflatten N</span>
 
-A node with many children lays them out in one wide row: a ribbon, too wide for the page.
-~:unflatten N~ passes the dot through Graphviz's own ~unflatten -l N~, which staggers those leaves over
-~N~ ranks, so the graph is a block rather than a ribbon:
-<span style="color: #a0a1a7;">#+begin_graph Lisp's children :unflatten 3
-</span>+ Lisp
-  + Scheme
-  + Common Lisp
-  + Clojure
-  + Racket
-  + Emacs Lisp
-  + Fennel
-  + Janet
-  + Hy
+A node with many children lays them out in one wide row: a ribbon, too wide for the page. Our lexer knows
+nine kinds of token:
+<span style="color: #a0a1a7;">#+begin_graph Token kinds :demo live
+</span>+ token
+  + <span style="text-decoration: underline;">NUMBER</span>
+  + IDENT
+  + <span style="text-decoration: underline;">PLUS</span>
+  + MINUS
+  + STAR
+  + SLASH
+  + LPAREN
+  + RPAREN
+  + EOF
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+~:unflatten N~ passes the dot through Graphviz's own ~unflatten -l N~, which staggers those leaves over ~N~
+ranks, so the graph is a block rather than a ribbon:
+<span style="color: #a0a1a7;">#+begin_graph Token kinds :unflatten 3 :demo live
+</span>+ token
+  + <span style="text-decoration: underline;">NUMBER</span>
+  + IDENT
+  + <span style="text-decoration: underline;">PLUS</span>
+  + MINUS
+  + STAR
+  + SLASH
+  + LPAREN
+  + RPAREN
+  + EOF
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #0184bc; font-weight: bold;">* Graphs in their document</span>
 
-A graph rarely stands alone: prose refers to it, and an outline may already <span style="font-style: italic;">/be/</span> one. Org's own
-document machinery reaches graphs too.
+A graph rarely stands alone: prose refers to it, and an outline may already <span style="font-style: italic;">/be/</span> one. Org's own document
+machinery reaches graphs too.
 
 <span style="color: #8b4513; font-weight: bold;">** #+name: and #+caption: make a figure</span>
 
-We want to write &#8220;as Figure 1 shows&#8221;, and have the number stay right. In Org, ~#+name:~ is what
+We want to write &#8220;as Figure 1 shows&#8221;, and have the <span style="text-decoration: underline;">number</span> stay right. In Org, ~#+name:~ is what
 ~<span style="text-decoration: underline;"><a href="links">[[links]]</a></span>~ reach, and ~#+caption:~ captions a table or an image. A graph is an image, so both mean what
-they always do:
+they always do. Its point is an image file beside our document, so we show it as source alone:
 <span style="color: #a0a1a7;">#+begin_src org
-</span>As <span style="text-decoration: underline;"><a href="lineage">[[lineage]]</a></span> shows, Emacs is a Lisp.
+</span>As <span style="text-decoration: underline;"><a href="parse-tree">[[parse-tree]]</a></span> shows, =*= binds tighter than =+=.
 
-,#+name: lineage
-,#+caption: How Emacs came to be
+,#+name: parse-tree
+,#+caption: How 1 * 2 + 3 parses
 ,#+begin_graph
-+ &#955;-calculus
-  + Lisp
-    + Emacs Lisp
++ +
+  + *
+    + 1
+    + 2
+  + 3
 ,#+end_graph
 <span style="color: #a0a1a7;">#+end_src
 </span>
-- The graph renders to ~lineage.png~ ---both on ~C-c C-c~ and on export--- and exports as that image,
-  numbered and captioned: ~<span style="text-decoration: underline;"><a href="lineage">[[lineage]]</a></span>~ reads &#8220;Figure 1&#8221; in HTML, and ~\ref~ in LaTeX.
+- The graph renders to ~parse-tree.png~ ---both on ~C-c C-c~ and on export--- and exports as that image,
+  numbered and captioned: ~<span style="text-decoration: underline;"><a href="parse-tree">[[parse-tree]]</a></span>~ reads &#8220;Figure 1&#8221; in HTML, and ~\ref~ in LaTeX.
 - An explicit ~:file~ still wins: ~#+begin_graph :file elsewhere.png~ renders there, and the ~#+name:~
-  still labels it. With ~:svg t~, the figure is ~lineage.svg~.
+  still labels it. With ~:svg t~, the figure is ~parse-tree.svg~.
 - An unnamed graph exports as before: inlined into HTML, or as dot source elsewhere.
 
 <span style="color: #8b4513; font-weight: bold;">** Sections are graphs: the :graph: tag</span>
@@ -959,32 +966,64 @@ Sometimes a whole section is nothing but the outline we want drawn; wrapping it 
 A ~#+begin_graph~ block is a function on a region; a ~:graph:~ tag is the same function on a section. The
 section's text is the graph, and its ~:PROPERTIES:~ drawer ---Org's own home for key-value settings--- is
 the ~#+begin_graph~ line: ~:RANKDIR: LR~ is ~:rankdir LR~, ~:NODE.SHAPE: box~ is ~:node.shape box~, and
-~:FILE:~ is ~:file~. See <span style="text-decoration: underline;"><a href="*A section is a graph">the live example</a></span>:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>,* Emacs's lineage :graph:
+~:FILE:~ is ~:file~:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>,* Our grammar :graph_The_Grammar:
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:RANKDIR:</span> <span style="color: #383a42; background-color: #fafafa;">LR</span>
 <span style="color: #a626a4;">:NODE.SHAPE:</span> <span style="color: #383a42; background-color: #fafafa;">box</span>
 <span style="font-weight: bold;">:END:</span>
-+ &#955;-calculus
-  + <span style="font-weight: bold;">inspired ::</span> Lisp
-    + Emacs Lisp
-<span style="color: #a0a1a7;">#+end_src
++ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expr
+  + term
+    + factor
+      + <span style="text-decoration: underline;">NUMBER</span>
+      + <span style="font-weight: bold;">( &#8230; ) ::</span> <span style="text-decoration: underline;"><a href="expr">expr</a></span>
+<span style="color: #a0a1a7;">#+end_org
 </span>
 - The heading stays a heading; only its text becomes the graph, on export.
-- ~:graph_Some_Title:~ titles the graph ~Some Title~, as the words before the first ~:key~ would.
+- ~:graph_The_Grammar:~ titles the graph ~The Grammar~, as the words before the first ~:key~ would; plain
+  ~:graph:~ leaves it untitled.
 - Org's own properties, such as ~:CUSTOM_ID:~ and ~:CATEGORY:~, stay Org's; they never reach Graphviz.
 
 <span style="color: #0184bc; font-weight: bold;">* Beyond Graphviz: smartdiagram</span>
 
-Graphviz lays out a graph; but a README's opening often wants something more posed than a layout. LaTeX's
-<span style="text-decoration: underline;"><a href="https://ctan.org/pkg/smartdiagram">smartdiagram</a></span> package typesets a handful of fixed pictures ---a planet amid its satellites, a flow of
-boxes, a column of terms and their descriptions--- that suit it better than any graph.
-~:smartdiagram TYPE~ hands the very same list to smartdiagram instead; ~C-c C-c~ renders it with ~pdflatex~, and LaTeX
-export typesets it in place:
-<span style="color: #a0a1a7;">#+macro: replaces \\ <a href="color:gray">[[color:gray][replaces]]</a> \\ <a href="color:gray">[[color:gray][=$1=]]</a></span>
-<span style="color: #a0a1a7;">#+begin_graph One syntax =(key map)= \\ where =key= is =number=, =:keyword=, ='symbol=, or ="string"=! :smartdiagram constellation
-</span>#+graph:
+Graphviz lays out a graph; but a slide or a README's opening often wants something more posed than a
+layout. LaTeX's <span style="text-decoration: underline;"><a href="https://ctan.org/pkg/smartdiagram">smartdiagram</a></span> package typesets a handful of fixed pictures ---a planet amid its
+satellites, a flow of boxes, a column of terms and their descriptions--- that suit it better than any
+graph. ~:smartdiagram TYPE~ hands the very same list to smartdiagram instead; ~C-c C-c~ renders it with
+~pdflatex~, and LaTeX export typesets it in place. Our compiler's pipeline is a flow:
+<span style="color: #a0a1a7;">#+begin_graph From text to value :smartdiagram flow:horizontal :demo live
+</span>+ characters
++ tokens
++ syntax tree
++ value
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+- ~TYPE~ is one of ~constellation~, ~connected-constellation~, ~bubble~, ~flow~, ~flow:horizontal~,
+  ~circular~, ~circular:clockwise~, ~descriptive~, ~priority-descriptive~, or ~sequence~.
+- A constellation or bubble has one top item, its centre; that item's children orbit it. A descriptive
+  diagram's items are ~+ TERM :: DESCRIPTION~. Every other type reads the top items, in order.
+- The ~#+graph:~ rows are ~\smartdiagramset~'s, in smartdiagram's own words: ~| planet color | black!75 |~.
+- An item's ~| color |~, ~| fontcolor |~, and ~| fontsize |~ rows ---Graphviz's names for them--- colour
+  its shape and its text, and size its text; its ~:tags:~ splice ~#+name:~ templates of those rows, as in
+  any graph. An item's later paragraphs sit beneath its text.
+- The title sits above the diagram; prose before the list, between the two; prose after it, beneath.
+- ~:dpi N~ sets the PNG's resolution, 300 by default. ~C-u C-c C-c~ shows the LaTeX.
+- ~C-M-i~ and eldoc know which kind of graph they are in: under ~:smartdiagram~, they offer
+  smartdiagram's keys, with their defaults, rather than Graphviz's.
+- Graphviz's own syntax ---~#+node:~, ~#+edge:~, ~#+rank:~, links between items, records--- draws nothing
+  here, so it is an error rather than silently dropped.
+
+<span style="color: #8b4513; font-weight: bold;">** Org's markup in place of LaTeX's</span>
+
+Why bother, when LaTeX could draw it directly? Here is a richer diagram, one that began life as a
+~#+begin_src latex-as-png~ block, via <span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png">ob-latex-as-png</a></span>: a constellation of how one syntax,
+~(key map)~, replaces many. Its ~#+graph:~ rows, macro, and colour links are where the LaTeX went:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>#+macro: replaces \\ <span style="color: #bebebe;"><a href="color:gray">replaces</a></span> \\ <span style="color: #bebebe;"><a href="color:gray">=$1=</a></span>
+
+#+begin_graph One syntax =(key map)= \\ where =key= is =<span style="text-decoration: underline;">number</span>=, =:keyword=, ='symbol=, or ="string"=! :smartdiagram constellation
+#+graph:
 | planet color              | black!75        |
 | planet size               | 3.5cm           |
 | planet text width         | 3.3cm           |
@@ -1017,28 +1056,10 @@ export typesets it in place:
              person-names)
          2)
 #+end_src
-<span style="color: #a0a1a7;">#+end_graph
+#+end_graph
+<span style="color: #a0a1a7;">#+end_org
 </span>
-- ~TYPE~ is one of ~constellation~, ~connected-constellation~, ~bubble~, ~flow~, ~flow:horizontal~,
-  ~circular~, ~circular:clockwise~, ~descriptive~, ~priority-descriptive~, or ~sequence~.
-- A constellation or bubble has one top item, its centre; that item's children orbit it. A descriptive
-  diagram's items are ~+ TERM :: DESCRIPTION~. Every other type reads the top items, in order.
-- The ~#+graph:~ rows are ~\smartdiagramset~'s, in smartdiagram's own words: ~| planet color | black!75 |~.
-- An item's ~| color |~, ~| fontcolor |~, and ~| fontsize |~ rows ---Graphviz's names for them--- colour
-  its shape and its text, and size its text; its ~:tags:~ splice ~#+name:~ templates of those rows, as in
-  any graph. An item's later paragraphs sit beneath its text.
-- The title sits above the diagram; prose before the list, between the two; prose after it, beneath.
-- ~:dpi N~ sets the PNG's resolution, 300 by default. ~C-u C-c C-c~ shows the LaTeX.
-- ~C-M-i~ and eldoc know which kind of graph they are in: under ~:smartdiagram~, they offer
-  smartdiagram's keys, with their defaults, rather than Graphviz's.
-- Graphviz's own syntax ---~#+node:~, ~#+edge:~, ~#+rank:~, links between items, records--- draws
-  nothing here, so it is an error rather than silently dropped.
-
-<span style="color: #8b4513; font-weight: bold;">** Org's markup in place of LaTeX's</span>
-
-Why bother, when LaTeX could draw it directly? The diagram above began life as a
-~#+begin_src latex-as-png~ block, via <span style="text-decoration: underline;"><a href="https://github.com/alhassy/ob-latex-as-png">ob-latex-as-png</a></span>. Every LaTeX incantation it needed has an Org
-counterpart that we already write daily:
+Every LaTeX incantation it needed has an Org counterpart that we already write daily:
 
 | LaTeX                                                     | Org                                               |
 |-----------------------------------------------------------+---------------------------------------------------|
@@ -1063,26 +1084,25 @@ survive the move are ~\\~ ---which Org itself reads as a line break--- and the f
 
 <span style="color: #0184bc; font-weight: bold;">* Comforts while editing</span>
 
-Graphviz has 177 attributes, and nobody remembers them. So the block helps as we type, wherever we
-type.
+Graphviz has 177 attributes, and nobody remembers them. So the block helps as we type, wherever we type.
 
 1. ~C-M-i~ (~completion-at-point~) and eldoc know about graph keys ---in any Org buffer's graph blocks,
    and in the ~org-graph-edit-mode~ buffer that ~C-c '~ opens on one, as for a source block:
-   - In a key cell, completion offers the attributes valid there, plus the reserved keys; after
-     ~:edge.~ or ~:edge[T].~, it offers only edge attributes, prefix and all. In a value cell, it offers
-     the values of that row's attribute, such as ~vee~ for ~:edge.arrowhead~. Each candidate is
-     annotated with its description.
+   - In a key cell, completion offers the attributes valid there, <span style="text-decoration: underline;">plus</span> the reserved keys; after ~:edge.~
+     or ~:edge[T].~, it offers only edge attributes, prefix and all. In a value cell, it offers the
+     values of that row's attribute, such as ~vee~ for ~:edge.arrowhead~. Each candidate is annotated
+     with its description.
    - On the ~#+begin_graph~ line, ~:r C-M-i~ offers ~:rankdir~ and the other graph attributes, every
      ~:node.KEY~ and ~:edge.KEY~, and the block's own ~:file~, ~:svg~, ~:directed~, and ~:C-c_C-c~;
      ~:rankdir L C-M-i~ then offers ~LR~.
-   - Eldoc shows the description of the key on the current row, or at point on the ~#+begin_graph~
-     line, ending with Graphviz's default; e.g., ~| :edge.arrowhead | vee |~ shows &#8220;Style of arrowhead
-     on the head node of an edge.  Default: normal.&#8221;
+   - Eldoc shows the description of the key on the current row, or at point on the ~#+begin_graph~ line,
+     ending with Graphviz's default; e.g., ~| :edge.arrowhead | vee |~ shows &#8220;Style of arrowhead on the
+     head node of an edge.  Default: normal.&#8221;
 
 2. When we would rather pick than type, ~C-u RET~ on any table row inside a graph inserts a new
-   ~| key | value |~ row interactively: a completion menu for the key, then one for the value ---or a free-text
-   prompt, when the attribute accepts arbitrary strings. Plain ~RET~ is unaffected. The menu shows only
-   the attributes valid where the table sits:
+   ~| key | value |~ row interactively: a completion menu for the key, then one for the value ---or a
+   free-text prompt, when the attribute accepts arbitrary strings. Plain ~RET~ is unaffected. The menu
+   shows only the attributes valid where the table sits:
    - Table under ~#+graph:~ &#10230; graph-level attributes (~rankdir~, ~splines~, ~bgcolor~, &#8230;)
    - Table under ~#+node:~ &#10230; default node attributes (~shape~, ~style~, ~color~, &#8230;)
    - Table under ~#+edge:~ &#10230; default edge attributes (~arrowhead~, ~dir~, ~penwidth~, &#8230;)
@@ -1094,9 +1114,9 @@ type.
    ~C-c '~ buffer too.
 
 3. Where do the descriptions come from? ~org-graph-attributes~, which lives on its own in
-   ~org-graph-attributes.el~: every Graphviz attribute, scraped from <span style="text-decoration: underline;"><a href="https://graphviz.org/doc/info/attrs.html">Graphviz's attribute table</a></span>. To
-   add or adjust one, edit its entry there, or ~M-x customize-variable RET org-graph-attributes~; each
-   entry has the form:
+   ~org-graph-attributes.el~: every Graphviz attribute, scraped from <span style="text-decoration: underline;"><a href="https://graphviz.org/doc/info/attrs.html">Graphviz's attribute table</a></span>. To add
+   or adjust one, edit its entry there, or ~M-x customize-variable RET org-graph-attributes~; each entry
+   has the form:
 <span style="color: #a0a1a7;">   #+begin_src emacs-lisp
 </span>   (<span style="color: #e44649;">:name</span> <span style="color: #50a14f;">"shape"</span> <span style="color: #e44649;">:valid-on</span> (nodes) <span style="color: #e44649;">:default</span> <span style="color: #50a14f;">"ellipse"</span>
     <span style="color: #e44649;">:values</span> (<span style="color: #50a14f;">"box"</span> <span style="color: #50a14f;">"polygon"</span> <span style="color: #50a14f;">"ellipse"</span> &#8230;)  <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">nil &#8594; free-text prompt
@@ -1108,17 +1128,21 @@ type.
 4. When the picture is wrong, we want to see what we built. ~C-u C-c C-c~ shows the generated dot in a
    ~*org-graph dot*~ buffer instead of rendering a PNG, and inserts ---or replaces--- a ~#+RESULTS:~
    holding it as a ~#+begin_src dot~ block, so the source is preserved. For a block where we always want
-   dot, ~:C-c_C-c dot~ in its header makes plain ~C-c C-c~ show dot, and ~C-u C-c C-c~ toggles back to
-   PNG: the prefix always flips whatever the block's default is.
+   dot, ~:C-c_C-c dot~ in its header makes plain ~C-c C-c~ show dot, and ~C-u C-c C-c~ toggles back to PNG:
+   the prefix always flips whatever the block's default is.
 
 5. The image ~C-c C-c~ renders is clickable. Hovering over a node or cluster shows its tooltip ---its
    footnotes and notes--- and a click follows it: to its link's target, when its item has a web, file, or
-   ~<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>~ link; else to the item itself, in the ~#+begin_graph~ block. Graphviz writes an image
-   map (~-Tcmapx~) beside the PNG, from the same layout, and its areas become the image's ~:map~; it is
-   scaled as the image is, say by ~org-image-actual-width~. The map lives only as long as the image does:
-   an image Org redisplays itself, say on reopening the file, is clickable again after another ~C-c C-c~.
+   ~<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>~ link; else to the item itself, in the ~#+begin_graph~ block. Graphviz writes an image map
+   (~-Tcmapx~) beside the PNG, from the same layout, and its areas become the image's ~:map~; it is scaled
+   as the image is, say by ~org-image-actual-width~. The map lives only as long as the image does: an image
+   Org redisplays itself, say on reopening the file, is clickable again after another ~C-c C-c~.
 
-6. Big graphs make big PNGs; ~(setq org-image-actual-width 700)~ keeps them on screen.
+6. Big graphs make big PNGs; ~(setq org-image-actual-width 700)~ keeps them on screen. In an HTML export,
+   a graph shrinks to the page's width by itself, and a click toggles its full size.
+
+7. In a ~:demo live~ graph, as throughout this README, ~C-c C-c~ still renders the graph: a live demo keeps
+   no snapshot to take.
 
 <span style="color: #0184bc; font-weight: bold;">* Reference</span>
 
@@ -1173,42 +1197,35 @@ that taste; the examples above avoid them, but they are fully supported.
 
 An inline link's arc is styled by ~:edge[T].KEY~, naming the arc by where it goes; ~:edge[T].:inherit~
 applies a template to it. A row with no ~<span style="text-decoration: underline;"><a href="T">[[T]]</a></span>~ link in the item's text is an error:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ <span style="text-decoration: underline;">&lt;&lt;lam&gt;&gt;</span> &#955;-calculus
-+ Lisp <span style="text-decoration: underline;"><a href="lam">[[lam][borrows]]</a></span>
-  | :edge[lam].style | dotted |
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>Lisp -&gt; lam [ label=borrows style=dotted ];
-<span style="color: #a0a1a7;">#+end_src
+<span style="color: #a0a1a7;">#+begin_graph :demo live
+</span>+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
+  + term
+    + factor <span style="text-decoration: underline;"><a href="expr">[[expr][( &#8230; )]]</a></span>
+      | :edge[expr].style | dotted |
+      | :edge[expr].color | red    |
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 A ~| shape | cluster |~ row makes an item a cluster, as ~#+begin_cluster~ does. Its children are then its
 members rather than arc targets, so arcs out of them are inline links, styled as above:
-<span style="color: #a0a1a7;">#+begin_src org
-</span>+ Emacs
-  + Packages
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR :demo live
+</span>+ compiler
+  + Front end
     | shape | cluster |
-    + Org
-    + Magit
-<span style="color: #a0a1a7;">#+end_src
-</span><span style="color: #a0a1a7;">#+begin_src dot
-</span>graph [ compound=true ]
-subgraph cluster_Packages { label=Packages Org; Magit; }
-Emacs -&gt; Org [ lhead=cluster_Packages ];
-<span style="color: #a0a1a7;">#+end_src
+    + lexer <span style="text-decoration: underline;"><a href="parser">[[parser]]</a></span>
+    + <span style="text-decoration: underline;">&lt;&lt;parser&gt;&gt;</span> parser
+<span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #0184bc; font-weight: bold;">* Gallery</span>
 
-The demo is done; here is what it adds up to. Each graph below is live: ~C-c C-c~ in it, and change
-things.
+The demo is done; here is what it adds up to, beyond parsing. Each graph below is live: ~C-c C-c~ in it,
+and change things. Each fits the page; click one to see it full size.
 
 <span style="color: #8b4513; font-weight: bold;">** A decision tree</span>
 
-A decision tree is a tree whose nodes come in kinds: decisions we make (boxes), chances we take
-(circles), and outcomes (bare text), with each chance's arcs labelled by how likely it is. Templates name
-the kinds, description terms label the arcs, and an item's ~#+edge:~ dashes every arc of chance beneath
-it:
-<span style="color: #a0a1a7;">#+begin_graph Should our package go lexical? :rankdir LR
+A decision tree is a tree whose nodes come in kinds: decisions we make (boxes), chances we take (circles),
+and outcomes (bare text), with each chance's arcs labelled by how likely it is. Templates name the kinds,
+description terms label the arcs, and an item's ~#+edge:~ dashes every arc of chance beneath it:
+<span style="color: #a0a1a7;">#+begin_graph Should our package go lexical? :rankdir LR :demo live
 </span>#+name: decision
 | shape | box |
 #+name: chance
@@ -1233,14 +1250,13 @@ The chance node is all target: ~<span style="text-decoration: underline;">&lt;&l
 
 A chapter of S&#246;nke Ahrens' <span style="font-style: italic;">/How to Take Smart Notes/</span>, as we would outline it while reading. Each
 connective, such as &#8220;is an aid for&#8221;, sits on its arc, as a description term; ordered steps are numbered
-arcs; ~:smart_kind:~ ---a template named outside the graph--- marks the three kinds of note; and
-~<span style="text-decoration: underline;"><a href="fleeting">[[fleeting]]</a></span>~ arcs back to a note met earlier:
-<span style="color: #a0a1a7;">#+name: smart_kind</span>
+arcs; ~:smart_kind:~ marks the three kinds of note; and ~<span style="text-decoration: underline;"><a href="fleeting">[[fleeting]]</a></span>~ arcs back to a note met earlier:
+<span style="color: #a0a1a7;">#+begin_graph How to Take Smart Notes ---S&#246;nke Ahrens :rankdir LR :wrap 24 :directed nil :fontname Helvetica :node.shape box :node.style "rounded,filled" :node.fillcolor white :node.fontname Helvetica :edge.fontname Helvetica :edge.fontsize 10 :edge.fontcolor gray30 :edge.color gray60 :demo live
+</span>#+name: smart_kind
 | shape     | note      |
 | fillcolor | "#fff5cc" |
 
-<span style="color: #a0a1a7;">#+begin_graph How to Take Smart Notes ---S&#246;nke Ahrens :rankdir LR :wrap 24 :directed nil :fontname Helvetica :node.shape box :node.style "rounded,filled" :node.fillcolor white :node.fontname Helvetica :edge.fontname Helvetica :edge.fontsize 10 :edge.fontcolor gray30 :edge.color gray60
-</span>+ <span style="text-decoration: underline;">&lt;&lt;notes&gt;&gt;</span> <span style="font-weight: bold;">*Smart notes*</span>
++ <span style="text-decoration: underline;">&lt;&lt;notes&gt;&gt;</span> <span style="font-weight: bold;">*Smart notes*</span>
   + Writing
     + <span style="font-weight: bold;">is an aid for ::</span> thinking
     + <span style="font-weight: bold;">is an aid for ::</span> studying
@@ -1281,20 +1297,9 @@ arcs; ~:smart_kind:~ ---a template named outside the graph--- marks the three ki
 </span>
 <span style="color: #8b4513; font-weight: bold;">** Records, hands on</span>
 
-An item's ~#+record:~ table is its label, drawn as laid out; ~<span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span>~ makes ~The Middle~ a port, whose
-link is an arc from it:
-<span style="color: #a0a1a7;">#+begin_graph
-</span>+ struct1
-  #+record:
-  | left | <span style="text-decoration: underline;">&lt;&lt;mid&gt;&gt;</span> The Middle <span style="text-decoration: underline;"><a href="struct2::one">[[</a><a href="struct2::one">struct2::one]</a><a href="struct2::one">]</a></span> | right |
-+ struct2
-  #+record:
-  | <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> one | two |
-<span style="color: #a0a1a7;">#+end_graph
-</span>
-Spans replace ~{ }~ nesting: ~^~ continues the cell above, and an empty cell the one to its left. A
-multi-word port is reached by its words, and a reference's ~:edge.KEY~ rows style the arc into it:
-<span style="color: #a0a1a7;">#+begin_graph
+Records are the place to play: change a ~<span style="text-decoration: underline;">&lt;&lt;port&gt;&gt;</span>~, add a ~^~, and press ~C-c C-c~. A multi-word port is
+reached by its words, and a reference's ~:edge.KEY~ rows style the arc into it:
+<span style="color: #a0a1a7;">#+begin_graph :demo live
 </span>+ struct3
   #+record:
   | hello \\ world | b |                        |   | g | h |
@@ -1307,8 +1312,10 @@ multi-word port is reached by its words, and a reference's ~:edge.KEY~ rows styl
     | :edge.color | #f9e2af |
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-Next comes a section whose whole text is a graph, by its ~:graph_Lineage:~ tag; so it has no prose of
-its own, lest the prose become part of the graph.
+Here ~b~ and ~f~ span three columns, and ~hello~, ~g~, and ~h~ three rows.
+
+Next comes a section whose whole text is a graph, by its ~:graph_Lineage:~ tag; so it has no prose of its
+own, lest the prose become part of the graph.
 
 <span style="color: #8b4513; font-weight: bold;">** A section is a graph </span><span style="color: #8b4513; font-weight: bold;">:graph_Lineage:</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
@@ -1323,16 +1330,17 @@ its own, lest the prose become part of the graph.
 
 <span style="color: #8b4513; font-weight: bold;">** From &#955;-calculus to Emacs Lisp</span>
 
-Now everything at once: a header drawer's worth of ~#+graph:~, ~#+node:~, and ~#+edge:~ tables;
-~#+rank:~ lines; arc templates by tags, sampled in a legend; clusters; and labels broken by ~\\~.
-Its palette is Catppuccin's; the colours it repeats are named once, by Org's own macros:
-<span style="color: #a0a1a7;">#+macro: yellow #f9e2af</span>
-<span style="color: #a0a1a7;">#+macro: mauve #cba6f7</span>
-<span style="color: #a0a1a7;">#+macro: surface #45475a</span>
-<span style="color: #a0a1a7;">#+macro: sky #89dceb</span>
+Now everything at once: ~#+graph:~, ~#+node:~, and ~#+edge:~ tables; ~#+rank:~ lines; arc templates by
+tags, sampled in a legend; clusters; and labels broken by ~\\~. Its palette is Catppuccin's; the colours
+it repeats are named once, by Org's own macros:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>#+macro: yellow #f9e2af
+#+macro: mauve #cba6f7
+#+macro: surface #45475a
+#+macro: sky #89dceb
 
-<span style="color: #a0a1a7;">#+begin_graph :file images/lambda-to-emacs-fun.png
-</span>#+graph:
+#+begin_graph :file images/lambda-to-emacs-fun.png
+#+graph:
 | rankdir  | TB                            |
 | label    | From &#955;-Calculus to Emacs Lisp |
 | labelloc | t                             |
@@ -1443,17 +1451,15 @@ Its palette is Catppuccin's; the colours it repeats are named once, by Org's own
 - <span style="font-weight: bold;">:inspiration:</span><span style="font-weight: bold;"> ::</span> inspiration
 - <span style="font-weight: bold;">:equivalence:</span><span style="font-weight: bold;"> ::</span> equivalence
 #+end_cluster
-<span style="color: #a0a1a7;">#+end_graph
-</span><span style="color: #a0a1a7;">#+RESULTS:</span>
-<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs-fun.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs-fun.png</a></span>
-
+#+end_graph
+<span style="color: #a0a1a7;">#+end_org
+</span>
 <span style="color: #8b4513; font-weight: bold;">** The same, spelled long-hand</span>
 
-The graph above, as it was first written, before templates and legends existed: every arc styled by
-its own ~:edge.KEY~ rows, every colour spelled out, its settings folded in a ~:SETTINGS:~ drawer, and a
-legend of plain-text nodes. Comparing the two is demonstrative of what each feature saves.
-
-<span style="color: #a0a1a7;">#+begin_graph :file images/lambda-to-emacs.png
+The graph above, as it was first written, before templates and legends existed: every arc styled by its
+own ~:edge.KEY~ rows, every colour spelled out, its settings folded in a ~:SETTINGS:~ drawer, and a legend
+of plain-text nodes. Comparing the two is demonstrative of what each feature saves.
+<span style="color: #a0a1a7;">#+begin_graph :file images/lambda-to-emacs.png :demo live
 </span><span style="font-weight: bold;">:SETTINGS:</span>
 #+graph:
 | rankdir  | TB                            |
@@ -1575,9 +1581,7 @@ legend of plain-text nodes. Comparing the two is demonstrative of what each feat
 + Dotted = Equivalence
 #+end_cluster
 <span style="color: #a0a1a7;">#+end_graph
-</span><span style="color: #a0a1a7;">#+RESULTS:</span>
-<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs.png">https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/lambda-to-emacs.png</a></span>
-
+</span>
 <span style="color: #8b4513; font-weight: bold;">** Karbala ---the family of the Prophet</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:CREATED:</span>  <span style="color: #383a42; background-color: #fafafa; text-decoration: underline;">[2026-05-20 Wed]</span>
@@ -1588,9 +1592,9 @@ Hussain ibn Ali at Karbala: his wives, his children, the antagonists (Muawiya, Y
 and a legend. It is demonstrative of most of this README at once: a ~:SETTINGS:~ drawer, ~#+begin_cluster~
 blocks with scoped ~#+node:~ overrides, ~#+rank:~ groupings, diamond shapes for key Karbala actors, ~\\~
 multi-line labels, footnote tooltips, and templates for the pink marriage arcs and red martyrdom arrows
----all without a single line of raw dot.
+---all without a single line of raw dot. It is a big graph: click it to see it full size.
 
-<span style="color: #a0a1a7;">#+begin_graph :file ~/Downloads/karbala.png :svg t
+<span style="color: #a0a1a7;">#+begin_graph :demo live
 </span><span style="font-weight: bold;">:SETTINGS:</span>
 #+graph:
 | label    | The Karbala Tragedy |
@@ -2157,8 +2161,6 @@ multi-line labels, footnote tooltips, and templates for the pink marriage arcs a
 #+rank: mamun mutasim
 #+rank: mutawakkil mutamid
 <span style="color: #a0a1a7;">#+end_graph
-</span><span style="color: #a0a1a7;">#+RESULTS:</span>
-<span style="text-decoration: underline;"><a href="file:~/Downloads/karbala.png">file:~/Downloads/karbala.png</a></span>
-</pre>
+</span></pre>
   </body>
 </html>

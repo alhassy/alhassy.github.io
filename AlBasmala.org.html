@@ -483,6 +483,16 @@ fixes them in the vendored copy:
    =<span style="text-decoration: underline;"><a href="https://raw.githubusercontent.com/alhassy/holy-books/main/images/short_example.png">[[https://raw.githubusercontent.com/alhassy/holy-books/main/images/short_example.png]]</a></span>=,
    which Org still inlines as an image.  A local-path source keeps its links; in due time,
    we may resolve them against the source's git remote.
+
+   An image <span style="font-style: italic;">/drawn by a graph/</span> is the exception: Graphviz reads its =image= from a file, never
+   a URL, and a URL in a graph is a mere hyperlink.  So, within a =#+begin_graph=, a
+   description-less image link is fetched into the git-ignored =.redirect-images/=, mirrored by
+   its URL, and points there; e.g.,
+   =<span style="text-decoration: underline;"><a href="file:images/inference-rules.png">[[file:images/inference-rules.png]]</a></span>= &#8614;
+   =<span style="text-decoration: underline;"><a href="file:/&#8230;/blog/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png">[[file:/&#8230;/blog/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png]]</a></span>=.
+   That path is meaningless to a reader, so =blog--mirrored-images-online=, a final-output
+   filter, turns each mirrored path back into its URL ---in the =&lt;svg&gt;='s =xlink:href=, for the
+   browser, and in a =:demo='s source, which then reads as any other re-rooted link.
 2. <span style="font-weight: bold;">*File-level keywords.*</span> The temp file already opens with the heading's =#+title:= and
    friends; an included =#+title: holy-books= would be concatenated onto ours, and
    =#+options: toc:nil= would hide our &#926; table of contents.  So we axe =#+title:=,
@@ -626,11 +636,41 @@ vendored for CI.  Relative path; must end with a trailing slash."</span>)
 (<span style="color: #a626a4;">defconst</span> <span style="color: #8b4513;">blog--redirect-axed-keywords</span> '(<span style="color: #50a14f;">"TITLE"</span> <span style="color: #50a14f;">"SUBTITLE"</span> <span style="color: #50a14f;">"AUTHOR"</span> <span style="color: #50a14f;">"DATE"</span> <span style="color: #50a14f;">"OPTIONS"</span> <span style="color: #50a14f;">"EXPORT_FILE_NAME"</span> <span style="color: #50a14f;">"TOC"</span>)
   <span style="color: #50a14f; font-style: italic;">"A :REDIRECT: source's file-level keywords that would clash with its article's synthetic ones."</span>)
 
+(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">blog-redirect-images-subdir</span> <span style="color: #50a14f;">".redirect-images/"</span>
+  <span style="color: #50a14f; font-style: italic;">"Git-ignored subdirectory of `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog-posts-directory</span><span style="color: #50a14f; font-style: italic;">' mirroring each image a :REDIRECT:'s graphs draw, by its URL;
+e.g., <a href="https://raw&#8230;/images/x.png">https://raw&#8230;/images/x.png</a> &#8614; .redirect-images/raw&#8230;/images/x.png."</span>)
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--graph-image-p</span> (link)
+  <span style="color: #50a14f; font-style: italic;">"LINK &#8614; whether it is a description-less link to an image within a #+begin_graph, which Graphviz draws from a file."</span>
+  (<span style="color: #a626a4;">and</span> (not (org-element-property <span style="color: #e44649;">:contents-begin</span> link))
+       (string-match-p <span style="color: #50a14f;">"\\.</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">(</span><span style="color: #50a14f;">png</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">jpe?g</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">gif</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">|</span><span style="color: #50a14f;">svg</span><span style="color: #000000; font-weight: bold;">\\</span><span style="color: #000000; font-weight: bold;">)</span><span style="color: #50a14f;">\\'"</span> (org-element-property <span style="color: #e44649;">:path</span> link))
+       (seq-some (<span style="color: #a626a4;">lambda</span> (it) (<span style="color: #a626a4;">and</span> (eq 'special-block (org-element-type it))
+                                   (string-equal-ignore-case <span style="color: #50a14f;">"graph"</span> (org-element-property <span style="color: #e44649;">:type</span> it))))
+                 (org-element-lineage link))))
+
+(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--mirrored-images-online</span> (output _backend _info)
+  <span style="color: #50a14f; font-style: italic;">"OUTPUT whose mirrored images &#8614; their URLs, for the browser; e.g., an &lt;svg&gt;'s xlink:href=\"/&#8230;/.redirect-images/raw&#8230;/x.png\"
+&#8614; xlink:href=\"<a href="https://raw&#8230;/x.png">https://raw&#8230;/x.png</a>\", and a :demo's <a href="file:/&#8230;/.redirect-images/raw&#8230;/x.png">[[file:/&#8230;/.redirect-images/raw&#8230;/x.png]]</a> &#8614; <a href="https://raw&#8230;/x.png">[[https://raw&#8230;/x.png]]</a>.
+Any machine's mirror, so a vendored copy kept from another machine's build reads right too."</span>
+  (<span style="color: #a626a4;">with-temp-buffer</span>
+    (insert output)
+    (goto-char (point-min))
+    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A literal search, then a step back over the path: a regexp opening with [</span><span style="color: #a0a1a7; font-weight: bold;">^</span><span style="color: #a0a1a7;">&#8230;]* overflows Emacs's matcher on an
+</span>    <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">inline base64 image, a run of 100KB sans quote or space.
+</span>    (<span style="color: #a626a4;">while</span> (search-forward (concat <span style="color: #50a14f;">"/"</span> blog-redirect-images-subdir) nil t)
+      (<span style="color: #a626a4;">let</span> ((end (point)))
+        (goto-char (match-beginning 0))
+        (skip-chars-backward <span style="color: #50a14f;">"^\"'&lt;&gt;[(=:[:space:]"</span>)
+        (<span style="color: #a626a4;">when</span> (looking-back <span style="color: #50a14f;">"file:"</span> (- (point) 5)) (backward-char 5))
+        (delete-region (point) end)
+        (insert <span style="color: #50a14f;">"<a href="https://">https://</a>"</span>)))
+    (buffer-string)))
+
 (<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">blog--prepare-redirect</span> (file redirect)
   <span style="color: #50a14f; font-style: italic;">"Make FILE, vendored from REDIRECT, include-ready; e.g., when REDIRECT is a URL, <a href="file:images/x.png">file:images/x.png</a> &#8614; URL-dir/images/x.png.
 
 Axes `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--redirect-axed-keywords</span><span style="color: #50a14f; font-style: italic;">', re-roots relative file links and #+fileimage: at REDIRECT's
-directory when it's a URL, and, in a container, points <a href="#id">[[#id]]</a> at the article holding id when
+directory when it's a URL ---save that an image a graph draws is mirrored locally, by `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">blog--graph-image-p</span><span style="color: #50a14f; font-style: italic;">'---, and, in a container, points <a href="#id">[[#id]]</a> at the article holding id when
 that's another one; see &#167;&#8220;Making a source include-ready&#8221;."</span>
   (<span style="color: #a626a4;">with-temp-buffer</span>
     (insert-file-contents file)
@@ -673,6 +713,17 @@ that's another one; see &#167;&#8220;Making a source include-ready&#8221;."</spa
               (delete-region beg (- end (org-element-property <span style="color: #e44649;">:post-blank</span> el)))
               (goto-char beg)
               (insert (format <span style="color: #50a14f;">"<a href="%s#%s">[[%s#%s][%s]]</a>"</span> (blog--url (map-elt homes path)) path desc))))
+           ((<span style="color: #a626a4;">and</span> base (equal type <span style="color: #50a14f;">"file"</span>) (not (file-name-absolute-p path)) (blog--graph-image-p el))
+            <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Graphviz draws an image from a file, never a URL: mirror it; `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">blog--mirrored-images-online</span><span style="color: #a0a1a7;">' undoes this.
+</span>            (<span style="color: #a626a4;">let*</span> ((url (url-expand-file-name path base))
+                   (local (expand-file-name (concat blog-redirect-images-subdir (replace-regexp-in-string <span style="color: #50a14f;">"\\`https?://"</span> <span style="color: #50a14f;">""</span> url))
+                                            blog-posts-directory)))
+              (make-directory (file-name-directory local) t)
+              (<span style="color: #a626a4;">condition-case</span> err (blog--fetch-url url local)
+                (<span style="font-weight: bold;">error</span> (message <span style="color: #50a14f;">"=&gt; Couldn't mirror %s, so its graph draws no image: %s"</span> url (error-message-string err))))
+              (goto-char beg)
+              (search-forward (org-element-property <span style="color: #e44649;">:raw-link</span> el) end)
+              (replace-match (concat <span style="color: #50a14f;">"file:"</span> local) t t)))
            ((<span style="color: #a626a4;">and</span> base (equal type <span style="color: #50a14f;">"file"</span>) (not (file-name-absolute-p path)))
             <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Expand before searching: `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">url-expand-file-name</span><span style="color: #a0a1a7;">' clobbers the match data.
 </span>            (<span style="color: #a626a4;">let</span> ((url (url-expand-file-name path base)))
@@ -1993,7 +2044,7 @@ That global aside, &#12308;<a href="kbd:C-c_C-e_h_h">C-c</a> <a href="kbd:C-c_C-
 </span>(org-export-define-derived-backend 'blog-page 'html
   <span style="color: #e44649;">:options-alist</span> '((<span style="color: #e44649;">:html-prefer-user-labels</span> nil nil t))
   <span style="color: #e44649;">:filters-alist</span> '((<span style="color: #e44649;">:filter-parse-tree</span> . blog--stable-headline-ids)
-                   (<span style="color: #e44649;">:filter-final-output</span> . blog--no-random-ids)))
+                   (<span style="color: #e44649;">:filter-final-output</span> blog--no-random-ids blog--mirrored-images-online)))
 
 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Never export a broken link; e.g., a `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">doc:</span><span style="color: #a0a1a7;">' link to nothing errors rather than shipping an empty tooltip.
 </span>(<span style="color: #a626a4;">setq</span> org-export-with-broken-links nil)
@@ -3723,7 +3774,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
@@ -3732,9 +3783,14 @@ jobs:
         with:
           version: 30.1
 
-      # org-special-block-extras' graph block, in its manual, draws with Graphviz.
+      # org-special-block-extras' graph block, in its manual, draws with Graphviz.  The runner image's apt index
+      # goes stale as Ubuntu supersedes packages ---then installs 404--- so we refresh it first, for poppler too.
+      # Since Ubuntu 26.04, as in Debian, unflatten ---which :unflatten N runs--- ships apart, in graphviz-tools.
       - name: Install Graphviz
-        run: sudo apt-get install -y graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+          if apt-cache show graphviz-tools &gt; /dev/null 2&gt;&amp;1; then sudo apt-get install -y graphviz-tools; fi
 
       # &#8230; and, under :smartdiagram, typesets with pdflatex, then pdftoppm (poppler) makes the PNG.
       # tlmgr resolves no dependencies, so we list what a smartdiagram's standalone document loads;
@@ -3761,12 +3817,17 @@ jobs:
       # (restore-keys) and, after the upgrade below, saved anew.  A fixed key would hit forever and
       # never be re-saved, freezing our packages at whatever MELPA had when the key last changed.
       - name: Cache Emacs packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.emacs.d/elpa
           key: elpa-${{ runner.os }}-emacs30.1-${{ github.run_id }}
           restore-keys: elpa-${{ runner.os }}-emacs30.1-
 
+      # org-special-block-extras comes from GitHub master, not MELPA: its manual, which we publish
+      # via a :REDIRECT: to master, uses features that MELPA's build may not have caught up to yet.
+      # So we axe any cached copy and clone master afresh, ~2s; package-vc-upgrade-all pulls async, so
+      # in batch it never lands.
+      # TODO: Install org-special-block-extras from MELPA again, once it stabilises.
       - name: Install Emacs package dependencies
         run: |
           emacs --batch \
@@ -3774,7 +3835,9 @@ jobs:
             --eval "(setq package-archives '((\"gnu\" . \"<a href="https://elpa.gnu.org/packages/">https://elpa.gnu.org/packages/</a>\") (\"melpa\" . \"<a href="https://melpa.org/packages/">https://melpa.org/packages/</a>\")) package-install-upgrade-built-in t)" \
             --eval "(package-initialize)" \
             --eval "(package-refresh-contents)" \
-            --eval "(dolist (p '(dash f s htmlize org-special-block-extras)) (unless (package-installed-p p) (package-install p)))" \
+            --eval "(dolist (p '(dash f s htmlize)) (unless (package-installed-p p) (package-install p)))" \
+            --eval "(dolist (d (cdr (assq 'org-special-block-extras package-alist))) (package-delete d t))" \
+            --eval "(package-vc-install (quote (org-special-block-extras :url \"<a href="https://github.com/alhassy/org-special-block-extras">https://github.com/alhassy/org-special-block-extras</a>\" :lisp-dir \"lisp\")))" \
             --eval "(package-upgrade-all)"
 
       - name: Build all articles
@@ -3789,6 +3852,7 @@ jobs:
             --eval "(defun not-currently-working-with (&amp;optional _) \"\")" \
             --eval "(defun currently-working-with (&amp;optional _) \"\")" \
             --eval "(setq org-confirm-babel-evaluate nil)" \
+            --eval "(setq org-defblock-evaluate-switches t)" \
             --eval "(setq blog-publish-directory \"./public/\")" \
             --eval "(setq blog-posts-directory \"./\")" \
             --eval "(require 'ob-tangle)" \
