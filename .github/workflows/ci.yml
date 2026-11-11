@@ -36,18 +36,25 @@ jobs:
         with:
           version: 30.1
 
-      # org-special-block-extras' graph block, in its manual, draws with Graphviz.  The runner image's apt index
-      # goes stale as Ubuntu supersedes packages ---then installs 404--- so we refresh it first, for poppler too.
-      # Since Ubuntu 26.04, as in Debian, unflatten ---which :unflatten N runs--- ships apart, in graphviz-tools.
-      - name: Install Graphviz
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz
-          if apt-cache show graphviz-tools > /dev/null 2>&1; then sudo apt-get install -y graphviz-tools; fi
+      # org-special-block-extras' graph block, in its manual, draws with Graphviz ---unflatten included, which
+      # :unflatten N runs--- and, under :smartdiagram, pdftoppm (poppler) turns pdflatex's PDF into a PNG.
+      # We take both from conda-forge rather than apt: Ubuntu's mirrors go stale ---installs 404--- or vanish
+      # from the runners' DNS outright, as on 2026-11-11, failing the whole build ere it starts.
+      # The env's bin/ joins PATH, so the Emacs steps below find dot and pdftoppm sans activation.
+      - name: Install Graphviz and poppler, from conda-forge
+        id: conda
+        uses: mamba-org/setup-micromamba@v3
+        with:
+          environment-name: blog
+          create-args: graphviz poppler
+          condarc: |
+            channels: [conda-forge]
+          cache-environment: true
+          post-cleanup: none
+      - run: echo "${{ steps.conda.outputs.environment-path }}/bin" >> "$GITHUB_PATH"
 
-      # … and, under :smartdiagram, typesets with pdflatex, then pdftoppm (poppler) makes the PNG.
-      # tlmgr resolves no dependencies, so we list what a smartdiagram's standalone document loads;
-      # cached, a minimal TeX Live costs seconds rather than texlive-full's gigabytes.
+      # A smartdiagram typesets with pdflatex.  tlmgr resolves no dependencies, so we list what a smartdiagram's
+      # standalone document loads; cached, a minimal TeX Live costs seconds rather than texlive-full's gigabytes.
       - name: Install a minimal TeX Live, for smartdiagrams
         uses: TeX-Live/setup-texlive-action@v4
         with:
@@ -62,9 +69,6 @@ jobs:
             etoolbox
             varwidth
             xcolor
-
-      - name: Install poppler, for pdftoppm
-        run: sudo apt-get install -y poppler-utils
 
       # A key unique to each run never hits exactly, so the newest elpa-…-* cache is restored
       # (restore-keys) and, after the upgrade below, saved anew.  A fixed key would hit forever and
