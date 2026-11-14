@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-11-14 Sat 21:56 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>org-special-block-extras: a minimal working example</title>
+<meta name="description" content="A tiny Lisp function, a peek at its values, a graph of its loop, and a proof of what it computes." />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-c:before { content: 'C'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'JavaScript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<style>
+/* tooltips.css ---The look of tooltips.js: tooltipster's Punk theme, a dark box over a pink rule. */
+
+/* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
+.tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
+/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+mjx-container .tooltip { color: inherit; }
+
+.tooltip-box {
+  position: absolute; z-index: 1000;
+  max-width: min(40em, calc(100vw - 16px)); /* A phone's screen, less the margins `place' keeps. */
+  padding: 8px 16px; border-radius: 5px; border-bottom: 3px solid #f71169;
+  background: #2a2a2a; color: #fff; font-size: 0.9em; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow-wrap: anywhere;
+  animation: tooltip-grow 0.15s ease-out; transform-origin: center bottom;
+}
+.tooltip-box[hidden] { display: none; }
+.tooltip-box a { color: #ff8ab8; }
+.tooltip-box p { margin: 0.4em 0; }
+/* A docstring keeps its line breaks and indentation, yet wraps rather than overflowing a phone's screen. */
+.tooltip-box pre { margin: 0; white-space: pre-wrap; background: none; color: inherit; border: none; box-shadow: none; }
+
+@keyframes tooltip-grow { from { opacity: 0; transform: scale(0.8); } }
+</style>
+<script>
+// tooltips.js ---Tooltips for org-special-block-extras: hover on a desktop, tap on a phone.
+//
+// By way of example, the exported Org `[[doc:cat]]` becomes
+//
+//     <abbr class="tooltip" tabindex="0">Category Theory<template><p>A theory of composition.</p></template></abbr>
+//
+// and we show the <template>'s HTML in one shared box, positioned beside the word.  The box is ordinary HTML, so its
+// links are clickable: hovering from the word into the box keeps it open.
+//
+// We replace tooltipster ---and the jQuery it needs--- since it opened only on mouseenter, which no phone fires, and
+// fetched its bundle cross-origin per page; see https://github.com/alhassy/org-special-block-extras/issues/53.
+// This file is inlined into each exported page, sans any request.
+//
+// | Action                                   | Effect                    |
+// |------------------------------------------+---------------------------|
+// | Hover a word, with a mouse               | Open, after a beat        |
+// | Leave the word and the box               | Close, after a beat       |
+// | Tap, or click, a word                    | Open; again to close      |
+// | Tap, or click, anywhere else; or Escape  | Close                     |
+// | Tab onto a word                          | Open; Escape to close     |
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.className = 'tooltip-box';
+  box.setAttribute('role', 'tooltip');
+  box.hidden = true;
+  document.body.append(box);
+
+  let owner = null; // The .tooltip whose box is open, if any.
+  let timer;        // A pending open or close; the newest intent wins.
+  const later = (action, ms) => { clearTimeout(timer); timer = setTimeout(action, ms); };
+
+  const open = (word) => {
+    clearTimeout(timer);
+    if (owner === word) return;
+    close();
+    owner = word;
+    box.innerHTML = tipOf(word)?.innerHTML ?? '';
+    box.hidden = false;
+    place(word);
+  };
+
+  const close = () => { clearTimeout(timer); owner = null; box.hidden = true; };
+
+  // A word's tip is its <template>; else, in maths or a graph's <svg>, which keep no <template> within, the one its
+  // osbe-tip-ID class names, beside them: \class{tooltip osbe-tip-g1}{x} … <template id="osbe-tip-g1">.
+  const tipOf = (word) => word.querySelector(':scope > template')
+    ?? document.getElementById([...word.classList].find((c) => c.startsWith('osbe-tip-')));
+
+  // Above the word when there is room, else below; centred on it, yet never past the screen's edges ---a phone's
+  // screen being narrower than most tooltips.
+  const place = (word) => {
+    const at = word.getBoundingClientRect(), gap = 8;
+    const centred = at.left + at.width / 2 - box.offsetWidth / 2;
+    const left = Math.min(Math.max(gap, centred), innerWidth - box.offsetWidth - gap);
+    const above = at.top > box.offsetHeight + gap;
+    box.style.left = `${left + scrollX}px`;
+    box.style.top = `${(above ? at.top - box.offsetHeight - gap : at.bottom + gap) + scrollY}px`;
+  };
+
+  const wordAt = (node) => node instanceof Element ? node.closest('.tooltip') : null;
+
+  // Hover is for mice alone: a phone fires pointerover on each tap, which the click handler below already serves.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const word = wordAt(e.target);
+    if (word) later(() => open(word), 100);
+    else if (box.contains(e.target)) clearTimeout(timer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse' || !owner) return;
+    const into = e.relatedTarget;
+    if (!(box.contains(into) || wordAt(into) === owner)) later(close, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (box.contains(e.target)) return; // A link in the box does as links do.
+    const word = wordAt(e.target);
+    if (word && word !== owner) open(word);
+    else close();
+  });
+
+  // A tap focuses the word too; only keyboard focus, which is visible, opens it ---else the tap's click would close it.
+  document.addEventListener('focusin', (e) => {
+    const word = wordAt(e.target);
+    if (word?.matches(':focus-visible')) open(word);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // A phone resizes the page whenever its address bar slides away mid-scroll; so we follow the word, not close.
+  addEventListener('resize', () => owner && place(owner));
+});
+</script>
+<template id="osbe-tip-hint"><p>Click to hide this hint, or to show it again; shift-click, every hint of this proof.
+A link within it is followed instead.</p></template>
+<style>
+  .osbe-hint { cursor: pointer; }
+  /* A hint is plainly a hint ---prose, maybe coloured--- so it wears no tooltip's dotted underline. */
+  .tooltip.osbe-hint { border-bottom: none; }
+  .osbe-hint-fold, .osbe-hint.osbe-folded .osbe-hint-body { display: none; }
+  .osbe-hint.osbe-folded .osbe-hint-fold { display: inline-block; }
+</style>
+<script>
+  // A click on a math block's hint folds it to [⋯], or unfolds it, as TAB does in Emacs; a shift-click folds every
+  // hint of its proof, unless all are folded, whence it unfolds them, as C-TAB does.  A click on a link within a hint,
+  // such as a [[NAME]] citing a tag, follows it instead.
+  document.addEventListener('click', (event) => {
+    const hint = event.target.closest?.('.osbe-hint');
+    if (!hint || event.target.closest('a')) return;
+    if (!event.shiftKey) return hint.classList.toggle('osbe-folded');
+    const hints = [...(hint.closest('mjx-container') ?? document).querySelectorAll('.osbe-hint')];
+    const fold = hints.some((h) => !h.classList.contains('osbe-folded'));
+    hints.forEach((h) => h.classList.toggle('osbe-folded', fold));
+  });
+</script>
+          <style>
+          /* From: https://endlessparentheses.com/public/css/endless.css */
+          /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+          kbd
+          {
+            -moz-border-radius: 6px;
+            -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            -webkit-border-radius: 6px;
+            -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+            color: #333;
+            display: inline-block;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 80%;
+            font-weight: normal;
+            line-height: inherit;
+            margin: 0 .1em;
+            padding: .08em .4em;
+            text-shadow: 0 1px 0 #fff;
+            word-spacing: -4px;
+
+            box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+          }
+          </style></head>
+<body>
+<div id="content" class="content">
+<div class="header">
+  <a href="https://alhassy.github.io/" class="logo">Life & Computing Science</a>
+  <br/>
+  <a href="https://alhassy.com/projects">Projects</a>
+  <a href="https://alhassy.com/about">About</a>
+  <a href="https://alhassy.com/AlBasmala">AlBasmala</a>
+  <br/><a href="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml"><img style="vertical-align:middle" alt="build status" src="https://github.com/alhassy/alhassy.github.io/actions/workflows/ci.yml/badge.svg?branch=master"></a>
+</div><meta name="author" content="Musa Al-hassy">
+   <meta name="referrer" content="no-referrer"><link href="https://alhassy.com/resources/usual-org-front-matter.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.com/resources/blog-banner.css" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" /><link rel="icon" href="https://alhassy.com/resources/favicon.png"><script type="text/javascript">
+  /*
+  @licstart  The following is the entire license notice for the
+  JavaScript code in this tag.
+  
+  Copyright (C) 2012-2020 Free Software Foundation, Inc.
+  
+  The JavaScript code in this tag is free software: you can
+  redistribute it and/or modify it under the terms of the GNU
+  General Public License (GNU GPL) as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.  The code is distributed WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+  
+  As additional permission under GNU GPL version 3 section 7, you
+  may distribute non-source (e.g., minimized or compacted) forms of
+  that code without the copy of the GNU GPL normally required by
+  section 4, provided you include this license notice and a URL
+  through which recipients can access the Corresponding Source.
+  
+  
+  @licend  The above is the entire license notice
+  for the JavaScript code in this tag.
+  */
+  <!--/*--><![CDATA[/*><!--*/
+   function CodeHighlightOn(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(null != target) {
+       elem.cacheClassElem = elem.className;
+       elem.cacheClassTarget = target.className;
+       target.className = "code-highlighted";
+       elem.className   = "code-highlighted";
+     }
+   }
+   function CodeHighlightOff(elem, id)
+   {
+     var target = document.getElementById(id);
+     if(elem.cacheClassElem)
+       elem.className = elem.cacheClassElem;
+     if(elem.cacheClassTarget)
+       target.className = elem.cacheClassTarget;
+   }
+  /*]]>*///-->
+  </script><link href="https://alhassy.github.io/org-notes-style.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/floating-toc.css" rel="stylesheet" type="text/css" /><link href="https://alhassy.github.io/blog-banner.css" rel="stylesheet" type="text/css" /><br><center><h1 class="post-title">org-special-block-extras: a minimal working example</h1></center><script> window.parent.document.title =  window.parent.document.title.replace(/@@.*@@/, "") </script><center><a href="https://alhassy.github.io/tags.html"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 16" width="15" height="16"><path fill-rule="evenodd" d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 000-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"></path></svg> </a><a href="https://alhassy.com/tag-org-special-block-extras.html"><img src="https://img.shields.io/badge/-org--special--block--extras-grey"></a> <a href="https://alhassy.com/tag-emacs.html"><img src="https://img.shields.io/badge/-emacs-grey"></a> <a href="https://alhassy.com/tag-lisp.html"><img src="https://img.shields.io/badge/-lisp-grey"></a> <a href="https://alhassy.com/tag-org.html"><img src="https://img.shields.io/badge/-org-grey"></a></center><center class="post-image"><a href="./resources/emacs-birthday-present.png" class="tooltip" title="Image credit ./resources/emacs-birthday-present.png"><img src="./resources/emacs-birthday-present.png" alt="Article image" style="border: 2px solid black;" width="350" height="350" align="top"/></a></center><center><a class="tooltip" title="See the colourised Org source of this article; i.e., what I typed to get this nice webpage" href="https://alhassy.com/org-special-block-extras-mwe.org.html"><img src="https://alhassy.com/resources/badge-source.svg"></a>&ensp;<a class="tooltip" title="See the various edits to this article over time" href="https://github.com/alhassy/org-special-block-extras/commits/master/minimal-working-example.org"><img src="https://alhassy.com/resources/badge-history.svg"></a>&ensp;<a href="https://www.buymeacoffee.com/alhassy"><img src="https://alhassy.com/resources/badge-buy-me-a-coffee.svg"></a></center><div id="table-of-contents" role="doc-toc">
+<h2> <a href="javascript:window.scrollTo(0,0)" style="color: black !important; border-bottom: none !important;" class="tooltip" title="Go to the top of the page"> Ξ </a> </h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#a-tiny-function">1. A tiny function</a></li>
+<li><a href="#how-the-loop-accumulates">2. How the loop accumulates</a></li>
+<li><a href="#why-squares">3. Why squares?</a></li>
+</ul>
+</div>
+</div>
+<div class="org-center">
+<p>
+⭐ The code lives at <a href="https://github.com/alhassy/org-special-block-extras">github.com/alhassy/org-special-block-extras</a> &mdash;star it, or <a href="https://github.com/alhassy/org-special-block-extras/issues">discuss it there</a>! <a href="https://github.com/alhassy/org-special-block-extras"><img src="https://img.shields.io/github/stars/alhassy/org-special-block-extras?style=social"></a>
+</p>
+</div>
+<div id="outline-container-a-tiny-function" class="outline-2">
+<h2 id="a-tiny-function"><span class="section-number-2">1.</span> <a href="#a-tiny-function">A tiny function</a></h2>
+<div class="outline-text-2" id="text-a-tiny-function">
+<p>
+We sum the first <code>n</code> <abbr class="tooltip" tabindex="0">odd<template><p>
+An integer 2i - 1, for some i ≥ 1</p></template></abbr>&emsp13; numbers by <abbr class="tooltip" tabindex="0">cl-loop<template><pre>The Common Lisp ‘loop’ macro.
+Valid clauses include:
+  For clauses:
+    for VAR from/upfrom/downfrom EXPR1 to/upto/downto/above/below EXPR2
+        [by EXPR3]
+    for VAR = EXPR1 then EXPR2
+    for VAR in/on/in-ref LIST [by FUNC]
+    for VAR across/across-ref ARRAY
+    for VAR being:
+      the elements of/of-ref SEQUENCE [using (index VAR2)]
+      the symbols [of OBARRAY]
+      the hash-keys/hash-values of HASH-TABLE [using (hash-values/hash-keys V2)]
+      the key-codes/key-bindings/key-seqs of KEYMAP [using (key-bindings VAR2)]
+      the overlays/intervals [of BUFFER] [from POS1] [to POS2]
+      the frames/buffers
+      the windows [of FRAME]
+  Iteration clauses:
+    repeat INTEGER
+    while/until/always/never/thereis CONDITION
+  Accumulation clauses:
+    collect/append/nconc/concat/vconcat/count/sum/maximize/minimize FORM
+      [into VAR]
+  Miscellaneous clauses:
+    with VAR = INIT
+    if/when/unless COND CLAUSE [and CLAUSE]... else CLAUSE [and CLAUSE...]
+    named NAME
+    initially/finally [do] EXPRS...
+    do EXPRS...
+    [finally] return EXPR
+
+For more details, see Info node ‘(cl)Loop Facility’.
+
+(fn CLAUSE...)</pre></template></abbr>; place the
+cursor after the last parenthesis and press <abbr class="tooltip" tabindex="0" style="border: none; text-decoration: none;"><kbd style="border-color: red">C-x C-e</kbd><template><pre>C-x C-e ∷ eval-last-sexp
+Evaluate sexp before point; print value in the echo area.
+Interactively, EVAL-LAST-SEXP-ARG-INTERNAL is the prefix argument.
+With a non ‘-’ prefix argument, print output into current buffer.
+
+This commands handles ‘defvar’, ‘defcustom’ and ‘defface’ the
+same way that ‘eval-defun’ does.  See the doc string of that
+function for details.
+
+Normally, this function truncates long output according to the
+value of the variables ‘eval-expression-print-length’ and
+‘eval-expression-print-level’.  With a prefix argument of zero,
+however, there is no such truncation.
+Integer values are printed in several formats (decimal, octal,
+and hexadecimal).  When the prefix argument is -1 or the value
+doesn’t exceed ‘eval-expression-print-maximum-character’, an
+integer value is also printed as a character of that codepoint.
+
+If ‘eval-expression-debug-on-error’ is non-nil, which is the default,
+this command arranges for all errors to enter the debugger.
+
+(fn EVAL-LAST-SEXP-ARG-INTERNAL)</pre></template></abbr> to define it.
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">sum-odds</span> (n)
+  <span style="color: #50a14f; font-style: italic;">"Return 1 + 3 + &#8943; + (2n - 1)."</span>
+  (<span style="color: #a626a4;">cl-loop</span> for i from 1 to n sum (- (* 2 i) 1)))
+</code></pre>
+</div>
+
+<details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
+<summary><strong><font face="Courier" size="3" color="green">Peek: the first few values</font></strong></summary>
+<p>
+<code>(sum-odds 4)</code> is the sum of the first 4 odd numbers. In order:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><code>n</code></td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">3</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>(sum-odds n)</code></td>
+<td class="org-right">1</td>
+<td class="org-right">4</td>
+<td class="org-right">9</td>
+<td class="org-right">16</td>
+</tr>
+</tbody>
+</table>
+<p>
+These are <span style="color:red;">squares</span>! <a class="anchor" id="squares" href="#squares" aria-label="Permalink to squares"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a> We <a href="#why-squares">prove it below</a>.
+</p>
+
+</details>
+</div>
+</div>
+<div id="outline-container-how-the-loop-accumulates" class="outline-2">
+<h2 id="how-the-loop-accumulates"><span class="section-number-2">2.</span> <a href="#how-the-loop-accumulates">How the loop accumulates</a></h2>
+<div class="outline-text-2" id="text-how-the-loop-accumulates">
+<p>
+Each step adds the next odd number to the running sum:
+</p>
+<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="581pt" height="44pt"
+ viewBox="0.00 0.00 581.00 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 40)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-40 577,-40 577,4 -4,4"/>
+<!-- 0 -->
+<g id="node1" class="node">
+<ellipse fill="none" stroke="black" cx="27" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-13.32" font-family="Times,serif" font-size="14.00">0</text>
+</g>
+<!-- 1 -->
+<g id="node2" class="node">
+<ellipse fill="none" stroke="black" cx="156.75" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="156.75" y="-13.32" font-family="Times,serif" font-size="14.00">1</text>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M54.47,-18C72.8,-18 97.47,-18 117.87,-18"/>
+<polygon fill="black" stroke="black" points="117.8,-21.5 127.8,-18 117.8,-14.5 117.8,-21.5"/>
+<text xml:space="preserve" text-anchor="middle" x="91.88" y="-21.95" font-family="Times,serif" font-size="14.00">add 1</text>
+</g>
+<!-- 4 -->
+<g id="node3" class="node">
+<ellipse fill="none" stroke="black" cx="286.5" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="286.5" y="-13.32" font-family="Times,serif" font-size="14.00">4</text>
+</g>
+<!-- 1&#45;&gt;4 -->
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M184.22,-18C202.55,-18 227.22,-18 247.62,-18"/>
+<polygon fill="black" stroke="black" points="247.55,-21.5 257.55,-18 247.55,-14.5 247.55,-21.5"/>
+<text xml:space="preserve" text-anchor="middle" x="221.62" y="-21.95" font-family="Times,serif" font-size="14.00">add 3</text>
+</g>
+<!-- 9 -->
+<g id="node4" class="node">
+<ellipse fill="none" stroke="black" cx="416.25" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="416.25" y="-13.32" font-family="Times,serif" font-size="14.00">9</text>
+</g>
+<!-- 4&#45;&gt;9 -->
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M313.97,-18C332.3,-18 356.97,-18 377.37,-18"/>
+<polygon fill="black" stroke="black" points="377.3,-21.5 387.3,-18 377.3,-14.5 377.3,-21.5"/>
+<text xml:space="preserve" text-anchor="middle" x="351.38" y="-21.95" font-family="Times,serif" font-size="14.00">add 5</text>
+</g>
+<!-- 16 -->
+<g id="node5" class="node">
+<ellipse fill="none" stroke="black" cx="546" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="546" y="-13.32" font-family="Times,serif" font-size="14.00">16</text>
+</g>
+<!-- 9&#45;&gt;16 -->
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M443.72,-18C462.05,-18 486.72,-18 507.12,-18"/>
+<polygon fill="black" stroke="black" points="507.05,-21.5 517.05,-18 507.05,-14.5 507.05,-21.5"/>
+<text xml:space="preserve" text-anchor="middle" x="481.12" y="-21.95" font-family="Times,serif" font-size="14.00">add 7</text>
+</g>
+</g>
+</svg>
+</div></div>
+</div>
+</div>
+<div id="outline-container-why-squares" class="outline-2">
+<h2 id="why-squares"><span class="section-number-2">3.</span> <a href="#why-squares">Why squares?</a></h2>
+<div class="outline-text-2" id="text-why-squares">
+<p>
+The <a href="#squares">squares</a> are no coincidence:
+</p>
+\begin{align*}
+&amp; \sum_{i=1}^{n} (2i - 1)
+\\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Split the sum} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; 2 · {\color{red}{\sum_{i=1}^{n} i}} - {\color{teal}{\sum_{i=1}^{n} 1}}
+\\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Gauss: ${\color{red}{\sum_{i=1}^{n} i}} = n(n+1)/2$; and $n$ ones sum to ${\color{teal}n}$} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; n(n + 1) - {\color{teal}n}
+\\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Distribute, then cancel} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; n^2   \tag{$\color{violet}{\text{Odd}}$} \label{Odd}
+\end{align*}
+
+<p>
+Hence, by \eqref{Odd}, <code>(sum-odds n)</code> is \(n^2\). <img src="https://img.shields.io/badge/sum--odds-n%C2%B2-teal">
+</p>
+</div>
+</div>
+<hr><center>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Amiri'>
+  <style>
+     body {font-family: 'Amiri', sans-serif;}
+     table {font-family:  'Scheherazade'; font-size: 105%; }
+   </style><strong> Generated by Emacs and Org-mode (•̀ᴗ•́)و </strong><center style="font-size: 12px"> <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> <img alt="Creative Commons License" style="border-width:0" src="https://alhassy.com/resources/cc-by-sa-3.0-88x31.png"/> </a> <br/> <span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type"> <em>Life & Computing Science</em> </span> by <a xmlns:cc="https://creativecommons.org/ns#" href="https://alhassy.github.io/" property="cc:attributionName" rel="cc:attributionURL"> Musa Al-hassy </a> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"> Creative Commons Attribution-ShareAlike 3.0 Unported License </a></center></center><div hidden> <div id="postamble" class="status"> </div> </div><link rel="stylesheet" href="readremaining.js-readremainingjs/css/rr_light.css"
+     type='text/css'/>
+  <script
+     src="readremaining.js-readremainingjs/src/readremaining.jquery.js"></script>
+  <script src='readremaining.js/src/readremaining.jquery.js'
+     type='text/javascript'></script>
+  <script type="text/javascript"> $('body').readRemaining({showGaugeDelay : 10,
+     showGaugeOnStart : true}); </script></div>
+</body>
+</html>

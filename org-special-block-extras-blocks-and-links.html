@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-14 Sat 13:39 -->
+<!-- 2026-11-14 Sat 21:55 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -466,7 +466,7 @@ A link within it is followed instead.</p></template>
 </ul>
 </li>
 <li><a href="#graphs">10. Graphs ---<i>Org lists, drawn by Graphviz</i></a></li>
-<li><a href="#switches-for-every-block">11. Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></li>
+<li><a href="#switches-for-every-block">11. Switches for every block and section: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></li>
 <li><a href="#demos">12. Demos &mdash;a block, then what it exports to, and a test that it still does</a></li>
 <li><a href="#callouts">13. Callouts &mdash;Note, tip, important, warning, caution</a></li>
 <li><a href="#colours-links">14. Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></li>
@@ -2153,7 +2153,26 @@ then someone is lying.</li>
 </ul>
 
 <p>
-( Rephrased: The sum of the degrees of the vertices of a (total) <abbr class="tooltip" tabindex="0">graph<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> is
+( Rephrased: The sum of the degrees of the vertices of a (total) <abbr class="tooltip" tabindex="0">graph<template><pre>Overview of noun graph
+
+The noun graph has 1 sense (first 1 from tagged texts)
+                                           
+1. (15) graph, graphical record -- (a visual representation of the relations between certain quantities plotted with reference to a set of axes)
+
+Overview of verb graph
+
+The verb graph has 2 senses (first 1 from tagged texts)
+                                          
+1. (1) graph, chart -- (represent by means of a graph; "chart the data")
+2. graph -- (plot upon a graph)
+
+Synonyms/Hypernyms (Ordered by Estimated Frequency) of noun graph
+
+1 sense of graph                                                        
+
+Sense 1
+graph, graphical record
+       =&gt; visual communication</pre></template></abbr> is
 twice the number of edges of the graph; moreover, an even number of vertices
 have an odd degree.
 </p>
@@ -2410,7 +2429,8 @@ dot source, so re-exporting an unchanged graph rewrites one file rather than add
 For HTML export: embeds an inline &lt;svg&gt; element, whose nodes' and arcs' tooltips hover as prose's do, by tooltips.js;
 under :svg nil, an inline base64 PNG, sans tooltips.  Either fits the page's width, a click toggling its full size.
 For Markdown, it writes the image file and links it, as for a named graph.
-For other backends it emits a #+begin_src dot block.  In HTML, a node's [[*Section]] link leads to that section.
+For LaTeX, dot writes a PDF beside the .tex, which \\includegraphics shows, shrunk only to fit the line's width;
+for other backends, or sans dot, it emits a #+begin_src dot block.  In HTML, a node's [[*Section]] link leads to that section.
 
 With :smartdiagram TYPE ---constellation, flow:horizontal, descriptive, and so on--- LaTeX's smartdiagram package
 typesets the list instead, as `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org--smartdiagram</span><span style="color: #50a14f;">' says: the #+graph: rows are \\smartdiagramset's, and prose after the
@@ -2503,6 +2523,12 @@ Example:
                                                                       (org--graph-raw-&gt;dot raw title args))
                                                                   dot))))
            (delete-file tmp))))
+      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A vector PDF, by dot, beside the .tex; shrunk to the line's width only when wider, as HTML fits the page.
+</span>      ((guard (<span style="color: #a626a4;">and</span> (org-export-derived-backend-p backend 'latex)
+                   (funcall render <span style="color: #50a14f;">"pdf"</span> (concat (file-name-sans-extension outfile) <span style="color: #50a14f;">".pdf"</span>))))
+       (format (concat <span style="color: #50a14f;">"\\begin{center}\\setbox0\\hbox{\\includegraphics{%s}}"</span>
+                       <span style="color: #50a14f;">"\\ifdim\\wd0&gt;\\linewidth\\resizebox{\\linewidth}{!}{\\box0}\\else\\box0\\fi\\end{center}"</span>)
+               (concat (file-name-sans-extension outfile) <span style="color: #50a14f;">".pdf"</span>)))
       (_
        <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">`</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org-parse</span><span style="color: #a0a1a7;">' lets Org export the src block, rather than emit its raw syntax into the output.
 </span>       (org-parse (<span style="color: #a626a4;">if</span> smart (format <span style="color: #50a14f;">"#+begin_src latex\n%s\n#+end_src"</span> dot)
@@ -2526,7 +2552,8 @@ dot source, so re-exporting an unchanged graph rewrites one file rather than add
 For HTML export: embeds an inline &lt;svg&gt; element, whose nodes’ and arcs’ tooltips hover as prose’s do, by tooltips.js;
 under :svg nil, an inline base64 PNG, sans tooltips.  Either fits the page’s width, a click toggling its full size.
 For Markdown, it writes the image file and links it, as for a named graph.
-For other backends it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
+For LaTeX, dot writes a PDF beside the .tex, which \includegraphics shows, shrunk only to fit the line’s width;
+for other backends, or sans dot, it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
 
 With :smartdiagram TYPE ---constellation, flow:horizontal, descriptive, and so on--- LaTeX’s smartdiagram package
 typesets the list instead, as ‘org--smartdiagram’ says: the #+graph: rows are \smartdiagramset’s, and prose after the
@@ -2646,7 +2673,7 @@ hand-tuned <code>\hspace</code>'s; <a href="https://github.com/alhassy/org-speci
 </div>
 </div>
 <div id="outline-container-switches-for-every-block" class="outline-2">
-<h2 id="switches-for-every-block"><span class="section-number-2">11.</span> <a href="#switches-for-every-block">Switches for every block: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></h2>
+<h2 id="switches-for-every-block"><span class="section-number-2">11.</span> <a href="#switches-for-every-block">Switches for every block and section: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></h2>
 <div class="outline-text-2" id="text-switches-for-every-block">
 <p>
 Just as every src block understands <code>:exports</code> and <code>:results</code>, every block understands these
@@ -2841,6 +2868,39 @@ your own blocks</a>.
 <p>
 Switches are inherited as a src block's header-args are; e.g., <code>:header-args:red: :let (N 3)</code>
 in a heading's drawer gives every <code>red</code> block of its subtree that <code>:let</code>.
+</p>
+
+<p>
+A section and a block are two ways to say the same thing; so a section takes every switch too,
+as a property of its own. By way of example, the following section appears in the PDF alone,
+its arrows typeset:
+</p>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #0184bc; font-weight: bold;">* Notes for the printed handout</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:when:</span> <span style="color: #383a42; background-color: #fafafa;">(eq backend 'latex)</span>
+<span style="color: #a626a4;">:let:</span> <span style="color: #383a42; background-color: #fafafa;">(-&gt; "&#8658;")</span>
+<span style="font-weight: bold;">:END:</span>
+Recall that p -&gt; q.
+</code></pre>
+</div>
+<p>
+A section's contents are its text and subsections; its heading stays put, being its title.
+</p>
+<ul class="org-ul">
+<li><code>:noexport t</code>, or a <code>:when</code> whose form is nil, axes the whole subtree, heading included.</li>
+<li><code>:let</code> substitutes throughout the subtree, its blocks included.</li>
+<li><code>:folded</code> and <code>:boxed</code> wrap the contents, which then may not have subsections, as no block
+can hold a heading; <code>:folded t</code> is titled by the heading.</li>
+<li><code>:verbatim t</code> shows the section as written, heading included, as Org source; and <code>:demo t</code>
+shows that beside its rendering, <code>C-c C-c</code> within the section taking its snapshot.</li>
+<li><code>:ignore t</code> bypasses the section's own behaviour: its tags that an <code>org-deftag</code> defines, such
+as <code>:details_Hint:</code>.</li>
+<li><code>:C-c_C-c ACTION</code> runs upon <code>C-c C-c</code> within the section, or a subsection, wherever Org's own
+<code>C-c C-c</code> has nothing to do; so a table or checkbox in it keeps its own.</li>
+</ul>
+<p>
+A value that is not wholly Lisp is a string, as in <code>:folded: Peek at the answer</code>.
 </p>
 
 <p>

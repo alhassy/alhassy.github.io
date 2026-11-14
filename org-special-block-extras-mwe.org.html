@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.59 in inline-css mode. -->
+<html>
+  <head>
+    <title>org-special-block-extras-mwe.org</title>
+  </head>
+  <body style="color: #383a42; background-color: #fafafa;">
+    <pre>
+<span style="color: #a0a1a7;"># The minimal working example of README.md, which shows this file; alhassy.com publishes it, by a :REDIRECT:.</span>
+
+<span style="color: #0184bc; font-weight: bold;">* A tiny function</span>
+
+We sum the first =n= <span style="color: #bebebe; font-weight: bold; text-decoration: underline; text-decoration: overline;"><a href="tooltip:odd">[[tooltip:odd][An integer 2i - 1, for some i &#8805; 1]]</a></span> numbers by <a href="doc:cl-loop">doc:cl-loop</a>; place the
+cursor after the last parenthesis and press &#12308;<a href="kbd:C-x_C-e">C-x</a> <a href="kbd:C-x_C-e">C-</a>e&#12309; to define it.
+<span style="color: #a0a1a7;">#+begin_src emacs-lisp
+</span>(<span style="color: #a626a4;">defun</span> <span style="color: #0184bc;">sum-odds</span> (n)
+  <span style="color: #50a14f; font-style: italic;">"Return 1 + 3 + &#8943; + (2n - 1)."</span>
+  (<span style="color: #a626a4;">cl-loop</span> for i from 1 to n sum (- (* 2 i) 1)))
+<span style="color: #a0a1a7;">#+end_src
+</span>
+<span style="color: #a0a1a7;">#+begin_details Peek: the first few values :let (N 4)
+</span>=(sum-odds N)= is the sum of the first N odd numbers. In order:
+| <span style="font-weight: bold; font-style: italic;">=n=</span><span style="font-weight: bold; font-style: italic;">            </span>| 1 | 2 | 3 |  4 |
+| <span style="font-weight: bold; font-style: italic;">=(sum-odds n)=</span><span style="font-weight: bold; font-style: italic;"> </span>| 1 | 4 | 9 | 16 |
+These are <span style="color: #ff0000;"><a href="red:squares">squares</a></span>! <span style="text-decoration: underline;">&lt;&lt;squares&gt;&gt;</span> We <span style="text-decoration: underline;"><a href="*Why squares?">prove it below</a></span>.
+<span style="color: #a0a1a7;">#+end_details
+</span>
+<span style="color: #0184bc; font-weight: bold;">* How the loop accumulates</span>
+
+Each step adds the next odd number to the running sum:
+<span style="color: #a0a1a7;">#+begin_graph :rankdir LR
+</span>+ 0
+  + <span style="font-weight: bold;">add 1 ::</span> 1
+    + <span style="font-weight: bold;">add 3 ::</span> 4
+      + <span style="font-weight: bold;">add 5 ::</span> 9
+        + <span style="font-weight: bold;">add 7 ::</span> 16
+<span style="color: #a0a1a7;">#+end_graph
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Why squares?</span>
+
+The <span style="text-decoration: underline;"><a href="squares">squares</a></span> are no coincidence:
+<span style="color: #a0a1a7;">#+begin_math :let (&#931; "\\sum_{i=1}^{n}")
+</span>  &#931; (2i - 1)
+=<span style="color: #a0a1a7;">{ Split the sum }</span>
+  2 &#183; <span style="color: #ff0000;">{&#931; i}</span> - <span style="color: teal;">{&#931; 1}</span>
+=<span style="color: #a0a1a7;">{ Gauss: </span><span style="color: #a0a1a7;">$</span><span style="color: #a0a1a7;">{&#931; i}</span><span style="color: #a0a1a7;"> = n(n+1)/2$</span><span style="color: #a0a1a7;">; and </span><span style="color: #a0a1a7;">$n$</span><span style="color: #a0a1a7;"> ones sum to </span><span style="color: #a0a1a7;">$</span><span style="color: #a0a1a7;">teal:n</span><span style="color: #a0a1a7;">$</span><span style="color: #a0a1a7;"> }</span>
+  n(n + 1) - <span style="color: teal;">teal:n</span>
+=<span style="color: #a0a1a7;">{ Distribute, then cancel }</span>
+  n^2   <span style="color: #ee82ee;">violet:</span><span style="color: #ee82ee; text-decoration: underline;">&lt;</span><span style="color: #ee82ee; text-decoration: underline;">&lt;</span><span style="color: #ee82ee; text-decoration: underline;">Odd</span><span style="color: #ee82ee; text-decoration: underline;">&gt;&gt;</span>
+<span style="color: #a0a1a7;">#+end_math
+</span>
+Hence, by <span style="text-decoration: underline;"><a href="Odd">Odd</a></span>, =(sum-odds n)= is $n^2$. <span style="text-decoration: underline;"><a href="badge:sum-odds|n&#178;|teal">badge:sum-odds|n&#178;|teal</a></span>
+</pre>
+  </body>
+</html>

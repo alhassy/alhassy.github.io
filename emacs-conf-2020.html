@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-14 Sat 13:39 -->
+<!-- 2026-11-14 Sat 21:55 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Powering-up Special Blocks: EmacsConf 2020 slides</title>
@@ -575,7 +575,74 @@ it exported to other backends!
 <tbody>
 <tr>
 <td class="org-left">Colours</td>
-<td class="org-left"><abbr class="tooltip" tabindex="0">latex-definitions<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">color<template><pre>Format text according to a given COLOR, which is black by default.
+<td class="org-left"><abbr class="tooltip" tabindex="0">math<template><pre>Display maths, wherein our links ---e.g., red:x, [[doc:fold][f]]--- and Org’s *markup* are LaTeX’s.
+
+  #+begin_math
+  # The bounds, declared once; this line is a comment.
+  \def\xstart{red:a}
+  teal:\bigoplus_{violet:x[fn::the current element] = \xstart}^{cyan:b} brown:f(violet:x)   teal:&lt;&lt;Fold&gt;&gt;
+  #+end_math
+
+Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link to it.
+
++ red:ATOM colours an ATOM: a {group}; \left(…\right); a \command{with}{arguments}, or a sizer with its
+  delimiter, \big(; a word; else one character.  [[red:][a + b]] colours a + b.  So too for any colour,
+  [[color:#ff0066][…]], highlight:, web links, and tooltip: and doc:, which hover in HTML; see ‘org-math-links’.
++ ATOM[fn::TIP], or ATOM[[tooltip:TIP]], is a tooltip, as [[tooltip:ATOM][TIP]] is, and as in prose: in HTML, TIP hovers over ATOM, by
+  tooltips.js; in LaTeX, TIP is a margin note, its number on ATOM.  ATOM[fn:NAME]’s TIP is its “[fn:NAME] TIP”
+  definition, elsewhere in the buffer; so one long tip may serve many atoms.
++ A section link, [[*Heading][f]], [[#custom-id][f]], or [[id:ID][f]], links f to that section, as a graph’s node does.
++ *bold* /italic/ _underline_ +cancel+ =texttt= ~mathtt~, when the markers hug their text, as in Org’s prose.
++ An Org table is a MATRIX, pmatrix by default; as in Org, a line that begins | is a table, so write \lvert x \rvert.
++ A description list, “- VALUE :: CONDITION” lines, is a cases environment; a CONDITION of mere words, such as
+  otherwise, is prose.
++ A line ending “COLOUR:&lt;&lt;NAME&gt;&gt;”, Org’s own target, is tagged NAME, in COLOUR, which [[NAME]] cites, as Org cites
+  a target, and C-c C-o on it visits; sans COLOUR, “&lt;&lt;NAME&gt;&gt;” is plain.  NAME may hold maths, as \meet, ⊑, or a
+  subscript, as &lt;&lt;Base Case_1&gt;&gt;.  A hint’s M-x  … \ may be tagged too: “M-x  0 + n = n teal:&lt;&lt;Base Case&gt;&gt; \”.
+  NUMBERED numbers the rest.  A block’s “#+name: NAME” labels its last line, so [[NAME]] cites it too; it is
+  tagged NAME when unnumbered.
++ Lines with an &amp; are aligned at it, as in LaTeX’s align; else, lines that end in \\ are gathered, each centred on
+  a line of its own.  Only the block’s own &amp; and \\ count, not those in a {group} or a \begin{cases}…\end{cases}.
++ “X ={ HINT } Y” states why the step holds, as in a calculational proof; so too for any relation, ≤{ … }, \equiv{ … },
+  … The { hugs the relation, and a space or newline follows it, so x ={a} is no hint; in Emacs, a hint shows as a
+  comment does, so we see which {…} is one.  A step runs from its hint to the next, wherever the newlines fall, sans
+  our writing \\.  A hint may span lines, and shows on those lines, a blank one a gap; within it, M-x  … \ is a nested
+  calculation.  TAB on a hint folds it, as a click does in HTML; M-q within it fills it alone, as prose, whereas M-q
+  elsewhere in the block leaves the maths be.
++ HINTS sets each hint between the expressions it relates, maroon, after a bracket that opens it, lest it be mistaken
+  for maths; beside, at its step’s end, plain, as its column sets it apart; none, hidden from the export; or as a list,
+  LAYOUT then FORMAT, LaTeX whose %s is the hint, or folded, or both ---e.g., (beside "{\color{teal} %s}" folded).
+  Folded hints start as [⋯] in HTML, so a reader clicks to see each, as a puzzle; LaTeX, sans clicks, shows them.
+  To set hints beside throughout a file: #+property: header-args:math :hints beside.
++ ENVIRONMENT overrules the environment the lines imply, for a layout we infer not: e.g., multline* for one long
+  equation, or alignat*{2} for columns of a set width.  Sans star, it is numbered; its #+name: labels it.
++ NUMBERED is t, to number each line; or once, to number the lines as one equation, split at their &amp;s; its one tag,
+  else its #+name:, labels it.
++ Inline maths, $red:x$ or \(red:x\), reads our links and Org’s markup too.
++ Unicode, such as ∀ x ∈ ℕ, typesets in HTML, but in LaTeX only with #+latex_compiler: lualatex and
+  #+latex_header: \usepackage{unicode-math}; else, its symbols are dropped, silently.
++ A line “# …” is a comment.  A line that begins \def, \let, \newcommand, \renewcommand, or \DeclareMathOperator
+  begins a definition, through the line that closes its braces: declared, but not shown.  In LaTeX, it goes to the
+  preamble; in HTML, MathJax reads it hidden, and then knows it page-wide.
++ In Markdown, the block is a fenced math block, its definitions within, since GitHub forgets them between blocks.
++ In Emacs, C-c C-c shows the maths as an image atop the block, until C-c C-c again, or an edit; C-c ’ edits the
+  block in ‘latex-mode’, its hints, tags, and colours shown as in the Org buffer.  C-c C-x C-l, which shows Org’s own maths as images, shows math blocks too.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_math
+     Hello, world
+     #+end_math
+
+ is rewritten to the result of the call
+
+     (org-block/math ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">color<template><pre>Format text according to a given COLOR, which is black by default.
 
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
@@ -871,7 +938,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">org-demo<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">stutter<template><pre>Output the CONTENTS of the block REPS many times
+     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, <a href="https://alhassy.com/org-special-block-extras-blocks-and-links#demos">org-demo</a>, <abbr class="tooltip" tabindex="0">stutter<template><pre>Output the CONTENTS of the block REPS many times
 
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
@@ -887,7 +954,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/stutter ‘latex "Hello, world")</pre></template></abbr>, <abbr class="tooltip" tabindex="0">rename<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>, <abbr class="tooltip" tabindex="0">spoiler<template><pre>Hide text enclosed in double parens ((like this)) as if it were spoilers.
+     (org-block/stutter ‘latex "Hello, world")</pre></template></abbr>, <a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">rename</a>, <abbr class="tooltip" tabindex="0">spoiler<template><pre>Hide text enclosed in double parens ((like this)) as if it were spoilers.
    LEFT and RIGHT may be other kinds of delimiters.
    The main argument, COLOR, indicates which color to use.
 
@@ -1053,7 +1120,7 @@ For example, upon LaTeX export, the Org special block
 <br></li>
 
 <li><p>
-<abbr class="tooltip" tabindex="0">translate<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr> in the export
+<a href="https://alhassy.com/org-special-block-extras-blocks-and-links#switches-for-every-block">translate</a> in the export
 </p>
 
 <p>
@@ -1485,7 +1552,74 @@ PARAMETERS should be keyword value pairs.  See
 </ul>
 
 <p>
-<span style="color:green;">Of</span> <span style="color:green;">course</span> to actually write the formatting function they need <abbr class="tooltip" tabindex="0">loop<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr>,
+<span style="color:green;">Of</span> <span style="color:green;">course</span> to actually write the formatting function they need <abbr class="tooltip" tabindex="0">loop<template><pre>Overview of noun loop
+
+The noun loop has 10 senses (first 1 from tagged texts)
+                                          
+1. (1) cringle, eyelet, loop, grommet, grummet -- (fastener consisting of a metal ring for lining a small hole to permit the attachment of cords or lines)
+2. loop -- (anything with a round or oval shape (formed by a curve that is closed and does not intersect itself))
+3. iteration, loop -- ((computer science) a single execution of a set of instructions that are to be repeated; "the solution took hundreds of iterations")
+4. loop -- (an inner circle of advisors (especially under President Reagan); "he's no longer in the loop")
+5. loop -- (the basic pattern of the human fingerprint)
+6. loop -- (a computer program that performs a series of instructions repeatedly until some specified condition is satisfied)
+7. loop topology, loop -- (the topology of a network whose components are serially connected in such a way that the last component is connected to the first component)
+8. loop -- (an intrauterine device in the shape of a loop)
+9. closed circuit, loop -- (a complete electrical circuit around which current flows or a signal circulates)
+10. loop, loop-the-loop -- (a flight maneuver; aircraft flies a complete circle in the vertical plane)
+
+Overview of verb loop
+
+The verb loop has 5 senses (first 2 from tagged texts)
+                                           
+1. (1) loop -- (move in loops; "The bicycle looped around the tree")
+2. (1) loop, intertwine -- (make a loop in; "loop a rope")
+3. loop -- (fly loops, perform a loop; "the stunt pilot looped his plane")
+4. coil, loop, curl -- (wind around something in coils or loops)
+5. loop -- (fasten or join with a loop; "He looped the watch through his belt")
+
+Synonyms/Hypernyms (Ordered by Estimated Frequency) of noun loop
+
+10 senses of loop                                                       
+
+Sense 1
+cringle, eyelet, loop, grommet, grummet
+       =&gt; fastener, fastening, holdfast, fixing
+
+Sense 2
+loop
+       =&gt; simple closed curve, Jordan curve
+
+Sense 3
+iteration, loop
+       =&gt; process, physical process
+
+Sense 4
+loop
+       =&gt; clique, coterie, ingroup, inner circle, pack, camp
+
+Sense 5
+loop
+       =&gt; fingerprint
+
+Sense 6
+loop
+       =&gt; program, programme, computer program, computer programme
+
+Sense 7
+loop topology, loop
+       =&gt; topology, network topology
+
+Sense 8
+loop
+       =&gt; intrauterine device, IUD
+
+Sense 9
+closed circuit, loop
+       =&gt; circuit, electrical circuit, electric circuit
+
+Sense 10
+loop, loop-the-loop
+       =&gt; flight maneuver, airplane maneuver</pre></template></abbr>,
 <abbr class="tooltip" tabindex="0">s-replace<template><pre>Replaces OLD with NEW in S.
 
 (fn OLD NEW S)</pre></template></abbr>, <abbr class="tooltip" tabindex="0">mapcar<template><pre>Apply FUNCTION to each element of SEQUENCE, and make a list of the results.
@@ -2092,7 +2226,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, and <abbr class="tooltip" tabindex="0">org-demo<template><pre>/bin/bash: line 1: wn: command not found</pre></template></abbr></li>
+     (org-block/solution ‘latex "Hello, world")</pre></template></abbr>, and <a href="https://alhassy.com/org-special-block-extras-blocks-and-links#demos">org-demo</a></li>
 </ul>
 
 <p>
