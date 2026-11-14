@@ -53,6 +53,16 @@ jobs:
           post-cleanup: none
       - run: echo "${{ steps.conda.outputs.environment-path }}/bin" >> "$GITHUB_PATH"
 
+      # doc: links' tooltips define words by running WordNet's wn, which conda-forge lacks; so apt it is.
+      # Should Ubuntu's mirrors vanish again, we warn rather than fail: only tooltips suffer, not the whole build.
+      - name: Install WordNet, for doc links' definitions
+        timeout-minutes: 3
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wordnet
+          wn tooltip -over -synsn | head -3
+
       # A smartdiagram typesets with pdflatex.  tlmgr resolves no dependencies, so we list what a smartdiagram's
       # standalone document loads; cached, a minimal TeX Live costs seconds rather than texlive-full's gigabytes.
       - name: Install a minimal TeX Live, for smartdiagrams
