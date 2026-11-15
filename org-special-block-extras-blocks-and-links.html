@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-15 Sun 15:30 -->
+<!-- 2026-11-15 Sun 15:45 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -473,6 +473,7 @@ A link within it is followed instead.</p></template>
 <li><a href="#wrap-a-block-in-others-within">12.2. Wrap a block in others: <code>:within</code></a></li>
 <li><a href="#code-filename-copy-highlight-tab">12.3. Code: <code>:filename</code>, <code>:copy</code>, <code>:highlight</code>, <code>:tab</code></a></li>
 <li><a href="#what-does-a-block-transpile-to-log">12.4. What does a block transpile to?: <code>:log</code></a></li>
+<li><a href="#why-not-babel-names">12.5. Why not Babel's names?: <code>:var</code>, <code>:wrap</code>, <code>:results</code></a></li>
 </ul>
 </li>
 <li><a href="#demos">13. Demos &mdash;a block, then what it exports to, and a test that it still does</a></li>
@@ -1890,7 +1891,8 @@ p -&gt; q &amp;== \neg p \lor q
 </pre>
 </div>
 <p>
-The rows above the rule are a header, and are skipped. A Lisp variable serves too, across
+The rows above the rule are a header, and are skipped; so too is every column past the
+second, which may then hold notes on each shorthand. A Lisp variable serves too, across
 documents: <code>(setq logic '(-&gt; "\\Rightarrow"))</code> and then <code>:let logic</code>.
 </p>
 </div>
@@ -2694,6 +2696,13 @@ tooltips, via <code>:svg nil</code>&mdash; whereas other backends receive the do
 tables set Graphviz's defaults; <code>C-h o org--graph-block</code> documents every option.
 </p>
 
+<p>
+A graph of many clusters &mdash;boxes within boxes&mdash; may read better as <a href="#images"><code>#+begin_image d2</code></a>:
+D2 draws a box by braces alone, <code>Emacs { Org -&gt; HTML }</code>, where a graph needs a
+<code>#+begin_cluster</code> block for each. D2's syntax is absolutely lovely; a graph is the better
+fit when its nodes are Org list items already, with links and markup of their own.
+</p>
+
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Some lists want a picture rather than a graph: a centre and what orbits it, or a flow of steps.
 ~:smartdiagram TYPE~ hands the very same list to LaTeX's smartdiagram package instead of Graphviz:
 
@@ -2942,20 +2951,29 @@ Mermaid itself, from a CDN; in Markdown, a fenced <code>mermaid</code> block is 
 Mermaid diagram stays live, and needs no tool at all, in a web page or a README.</li>
 <li><p>
 <a href="https://d2lang.com">D2</a>, by <code>d2</code>, to SVG, then <code>rsvg-convert</code>; <code>:layout elk</code> chooses its layout engine, <code>:theme 200</code>
-its theme, and <code>:sketch t</code> its hand-drawn look.
-By way of example, a sketched diagram in theme 101:
+its theme, and <code>:sketch t</code> its hand-drawn look. D2's syntax is the simplest of the lot, and
+I love it: <code>a -&gt; b : label</code> is an edge, <code>a { b; c }</code> is a box holding <code>b</code> and <code>c</code>, and edges
+chain, in either direction. By way of example, a sketched diagram in theme 101:
 </p>
 <div class="osbe-copy" style="position: relative;">
 <button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
-<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_image d2 :file flags :theme 101 :sketch t
-</span>High Mem Instance -&gt; EC2 &lt;- High CPU Instance: Hosted By
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_image d2 :theme 101 :sketch t
+</span>me { family; taekwondo; islam }
+
+me -&gt; Emacs : brings me joy
+
+Emacs {
+ HTML &lt;- Org -&gt; LaTeX : exports to
+ HTML -&gt; My blog
+}
 <span style="color: #a0a1a7;">#+end_image</span>
 </code></pre>
 </div>
 </div>
 <p>
----<code>flags.{svg,pdf,png}</code> within <code>org-image-block-directory</code>, each backend taking its own.
+Two boxes, <code>me</code> and <code>Emacs</code>, and four edges, in nine lines, with no ceremony beyond what
+the picture says.
 </p></li>
 </ul>
 <p>
@@ -3094,8 +3112,13 @@ and center blocks, and any <code>#+begin_𝒳</code> at all, no declaration need
 </tr>
 
 <tr>
+<td class="org-left"><code>:let VAR=VAL …</code></td>
+<td class="org-left">Likewise, in Babel's spelling, up to the next <code>:KEY</code>; see <a href="#why-not-babel-names">Why not Babel's names?</a></td>
+</tr>
+
+<tr>
 <td class="org-left"><code>:let NAME</code></td>
-<td class="org-left">Likewise, for the <code>VAR</code> and <code>VAL</code> of each row of the table <code>#+name: NAME</code>, else of the variable <code>NAME</code></td>
+<td class="org-left">Likewise, for the first two columns of each row of the table <code>#+name: NAME</code>, else for the variable <code>NAME</code></td>
 </tr>
 
 <tr>
@@ -3507,11 +3530,7 @@ folds a section's text away.
 </p>
 
 <p>
-Why not <code>:wrap</code>? Babel has it already: <code>#+begin_src python :wrap example</code> wraps the
-block's <i>results</i>, not the block. A src block's language keeps every header argument
-Babel declares for it &mdash;its common ones, such as <code>:wrap</code>, and those of
-<code>org-babel-header-args:LANG</code>&mdash; just as a block of ours keeps a keyword it declares;
-so <code>ob-elvish</code>'s own <code>:log</code>, say, stays its own.
+Why not <code>:wrap</code>? Babel has it already, for a block's results; see <a href="#why-not-babel-names">Why not Babel's names?</a>
 </p>
 </div>
 </div>
@@ -3603,6 +3622,108 @@ then appends the block's rendering to the buffer <code>*Org Block Log*</code>, i
 applied; <code>:log FILE</code> writes it to <code>FILE</code> instead. Moreover, <code>C-c C-c</code> within a <code>:log</code>
 block shows its rendering at once, along each of <code>org-demo-backends</code>, sans exporting
 the document; save within a src block, whose <code>C-c C-c</code> stays Babel's.
+</p>
+</div>
+</div>
+<div id="outline-container-why-not-babel-names" class="outline-3">
+<h3 id="why-not-babel-names"><span class="section-number-3">12.5.</span> <a href="#why-not-babel-names">Why not Babel's names?: <code>:var</code>, <code>:wrap</code>, <code>:results</code></a></h3>
+<div class="outline-text-3" id="text-why-not-babel-names">
+<p>
+Our switches apply to every block, src blocks included, and are axed from its header before
+Babel runs. So a switch named as a Babel header argument would steal it from every src block:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_src python :var x=3 :wrap example :results output
+</span><span style="color: #8b4513;">x</span> += 1
+<span style="color: #e44649;">print</span>(x)
+<span style="color: #a0a1a7;">#+end_src</span>
+</code></pre>
+</div>
+</div>
+<p>
+Here, Babel binds Python's <code>x</code>, collects what the program prints, and wraps that in an example
+block. Had our switches taken these names, Babel would never see them: our <code>:var</code> would replace
+the text <code>x</code> rather than bind it &mdash;so the code would read <code>3 += 1</code>, which Python rejects&mdash; and
+our <code>:wrap</code> would wrap the block's source, not its output. Leaving such a name to Babel, on src
+blocks alone, is no better: <code>:wrap</code> would then mean one thing on a src block and another on any
+other block. Hence, our names differ:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Ours</th>
+<th scope="col" class="org-left">Means</th>
+<th scope="col" class="org-left">Babel's</th>
+<th scope="col" class="org-left">Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>:let</code></td>
+<td class="org-left">Replace words in the text, before export</td>
+<td class="org-left"><code>:var</code></td>
+<td class="org-left">Bind a variable of the program, as it runs</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:within</code></td>
+<td class="org-left">Wrap the block itself</td>
+<td class="org-left"><code>:wrap</code></td>
+<td class="org-left">Wrap the block's results</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:log</code></td>
+<td class="org-left">Show what the block transpiles to</td>
+<td class="org-left"><code>:results</code></td>
+<td class="org-left">Collect, and insert, the program's results</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Our <code>:let</code> is closer to Org's own <code>#+macro:</code> than to <code>:var</code>, and is <code>let*</code> at heart: each value
+may use those before it. As for the names Babel's packages declare, which no list of ours can
+foresee, a src block's language keeps every header argument Babel declares for it &mdash;its common
+ones, and those of <code>org-babel-header-args:LANG</code>&mdash; just as a block of ours keeps a keyword it
+declares; so <code>ob-elvish</code>'s own <code>:log</code>, say, stays its own.
+</p>
+
+<p>
+<code>:let</code> borrows Babel's spelling nonetheless, as shorthand for its list:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><code>:let N=3 WHO="Jasim" SUM=(* N N)</code></td>
+<td class="org-left">≡ <code>:let (N 3 WHO "Jasim" SUM (* N N))</code></td>
+</tr>
+</tbody>
+</table>
+<p>
+Each value is Lisp, as in the list, and the pairs run up to the next <code>:KEY</code>, as Babel's do. A
+variable has no <code>=</code>, so an operator such as <code>==</code> needs the list: <code>:let (== "\\equiv")</code>.
 </p>
 </div>
 </div>

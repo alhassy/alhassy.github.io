@@ -5153,7 +5153,8 @@ p -&gt; q &amp;== \neg p \lor q
 | -&gt;       | \Rightarrow |
 | ==       | \equiv      |
 <span style="color: #a0a1a7;">  #+end_example
-</span>  The rows above the rule are a header, and are skipped. A Lisp variable serves too, across
+</span>  The rows above the rule are a header, and are skipped; so too is every column past the
+  second, which may then hold notes on each shorthand. A Lisp variable serves too, across
   documents: =(setq logic '(-&gt; "\\Rightarrow"))= and then =:let logic=.
 
 <span style="color: #8b4513; font-weight: bold;">** Calculational proofs ---</span><span style="color: #8b4513; font-weight: bold;">=REL{ HINT }=</span><span style="color: #8b4513; font-weight: bold;"> in a math block, folded by </span><span style="color: #8b4513; font-weight: bold;">=TAB=</span>
@@ -5661,6 +5662,11 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
   tooltips, via =:svg nil=--- whereas other backends receive the dot source. Inside the block, =#+graph:=, =#+node:= and =#+edge:=
   tables set Graphviz's defaults; =C-h o org--graph-block= documents every option.
 
+  A graph of many clusters ---boxes within boxes--- may read better as <span style="text-decoration: underline;"><a href="#images">=#+begin_image d2=</a></span>:
+  D2 draws a box by braces alone, =Emacs { Org -&gt; HTML }=, where a graph needs a
+  =#+begin_cluster= block for each. D2's syntax is absolutely lovely; a graph is the better
+  fit when its nodes are Org list items already, with links and markup of their own.
+
 <span style="color: #a0a1a7;">  #+begin_org :ignore t :demo live
 </span>  Some lists want a picture rather than a graph: a centre and what orbits it, or a flow of steps.
   ~:smartdiagram TYPE~ hands the very same list to LaTeX's smartdiagram package instead of Graphviz:
@@ -5777,14 +5783,23 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
     Mermaid itself, from a CDN; in Markdown, a fenced =mermaid= block is drawn by GitHub. So a
     Mermaid diagram stays live, and needs no tool at all, in a web page or a README.
   + <span style="text-decoration: underline;"><a href="https://d2lang.com">D2</a></span>, by =d2=, to SVG, then =rsvg-convert=; =:layout elk= chooses its layout engine, =:theme 200=
-    its theme, and =:sketch t= its hand-drawn look.
-    By way of example, a sketched diagram in theme 101:
+    its theme, and =:sketch t= its hand-drawn look. D2's syntax is the simplest of the lot, and
+    I love it: =a -&gt; b : label= is an edge, =a { b; c }= is a box holding =b= and =c=, and edges
+    chain, in either direction. By way of example, a sketched diagram in theme 101:
 <span style="color: #a0a1a7;">    #+begin_src org :tangle no
-</span>,#+begin_image d2 :file flags :theme 101 :sketch t
-High Mem Instance -&gt; EC2 &lt;- High CPU Instance: Hosted By
+</span>,#+begin_image d2 :theme 101 :sketch t
+me { family; taekwondo; islam }
+
+me -&gt; Emacs : brings me joy
+
+Emacs {
+ HTML &lt;- Org -&gt; LaTeX : exports to
+ HTML -&gt; My blog
+}
 ,#+end_image
 <span style="color: #a0a1a7;">    #+end_src
-</span>    ---=flags.{svg,pdf,png}= within ~org-image-block-directory~, each backend taking its own.
+</span>    Two boxes, =me= and =Emacs=, and four edges, in nine lines, with no ceremony beyond what
+    the picture says.
   None of SVG, dot, PlantUML, Mermaid, or D2 has a preamble, so a line of dashes in one is an error.
 
   =C-c C-c=, and export, need each language's tools; a missing one is an error saying how to
@@ -5827,7 +5842,8 @@ High Mem Instance -&gt; EC2 &lt;- High CPU Instance: Hosted By
   | <span style="font-weight: bold; font-style: italic;">=:noexport t=</span><span style="font-weight: bold; font-style: italic;">    </span>| Nothing at all; e.g., notes to self                                          |
   | <span style="font-weight: bold; font-style: italic;">=:when FORM=</span><span style="font-weight: bold; font-style: italic;">     </span>| Nothing at all, unless the Lisp =FORM= is non-nil; it may mention =backend= |
   | <span style="font-weight: bold; font-style: italic;">=:let (VAR VAL &#8230;)=</span><span style="font-weight: bold; font-style: italic;"> </span>| Each whole-word =VAR=, or operator such as =-&gt;=, in the contents becomes its value, beforehand |
-  | <span style="font-weight: bold; font-style: italic;">=:let NAME=</span><span style="font-weight: bold; font-style: italic;">      </span>| Likewise, for the =VAR= and =VAL= of each row of the table =#+name: NAME=, else of the variable =NAME= |
+  | ~:let VAR=VAL &#8230;~ | Likewise, in Babel's spelling, up to the next =:KEY=; see <span style="text-decoration: underline;"><a href="#why-not-babel-names">Why not Babel's names?</a></span> |
+  | <span style="font-weight: bold; font-style: italic;">=:let NAME=</span><span style="font-weight: bold; font-style: italic;">      </span>| Likewise, for the first two columns of each row of the table =#+name: NAME=, else for the variable =NAME= |
   | <span style="font-weight: bold; font-style: italic;">=:ignore t=</span><span style="font-weight: bold; font-style: italic;">      </span>| The contents, as plain Org; i.e., the block's own behaviour is bypassed      |
   | <span style="font-weight: bold; font-style: italic;">=:boxed TITLE=</span><span style="font-weight: bold; font-style: italic;">   </span>| The result, within a <a href="doc:org--box-block">box</a> titled =TITLE=; =t= for untitled               |
   | <span style="font-weight: bold; font-style: italic;">=:folded TITLE=</span><span style="font-weight: bold; font-style: italic;">  </span>| The result, folded within <a href="doc:org--details-block">details</a> titled =TITLE=; =t= for the block's name |
@@ -6006,11 +6022,7 @@ Most students guess =2N=; ask for a counterexample.
   outermost. Since a heading's drawer takes every switch, =:within: (details "Proof")=
   folds a section's text away.
 
-  Why not =:wrap=? Babel has it already: =#+begin_src python :wrap example= wraps the
-  block's <span style="font-style: italic;">/results/</span>, not the block. A src block's language keeps every header argument
-  Babel declares for it ---its common ones, such as =:wrap=, and those of
-  =org-babel-header-args:LANG=--- just as a block of ours keeps a keyword it declares;
-  so =ob-elvish='s own =:log=, say, stays its own.
+  Why not =:wrap=? Babel has it already, for a block's results; see <span style="text-decoration: underline;"><a href="#why-not-babel-names">Why not Babel's names?</a></span>
 
 <span style="color: #a626a4; font-weight: bold;">*** Code: </span><span style="color: #a626a4; font-weight: bold;">=:filename=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:copy=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:highlight=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:tab=</span>
 
@@ -6072,6 +6084,43 @@ sum(range(1, 11))
   applied; =:log FILE= writes it to =FILE= instead. Moreover, =C-c C-c= within a =:log=
   block shows its rendering at once, along each of ~org-demo-backends~, sans exporting
   the document; save within a src block, whose =C-c C-c= stays Babel's.
+
+<span style="color: #a626a4; font-weight: bold;">*** Why not Babel's names?: </span><span style="color: #a626a4; font-weight: bold;">=:var=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:wrap=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:results=</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">why-not-babel-names</span>
+  <span style="font-weight: bold;">:END:</span>
+
+  Our switches apply to every block, src blocks included, and are axed from its header before
+  Babel runs. So a switch named as a Babel header argument would steal it from every src block:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_src python :var x=3 :wrap example :results output
+x += 1
+print(x)
+,#+end_src
+<span style="color: #a0a1a7;">  #+end_src
+</span>  Here, Babel binds Python's =x=, collects what the program prints, and wraps that in an example
+  block. Had our switches taken these names, Babel would never see them: our =:var= would replace
+  the text =x= rather than bind it ---so the code would read ~3 += 1~, which Python rejects--- and
+  our =:wrap= would wrap the block's source, not its output. Leaving such a name to Babel, on src
+  blocks alone, is no better: =:wrap= would then mean one thing on a src block and another on any
+  other block. Hence, our names differ:
+
+  | Ours       | Means                                       | Babel's     | Means                                     |
+  |------------+---------------------------------------------+-------------+-------------------------------------------|
+  | =:let=     | Replace words in the text, before export    | <span style="font-weight: bold; font-style: italic;">=:var=</span><span style="font-weight: bold; font-style: italic;">      </span>| Bind a variable of the program, as it runs |
+  | =:within=  | Wrap the block itself                       | <span style="font-weight: bold; font-style: italic;">=:wrap=</span><span style="font-weight: bold; font-style: italic;">     </span>| Wrap the block's results                  |
+  | =:log=     | Show what the block transpiles to           | <span style="font-weight: bold; font-style: italic;">=:results=</span><span style="font-weight: bold; font-style: italic;">  </span>| Collect, and insert, the program's results |
+
+  Our =:let= is closer to Org's own =#+macro:= than to =:var=, and is =let*= at heart: each value
+  may use those before it. As for the names Babel's packages declare, which no list of ours can
+  foresee, a src block's language keeps every header argument Babel declares for it ---its common
+  ones, and those of =org-babel-header-args:LANG=--- just as a block of ours keeps a keyword it
+  declares; so =ob-elvish='s own =:log=, say, stays its own.
+
+  =:let= borrows Babel's spelling nonetheless, as shorthand for its list:
+  | ~:let N=3 WHO="Jasim" SUM=(* N N)~ | &#8801; ~:let (N 3 WHO "Jasim" SUM (* N N))~ |
+  Each value is Lisp, as in the list, and the pairs run up to the next =:KEY=, as Babel's do. A
+  variable has no ~=~, so an operator such as ~==~ needs the list: ~:let (== "\\equiv")~.
 
 <span style="color: #8b4513; font-weight: bold;">** Demos ---a block, then what it exports to, and a test that it still does</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
