@@ -95,7 +95,7 @@
 # For example, “[[doc: !Here's more explanatory prose]]” ≈ “[[margin: Here's more explanatory prose]]”; i.e.,
 # doc links that start with ‘!’ are considered to be inline literals and not addresses to look-up information.
   
-# TODO: Introduce org-defblock-alias which alises org-block/X, org-link/X, registers the new name in org-supported-blocks, and registers the new name as an org-link.
+# TODO: Introduce org-defblock-alias which alises org--X-block, org--X-link, registers the new name in org-supported-blocks, and registers the new name as an org-link.
 
 
 # TODO: Add tests involving header-args
@@ -1379,7 +1379,7 @@ Alternatively, if you don't find much value in these basic bindings, you can rem
   (let* ((link (s-chop-suffix ":" (org-link-at-point)))
          (msg (ignore-errors
                 (concat
-                 (documentation (intern (format "org-link/%s" link)))
+                 (documentation (intern (format "org--%s-link" link)))
                  "\nKEY BINDINGS:\n"
                  "\nUnless indicated below otherwise..."
                  "\n\tC-h: Shows this helpful message buffer"
@@ -1409,10 +1409,10 @@ Alternatively, if you don't find much value in these basic bindings, you can rem
   "Make a new Org-link NAME that exports using form BODY.
 
 Since Org links are essentially string-valued functions,
-a function ‘org-link/NAME’ is created.
+a function ‘org--NAME-link’ is created.
 
 DOCSTRING is optional; it is visible with
-   (documentation 'org-link/NAME)
+   (documentation 'org--NAME-link)
 
 BODY is a string-valued expression, that may make use of the names
 o-label, o-description, o-backend. The final one refers to the export
@@ -1480,7 +1480,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
   know what/how the link exports, and actually see the HTML export.
 
   That is to say, for the ‘shout’ example aboce, the default display is essentially:
-  [:help-echo (org-link/shout o-label o-description 'html)]
+  [:help-echo (org--shout-link o-label o-description 'html)]
 
   You may want to add the following to your Emacs init file:
 
@@ -1526,7 +1526,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
                                       display   #'vectorp
                                       body)
     (setq display (seq--into-list display))
-    (let ((org-link/NAME (intern (format "org-link/%s" name)))
+    (let ((org--NAME-link (intern (format "org--%s-link" name)))
           (navigation "Press “C-h” to see possible actions on this link type.")
           (lets (cl-loop for (variable value)
                       on (cl-getf display :let)
@@ -1534,7 +1534,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
                       collect (list variable value))))
       `(progn
        ;; Declare the underlying function and documentation
-       (cl-defun ,org-link/NAME ;; function name
+       (cl-defun ,org--NAME-link ;; function name
            (o-label o-description o-backend)         ;; function args
            ;; new function documentation
            ,docstring
@@ -1543,7 +1543,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
        ;; Construct the Org-link
        (org-link-set-parameters
         ,(format "%s" name)
-        :export (quote ,org-link/NAME)
+        :export (quote ,org--NAME-link)
         ;; How should these links be displayed?
         ;; (We augment the namespace with the missing o-description that local variables may be using.)
         :face (lambda (o-label)  (let (o-description) (let* ,lets ,(cl-getf display :face))))
@@ -1592,10 +1592,10 @@ is displayed in Emacs Org buffers. The keys are as follows.
                                      (quote ,name)
                                      (or o-description o-label)
                                      ,(concat (or docstring "") "\n\n" navigation "\n")
-                                     (,org-link/NAME o-label o-description 'html)))))))
+                                     (,org--NAME-link o-label o-description 'html)))))))
         ;; Return value is the name of the underlying function.
         ;; We do this to be consistent with `defun'.
-        (quote ,org-link/NAME)))))
+        (quote ,org--NAME-link)))))
  #+end_src
 
  # shout:hi
@@ -1607,7 +1607,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
 
 The link text appears as red bold in both Emacs and in HTML export."
   [:face '(:foreground "red" :weight bold)
-   ;; :help-echo (org-link/shout label description 'html)
+   ;; :help-echo (org--shout-link label description 'html)
    :display 'full
    :keymap (C-m (message-box "hola"))
    :follow (message-box "%s and %s" pre current-prefix-arg)
@@ -1617,14 +1617,14 @@ The link text appears as red bold in both Emacs and in HTML export."
 
 (deftest "org-deflink makes documented functions"
   [org-deflink]
-  (⇝ (documentation #'org-link/shout)
+  (⇝ (documentation #'org--shout-link)
      "Capitalise the link description, if any, otherwise capitalise the label.
 
      The link text appears as red bold in both Emacs and in HTML export."))
 
 (deftest "org-deflink works as expected, plain links"
   [org-deflink]
-  (should (not (null (symbol-function 'org-link/shout))))
+  (should (not (null (symbol-function 'org--shout-link))))
   (⇝ (⟰ "shout:hello")
      "<p> <span style=\"color:red\"> HELLO </span></p>"))
 
@@ -1858,7 +1858,7 @@ Three example uses:
                    ,(vconcat `[:help-echo (format "%s:%s\n\n%s" (quote ,name) label ,docstring)] (or link-display (cdr (assoc name org--block--link-display))))
                    ;; s-replace-all `((,(format "@@%s:" backend) . "") ("#+end_export" . "") (,(format "#+begin_export %s" backend) . ""))
                    (s-replace-regexp "@@" ""
-                                     (,(intern (format "org-block/%s" name)) backend (or description label) label :o-link? t)))))))))
+                                     (,(intern (format "org--%s-block" name)) backend (or description label) label :o-link? t)))))))))
 
 ;; WHERE ...
 
@@ -1877,10 +1877,10 @@ Three example uses:
         (kwds (cddr kwds)))
        ;; Unless we've already set the docs for the generic function, don't re-declare it.
        `(progn ;; if ,(null body)
-         (cl-defgeneric ,(intern (format "org-block/%s" name)) (backend raw-contents &rest _)
+         (cl-defgeneric ,(intern (format "org--%s-block" name)) (backend raw-contents &rest _)
            ,docstring)
 
-       (cl-defmethod ,(intern (format "org-block/%s" name))
+       (cl-defmethod ,(intern (format "org--%s-block" name))
      ((backend ,(if backend-type `(eql ,backend-type) t))
       (raw-contents string)
       &optional
@@ -1997,7 +1997,7 @@ BACKEND is the export back-end being used, as a symbol."
 	  ;; TODO: Make the `main-arg' just be the first keyword arg. That is “begin_X main-value :keyₖ value-k” ≈ “begin_X :key₀ main-value :keyₖ value-k”.
 	  ;; This will simplify cases where this is no sense of a main-arg, such as org-demo, whose arg list starts with “nil nil” since there's no main-arg and its default is nil.
 	  ;; One consequence of this approach is that the first keyword arg is special, it's key can be omitted when it occurs first: “begin_X main-value” ≈ “begin_X :key₀ main-value”.
-	  (-let [val (eval `(,(intern (format "org-block/%s" blk))
+	  (-let [val (eval `(,(intern (format "org--%s-block" blk))
                              (quote ,backend)
                              ,blk-contents
                              ,main-arg
@@ -2353,7 +2353,7 @@ Usage: (blockcall blk-name main-arg even-many:key-values raw-contents)
 One should rarely use this directly; instead use
 `org-thread-blockcall'.
 "
-  `(concat "#+end_export\n" (,(intern (format "org-block/%s" blk))
+  `(concat "#+end_export\n" (,(intern (format "org--%s-block" blk))
     backend ;; defblock internal
     ; (format "\n#+begin_export html\n\n%s\n#+end_export\n" ,(car (last keyword-args-then-contents))) ;; contents
     ,@(last keyword-args-then-contents) ;; contents
@@ -2412,7 +2412,7 @@ A full example:
   :CUSTOM_ID: short-example-an-opportunity-to-learn
   :END:
 
-The following tiny block is composed from two [[doc:org-block/details][details]] blocks and a [[doc:org-block/box][box]] block
+The following tiny block is composed from two [[doc:org--details-block][details]] blocks and a [[doc:org--box-block][box]] block
 ---defined elsewhere in this article. It is intended to give the reader another
 opportunity to make sure they have tried to solve the puzzle posed in the main
 text before seeing the answer ----this works well in HTML, not so in LaTeX.
@@ -2903,8 +2903,9 @@ and (indented) child premises of its own.
 
 If there are multiple trees, they are shown one after the other.
 
-The text in this block should be considered LaTeX;
-as such, Org markup is not recognised.
+The text in this block is maths, as a math block's is; so our links,
+such as red:x and [[tooltip:x][a tip]], and Org's *markup* are LaTeX's;
+see `org--math-markup'.
 
 A proof tree, derivation, is then just a deeply nested
 itemisation.  For instance, assuming P = Q(X), X = Y, Q(Y) = R,
@@ -3006,7 +3007,7 @@ defined, otherwise, we leave the CONTENTS of the block as is.
 We also support the seemingly useless blocks that have no
 contents at all, not even an empty new line."
   (let* ((type    (nth 1 (nth 1 blk)))
-         (handler (intern (format "org-block/%s" type))))
+         (handler (intern (format "org--%s-block" type))))
     (ignore-errors (apply handler backend (or contents "") nil))))
  #+END_SRC
 
@@ -3280,7 +3281,7 @@ This could be declared via ...
   (pcase backend
     ('html (format "Yuck/%s: <strong>%s</strong>" speaker contents))
     ('latex (format "Yuck/%s: \\emph{\\LARGE %s}" speaker contents))
-    (t (error "org-block/shout: Unsupported backend “%s”" backend))))
+    (t (error "org--shout-block: Unsupported backend “%s”" backend))))
 #+end_src
 
 Rather than defining it with a single defblock declaration and a condition on the backend, we can define it using three
@@ -3317,9 +3318,9 @@ Such “open methods” are known as “multimethods”; e.g., see doc:cl-defgen
 :Multimethod_invocation_examples_of_SHOUT:
 #+begin_src elisp :tangle no
 ;; Example uses of the multimethods approach
-(org-block/shout 'random-backend "hi") ;; should error!
-(org-block/shout 'html "hi")
-(org-block/shout 'latex "hi")
+(org--shout-block 'random-backend "hi") ;; should error!
+(org--shout-block 'html "hi")
+(org--shout-block 'latex "hi")
 #+end_src
 :End:
 
@@ -3507,9 +3508,9 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    :CUSTOM_ID: boxed-text
    :END:
 
-   #+begin_org :ignore t :demo org-block/box
+   #+begin_org :ignore t :demo org--box-block
    It can be useful to draw attention to some important text by
-   enclosing it in a [[doc:org-block/box][box]].
+   enclosing it in a [[doc:org--box-block][box]].
 
    #+begin_box Uses of callout boxes
    Such boxes often callout tips, warnings, cautionary info or
@@ -3517,7 +3518,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    #+end_box
    #+end_org
 
-   #+RESULTS[e8b915155a]:
+   #+RESULTS[141a9a1045]:
    :results:
    #+begin_export html
    <p>
@@ -3562,7 +3563,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    
     is rewritten to the result of the call
    
-        (org-block/box ‘latex "Hello, world")</pre></template></abbr>.
+        (org--box-block ‘latex "Hello, world")</pre></template></abbr>.
    </p>
    
    <div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Uses of callout boxes</h3> 
@@ -3574,7 +3575,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    #+end_export
    #+begin_export latex
    It can be useful to draw attention to some important text by
-   enclosing it in a \hyperref[o-glossary-org-block/box]{box}\label{o-glossary-declaration-site-org-block/box}.
+   enclosing it in a \hyperref[o-glossary-org--box-block]{box}\label{o-glossary-declaration-site-org--box-block}.
    
    \colorlet{osbe-box-back}{red!5!white}\colorlet{osbe-box-frame}{red!75!black}\colorlet{osbe-box-title}{yellow!50!red}\begin{tcolorbox}[title={Uses of callout boxes},colback=osbe-box-back,colframe=osbe-box-frame,colbacktitle=osbe-box-title,coltitle=red!25!black, fonttitle=\bfseries,subtitle style={boxrule=0.4pt, colback=yellow!50!red!25!white}]
    Such boxes often callout tips, warnings, cautionary info or
@@ -3585,7 +3586,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
 
 *** TODO COMMENT Extra notes, either make into yaml tests or more to an FAQ section
    
-**** Three demos of  [[doc:org-block/box][box]]
+**** Three demos of  [[doc:org--box-block][box]]
  #+latex_header: \newunicodechar{ᵒ}{\ensuremath{{}^o}}
  #+html: <br>
  #+begin_box Example: A super boring observation presented obscurely :background-color blue
@@ -3617,7 +3618,7 @@ Or, with the header option ~:shadow (:left "inset cyan" :right "inset pink"
 
  #+end_box
 
- For further header options, see the documentation of [[doc:org-block/box][box]].
+ For further header options, see the documentation of [[doc:org--box-block][box]].
 
 **** Subtle Colours
  #+html: <br>
@@ -3682,10 +3683,10 @@ src_latex[:exports code]{\color{blue}} is a nightmare. )
   :CUSTOM_ID: folded-details
   :END:
 
-   #+begin_org :ignore t :demo org-block/details
+   #+begin_org :ignore t :demo org--details-block
    Sometimes there is a remark or a code snippet that is useful to
    have, but not relevant to the discussion at hand and so we want to
-   /fold away such [[doc:org-block/details][details]]/.
+   /fold away such [[doc:org--details-block][details]]/.
 
    #+begin_details Example use cases
    + ‘Conversation-style’ articles, where the author asks the reader questions
@@ -3699,7 +3700,7 @@ src_latex[:exports code]{\color{blue}} is a nightmare. )
    Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "green"~.
    #+end_org
 
-   #+RESULTS[ca8d302267]:
+   #+RESULTS[f9cf306321]:
    :results:
    #+begin_export html
    <p>
@@ -3728,7 +3729,7 @@ src_latex[:exports code]{\color{blue}} is a nightmare. )
    
     is rewritten to the result of the call
    
-        (org-block/details ‘latex "Hello, world")</pre></template></abbr></i>.
+        (org--details-block ‘latex "Hello, world")</pre></template></abbr></i>.
    </p>
    
    <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
@@ -3751,7 +3752,7 @@ src_latex[:exports code]{\color{blue}} is a nightmare. )
    #+begin_export latex
    Sometimes there is a remark or a code snippet that is useful to
    have, but not relevant to the discussion at hand and so we want to
-   \emph{fold away such \hyperref[o-glossary-org-block/details]{details}\label{o-glossary-declaration-site-org-block/details}}.
+   \emph{fold away such \hyperref[o-glossary-org--details-block]{details}\label{o-glossary-declaration-site-org--details-block}}.
    
    \definecolor{osbe-bg}{HTML}{e5f5e5}\colorlet{osbe-fg}{green}\begin{quote}
    \begin{tcolorbox}[colback=osbe-bg,colframe=osbe-fg,title={Example use cases},sharp corners,boxrule=0.4pt]
@@ -3835,8 +3836,8 @@ your Org file or place it into your ~org-html-head~ variable.
 #+end_box
 
 
-Sometimes you want to remark on [[doc:org-block/details][details]] without drawing too much
-attention, and so a tooltip via [[doc:org-block/tooltip][tooltip]] suffices.
+Sometimes you want to remark on [[doc:org--details-block][details]] without drawing too much
+attention, and so a tooltip via [[doc:org--tooltip-block][tooltip]] suffices.
 
 ** Nice Keystroke Renditions: kbd:C-h_t
   :PROPERTIES:
@@ -4018,12 +4019,12 @@ Let's have some sanity tests...
   :CUSTOM_ID: tooltip
   :END:
 
-Sometimes you want to remark on [[doc:org-block/details][details]] without drawing too much
-attention, and so a tooltip via [[doc:org-block/remark][remark]] suffices.
+Sometimes you want to remark on [[doc:org--details-block][details]] without drawing too much
+attention, and so a tooltip via [[doc:org--remark-block][remark]] suffices.
   
-   #+begin_org :ignore t :demo org-block/tooltip
+   #+begin_org :ignore t :demo org--tooltip-block
    It can be annoying to make readers jump to the bottom of the page to
-   read a footnote.  Instead, I prefer to write an /inline [[doc:org-block/tooltip][remark]]/
+   read a footnote.  Instead, I prefer to write an /inline [[doc:org--tooltip-block][remark]]/
    containing, say, references or additional explanation.
 
       /[[tooltip:Allah][The God of Abraham; known as Elohim in the Bible]] does not burden a
@@ -4035,7 +4036,7 @@ attention, and so a tooltip via [[doc:org-block/remark][remark]] suffices.
           burden a soul beyond what it can bear./ --- Quran 2:286
    #+end_org
 
-   #+RESULTS[a29b7d33bd]:
+   #+RESULTS[23e71c6e68]:
    :results:
    #+begin_export html
    <p>
@@ -4060,7 +4061,7 @@ attention, and so a tooltip via [[doc:org-block/remark][remark]] suffices.
    
    ‘tooltip’ is an alias, for when we think in HTML rather than LaTeX.
    
-   An alias of ‘org-block/margin’.
+   An alias of ‘org--margin-block’.
    
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
@@ -4076,7 +4077,7 @@ attention, and so a tooltip via [[doc:org-block/remark][remark]] suffices.
    
     is rewritten to the result of the call
    
-        (org-block/tooltip ‘latex "Hello, world")</pre></template></abbr></i>
+        (org--tooltip-block ‘latex "Hello, world")</pre></template></abbr></i>
    containing, say, references or additional explanation.
    </p>
    
@@ -4098,7 +4099,7 @@ attention, and so a tooltip via [[doc:org-block/remark][remark]] suffices.
    #+end_export
    #+begin_export latex
    It can be annoying to make readers jump to the bottom of the page to
-   read a footnote.  Instead, I prefer to write an \emph{inline \hyperref[o-glossary-org-block/tooltip]{remark}\label{o-glossary-declaration-site-org-block/tooltip}}
+   read a footnote.  Instead, I prefer to write an \emph{inline \hyperref[o-glossary-org--tooltip-block]{remark}\label{o-glossary-declaration-site-org--tooltip-block}}
    containing, say, references or additional explanation.
    
    \emph{Allah\refstepcounter{footnote}${}^{\textnormal{{\thefootnote}}}$\newsavebox{\OrgSpecialBlockExtrasMarginBox}\begin{lrbox}{\OrgSpecialBlockExtrasMarginBox}\begin{minipage}{\marginparwidth}
@@ -4130,7 +4131,7 @@ attention, and so a tooltip via [[doc:org-block/remark][remark]] suffices.
 
    Org's own footnotes are such remarks too: in HTML, each footnote's number is a tooltip of its
    definition, the footnotes section staying below, for print; in LaTeX, each is a margin note, as
-   the [[doc:org-block/margin][margin]] block's are, numbered as footnotes are. All three of Org's spellings serve: an
+   the [[doc:org--margin-block][margin]] block's are, numbered as footnotes are. All three of Org's spellings serve: an
    anonymous =[fn::…]=, a named =[fn:NAME]= defined elsewhere, and a named inline =[fn:NAME: …]=, which
    later =[fn:NAME]= references share.
 
@@ -4443,7 +4444,7 @@ from∘to m = {! try it! }
   reference in LaTeX. Here 𝒳 is an Emacs Lisp function or variable, a word in the English
   dictionary ---via [[https://wordnet.princeton.edu][WordNet]]'s =wn=, should we have it--- or, best of all, a term of our own.
 
-  #+begin_org :ignore t :demo org-link/doc
+  #+begin_org :ignore t :demo org--doc-link
   The ~doc~ link type can be used to show tooltips for Emacs Lisp commands such as
 
                            doc:thread-last
@@ -4601,7 +4602,7 @@ from∘to m = {! try it! }
   =<<<monoid>>>= is a unital semigroup”, Org already links each later “monoid” to its
   definition; in HTML, each such mention is also a tooltip of the defining paragraph.
 
-  #+begin_org :ignore t :demo org-block/documentation
+  #+begin_org :ignore t :demo org--documentation-block
   Our glossary, listing every term this page cites ---even those cited further below:
 
   #+print_glossary:
@@ -4693,9 +4694,9 @@ from∘to m = {! try it! }
   :CUSTOM_ID: parallel
   :END:
 
-     #+begin_org :ignore t :demo org-block/parallel
+     #+begin_org :ignore t :demo org--parallel-block
      Reduce the amount of whitespace noise in your articles by using the
-     [[doc:org-block/parallel][parallel]] block to place ideas
+     [[doc:org--parallel-block][parallel]] block to place ideas
      side-by-side ---with up to 𝓃-many columns.
 
      ----------------------------------------------------------------------
@@ -4730,10 +4731,10 @@ from∘to m = {! try it! }
 
      In summary, articles can get lengthy when vertical whitespace is
      wasted on thin lines; instead, one could save space by using
-     /[[doc:org-block/parallel][parallel]] columns of text/.
+     /[[doc:org--parallel-block][parallel]] columns of text/.
      #+end_org
 
-     #+RESULTS[16f51b69d3]:
+     #+RESULTS[f2dde1a0f0]:
      :results:
      #+begin_export html
      <p>
@@ -4794,7 +4795,7 @@ from∘to m = {! try it! }
      
       is rewritten to the result of the call
      
-          (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> block to place ideas
+          (org--parallel-block ‘latex "Hello, world")</pre></template></abbr> block to place ideas
      side-by-side &mdash;with up to 𝓃-many columns.
      </p>
      
@@ -4891,12 +4892,12 @@ from∘to m = {! try it! }
      
       is rewritten to the result of the call
      
-          (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
+          (org--parallel-block ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
      </p>
      #+end_export
      #+begin_export latex
      Reduce the amount of whitespace noise in your articles by using the
-     \hyperref[o-glossary-org-block/parallel]{parallel}\label{o-glossary-declaration-site-org-block/parallel} block to place ideas
+     \hyperref[o-glossary-org--parallel-block]{parallel}\label{o-glossary-declaration-site-org--parallel-block} block to place ideas
      side-by-side ---with up to 𝓃-many columns.
      
      \noindent\rule{\textwidth}{0.5pt}
@@ -4933,7 +4934,7 @@ from∘to m = {! try it! }
      
      In summary, articles can get lengthy when vertical whitespace is
      wasted on thin lines; instead, one could save space by using
-     \emph{\hyperref[o-glossary-org-block/parallel]{parallel}\label{o-glossary-declaration-site-org-block/parallel} columns of text}.
+     \emph{\hyperref[o-glossary-org--parallel-block]{parallel}\label{o-glossary-declaration-site-org--parallel-block} columns of text}.
      #+end_export
      :end:
 
@@ -4943,7 +4944,7 @@ from∘to m = {! try it! }
   :END:
 
   To colour a formula, LaTeX ---and MathJax, which typesets it in HTML--- would have us write
-  ={\color{red} x}=; yet our prose colours by =red:x=. A [[doc:org-block/math][math]] block is display maths
+  ={\color{red} x}=; yet our prose colours by =red:x=. A [[doc:org--math-block][math]] block is display maths
   wherein our links are LaTeX's: =red:ATOM= colours a ={group}=, =\left(…\right)=, a
   =\command{with}{arguments}=, a word, else one character; =[[red:][a + b]]= colours =a + b=. So too
   for =color:#ff0066=, =highlight:=, web links, and =tooltip:= and =doc:=, which hover in
@@ -4957,7 +4958,7 @@ from∘to m = {! try it! }
   knows it page-wide. A line =# …= is a comment. Below, the first block is only definitions, and so
   shows nothing.
 
-  #+begin_org :ignore t :demo org-block/math
+  #+begin_org :ignore t :demo org--math-block
   Hello, in this blog post I'd like to talk about quantifiers.
 
   # First, I'll define some helpers that I use multiple times; they are declared, not shown.
@@ -5076,7 +5077,9 @@ R_{teal:\theta} =
   named thing: =[[NAME]]= is its number, or name, as LaTeX's =\eqref=
   shows it; and =[[NAME][these words]]= links the words to it. =C-c C-o= on the link, in Emacs, visits
   the line; failing that, any =\tag{…NAME…}=. A =NAME= may hold maths, such as =⊑-Definition= or
-  =Distributivity of \meet=, which shows as maths in the tag, and is cited by the very same name. With
+  =Distributivity of \meet=, which shows as maths in the tag, and is cited by the very same name. A line
+  may have several names, =blue:<<⊑-Definition>> <<Order>>=: the first is its tag, and the rest are
+  aliases, which cite it just as well ---one equation, one number, many names. With
   =:numbered t=, the untagged lines are numbered too. Only the block's
   own =&= counts: one within a ={group}= or a =\begin{cases}…\end{cases}= belongs to it, so a
   piecewise definition is one equation, unless its line aligns at an =&= of its own. A hint,
@@ -5616,7 +5619,7 @@ Hence, by [[Geometric]], $\Sn = {1 - r^n \over 1 - r}$ whenever $red:r ≠ 1$.
   :CUSTOM_ID: graphs
   :END:
 
-  #+begin_org :ignore t :demo (live org-block/graph)
+  #+begin_org :ignore t :demo (live org--graph-block)
   Org lists are already trees, so the ~graph~ block draws them with Graphviz:
   nesting makes an edge, and a two-column table styles the item above it.
 
@@ -5640,11 +5643,11 @@ Hence, by [[Geometric]], $\Sn = {1 - r^n \over 1 - r}$ whenever $red:r ≠ 1$.
   Press =C-c C-c= inside the block to render it to a PNG; =C-u C-c C-c= shows the dot source instead.
   #+end_org
 
-  The [[doc:org-block/graph][graph]] block is opt-in, so we load it separately with
+  The [[doc:org--graph-block][graph]] block is opt-in, so we load it separately with
   ~(require 'org-graph-block)~. Rendering needs the =dot= executable from [[https://graphviz.org][Graphviz]]:
   HTML export embeds an inline SVG, whose tooltips hover as any other's do ---or a PNG, sans
   tooltips, via =:svg nil=--- whereas other backends receive the dot source. Inside the block, =#+graph:=, =#+node:= and =#+edge:=
-  tables set Graphviz's defaults; =C-h o org-block/graph= documents every option.
+  tables set Graphviz's defaults; =C-h o org--graph-block= documents every option.
 
   #+begin_org :ignore t :demo live
   Some lists want a picture rather than a graph: a centre and what orbits it, or a flow of steps.
@@ -5678,6 +5681,126 @@ Hence, by [[Geometric]], $\Sn = {1 - r^n \over 1 - r}$ whenever $red:r ≠ 1$.
   links, src blocks--- replaces LaTeX's =\newcommand=, =\texttt=, =\textcolor=, and
   hand-tuned =\hspace='s; [[https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org][graphs-README.org]] sets the two side by side.
 
+  Class diagrams, state machines, entity-relationship diagrams, mindmaps, and even sequence
+  diagrams are graphs too: tags such as =:inherits:=, =:start:=, and =:one-to-many:= ---templates
+  every graph has, in ~org-graph-builtin-templates~--- and =#+begin_graph :mindmap t= draw them; see
+  [[https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org#diagrams-we-draw-sequences-classes-states-entities-mindmaps][Diagrams we draw]].
+
+** Images ---LaTeX, HTML, SVG, dot, PlantUML, Mermaid, D2: itself where read natively, else a picture
+  :PROPERTIES:
+  :CUSTOM_ID: images
+  :END:
+
+  A TikZ picture belongs in a web page as much as in a PDF; an HTML widget, in a PDF as much as
+  in a web page. A =#+begin_image LANG= block is its =LANG=, raw, along its own backend; along
+  any other, an image of itself:
+  #+begin_src org :tangle no
+,#+name: arrow
+,#+begin_image latex
+\begin{tikzpicture}
+  \draw[->, thick] (0,0) -- (2,1) node[right] {$f(x)$};
+\end{tikzpicture}
+,#+end_image
+
+,#+begin_image html :css "button { background: gold; padding: 1em }"
+<button>Click me</button>
+,#+end_image
+  #+end_src
+  | Block                | HTML                   | LaTeX                    | Markdown, and the rest |
+  |----------------------+------------------------+--------------------------+------------------------|
+  | =#+begin_image latex= | an SVG, inlined        | itself, raw              | a PNG                  |
+  | =#+begin_image html=  | itself, raw            | a PDF, by =\includegraphics= | a PNG                  |
+  | =#+begin_image svg=   | itself, raw            | a PDF, by =\includegraphics= | a PNG                  |
+  | =#+begin_image dot=   | an SVG, inlined        | a PDF, by =\includegraphics= | a PNG                  |
+  | =#+begin_image plantuml= | an SVG, inlined     | a PDF, by =\includegraphics= | a PNG                  |
+  | =#+begin_image mermaid=  | itself, drawn by the browser | a PDF, by =\includegraphics= | itself, drawn by GitHub |
+  | =#+begin_image d2=       | an SVG, inlined     | a PDF, by =\includegraphics= | a PNG                  |
+  The SVG and PDF are vector, so they stay crisp at any zoom; the SVG is inlined, as a =data:=
+  URI, so a page carries its images along, wherever it is published.
+
+  Above a line of five or more dashes ---Org's horizontal rule--- is the block's own preamble:
+  LaTeX's, before =\begin{document}=, or HTML's =<head>=. Along its own backend, a LaTeX
+  block's preamble joins the document's; an HTML block's precedes it.
+  #+begin_src org :tangle no
+,#+begin_image latex
+\usepackage{smartdiagram}
+-----
+\smartdiagram[bubble diagram]{Emacs, Org, \LaTeX, HTML}
+,#+end_image
+  #+end_src
+  Five dashes, since three alone are LaTeX's em-dash.
+
+  =C-c C-c= within the block renders it, and shows its PNG atop the block; again, to remove it.
+  The renderings are =images/NAME.{svg,pdf,png}=, by ~org-image-block-directory~; each way of
+  naming them has its price:
+  | Naming       | =NAME=                                  | Upon an edit                     | Link to it from elsewhere? |
+  |--------------+-----------------------------------------+----------------------------------+----------------------------|
+  | Sans =:file= | =#+name:=, else =image=, then its hash  | rendered afresh; the former axed | No: the name changes       |
+  | =:file tree= | =tree=, exactly                         | stale, till =C-c C-c=            | Yes: an intentional figure |
+  A block never rendered is rendered upon export, when the tools are at hand; else it is shown
+  as source, with a warning.
+
+  Moreover:
+  + =:as-image t= is an image even along its own backend. Its preamble ---a heavy package, say---
+    then stays out of the document's; yet a PDF's picture of text is neither searchable nor in
+    the document's font, and an HTML picture is no longer interactive.
+  + =:resolution 300= sharpens its PNG; by default, ~org-image-block-png-resolution~, 144.
+  + ~org-image-block-shell-escape~ compiles LaTeX with =-shell-escape=, as =minted= needs; it is
+    off by default, since it lets a document's LaTeX run any shell command.
+
+  Each language becomes a PDF, cropped, whence =pdftocairo= makes the SVG and PNG:
+  + LaTeX, by =pdflatex= ---else the document's =#+latex_compiler:=--- and the =standalone=
+    class; ~org-image-block-latex-preamble~ loads =amsmath= and TikZ, then the document's own
+    =#+latex_header:= lines, then the block's preamble.
+  + HTML, by a headless Chrome, ~org-image-block-browser~, then =pdfcrop=; =:css= styles it and
+    =:width 600px= fixes its width. It sees none of the page's own CSS, being rendered alone.
+  + SVG, by =rsvg-convert=, at the SVG's own size.
+  + Graphviz's dot, such as =digraph { Org -> HTML }=, by =dot=, then =pdfcrop=; =:layout neato=
+    chooses the layout engine. It is the escape hatch for raw Graphviz; the [[#graphs][graph]] block stays
+    the Org-native way to draw one.
+  + PlantUML, by =plantuml=, then =pdfcrop=; a body sans =@startuml= is put within =@startuml= …
+    =@enduml=, so =Alice -> Bob: Hi= alone suffices.
+  + Mermaid, by =mmdc=, the Mermaid CLI ---=npm install -g @mermaid-js/mermaid-cli=--- then
+    =pdfcrop=; yet only for LaTeX and the rest. In HTML, a =<pre class="mermaid">= is drawn by
+    Mermaid itself, from a CDN; in Markdown, a fenced =mermaid= block is drawn by GitHub. So a
+    Mermaid diagram stays live, and needs no tool at all, in a web page or a README.
+  + [[https://d2lang.com][D2]], by =d2=, to SVG, then =rsvg-convert=; =:layout elk= chooses its layout engine, =:theme 200=
+    its theme, and =:sketch t= its hand-drawn look.
+    By way of example, a sketched diagram in theme 101:
+    #+begin_src org :tangle no
+,#+begin_image d2 :file flags :theme 101 :sketch t
+High Mem Instance -> EC2 <- High CPU Instance: Hosted By
+,#+end_image
+    #+end_src
+    ---=flags.{svg,pdf,png}= within ~org-image-block-directory~, each backend taking its own.
+  None of SVG, dot, PlantUML, Mermaid, or D2 has a preamble, so a line of dashes in one is an error.
+
+  =C-c C-c=, and export, need each language's tools; a missing one is an error saying how to
+  install it. On macOS, by [[https://brew.sh][Homebrew]]:
+  | Language | Its tools                | Installed by                                                    |
+  |----------+--------------------------+-----------------------------------------------------------------|
+  | Every one | =pdftocairo=, =pdfcrop=  | =brew install poppler=; =pdfcrop= comes with TeX Live            |
+  | =latex=   | =pdflatex=               | TeX Live; e.g., =brew install --cask mactex=                     |
+  | =html=    | Chrome, or Chromium      | ~org-image-block-browser~ finds it                               |
+  | =svg=     | =rsvg-convert=           | =brew install librsvg=                                           |
+  | =dot=     | =dot=                    | =brew install graphviz=                                          |
+  | =plantuml= | =plantuml=              | =brew install plantuml=                                          |
+  | =mermaid= | =mmdc=, for LaTeX alone  | =npm install -g @mermaid-js/mermaid-cli=                         |
+  | =d2=      | =d2=, =rsvg-convert=     | =brew install d2 librsvg=                                        |
+
+  *Why not Babel's own =ob-dot=, =ob-plantuml=, or =ob-mermaid=?* They render a src block to its
+  =:file= on =C-c C-c=, and =:exports results= shows it; that is the core of the job, and they do
+  it well. An image block adds three things:
+  1. *A format per backend:* an SVG, inlined, in HTML; a PDF, vector, in LaTeX; a PNG elsewhere.
+     Babel's =:file= is one format for every backend.
+  2. *Freshness:* renderings are named by the block's hash, so an edited block is rendered afresh;
+     Babel's =:file= keeps exporting the former image till the block is run again.
+  3. *No boilerplate:* no =:file=, nor =:exports results=, on every block.
+  For Mermaid, a fourth: =ob-mermaid= always renders by =mmdc= to a static file, whereas an image
+  block lets the browser, and GitHub, draw it live.
+  A new language, such as Mermaid, is one entry of ~org-image-block-languages~: a function
+  writing the block as a PDF.
+
 ** Switches for every block and section: =:when=, =:let=, =:folded=, …
   :PROPERTIES:
   :CUSTOM_ID: switches-for-every-block
@@ -5694,10 +5817,19 @@ Hence, by [[Geometric]], $\Sn = {1 - r^n \over 1 - r}$ whenever $red:r ≠ 1$.
   | =:let (VAR VAL …)= | Each whole-word =VAR=, or operator such as =->=, in the contents becomes its value, beforehand |
   | =:let NAME=      | Likewise, for the =VAR= and =VAL= of each row of the table =#+name: NAME=, else of the variable =NAME= |
   | =:ignore t=      | The contents, as plain Org; i.e., the block's own behaviour is bypassed      |
-  | =:boxed TITLE=   | The result, within a [[doc:org-block/box][box]] titled =TITLE=; =t= for untitled               |
-  | =:folded TITLE=  | The result, folded within [[doc:org-block/details][details]] titled =TITLE=; =t= for the block's name |
+  | =:boxed TITLE=   | The result, within a [[doc:org--box-block][box]] titled =TITLE=; =t= for untitled               |
+  | =:folded TITLE=  | The result, folded within [[doc:org--details-block][details]] titled =TITLE=; =t= for the block's name |
   | =:verbatim t=    | The block as written, sans its switches, shown as Org source                  |
   | =:demo t=        | That source, then what it exports to; and a test that it still does; see [[#demos][Demos]] |
+  | =:backend B=     | Nothing at all, unless we export along =B=, or one of a list such as =(html latex)=, or a backend deriving from one |
+  | =:tags T=        | Nothing at all, when the tag =T=, or one of a list, is among =#+exclude_tags:=; see [[#two-editions][Two editions]] |
+  | =:within B=      | The result, within the block =B=, or =(B ARG :KEY VAL …)=, or within each of a list of them, outermost first |
+  | =:permalink ID=  | The result, after a 🔗 whose URL ends in =#ID=; =t= for its =#+name:=, else its title; see [[https://alhassy.com/permalinks#permalinks][Permalinks]] |
+  | =:filename F=    | The result, beneath its file name =F=; for a src block, =t= is the file it =:tangle=-s to |
+  | =:copy t=        | The result, with a button copying its text, in HTML; every src and example block has one by default |
+  | =:tab T=         | The result as the tab =T= of the tabset that adjacent =:tab= blocks make, in HTML; =t= for a src block's language |
+  | =:highlight L=   | The lines =L=, such as ="2,4-6"=, or coderef labels, such as =(loop)=, lit up, in HTML |
+  | =:log t=         | The result, as ever; and what it transpiles to, in the buffer =*Org Block Log*=; or in the file =:log FILE= |
 
   #+begin_org :ignore t :demo t
   #+begin_box Exercise :let (N 7)
@@ -5809,6 +5941,126 @@ Recall that p -> q.
   run Lisp written in the document, Emacs asks once before running each distinct form;
   ~org-defblock-evaluate-switches~ may instead allow them freely, or never.
 
+*** Two editions of one document: =:tags=
+  :PROPERTIES:
+  :CUSTOM_ID: two-editions
+  :END:
+
+  A course's notes come in two editions: the students' and the instructor's. Org already
+  writes both from one file, for sections: a heading tagged =:solution:= is not exported
+  when =#+exclude_tags: solution= says so. The =:tags= switch brings the same to blocks,
+  sans a heading per answer:
+  #+begin_src org :tangle no
+,#+exclude_tags: solution instructor
+
+,#+begin_box Exercise
+What do the first =N= odd numbers sum to?
+,#+end_box
+
+,#+begin_box Answer :tags solution
+=N²=, by induction on =N=.
+,#+end_box
+
+,#+begin_remark :tags instructor
+Most students guess =2N=; ask for a counterexample.
+,#+end_remark
+  #+end_src
+  So the students' edition is the file as is; the instructor's is the file sans its
+  =#+exclude_tags:= line. A block's tags are a symbol, a string of words, or a list of
+  them: =:tags solution=, =:tags "solution hard"=, =:tags (solution hard)=. Sans any
+  =#+exclude_tags:=, Org's own ~org-export-exclude-tags~ applies, which is =noexport=; so
+  =:tags noexport= is =:noexport t=. A heading inherits =:header-args:box: :tags solution=
+  for each box of its subtree, as with any other switch.
+
+  =:tags= is sugar for a =:when=, sans the Lisp, and so sans the question before running
+  it. The answer above is, longhand,
+  #+begin_src org :tangle no
+,#+begin_box Answer :when (not (member "solution" (split-string (or (cadar (org-collect-keywords '("EXCLUDE_TAGS"))) ""))))
+  #+end_src
+  In similar spirit, =:backend html= is =:when (eq backend 'html)=, save that it also
+  matches a backend deriving from =html=, such as Markdown or a blog's own.
+
+*** Wrap a block in others: =:within=
+
+  =:folded T= and =:boxed T= wrap a block in a [[doc:org--details-block][details]] and a [[doc:org--box-block][box]]; =:within= wraps it in any
+  block, with any arguments, as written on its =#+begin_= line:
+  | =:within (details "Hint")=                 | ≡ =:folded "Hint"=                        |
+  | =:within ((details "Hint") (box "Lemma"))= | ≡ =:folded "Hint" :boxed "Lemma"=         |
+  | =:within (box "Aside" :shadow t)=          | A box with a shadow, which =:boxed= lacks |
+  | =:within center=                           | Org's own =#+begin_center=                |
+  | =:within (margin "see")=                   | A margin note on the word “see”, holding the block |
+  A block that ~org-defblock~ made is called by its handler; any other, such as =quote=,
+  =center=, or a special block of no declaration, is left to Org. The first of a list is
+  outermost. Since a heading's drawer takes every switch, =:within: (details "Proof")=
+  folds a section's text away.
+
+  Why not =:wrap=? Babel has it already: =#+begin_src python :wrap example= wraps the
+  block's /results/, not the block. A src block's language keeps every header argument
+  Babel declares for it ---its common ones, such as =:wrap=, and those of
+  =org-babel-header-args:LANG=--- just as a block of ours keeps a keyword it declares;
+  so =ob-elvish='s own =:log=, say, stays its own.
+
+*** Code: =:filename=, =:copy=, =:highlight=, =:tab=
+
+  Literate configurations name the file each block tangles to; =:filename t= shows it atop
+  the block, from its =:tangle=, as inherited. Then =#+PROPERTY: header-args:emacs-lisp
+  :tangle init.el :filename t= titles every block of the file, sans repeating ourselves.
+  #+begin_src org :tangle no
+,#+begin_src emacs-lisp :tangle init.el :filename t :highlight "2"
+(use-package org
+  :custom (org-hide-emphasis-markers t))
+,#+end_src
+  #+end_src
+
+  Every src and example block has a copy button in HTML, by =:copy t=, which each
+  inherits from ~org-babel-default-header-args:src~ and ~org-babel-default-header-args:example~.
+  The button copies the code sans its =-n= line numbers. To turn it off, write =:copy nil=
+  for a block, =#+PROPERTY: header-args:haskell :copy nil= for a language, or
+  =#+PROPERTY: header-args:src :copy nil= for every src block of the file; =header-args:src=
+  is weaker than a language's own, as Babel's language-agnostic =header-args= is weaker still.
+  A src block whose code is not exported, by =:exports results= or =none=, has neither a
+  button nor a file name.
+
+  =:highlight= lights lines up, by number ---as =-n= shows them, else counting from 1--- or
+  by Org's own coderef labels. In the following, the second line is lit by its label, and
+  hovering over the link lights it too, as Org's own manual promises:
+  #+begin_src org :tangle no
+,#+begin_src C -n :highlight (loop)
+int tot = 1;
+for (int i = 0; i != 10; i++)   (ref:loop)
+   tot *= i;
+,#+end_src
+
+The loop on line [[(loop)]] multiplies.
+  #+end_src
+  Org writes the hover's script only when ~org-html-head-include-scripts~ is on, which is
+  off by default; we add the script whenever a page has a =[[(label)]]= link.
+
+  Adjacent =:tab= blocks are one tabset, in HTML; =:tab t= is titled by a src block's
+  language. One algorithm in three languages takes the room of one:
+  #+begin_src org :tangle no
+,#+begin_src haskell :tab t
+sum [1 .. 10]
+,#+end_src
+,#+begin_src python :tab Python3
+sum(range(1, 11))
+,#+end_src
+,#+begin_src emacs-lisp :tab "Emacs Lisp"
+(apply #'+ (number-sequence 1 10))
+,#+end_src
+  #+end_src
+  Elsewhere ---LaTeX, Markdown, or a page sans JavaScript--- each block appears in turn,
+  beneath its title.
+
+*** What does a block transpile to?: =:log=
+
+  Every block becomes HTML, or LaTeX, in place of what it holds. To see that rendering apart
+  from the page ---when debugging a block of our own, say--- we mark it =:log t=: each export
+  then appends the block's rendering to the buffer =*Org Block Log*=, its other switches
+  applied; =:log FILE= writes it to =FILE= instead. Moreover, =C-c C-c= within a =:log=
+  block shows its rendering at once, along each of ~org-demo-backends~, sans exporting
+  the document; save within a src block, whose =C-c C-c= stays Babel's.
+
 ** Demos ---a block, then what it exports to, and a test that it still does
   :PROPERTIES:
   :CUSTOM_ID: demos
@@ -5854,8 +6106,8 @@ Hi *there*
   ~M-x org-demo-refresh-buffer~ snapshots them all; =C-u C-c C-c= leaves =C-c C-c= to the
   block's own action, if any.
 
-  A demo's value says what else to show: =:demo org-block/box= folds away the definition of
-  ~org-block/box~, below the rendering; =:demo (f v)= those of the function =f= and the
+  A demo's value says what else to show: =:demo org--box-block= folds away the definition of
+  ~org--box-block~, below the rendering; =:demo (f v)= those of the function =f= and the
   variable =v=, wherever they are defined ---a library, or this very document. A =live= demo,
   =:demo live=, keeps no snapshot: its rendering varies by machine, say, so it renders afresh
   each export and checks nothing; so =C-c C-c= in it is the block's own, such as a graph's.
@@ -6056,7 +6308,7 @@ the fundamental notions of number, order, and function.
   Where =red:𝒳= colours text, =[[highlight:pink][𝒳]]= colours its background; the colour
   defaults to yellow, and the link shows so highlighted in Emacs too.
 
-  #+begin_org :ignore t :demo org-block/highlight
+  #+begin_org :ignore t :demo org--highlight-block
   Skimming readers see [[highlight:yellow][the one sentence that matters]], and [[highlight:pink][the one to reread]].
 
   #+begin_highlight #e5f5e5
@@ -6123,11 +6375,11 @@ the fundamental notions of number, order, and function.
     =#+html_export_style:=, and =toggle-details=, which are HTML-only by design: they
     dress the page itself, and Markdown has no say over the page.
 
-  Dislike how a block B exports to Markdown? Advise ~org-block/B~ on your own machine; its
+  Dislike how a block B exports to Markdown? Advise ~org--B-block~ on your own machine; its
   result is Org, so the export makes of it whatever it does of any Org. By way of example,
   boxes between horizontal rules:
   #+begin_src emacs-lisp
-(advice-add 'org-block/box :around
+(advice-add 'org--box-block :around
             (lambda (box backend raw-contents &rest args)
               "In Markdown, a box is its bold title and text, between rules; elsewhere, as before."
               (if (org-export-markdown-p)
@@ -6144,7 +6396,7 @@ Each block names the LaTeX packages it needs ---a box, ~xcolor~ and ~tcolorbox~;
 ~csquotes~--- and a LaTeX export that uses the block, or its link, loads them just before
 =\begin{document}=. So we declare none ourselves; a package we do load, options and all, is left be.
 To see what a block needs, read the ~:latex-head~ of its definition, or evaluate
-~(get 'org-block/box 'org-latex-head)~ ⇒ ~("xcolor" "tcolorbox")~.
+~(get 'org--box-block 'org-latex-head)~ ⇒ ~("xcolor" "tcolorbox")~.
 
 A test, [[https://github.com/alhassy/org-special-block-extras/blob/master/tests/org-pdf-export-tests.el][tests/org-pdf-export-tests.el]], keeps this honest: it compiles every example of this manual to a
 PDF, and to beamer slides, declaring no packages at all. It uses LuaLaTeX, which reads Unicode such
@@ -6180,8 +6432,8 @@ margins, so there our margin notes, tooltips, and Org's footnotes are beamer's o
   "Call out CONTENTS under TITLE, tinted COLOR."
   (pcase backend
     ('html (format "<div style=\"border-left: 4px solid %s; padding-left: 1em\"><b>%s</b>%s</div>"
-                   color title contents))
-    (_     (format "\\textbf{\\color{%s}%s} %s" color title contents))))
+                   color (org-inline title) contents))
+    (_     (format "\\textbf{\\color{%s}%s} %s" color (org-inline title) contents))))
   #+end_src
 
   Now the following binds ~title~ to ="Heads up"= and ~color~ to =red=; omit either, and
@@ -6212,6 +6464,20 @@ Mind the gap.
 
   Every block is also a link, with the label as main argument and the description as
   contents: =[[note:Heads up][Mind the gap.]]=.
+
+  Our markup works in every block, for free: ~contents~ is Org, exported as prose is, so =red:fire=,
+  =[[tooltip:x][a tip]]=, =$\alpha$=, =[[https://orgmode.org][Org]]=, =[[file:notes.org][notes]]=,
+  =[[*Heading]]=, =[[target]]=, and =<<target>>= all render within it. An argument is a different matter:
+  only the block knows whether its ~title~ is prose, or whether its ~color~ is a colour's name; so we
+  hand a prose argument to ~(org-inline title)~, as the ~note~ above does, and its markup renders too
+  ---links to the document's sections and targets included, and its own =<<target>>= joins the document,
+  so a =[[target]]= elsewhere reaches the block. The package's own titles all do so.
+
+  Wherever the output is no prose, the same links mean the same things: in a math block, a proof tree,
+  and inline =$…$=, =red:x= is ={\color{red}x}= and =[[tooltip:x][a tip]]= hovers; in a graph, =red:x=
+  colours its node's label, a =tooltip:= is the node's tooltip, a web link its URL, and =$\lambda_{x}$=
+  shows as λ subscripted x. Each link says what it means once, in ~org-markup-links~; a link of our own
+  joins that list to reach maths and graphs alike.
 
   A block names what its document's head needs, added once, by ~:latex-head~ and ~:html-head~; say,
   ~(org-defblock thm (&optional title :latex-head ("amsthm" "\\newtheorem{theorem}{Theorem}")) …)~. A
@@ -6417,7 +6683,7 @@ Mind the gap.
   press, so Org does nothing else with it; nil declines it, leaving it to the block's
   =:C-c_C-c= switch, if any.
 
-  For a complete worked example, we may mimic the [[doc:org-block/graph][graph]] block's handler,
+  For a complete worked example, we may mimic the [[doc:org--graph-block][graph]] block's handler,
   [[https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-graph-block.el][org-graph--cc-handler]]. It
   + finds its block via ~(re-search-backward "^[ \t]*#\\+begin_graph\\b")~ then ~(org-special-block-after-point "graph")~;
   + reads the block's keyword arguments, so =#+begin_graph :C-c_C-c dot= changes what =C-c C-c= does;
@@ -6435,6 +6701,47 @@ Mind the gap.
   The dispatcher itself ---a single function on ~org-ctrl-c-ctrl-c-hook~--- lives in
   [[https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-ctrl-c-ctrl-c-for-special-block.el][org-ctrl-c-ctrl-c-for-special-block.el]].
 
+** Your own Babel: a block, and its =C-c C-c=
+  :PROPERTIES:
+  :CUSTOM_ID: your-own-babel
+  :END:
+
+  Each =ob-LANG= package teaches Babel to run a language: =C-c C-c= evaluates the block and
+  writes its =#+RESULTS:= below; export shows the code, its results, or both. We have both
+  halves already: ~org-defblock~ says what a block exports to, and ~org-def-action~ what
+  =C-c C-c= does within it. By way of example, a =calc= block whose every line is maths for
+  Emacs's own calculator:
+  #+begin_src emacs-lisp :tangle no
+(org-defblock calc (&context raw-contents)
+  "Each line of maths, beside its value by Emacs's calc."
+  (org-parse (format "#+begin_example\n%s\n#+end_example"
+                     (mapconcat (lambda (line) (format "%s  =  %s" line (calc-eval line)))
+                                (split-string raw-contents "\n" t) "\n"))))
+
+(org-def-action calc ()
+  "Write each line's value below the block, as Babel writes a src block's results."
+  (let ((results (mapconcat (lambda (line) (concat ": " (calc-eval line))) (split-string raw-contents "\n" t) "\n")))
+    (re-search-forward "^[ \t]*#\\+end_calc")
+    (forward-line)
+    (when (looking-at-p "[ \t]*#\\+RESULTS:")
+      (delete-region (point) (org-element-property :end (org-element-at-point))))
+    (insert "#+RESULTS:\n" results "\n")
+    t))
+  #+end_src
+  Then =C-c C-c= within
+  #+begin_src org :tangle no
+,#+begin_calc
+2^10
+sqrt(2)
+,#+end_calc
+  #+end_src
+  writes =: 1024= and =: 1.41421356237= below it; export shows each line beside its value.
+  That is the whole of an =ob-calc=: a language's evaluator is a function of the block's
+  text, so the block's arguments are its header arguments ---=#+begin_calc :precision 3=---
+  inherited by =:header-args:calc:= as ever, and every switch, such as =:folded= or =:tags=,
+  applies for free. For a single block, rather than a kind, the =:C-c_C-c= switch suffices;
+  and =:log t= shows what a block exports to, when the export half is the one in doubt.
+
 ** =C-c '= to edit a block in its own buffer
   :PROPERTIES:
   :CUSTOM_ID: c-c-quote-for-your-own-blocks
@@ -6446,7 +6753,7 @@ Mind the gap.
   edited as ever.
 
   A block may instead choose its buffer's mode: the option =:edit-indirect-mode MODE= makes
-  =C-c '= open the block's contents in a buffer in =MODE=. By way of example, the [[doc:org-block/graph][graph]] block
+  =C-c '= open the block's contents in a buffer in =MODE=. By way of example, the [[doc:org--graph-block][graph]] block
   is declared with ~:edit-indirect-mode org-graph-edit-mode~, an Org mode that completes Graphviz
   attributes.
 
@@ -6490,6 +6797,22 @@ Two.
   special block, it is the src block that is split, as ever. The command is
   ~org-special-block-split~, should you want it on a key of its own.
 
+** =C-c C-v C-j= to insert a block's argument
+  :PROPERTIES:
+  :CUSTOM_ID: c-c-c-v-c-j-to-insert-an-argument
+  :END:
+
+  In a src block, =C-c C-v C-j= completes a header argument, then its value, and appends both
+  to the =#+begin_src= line. Within a special block, it does the same for the block's own
+  keywords, as ~org-defblock~ declares them ---offering each one's default--- and for every
+  switch, such as =:folded= or =:tags=; an empty value, as for =:folded=, means =t=:
+  #+begin_src org :tangle no
+,#+begin_details Hint                         C-c C-v C-j :title-color ⏎ red ⏎
+body                                     ↦    #+begin_details Hint :title-color red
+,#+end_details
+  #+end_src
+  In a src block, our switches join Babel's own header arguments among those it completes.
+
 ** Hover for a block's arguments: =eldoc=
   :PROPERTIES:
   :CUSTOM_ID: eldoc-for-blocks-and-links
@@ -6503,16 +6826,28 @@ Two.
   #+end_example
   This needs no setup beyond =org-special-block-extras-mode=, and works for our own blocks too.
 
-  A multi-line display, such as eldoc-box, shows more beneath that line: the keys that act on the
-  block ---e.g., a math block's =C-c C-c= preview and =C-c '= edit--- and two buttons: /Docs/,
-  for the full story, =C-h o org-block/NAME=; and /See the manual/, for the section of this
-  manual that documents it. Our own blocks declare these as =org-defblock= options:
+  A multi-line display, such as eldoc-box, shows more beneath that line: a representative example
+  of the block, fontified as Org, its =#= comments explaining each feature ---enough for the common
+  uses, sans the manual---; the keys that act on the block ---e.g., a math block's =C-c C-c= preview
+  and =C-c '= edit---; the switches every block understands, =:when=, =:folded=, =:let=, and the
+  rest; and two buttons: /Docs/, for the full story, =C-h o org--NAME-block=; and /See the manual/,
+  for the section of this manual that documents it. Our own blocks declare these as =org-defblock=
+  options:
   #+begin_example
 (org-defblock shy (:hover "Prose that eldoc shows beneath the docstring's first line."
                    :manual "https://example.com/shy") ; or "#ANCHOR", a section of this manual
   "Be shy."
   contents)
+
+;; A long option reads best set apart, after the definition.
+(org-defblock-attribute shy :example "
+# Shy text is still Org: *bold* stays bold.
+#+begin_shy
+Hush, *now*.
+#+end_shy")
   #+end_example
+  Since =org-defblock-attribute= sets any option, after the fact, it serves us for blocks we did not
+  write too; e.g., =(org-defblock-attribute graph :manual "https://example.com/my-notes")=.
   An =org-deflink= takes =:hover= and =:manual= too.
 
   Likewise, completing on a =#+begin_= line ---=M-TAB=, or any completion popup--- offers every
@@ -6525,7 +6860,7 @@ Two.
   :END:
 
 Let's develop blocks for colouring text and link types for inline colouring;
-e.g., [[doc:org-block/color][color]] and [[doc:org-block/teal][teal]].
+e.g., [[doc:org--color-block][color]] and [[doc:org--teal-block][teal]].
  + E.g., ~[[brown: Hello, World!]]~ ⇒ [[brown: Hello, World!]]
  + E.g., ~brown:Friends!~
    ⇒ brown:Friends! ( Note the ‘!’ is not coloured; use ~[[...]]~ ! )
@@ -6813,7 +7148,7 @@ Let's have some sanity tests...
                     (format "Error: “color:%s” ⇒ Unsupported colour!" path)))))
    :export (lambda (colour description backend)
              (-let [block-colouring
-                    (intern (format "org-block/%s" colour))]
+                    (intern (format "org--%s-block" colour))]
                (if (member (intern colour) org--named-colors)
                    (funcall block-colouring backend description)
                  (error "Error: “color:%s” ⇒ Unsupported colour!" colour)))))
@@ -7280,9 +7615,12 @@ With =org-special-block-extras-mode= on, in HTML:
 
 Two targets whose names differ only in whitespace, such as =<<a b>>= and =<<a-b>>=, share an id; we name them apart.
 
-# [[color:orange][Going forward,]]
-Going forward, we could give every heading such a permalink too, producing clickable
-org-headings similar to Github's ---the necessary ingredients are likely [[https://github.com/alhassy/emacs.d#ensuring-useful-html-anchors][here]].
+The =:permalink= switch gives a block, or a section, a permalink sans writing =<<X>>= ourselves:
++ =#+begin_box Lemma :permalink t= puts =<<Lemma>>= atop the box: =t= names it by the block's =#+name:=, else its
+  title; =:permalink euclid= names it =euclid=.  A src block has no title, so =t= needs its =#+name:=.
++ A heading's =:permalink: t= puts the 🔗 beside the heading, as GitHub does, linking to its =CUSTOM_ID=; sans one,
+  the heading's text, with dashes for spaces, becomes it.  The table of contents shows the heading sans 🔗.
++ A =#+PROPERTY: header-args:box :permalink t= gives every titled box one, as with any other switch.
 
 #+html: <br>
 #+begin_org :ignore t :demo t
@@ -8110,10 +8448,10 @@ may be useful to colour the =|=-separated fields of a badge link.
 #   explanation and we want it without the ceremony of first defining a glossary term
 #   then invoking it. Enter the ~margin~ link. For example:
 #       
-# The use of ~doc:𝒳~ --- and [[doc:org-block/documentation][documentation]] --- are for explanatory remarks, personal
+# The use of ~doc:𝒳~ --- and [[doc:org--documentation-block][documentation]] --- are for explanatory remarks, personal
 # documentation, or glossary, that is intended to be used in multiple places.
 # However, sometimes we want a “one-off” remark containing, say, references or
-# additional explanation; for that we provide [[doc:org-block/margin][margin]].
+# additional explanation; for that we provide [[doc:org--margin-block][margin]].
 
 
 ** Intro, motivating examples                                        :ignore:
@@ -8121,9 +8459,9 @@ may be useful to colour the =|=-separated fields of a badge link.
    :CUSTOM_ID: comment-intro
    :END:
 
-   Sometimes I want to use the same [[doc:org-block/tooltip][tooltip]] multiple times, so I write
-   the tooltip content once in a [[doc:org-block/documentation][documentation]] block and then
-   reference it using the the [[doc:org-link/doc][doc]] link type.
+   Sometimes I want to use the same [[doc:org--tooltip-block][tooltip]] multiple times, so I write
+   the tooltip content once in a [[doc:org--documentation-block][documentation]] block and then
+   reference it using the the [[doc:org--doc-link][doc]] link type.
 
    # For instance,
    
@@ -8138,7 +8476,7 @@ may be useful to colour the =|=-separated fields of a badge link.
 
    The ~:label~ is optional; when not provided it defaults to the name of
    the entry with spaces replaced by ‘_’.  For more, see
-   doc:org-block/documentation.  Entry names do not need to be unique,
+   doc:org--documentation-block.  Entry names do not need to be unique,
    but labels do!  ( The labels are like the addresses used to look up a
    person's home. )
       
@@ -8164,7 +8502,7 @@ A theory of typed composition; e.g., typed monoids.
    badge:Pretty|HTML|green|https://alhassy.com/personal-glossary
 
    
-   Moreover, the  [[doc:org-link/doc][doc]] link type lets me reference Emacs-documentation such as
+   Moreover, the  [[doc:org--doc-link][doc]] link type lets me reference Emacs-documentation such as
    doc:loop or doc:thread-last, and English-dictionary entries such as
    doc:happiness.
 
@@ -8853,18 +9191,18 @@ Let =𝒞= be any of the following: =black=, =blue=, =brown=, =cyan=, =darkgray=
 
 | Idea                   | Documentation                                                    | Link only?          |
 |------------------------+------------------------------------------------------------------+---------------------|
-| Colours                | =𝒞=, [[doc:org-block/math][math]], [[doc:org--color][color]]                                      |                     |
-| Parallel               | [[doc:org-block/parallel][parallel]]                             |                     |
-| Editorial Comments     | [[doc:org-block/remark][remark]]                                 |                     |
-| Folded Details         | [[doc:org-block/details][details]] ,  [[doc:org-block/box][box]] |                     |
+| Colours                | =𝒞=, [[doc:org--math-block][math]], [[doc:org--color][color]]                                      |                     |
+| Parallel               | [[doc:org--parallel-block][parallel]]                             |                     |
+| Editorial Comments     | [[doc:org--remark-block][remark]]                                 |                     |
+| Folded Details         | [[doc:org--details-block][details]] ,  [[doc:org--box-block][box]] |                     |
 | Keystrokes             |                                                                  | ~kbd~                 |
 | Permalinks             |                                                                  | ~<<X>>~                 |
-| Documentation-Glossary | [[doc:org-block/documentation][documentation]]                   | ~doc~               |
-| Marginal remarks       | [[doc:org-block/margin][margin]]                                 |                     |
+| Documentation-Glossary | [[doc:org--documentation-block][documentation]]                   | ~doc~               |
+| Marginal remarks       | [[doc:org--margin-block][margin]]                                 |                     |
 | Badges                 | [[doc:org-make-badge][badge]]                                    |                     |
-| Equational proofs      | [[doc:org-block/math][math]]                                     |                     |
+| Equational proofs      | [[doc:org--math-block][math]]                                     |                     |
 
-Other fun stuff: [[doc:org-block/solution][solution]], [[https://alhassy.com/org-special-block-extras-blocks-and-links#demos][:demo]], [[doc:org-block/stutter][stutter]], [[doc:org-block/rename][rename]], [[doc:org-block/spoiler][spoiler]], [[doc:org-block/tree][tree]] :grin:
+Other fun stuff: [[doc:org--solution-block][solution]], [[https://alhassy.com/org-special-block-extras-blocks-and-links#demos][:demo]], [[doc:org--stutter-block][stutter]], [[doc:org--rename-block][rename]], [[doc:org--spoiler-block][spoiler]], [[doc:org--tree-block][tree]] :grin:
 
 There are also the social badge links:
 =reddit-subscribe-to=, =github-followers=, =github-forks=, =github-stars, github-watchers=, and =tweet=.

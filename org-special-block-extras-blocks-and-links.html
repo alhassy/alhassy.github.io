@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-14 Sat 22:10 -->
+<!-- 2026-11-15 Sun 06:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -466,14 +466,22 @@ A link within it is followed instead.</p></template>
 </ul>
 </li>
 <li><a href="#graphs">10. Graphs ---<i>Org lists, drawn by Graphviz</i></a></li>
-<li><a href="#switches-for-every-block">11. Switches for every block and section: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></li>
-<li><a href="#demos">12. Demos &mdash;a block, then what it exports to, and a test that it still does</a></li>
-<li><a href="#callouts">13. Callouts &mdash;Note, tip, important, warning, caution</a></li>
-<li><a href="#colours-links">14. Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></li>
-<li><a href="#quote-citations">15. Quotations, cited ---<code>#+begin_quote KEY</code></a></li>
-<li><a href="#highlights">16. Highlights &mdash;Colour the background, not the text</a></li>
-<li><a href="#markdown-export">17. Markdown export &mdash;What survives GitHub, and how to change it</a></li>
-<li><a href="#latex-packages">18. PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></li>
+<li><a href="#images">11. Images &mdash;LaTeX, HTML, SVG, dot, PlantUML, Mermaid, D2: itself where read natively, else a picture</a></li>
+<li><a href="#switches-for-every-block">12. Switches for every block and section: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a>
+<ul>
+<li><a href="#two-editions">12.1. Two editions of one document: <code>:tags</code></a></li>
+<li><a href="#wrap-a-block-in-others-within">12.2. Wrap a block in others: <code>:within</code></a></li>
+<li><a href="#code-filename-copy-highlight-tab">12.3. Code: <code>:filename</code>, <code>:copy</code>, <code>:highlight</code>, <code>:tab</code></a></li>
+<li><a href="#what-does-a-block-transpile-to-log">12.4. What does a block transpile to?: <code>:log</code></a></li>
+</ul>
+</li>
+<li><a href="#demos">13. Demos &mdash;a block, then what it exports to, and a test that it still does</a></li>
+<li><a href="#callouts">14. Callouts &mdash;Note, tip, important, warning, caution</a></li>
+<li><a href="#colours-links">15. Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></li>
+<li><a href="#quote-citations">16. Quotations, cited ---<code>#+begin_quote KEY</code></a></li>
+<li><a href="#highlights">17. Highlights &mdash;Colour the background, not the text</a></li>
+<li><a href="#markdown-export">18. Markdown export &mdash;What survives GitHub, and how to change it</a></li>
+<li><a href="#latex-packages">19. PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></li>
 </ul>
 </div>
 </div>
@@ -486,7 +494,7 @@ A link within it is followed instead.</p></template>
 <h2 id="boxed-text"><span class="section-number-2">1.</span> <a href="#boxed-text">Boxed Text —Calling out super duper info</a></h2>
 <div class="outline-text-2" id="text-boxed-text">
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">It can be useful to draw attention to some important text by
-enclosing it in a [[doc:org-block/box][box]].
+enclosing it in a [[doc:org--box-block][box]].
 
 #+begin_box Uses of callout boxes
 Such boxes often callout tips, warnings, cautionary info or
@@ -533,7 +541,7 @@ emphasises core information.
    
     is rewritten to the result of the call
    
-        (org-block/box ‘latex "Hello, world")</pre></template></abbr>.
+        (org--box-block ‘latex "Hello, world")</pre></template></abbr>.
    </p>
    
    <div style="padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"> <h3>Uses of callout boxes</h3> 
@@ -541,7 +549,9 @@ emphasises core information.
    Such boxes often callout tips, warnings, cautionary info or
    emphasises core information.
    </p>
-   </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+   </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> box (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">""</span>) <span style="color: #c18401;">&amp;key</span> background-color shadow frame-color title-background-color
                   <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Boxed-Text"</span>
                   <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
@@ -583,15 +593,16 @@ requires the tcolorbox package; Markdown, sans colours, gets a quote opening wit
                                          <span style="color: #50a14f;">"colbacktitle=osbe-box-title,coltitle=red!25!black, fonttitle=\\bfseries,"</span>
                                          <span style="color: #50a14f;">"subtitle style={boxrule=0.4pt, colback=yellow!50!red!25!white}]"</span>
                                          <span style="color: #50a14f;">"%s\\end{tcolorbox}"</span>)
-                                 title contents)))
+                                 (org-inline title) contents)))
                 (_ (format <span style="color: #50a14f;">"&lt;div style=\"%s\"&gt; &lt;h3&gt;%s&lt;/h3&gt; %s &lt;/div&gt;"</span>
                            (s-join <span style="color: #50a14f;">";"</span> (list <span style="color: #50a14f;">"padding: 1em"</span>
                                              (format <span style="color: #50a14f;">"background-color: %s"</span> (org-subtle-colors (format <span style="color: #50a14f;">"%s"</span> (<span style="color: #a626a4;">or</span> background-color <span style="color: #50a14f;">"green"</span>))))
                                              <span style="color: #50a14f;">"border-radius: 15px"</span>
                                              <span style="color: #50a14f;">"font-size: 0.9em"</span>
                                              (org--box-shadow shadow)))
-                           title contents))))
+                           (org-inline title) contents))))
 </code></pre>
+</div>
 </div>
  </details>
 </div>
@@ -601,7 +612,7 @@ requires the tcolorbox package; Markdown, sans colours, gets a quote opening wit
 <div class="outline-text-2" id="text-folded-details">
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Sometimes there is a remark or a code snippet that is useful to
 have, but not relevant to the discussion at hand and so we want to
-/fold away such [[doc:org-block/details][details]]/.
+/fold away such [[doc:org--details-block][details]]/.
 
 #+begin_details Example use cases
 + ‘Conversation-style’ articles, where the author asks the reader questions
@@ -638,7 +649,7 @@ Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "gree
    
     is rewritten to the result of the call
    
-        (org-block/details ‘latex "Hello, world")</pre></template></abbr></i>.
+        (org--details-block ‘latex "Hello, world")</pre></template></abbr></i>.
    </p>
    
    <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
@@ -656,7 +667,9 @@ Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "gree
    
    <p>
    Full syntax <code>#+begin_details "title" :background-color "cyan" :title-color "green"</code>.
-   </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+   </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> details (<span style="color: #c18401;">&amp;optional</span> (title <span style="color: #50a14f;">"Details"</span>) <span style="color: #c18401;">&amp;key</span> (background-color <span style="color: #50a14f;">"#e5f5e5"</span>) (title-color <span style="color: #50a14f;">"green"</span>)
                       <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"tcolorbox"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Folded-Details"</span>
                       <span style="color: #c18401;">&amp;context</span> backend contents)
@@ -676,15 +689,16 @@ In HTML, we show folded, details, regions with a nice greenish colour."</span>
                                                 <span style="color: #50a14f;">"%s\n"</span>
                                                 <span style="color: #50a14f;">"\\end{tcolorbox}\n"</span>
                                                 <span style="color: #50a14f;">"\\end{quote}"</span>)
-                                        title contents)))
+                                        (org-inline title) contents)))
                 (_ (format (concat <span style="color: #50a14f;">"&lt;details class=\"code-details\" style=\"padding: 1em; background-color: %s; "</span>
                                    <span style="color: #50a14f;">"border-radius: 15px; color: hsl(157 75%% 20%%); font-size: 0.9em; "</span>
                                    <span style="color: #50a14f;">"box-shadow: 0.05em 0.1em 5px 0.01em #00000057;\"&gt;\n"</span>
                                    <span style="color: #50a14f;">"&lt;summary&gt;&lt;strong&gt;&lt;font face=\"Courier\" size=\"3\" color=\"%s\"&gt;%s&lt;/font&gt;&lt;/strong&gt;&lt;/summary&gt;\n"</span>
                                    <span style="color: #50a14f;">"%s\n"</span>
                                    <span style="color: #50a14f;">"&lt;/details&gt;"</span>)
-                           background-color title-color title contents))))
+                           background-color title-color (org-inline title) contents))))
 </code></pre>
+</div>
 </div>
  </details>
 
@@ -693,11 +707,14 @@ Src blocks fold too: the header argument <code>:folded t</code> exports a src bl
 otherwise would, inside a <code>details</code> block titled by its language; <code>:folded "TITLE"</code> picks
 the title.
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+begin_src emacs-lisp :folded "How is it done?"
 (org-defblock details …)
 #+end_src
 </pre>
+</div>
 
 <p>
 A page with many folded blocks may offer a button to unfold them all at once:
@@ -798,7 +815,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/details ‘latex "Hello, world")</pre></template></abbr> without drawing too much
+     (org--details-block ‘latex "Hello, world")</pre></template></abbr> without drawing too much
 attention, and so a tooltip via <abbr class="tooltip" tabindex="0">remark<template><pre>Format CONTENTS as a first-class editor comment according to BACKEND.
 
 The CONTENTS string has an optional switch: If it contains a line
@@ -833,11 +850,11 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/remark ‘latex "Hello, world")</pre></template></abbr> suffices.
+     (org--remark-block ‘latex "Hello, world")</pre></template></abbr> suffices.
 </p>
 
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">It can be annoying to make readers jump to the bottom of the page to
-read a footnote.  Instead, I prefer to write an /inline [[doc:org-block/tooltip][remark]]/
+read a footnote.  Instead, I prefer to write an /inline [[doc:org--tooltip-block][remark]]/
 containing, say, references or additional explanation.
 
    /[[tooltip:Allah][The God of Abraham; known as Elohim in the Bible]] does not burden a
@@ -868,7 +885,7 @@ Or, without specifying an explicit label:
    
    ‘tooltip’ is an alias, for when we think in HTML rather than LaTeX.
    
-   An alias of ‘org-block/margin’.
+   An alias of ‘org--margin-block’.
    
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
@@ -884,7 +901,7 @@ Or, without specifying an explicit label:
    
     is rewritten to the result of the call
    
-        (org-block/tooltip ‘latex "Hello, world")</pre></template></abbr></i>
+        (org--tooltip-block ‘latex "Hello, world")</pre></template></abbr></i>
    containing, say, references or additional explanation.
    </p>
    
@@ -950,7 +967,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/margin ‘latex "Hello, world")</pre></template></abbr> block's are, numbered as footnotes are. All three of Org's spellings serve: an
+     (org--margin-block ‘latex "Hello, world")</pre></template></abbr> block's are, numbered as footnotes are. All three of Org's spellings serve: an
 anonymous <code>[fn::…]</code>, a named <code>[fn:NAME]</code> defined elsewhere, and a named inline <code>[fn:NAME: …]</code>, which
 later <code>[fn:NAME]</code> references share.
 </p>
@@ -1099,7 +1116,9 @@ definition via #+begin_documentation, then we try to look up its definition via 
   Sense 2
   happiness
          =&gt; feeling</pre></template></abbr>
-  </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+  </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deflink</span> doc (label <span style="color: #c18401;">&amp;optional</span> description backend)
   <span style="color: #50a14f;">"Export LABEL as itself, or as the provided DESCRIPTION,
  along with a tooltip that shows the user's
@@ -1113,7 +1132,7 @@ definition via #+begin_documentation, then we try to look up its definition via 
   <span style="color: #e44649;">:face</span> '(custom-button)
   <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Glossaries"</span>
   <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">progn</span>
-            (add-to-list 'org--docs-actually-used (list label name docs))
+            (org--docs-cite label entry)
             (<span style="color: #a626a4;">pcase</span> backend
               ('html (org--html-tooltip docs display-name (org--docs-plain-p label)))
               <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Make the current word refer to its glossary entry, and declare the location
@@ -1122,6 +1141,7 @@ definition via #+begin_documentation, then we try to look up its definition via 
                               label display-name label))
               (_ display-name))))
 </code></pre>
+</div>
 </div>
  </details>
 
@@ -1189,7 +1209,9 @@ Then, doc:cat studies [[doc:mon][monoids]] and their kin.</pre> </div><div style
   A set with an associative binary operation that has a unit.</p></template></abbr> and their kin.
   </p>
   </div>
-  </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+  </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> documentation
               (<span style="color: #c18401;">&amp;optional</span> (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)) <span style="color: #c18401;">&amp;key</span> label show (color <span style="color: #50a14f;">"green"</span>)
                <span style="color: #c18401;">&amp;allow-other-keys</span>
@@ -1235,6 +1257,7 @@ they are defined; see `</span><span style="color: #50a14f; font-weight: bold; te
 </span>              (<span style="color: #a626a4;">if</span> show (<span style="color: #a626a4;">org--blockcall</span> box name <span style="color: #e44649;">:background-color</span> color raw-contents) <span style="color: #50a14f;">""</span>))
 </code></pre>
 </div>
+</div>
  </details>
 
 <p>
@@ -1256,7 +1279,7 @@ cites it, in the same file or, from a library, in any other.
 <h2 id="parallel"><span class="section-number-2">6.</span> <a href="#parallel">Parallel ---<i>Place ideas side-by-side, possibly with a separator</i></a></h2>
 <div class="outline-text-2" id="text-parallel">
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Reduce the amount of whitespace noise in your articles by using the
-[[doc:org-block/parallel][parallel]] block to place ideas
+[[doc:org--parallel-block][parallel]] block to place ideas
 side-by-side ---with up to 𝓃-many columns.
 
 ----------------------------------------------------------------------
@@ -1291,7 +1314,7 @@ Goodbye (“God-be-with-ye”) to the right!
 
 In summary, articles can get lengthy when vertical whitespace is
 wasted on thin lines; instead, one could save space by using
-/[[doc:org-block/parallel][parallel]] columns of text/.</pre> </div><div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+/[[doc:org--parallel-block][parallel]] columns of text/.</pre> </div><div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
      Reduce the amount of whitespace noise in your articles by using the
      <abbr class="tooltip" tabindex="0">parallel<template><pre>Place ideas side-by-side, possibly with a separator.
      
@@ -1349,7 +1372,7 @@ wasted on thin lines; instead, one could save space by using
      
       is rewritten to the result of the call
      
-          (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> block to place ideas
+          (org--parallel-block ‘latex "Hello, world")</pre></template></abbr> block to place ideas
      side-by-side &mdash;with up to 𝓃-many columns.
      </p>
      
@@ -1446,8 +1469,10 @@ wasted on thin lines; instead, one could save space by using
      
       is rewritten to the result of the call
      
-          (org-block/parallel ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
-     </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+          (org--parallel-block ‘latex "Hello, world")</pre></template></abbr> columns of text</i>.
+     </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (<span style="color: #c18401;">&amp;optional</span> (cols <span style="color: #50a14f;">"2"</span>) <span style="color: #c18401;">&amp;key</span> bar <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span>
                        <span style="color: #c18401;">&amp;context</span> backend contents)
               <span style="color: #50a14f;">"Place ideas side-by-side, possibly with a separator.
@@ -1523,6 +1548,7 @@ With LaTeX export, the use of &#8216;#+columnbreak:&#8217; is used to request a 
                                        <span style="color: #50a14f;">"&lt;/div&gt;"</span>)))))))
 </code></pre>
 </div>
+</div>
  </details>
 </div>
 </div>
@@ -1543,7 +1569,7 @@ Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link 
 
 + red:ATOM colours an ATOM: a {group}; \left(…\right); a \command{with}{arguments}, or a sizer with its
   delimiter, \big(; a word; else one character.  [[red:][a + b]] colours a + b.  So too for any colour,
-  [[color:#ff0066][…]], highlight:, web links, and tooltip: and doc:, which hover in HTML; see ‘org-math-links’.
+  [[color:#ff0066][…]], highlight:, web links, and tooltip: and doc:, which hover in HTML; see ‘org-markup-links’.
 + ATOM[fn::TIP], or ATOM[[tooltip:TIP]], is a tooltip, as [[tooltip:ATOM][TIP]] is, and as in prose: in HTML, TIP hovers over ATOM, by
   tooltips.js; in LaTeX, TIP is a margin note, its number on ATOM.  ATOM[fn:NAME]’s TIP is its “[fn:NAME] TIP”
   definition, elsewhere in the buffer; so one long tip may serve many atoms.
@@ -1598,7 +1624,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/math ‘latex "Hello, world")</pre></template></abbr> block is display maths
+     (org--math-block ‘latex "Hello, world")</pre></template></abbr> block is display maths
 wherein our links are LaTeX's: <code>red:ATOM</code> colours a <code>{group}</code>, <code>\left(…\right)</code>, a
 <code>\command{with}{arguments}</code>, a word, else one character; <code>[[red:][a + b]]</code> colours <code>a + b</code>. So too
 for <code>color:#ff0066</code>, <code>highlight:</code>, web links, and <code>tooltip:</code> and <code>doc:</code>, which hover in
@@ -1653,7 +1679,9 @@ name of the current element]], [[red:starting at a]] and [[cyan:ending at b]].</
   <p>
   The above “quantification” means <span style="color:teal;">Loop sequentially with</span>
   <span style="color:brown;">loop-bodies f(x)</span> <span style="color:teal;">fused using ⊕</span>, using <span style="color:violet;">x as the name of the current element</span>, <span style="color:red;">starting at a</span> and <span style="color:cyan;">ending at b</span>.
-  </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+  </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> math (<span style="color: #c18401;">&amp;key</span> numbered (matrix <span style="color: #50a14f;">"pmatrix"</span>) (hints 'between) environment
                          <span style="color: #e44649;">:link</span> nil <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"amsmath"</span> <span style="color: #50a14f;">"xcolor"</span> <span style="color: #50a14f;">"cancel"</span>) <span style="color: #e44649;">:html-head</span> (mathjax)
                          <span style="color: #e44649;">:edit-indirect-mode</span> latex-mode <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#math"</span>
@@ -1671,7 +1699,7 @@ Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link 
 
 + red:ATOM colours an ATOM: a {group}; \\left(&#8230;\\right); a \\command{with}{arguments}, or a sizer with its
   delimiter, \\big(; a word; else one character.  [[red:][a + b]] colours a + b.  So too for any colour,
-  [[color:#ff0066][&#8230;]], highlight:, web links, and tooltip: and doc:, which hover in HTML; see `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org-math-links</span><span style="color: #50a14f;">'.
+  [[color:#ff0066][&#8230;]], highlight:, web links, and tooltip: and doc:, which hover in HTML; see `</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">org-markup-links</span><span style="color: #50a14f;">'.
 + ATOM[fn::TIP], or ATOM[[tooltip:TIP]], is a tooltip, as [[tooltip:ATOM][TIP]] is, and as in prose: in HTML, TIP hovers over ATOM, by
   tooltips.js; in LaTeX, TIP is a margin note, its number on ATOM.  ATOM[fn:NAME]'s TIP is its &#8220;[fn:NAME] TIP&#8221;
   definition, elsewhere in the buffer; so one long tip may serve many atoms.
@@ -1724,11 +1752,9 @@ Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link 
                          (org-parse (mapconcat (<span style="color: #a626a4;">lambda</span> (d) (replace-regexp-in-string <span style="color: #50a14f;">"^"</span> <span style="color: #50a14f;">"#+latex_header: "</span> d))
                                                definitions <span style="color: #50a14f;">"\n"</span>)))
                        shown
-                       <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The margin notes of the maths' tooltips, after it, as maths holds no \marginpar.
-</span>                       (string-join (reverse org--math-tips))))
+                       (org--math-tips-after backend)))
               <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">MathJax reads the page's text, wherein a &lt; would begin an HTML tag.
-</span>              (t (<span style="color: #a626a4;">when</span> org--math-tips (org-html-head-require 'org--tooltip-html-head))
-                 <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Hints fold on a click, by their tip and script; see `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org--math-hint-styled</span><span style="color: #a0a1a7;">'.
+</span>              (t <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Hints fold on a click, by their tip and script; see `</span><span style="color: #a0a1a7; font-weight: bold; text-decoration: underline;">org--math-hint-styled</span><span style="color: #a0a1a7;">'.
 </span>                 (<span style="color: #a626a4;">when</span> (<span style="color: #a626a4;">and</span> shown (string-match-p <span style="color: #50a14f;">"osbe-hint"</span> shown))
                    (org-html-head-require 'org--tooltip-html-head)
                    (org-html-head-require 'org--math-hint-html-head))
@@ -1736,9 +1762,9 @@ Then [[Fold]] cites the equation, as (Fold) in teal; [[Fold][these words]] link 
                            (format <span style="color: #50a14f;">"&lt;p style=\"display:none\"&gt;\\[</span><span style="color: #50a14f; font-weight: bold; text-decoration: underline;">%s\\</span><span style="color: #50a14f;">]&lt;/p&gt;\n"</span>
                                    (org-html-encode-plain-text (string-join definitions <span style="color: #50a14f;">"\n"</span>))))
                          (<span style="color: #a626a4;">and</span> shown (org-html-encode-plain-text shown))
-                         <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The tips of the maths' tooltips, beside it, since MathJax keeps no &lt;template&gt;.
-</span>                         (mapconcat (<span style="color: #a626a4;">lambda</span> (tip) (concat <span style="color: #50a14f;">"\n"</span> tip)) (reverse org--math-tips) <span style="color: #50a14f;">""</span>))))))))
+                         (org--math-tips-after backend))))))))
 </code></pre>
+</div>
 </div>
  </details>
 
@@ -1756,6 +1782,8 @@ block's last line, so <code>[[NAME]]</code> cites a single equation sans a tag; 
 A description list is a <code>cases</code> environment, each term a value and each description its
 condition &mdash;one of mere words, such as <code>otherwise</code>, is prose:
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+begin_math
 n! =
@@ -1763,6 +1791,7 @@ n! =
 - n · (n-1)! :: otherwise
 #+end_math
 </pre>
+</div>
 <p>
 A line that begins <code>- x</code>, sans a <code>::</code>, stays maths.
 </p></li>
@@ -1786,6 +1815,8 @@ and <code>#+latex_header: \usepackage{unicode-math}</code>, else its symbols are
 a “Missing character” in the log.</li>
 </ul>
 
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+begin_math :numbered t :matrix bmatrix
 R_{teal:\theta} =
@@ -1793,6 +1824,7 @@ R_{teal:\theta} =
 | \sin teal:\theta | \cos teal:\theta  |
 #+end_math
 </pre>
+</div>
 </div>
 </div>
 <div id="outline-container-aligned-equations" class="outline-2">
@@ -1807,7 +1839,9 @@ a hint's nested calculation, <code>\[ … \]</code>, may hold one too. We cite i
 named thing: <code>[[NAME]]</code> is its number, or name, as LaTeX's <code>\eqref</code>
 shows it; and <code>[[NAME][these words]]</code> links the words to it. <code>C-c C-o</code> on the link, in Emacs, visits
 the line; failing that, any <code>\tag{…NAME…}</code>. A <code>NAME</code> may hold maths, such as <code>⊑-Definition</code> or
-<code>Distributivity of \meet</code>, which shows as maths in the tag, and is cited by the very same name. With
+<code>Distributivity of \meet</code>, which shows as maths in the tag, and is cited by the very same name. A line
+may have several names, <code>blue:&lt;&lt;⊑-Definition&gt;&gt; &lt;&lt;Order&gt;&gt;</code>: the first is its tag, and the rest are
+aliases, which cite it just as well &mdash;one equation, one number, many names. With
 <code>:numbered t</code>, the untagged lines are numbered too. Only the block's
 own <code>&amp;</code> counts: one within a <code>{group}</code> or a <code>\begin{cases}…\end{cases}</code> belongs to it, so a
 piecewise definition is one equation, unless its line aligns at an <code>&amp;</code> of its own. A hint,
@@ -1840,6 +1874,8 @@ By [[Golden Rule]], conjunction is defined by equivalence and disjunction.</pre>
 <p>
 To share shorthands among many blocks, name them once, in a table that need not itself export:
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+begin_math :let logic
 p -&gt; q &amp;== \neg p \lor q
@@ -1852,6 +1888,7 @@ p -&gt; q &amp;== \neg p \lor q
 | -&gt;       | \Rightarrow |
 | ==       | \equiv      |
 </pre>
+</div>
 <p>
 The rows above the rule are a header, and are skipped. A Lisp variable serves too, across
 documents: <code>(setq logic '(-&gt; "\\Rightarrow"))</code> and then <code>:let logic</code>.
@@ -1874,12 +1911,15 @@ comment, by the very reading the export makes; any other <code>{…}</code> is L
 A step runs from its hint to the next, wherever the newlines fall &mdash;we need not write <code>\\</code>, and may
 give each expression and hint a line of its own, in Dijkstra's style, or not.
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+begin_math :let (== "\\equiv")
 p \land q =={ Golden Rule } p == q == p \lor q
-           =={ by symmetry } q \land p
+         =={ by symmetry } q \land p
 #+end_math
 </pre>
+</div>
 
 <p>
 A hint may span lines, as a long reason does, and shows on those very lines &mdash;a blank one a gap
@@ -1939,9 +1979,12 @@ A format may join <code>folded</code>, as in <code>(between "{\color{teal} %s}" 
 folded hints in full. Hints beside read well when the expressions are narrow; to have them so
 throughout a file, we say it once, as for any block's <a href="#switches-for-every-block">header arguments</a>:
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+property: header-args:math :hints beside
-</pre></li>
+</pre>
+</div></li>
 </ul>
 
 <div style="padding: 1em;background-color: #CCFFFF;border-radius: 15px;font-size: 0.9em;"> <h3>“Programming Comments  ≈  Proof Hints”</h3> 
@@ -1952,6 +1995,8 @@ Let's prove that \(x ≤ z\)&hellip;
 <p>
 <b>Source:</b>
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_math
 </span>  x
@@ -1969,6 +2014,7 @@ Let's prove that \(x ≤ z\)&hellip;
   z
 <span style="color: #a0a1a7;">#+end_math</span>
 </code></pre>
+</div>
 </div>
 <p>
 <p>
@@ -1991,6 +2037,8 @@ Let's calculate that \(a ⊆ e\)&hellip;
 <p>
 <b>Source:</b>
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_math
 </span>  a
@@ -2004,6 +2052,7 @@ Let's calculate that \(a ⊆ e\)&hellip;
   e
 <span style="color: #a0a1a7;">#+end_math</span>
 </code></pre>
+</div>
 </div>
 
 <br><p><br>
@@ -2043,6 +2092,8 @@ rational root equivales perfect power.
 <p>
 <b>Source:</b>
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_math
 </span><span style="color: #a626a4;">\def</span>\<span style="color: #0184bc;">suc</span>{<span style="color: #a626a4;">\mathsf</span>{suc}<span style="color: #a626a4;">\,</span>}
@@ -2078,6 +2129,7 @@ rational root equivales perfect power.
   2
 <span style="color: #a0a1a7;">#+end_math</span>
 </code></pre>
+</div>
 </div>
 
 </details>
@@ -2227,6 +2279,8 @@ Possibly Useful links:
 <a class="anchor" id="equational-proofs-in-LaTeX" href="#equational-proofs-in-LaTeX" aria-label="Permalink to equational-proofs-in-LaTeX"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
 Copy-paste the following&hellip;
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-latex"><code><span style="color: #50a14f;">$
 </span><span style="color: #a0a1a7; font-weight: bold;">% </span><span style="color: #a0a1a7;">set up \step command
@@ -2243,9 +2297,12 @@ Copy-paste the following&hellip;
 $</span>
 </code></pre>
 </div>
+</div>
 <p>
 Then, use it as follows&hellip;
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-latex"><code><span style="color: #a626a4;">\begin</span>{<span style="color: #0184bc;">calc</span>}
 x
@@ -2255,6 +2312,7 @@ y
 z
 <span style="color: #a626a4;">\end</span>{<span style="color: #0184bc;">calc</span>}
 </code></pre>
+</div>
 </div>
 
 </details>
@@ -2268,7 +2326,7 @@ A calculation enjoys all of a math block's maths. Below, we sum the first \(n\) 
 </p>
 <p style="display:none">\[\def\Sn{\mathcal{S}_n}\]</p>
 \begin{align*}
-&amp; {\color{red}{(1 - r)}} · \class{tooltip osbe-tip-g526}{\Sn}
+&amp; {\color{red}{(1 - r)}} · \class{tooltip osbe-tip-g630}{\Sn}
 \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Definition of $\Sn$} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; {\color{red}{(1 - r)}} · \sum_{i=0}^{n-1} r^i
 \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Distribute ${\color{red}{(1 - r)}}$ over the sum} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; \sum_{i=0}^{n-1} r^i - {\color{teal}{\sum_{i=0}^{n-1} r^{i+1}}}
 \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \begin{array}{@{}l@{}} \text{Shift the second sum's index:} \\ \begin{aligned}[t] &amp; \sum_{i=0}^{n-1} r^{i+1} \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Let $j = i + 1$, from $1$ to $n$} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \\ &amp; \sum_{j=1}^{n} r^j \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Rename $j$ back to $i$} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \\ &amp; \sum_{i=1}^{n} r^i \end{aligned} \end{array} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; \sum_{i=0}^{n-1} r^i - {\color{teal}{\sum_{i=1}^{n} r^i}}
@@ -2276,7 +2334,7 @@ A calculation enjoys all of a math block's maths. Below, we sum the first \(n\) 
 \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{Only the first and the last terms survive} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; {\color{violet}{r^0}} - {\color{violet}{r^n}}
 \\ = &amp; \quad \class{tooltip osbe-tip-hint osbe-hint}{\class{osbe-hint-body}{{\color[RGB]{128,0,0} \left[ \text{$r^0 = 1$} \right.}}\class{osbe-hint-fold}{{\color[RGB]{128,0,0} [\,\cdots\,]}}} \notag \\ &amp; 1 - r^n   \tag{$\color{teal}{\text{Geometric}}$} \label{Geometric}
 \end{align*}
-<template id="osbe-tip-g526"><p>
+<template id="osbe-tip-g630"><p>
 the first \(n\) powers of \(r\), summed</p></template>
 
 <p>
@@ -2300,6 +2358,8 @@ shift-clicks, for all of them.</li>
 <p>
 <b>Source:</b>
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_math :let (&#931; "\\sum_{i=0}^{n-1}")
 </span># A comment, absent from the export: &#119982;&#8345; is defined once.
@@ -2323,6 +2383,7 @@ shift-clicks, for all of them.</li>
   1 - r^n   <span style="color: teal; text-decoration: underline;">teal:</span><span style="color: teal; text-decoration: underline;">&lt;</span><span style="color: #a626a4; text-decoration: underline;">&lt;</span><span style="color: #50a14f; text-decoration: underline;">Geometric</span><span style="color: #a626a4; text-decoration: underline;">&gt;&gt;</span>
 <span style="color: #a0a1a7;">#+end_math</span>
 </code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -2412,7 +2473,9 @@ nesting makes an edge, and a two-column table styles the item above it.
 
 <p>
 Press <code>C-c C-c</code> inside the block to render it to a PNG; <code>C-u C-c C-c</code> shows the dot source instead.
-</p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+</p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> graph (<span style="color: #c18401;">&amp;optional</span> title <span style="color: #c18401;">&amp;key</span> file svg <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:edit-indirect-mode</span> org-graph-edit-mode
                     <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Graphs"</span> <span style="color: #c18401;">&amp;context</span> backend raw-contents args anchor)
   <span style="color: #50a14f;">"Render an Org list + tables as a Graphviz dot graph.
@@ -2420,8 +2483,8 @@ Press <code>C-c C-c</code> inside the block to render it to a PNG; <code>C-u C-c
 TITLE is the graph's label.
 The header's other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
 :directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
-wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
-rather than erring.  Pass :file foo.png on the
+wide rows of leaves over N ranks; and an unknown tag gets a made-up template, unless :unknown-tags error makes it
+an error.  Pass :file foo.png on the
 #+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
 a figure that [[foo]] reaches and #+caption: captions; otherwise the name is graph-HASH.png, HASH being that of the
 dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
@@ -2535,6 +2598,7 @@ Example:
                     (format <span style="color: #50a14f;">"#+begin_src dot :file %s\n%s\n#+end_src"</span> outfile dot)))))))
 </code></pre>
 </div>
+</div>
  </details>
 
 <p>
@@ -2543,8 +2607,8 @@ The <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + 
 TITLE is the graph’s label.
 The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
 :directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
-wide rows of leaves over N ranks; and :unknown-tags random-templates gives an unknown tag a made-up template,
-rather than erring.  Pass :file foo.png on the
+wide rows of leaves over N ranks; and an unknown tag gets a made-up template, unless :unknown-tags error makes it
+an error.  Pass :file foo.png on the
 #+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
 a figure that [[foo]] reaches and #+caption: captions; otherwise the name is graph-HASH.png, HASH being that of the
 dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
@@ -2623,11 +2687,11 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/graph ‘latex "Hello, world")</pre></template></abbr> block is opt-in, so we load it separately with
+     (org--graph-block ‘latex "Hello, world")</pre></template></abbr> block is opt-in, so we load it separately with
 <code>(require 'org-graph-block)</code>. Rendering needs the <code>dot</code> executable from <a href="https://graphviz.org">Graphviz</a>:
 HTML export embeds an inline SVG, whose tooltips hover as any other's do &mdash;or a PNG, sans
 tooltips, via <code>:svg nil</code>&mdash; whereas other backends receive the dot source. Inside the block, <code>#+graph:</code>, <code>#+node:</code> and <code>#+edge:</code>
-tables set Graphviz's defaults; <code>C-h o org-block/graph</code> documents every option.
+tables set Graphviz's defaults; <code>C-h o org--graph-block</code> documents every option.
 </p>
 
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">Some lists want a picture rather than a graph: a centre and what orbits it, or a flow of steps.
@@ -2670,10 +2734,328 @@ smartdiagram package, and <code>pdftoppm</code>. Org's own markup ---<code>#+mac
 links, src blocks&mdash; replaces LaTeX's <code>\newcommand</code>, <code>\texttt</code>, <code>\textcolor</code>, and
 hand-tuned <code>\hspace</code>'s; <a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org">graphs-README.org</a> sets the two side by side.
 </p>
+
+<p>
+Class diagrams, state machines, entity-relationship diagrams, mindmaps, and even sequence
+diagrams are graphs too: tags such as <code>:inherits:</code>, <code>:start:</code>, and <code>:one-to-many:</code> &mdash;templates
+every graph has, in <code>org-graph-builtin-templates</code>&mdash; and <code>#+begin_graph :mindmap t</code> draw them; see
+<a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org#diagrams-we-draw-sequences-classes-states-entities-mindmaps">Diagrams we draw</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-images" class="outline-2">
+<h2 id="images"><span class="section-number-2">11.</span> <a href="#images">Images &mdash;LaTeX, HTML, SVG, dot, PlantUML, Mermaid, D2: itself where read natively, else a picture</a></h2>
+<div class="outline-text-2" id="text-images">
+<p>
+A TikZ picture belongs in a web page as much as in a PDF; an HTML widget, in a PDF as much as
+in a web page. A <code>#+begin_image LANG</code> block is its <code>LANG</code>, raw, along its own backend; along
+any other, an image of itself:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+name: arrow</span>
+<span style="color: #a0a1a7;">#+begin_image latex
+</span>\begin{tikzpicture}
+  \draw[-&gt;, thick] (0,0) -- (2,1) node[right] {$f(x)$};
+\end{tikzpicture}
+<span style="color: #a0a1a7;">#+end_image
+</span>
+<span style="color: #a0a1a7;">#+begin_image html :css "button { background: gold; padding: 1em }"
+</span>&lt;button&gt;Click me&lt;/button&gt;
+<span style="color: #a0a1a7;">#+end_image</span>
+</code></pre>
+</div>
+</div>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Block</th>
+<th scope="col" class="org-left">HTML</th>
+<th scope="col" class="org-left">LaTeX</th>
+<th scope="col" class="org-left">Markdown, and the rest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>#+begin_image latex</code></td>
+<td class="org-left">an SVG, inlined</td>
+<td class="org-left">itself, raw</td>
+<td class="org-left">a PNG</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+begin_image html</code></td>
+<td class="org-left">itself, raw</td>
+<td class="org-left">a PDF, by <code>\includegraphics</code></td>
+<td class="org-left">a PNG</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+begin_image svg</code></td>
+<td class="org-left">itself, raw</td>
+<td class="org-left">a PDF, by <code>\includegraphics</code></td>
+<td class="org-left">a PNG</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+begin_image dot</code></td>
+<td class="org-left">an SVG, inlined</td>
+<td class="org-left">a PDF, by <code>\includegraphics</code></td>
+<td class="org-left">a PNG</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+begin_image plantuml</code></td>
+<td class="org-left">an SVG, inlined</td>
+<td class="org-left">a PDF, by <code>\includegraphics</code></td>
+<td class="org-left">a PNG</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+begin_image mermaid</code></td>
+<td class="org-left">itself, drawn by the browser</td>
+<td class="org-left">a PDF, by <code>\includegraphics</code></td>
+<td class="org-left">itself, drawn by GitHub</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+begin_image d2</code></td>
+<td class="org-left">an SVG, inlined</td>
+<td class="org-left">a PDF, by <code>\includegraphics</code></td>
+<td class="org-left">a PNG</td>
+</tr>
+</tbody>
+</table>
+<p>
+The SVG and PDF are vector, so they stay crisp at any zoom; the SVG is inlined, as a <code>data:</code>
+URI, so a page carries its images along, wherever it is published.
+</p>
+
+<p>
+Above a line of five or more dashes &mdash;Org's horizontal rule&mdash; is the block's own preamble:
+LaTeX's, before <code>\begin{document}</code>, or HTML's <code>&lt;head&gt;</code>. Along its own backend, a LaTeX
+block's preamble joins the document's; an HTML block's precedes it.
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_image latex
+</span>\usepackage{smartdiagram}
+-----
+\smartdiagram[bubble diagram]{Emacs, Org, \LaTeX, HTML}
+<span style="color: #a0a1a7;">#+end_image</span>
+</code></pre>
+</div>
+</div>
+<p>
+Five dashes, since three alone are LaTeX's em-dash.
+</p>
+
+<p>
+<code>C-c C-c</code> within the block renders it, and shows its PNG atop the block; again, to remove it.
+The renderings are <code>images/NAME.{svg,pdf,png}</code>, by <code>org-image-block-directory</code>; each way of
+naming them has its price:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Naming</th>
+<th scope="col" class="org-left"><code>NAME</code></th>
+<th scope="col" class="org-left">Upon an edit</th>
+<th scope="col" class="org-left">Link to it from elsewhere?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Sans <code>:file</code></td>
+<td class="org-left"><code>#+name:</code>, else <code>image</code>, then its hash</td>
+<td class="org-left">rendered afresh; the former axed</td>
+<td class="org-left">No: the name changes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:file tree</code></td>
+<td class="org-left"><code>tree</code>, exactly</td>
+<td class="org-left">stale, till <code>C-c C-c</code></td>
+<td class="org-left">Yes: an intentional figure</td>
+</tr>
+</tbody>
+</table>
+<p>
+A block never rendered is rendered upon export, when the tools are at hand; else it is shown
+as source, with a warning.
+</p>
+
+<p>
+Moreover:
+</p>
+<ul class="org-ul">
+<li><code>:as-image t</code> is an image even along its own backend. Its preamble &mdash;a heavy package, say&mdash;
+then stays out of the document's; yet a PDF's picture of text is neither searchable nor in
+the document's font, and an HTML picture is no longer interactive.</li>
+<li><code>:resolution 300</code> sharpens its PNG; by default, <code>org-image-block-png-resolution</code>, 144.</li>
+<li><code>org-image-block-shell-escape</code> compiles LaTeX with <code>-shell-escape</code>, as <code>minted</code> needs; it is
+off by default, since it lets a document's LaTeX run any shell command.</li>
+</ul>
+
+<p>
+Each language becomes a PDF, cropped, whence <code>pdftocairo</code> makes the SVG and PNG:
+</p>
+<ul class="org-ul">
+<li>LaTeX, by <code>pdflatex</code> &mdash;else the document's <code>#+latex_compiler:</code>&mdash; and the <code>standalone</code>
+class; <code>org-image-block-latex-preamble</code> loads <code>amsmath</code> and TikZ, then the document's own
+<code>#+latex_header:</code> lines, then the block's preamble.</li>
+<li>HTML, by a headless Chrome, <code>org-image-block-browser</code>, then <code>pdfcrop</code>; <code>:css</code> styles it and
+<code>:width 600px</code> fixes its width. It sees none of the page's own CSS, being rendered alone.</li>
+<li>SVG, by <code>rsvg-convert</code>, at the SVG's own size.</li>
+<li>Graphviz's dot, such as <code>digraph { Org -&gt; HTML }</code>, by <code>dot</code>, then <code>pdfcrop</code>; <code>:layout neato</code>
+chooses the layout engine. It is the escape hatch for raw Graphviz; the <a href="#graphs">graph</a> block stays
+the Org-native way to draw one.</li>
+<li>PlantUML, by <code>plantuml</code>, then <code>pdfcrop</code>; a body sans <code>@startuml</code> is put within <code>@startuml</code> …
+<code>@enduml</code>, so <code>Alice -&gt; Bob: Hi</code> alone suffices.</li>
+<li>Mermaid, by <code>mmdc</code>, the Mermaid CLI ---<code>npm install -g @mermaid-js/mermaid-cli</code>&mdash; then
+<code>pdfcrop</code>; yet only for LaTeX and the rest. In HTML, a <code>&lt;pre class</code>"mermaid"&gt;= is drawn by
+Mermaid itself, from a CDN; in Markdown, a fenced <code>mermaid</code> block is drawn by GitHub. So a
+Mermaid diagram stays live, and needs no tool at all, in a web page or a README.</li>
+<li><p>
+<a href="https://d2lang.com">D2</a>, by <code>d2</code>, to SVG, then <code>rsvg-convert</code>; <code>:layout elk</code> chooses its layout engine, <code>:theme 200</code>
+its theme, and <code>:sketch t</code> its hand-drawn look.
+By way of example, a sketched diagram in theme 101:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_image d2 :file flags :theme 101 :sketch t
+</span>High Mem Instance -&gt; EC2 &lt;- High CPU Instance: Hosted By
+<span style="color: #a0a1a7;">#+end_image</span>
+</code></pre>
+</div>
+</div>
+<p>
+---<code>flags.{svg,pdf,png}</code> within <code>org-image-block-directory</code>, each backend taking its own.
+</p></li>
+</ul>
+<p>
+None of SVG, dot, PlantUML, Mermaid, or D2 has a preamble, so a line of dashes in one is an error.
+</p>
+
+<p>
+<code>C-c C-c</code>, and export, need each language's tools; a missing one is an error saying how to
+install it. On macOS, by <a href="https://brew.sh">Homebrew</a>:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Language</th>
+<th scope="col" class="org-left">Its tools</th>
+<th scope="col" class="org-left">Installed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Every one</td>
+<td class="org-left"><code>pdftocairo</code>, <code>pdfcrop</code></td>
+<td class="org-left"><code>brew install poppler</code>; <code>pdfcrop</code> comes with TeX Live</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>latex</code></td>
+<td class="org-left"><code>pdflatex</code></td>
+<td class="org-left">TeX Live; e.g., <code>brew install --cask mactex</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>html</code></td>
+<td class="org-left">Chrome, or Chromium</td>
+<td class="org-left"><code>org-image-block-browser</code> finds it</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>svg</code></td>
+<td class="org-left"><code>rsvg-convert</code></td>
+<td class="org-left"><code>brew install librsvg</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>dot</code></td>
+<td class="org-left"><code>dot</code></td>
+<td class="org-left"><code>brew install graphviz</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>plantuml</code></td>
+<td class="org-left"><code>plantuml</code></td>
+<td class="org-left"><code>brew install plantuml</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>mermaid</code></td>
+<td class="org-left"><code>mmdc</code>, for LaTeX alone</td>
+<td class="org-left"><code>npm install -g @mermaid-js/mermaid-cli</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>d2</code></td>
+<td class="org-left"><code>d2</code>, <code>rsvg-convert</code></td>
+<td class="org-left"><code>brew install d2 librsvg</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<b>Why not Babel's own <code>ob-dot</code>, <code>ob-plantuml</code>, or <code>ob-mermaid</code>?</b> They render a src block to its
+<code>:file</code> on <code>C-c C-c</code>, and <code>:exports results</code> shows it; that is the core of the job, and they do
+it well. An image block adds three things:
+</p>
+<ol class="org-ol">
+<li><b>A format per backend:</b> an SVG, inlined, in HTML; a PDF, vector, in LaTeX; a PNG elsewhere.
+Babel's <code>:file</code> is one format for every backend.</li>
+<li><b>Freshness:</b> renderings are named by the block's hash, so an edited block is rendered afresh;
+Babel's <code>:file</code> keeps exporting the former image till the block is run again.</li>
+<li><b>No boilerplate:</b> no <code>:file</code>, nor <code>:exports results</code>, on every block.</li>
+</ol>
+<p>
+For Mermaid, a fourth: <code>ob-mermaid</code> always renders by <code>mmdc</code> to a static file, whereas an image
+block lets the browser, and GitHub, draw it live.
+A new language, such as Mermaid, is one entry of <code>org-image-block-languages</code>: a function
+writing the block as a PDF.
+</p>
 </div>
 </div>
 <div id="outline-container-switches-for-every-block" class="outline-2">
-<h2 id="switches-for-every-block"><span class="section-number-2">11.</span> <a href="#switches-for-every-block">Switches for every block and section: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></h2>
+<h2 id="switches-for-every-block"><span class="section-number-2">12.</span> <a href="#switches-for-every-block">Switches for every block and section: <code>:when</code>, <code>:let</code>, <code>:folded</code>, …</a></h2>
 <div class="outline-text-2" id="text-switches-for-every-block">
 <p>
 Just as every src block understands <code>:exports</code> and <code>:results</code>, every block understands these
@@ -2763,7 +3145,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/box ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for untitled</td>
+     (org--box-block ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for untitled</td>
 </tr>
 
 <tr>
@@ -2791,7 +3173,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/details ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for the block's name</td>
+     (org--details-block ‘latex "Hello, world")</pre></template></abbr> titled <code>TITLE</code>; <code>t</code> for the block's name</td>
 </tr>
 
 <tr>
@@ -2802,6 +3184,51 @@ For example, upon LaTeX export, the Org special block
 <tr>
 <td class="org-left"><code>:demo t</code></td>
 <td class="org-left">That source, then what it exports to; and a test that it still does; see <a href="#demos">Demos</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:backend B</code></td>
+<td class="org-left">Nothing at all, unless we export along <code>B</code>, or one of a list such as <code>(html latex)</code>, or a backend deriving from one</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:tags T</code></td>
+<td class="org-left">Nothing at all, when the tag <code>T</code>, or one of a list, is among <code>#+exclude_tags:</code>; see <a href="#two-editions">Two editions</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:within B</code></td>
+<td class="org-left">The result, within the block <code>B</code>, or <code>(B ARG :KEY VAL …)</code>, or within each of a list of them, outermost first</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:permalink ID</code></td>
+<td class="org-left">The result, after a 🔗 whose URL ends in <code>#ID</code>; <code>t</code> for its <code>#+name:</code>, else its title; see <a href="https://alhassy.com/permalinks#permalinks">Permalinks</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:filename F</code></td>
+<td class="org-left">The result, beneath its file name <code>F</code>; for a src block, <code>t</code> is the file it <code>:tangle</code>-s to</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:copy t</code></td>
+<td class="org-left">The result, with a button copying its text, in HTML; every src and example block has one by default</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:tab T</code></td>
+<td class="org-left">The result as the tab <code>T</code> of the tabset that adjacent <code>:tab</code> blocks make, in HTML; <code>t</code> for a src block's language</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:highlight L</code></td>
+<td class="org-left">The lines <code>L</code>, such as <code>"2,4-6"</code>, or coderef labels, such as <code>(loop)</code>, lit up, in HTML</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:log t</code></td>
+<td class="org-left">The result, as ever; and what it transpiles to, in the buffer <code>*Org Block Log*</code>; or in the file <code>:log FILE</code></td>
 </tr>
 </tbody>
 </table>
@@ -2875,6 +3302,8 @@ A section and a block are two ways to say the same thing; so a section takes eve
 as a property of its own. By way of example, the following section appears in the PDF alone,
 its arrows typeset:
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #0184bc; font-weight: bold;">* Notes for the printed handout</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
@@ -2883,6 +3312,7 @@ its arrows typeset:
 <span style="font-weight: bold;">:END:</span>
 Recall that p -&gt; q.
 </code></pre>
+</div>
 </div>
 <p>
 A section's contents are its text and subsections; its heading stays put, being its title.
@@ -2910,9 +3340,275 @@ run Lisp written in the document, Emacs asks once before running each distinct f
 <code>org-defblock-evaluate-switches</code> may instead allow them freely, or never.
 </p>
 </div>
+<div id="outline-container-two-editions" class="outline-3">
+<h3 id="two-editions"><span class="section-number-3">12.1.</span> <a href="#two-editions">Two editions of one document: <code>:tags</code></a></h3>
+<div class="outline-text-3" id="text-two-editions">
+<p>
+A course's notes come in two editions: the students' and the instructor's. Org already
+writes both from one file, for sections: a heading tagged <code>:solution:</code> is not exported
+when <code>#+exclude_tags: solution</code> says so. The <code>:tags</code> switch brings the same to blocks,
+sans a heading per answer:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+exclude_tags: solution instructor</span>
+
+<span style="color: #a0a1a7;">#+begin_box Exercise
+</span>What do the first =N= odd numbers sum to?
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_box Answer :tags solution
+</span>=N&#178;=, by induction on =N=.
+<span style="color: #a0a1a7;">#+end_box
+</span>
+<span style="color: #a0a1a7;">#+begin_remark :tags instructor
+</span>Most students guess =2N=; ask for a counterexample.
+<span style="color: #a0a1a7;">#+end_remark</span>
+</code></pre>
+</div>
+</div>
+<p>
+So the students' edition is the file as is; the instructor's is the file sans its
+<code>#+exclude_tags:</code> line. A block's tags are a symbol, a string of words, or a list of
+them: <code>:tags solution</code>, <code>:tags "solution hard"</code>, <code>:tags (solution hard)</code>. Sans any
+<code>#+exclude_tags:</code>, Org's own <code>org-export-exclude-tags</code> applies, which is <code>noexport</code>; so
+<code>:tags noexport</code> is <code>:noexport t</code>. A heading inherits <code>:header-args:box: :tags solution</code>
+for each box of its subtree, as with any other switch.
+</p>
+
+<p>
+<code>:tags</code> is sugar for a <code>:when</code>, sans the Lisp, and so sans the question before running
+it. The answer above is, longhand,
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code>#+begin_box Answer :when (not (member "solution" (split-string (or (cadar (org-collect-keywords '("EXCLUDE_TAGS"))) ""))))
+</code></pre>
+</div>
+</div>
+<p>
+In similar spirit, <code>:backend html</code> is <code>:when (eq backend 'html)</code>, save that it also
+matches a backend deriving from <code>html</code>, such as Markdown or a blog's own.
+</p>
+</div>
+</div>
+<div id="outline-container-wrap-a-block-in-others-within" class="outline-3">
+<h3 id="wrap-a-block-in-others-within"><span class="section-number-3">12.2.</span> <a href="#wrap-a-block-in-others-within">Wrap a block in others: <code>:within</code></a></h3>
+<div class="outline-text-3" id="text-wrap-a-block-in-others-within">
+<p>
+<code>:folded T</code> and <code>:boxed T</code> wrap a block in a <abbr class="tooltip" tabindex="0">details<template><pre>Enclose contents in a folded up box, for HTML.
+
+For LaTeX, this is just a boring, but centered, box.
+
+By default, the TITLE of such blocks is “Details”,
+its TITLE-COLOR is green, and BACKGROUND-COLOR is “#e5f5e5”.
+
+In HTML, we show folded, details, regions with a nice greenish colour.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_details
+     Hello, world
+     #+end_details
+
+ is rewritten to the result of the call
+
+     (org--details-block ‘latex "Hello, world")</pre></template></abbr> and a <abbr class="tooltip" tabindex="0">box<template><pre>Enclose text in a box, possibly with a TITLE.
+
+By default, the box’s BACKGROUND-COLOR is green for HTML and red for LaTeX;
+for LaTeX, there are also FRAME-COLOR and TITLE-BACKGROUND-COLOR.
+
+SHADOW is an alternate style of boxing: It shows the contents in a centred
+box with a shadow colour being the given non-nil value of SHADOW.
+If SHADOW is a hexadecimal colour, it should be a string enclosed in double quotes.
+More accurately, the following are all valid uses:
+
+    #+begin_box title :shadow t
+    #+begin_box title :shadow inset
+
+    #+begin_box title :shadow "pink"
+    #+begin_box title :shadow pink
+
+    #+begin_box title :shadow (cyan pink orange yellow)
+    #+begin_box title :shadow (cyan "inset pink" orange)
+    #+begin_box title :shadow (:left cyan :right pink :deep-right orange :deep-left yellow)
+
+Notice that prefixing colours with ‘inset’ causes the colour to be within the box,
+rather than spread, with blur, around the box. The use of ‘inset’ swaps left and right.
+
+The HTML export uses a padded div, whereas the LaTeX export
+requires the tcolorbox package; Markdown, sans colours, gets a quote opening with TITLE in bold.
+
+Regarding the Lisp function:
++ BACKEND refers to the current export backend.
++ RAW-CONTENTS refers to the text as the user wrote it, sans its least indentation.
+  ⇒ Its body asks, by &amp;context, for CONTENTS: the ‘org parsed’ version of user text.
+  ⇒ CONTENTS and RAW-CONTENTS are identical for the description of a link; whence the LINK? of &amp;context is non-nil.
+
+For example, upon LaTeX export, the Org special block
+
+     #+begin_box
+     Hello, world
+     #+end_box
+
+ is rewritten to the result of the call
+
+     (org--box-block ‘latex "Hello, world")</pre></template></abbr>; <code>:within</code> wraps it in any
+block, with any arguments, as written on its <code>#+begin_</code> line:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><code>:within (details "Hint")</code></td>
+<td class="org-left">≡ <code>:folded "Hint"</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:within ((details "Hint") (box "Lemma"))</code></td>
+<td class="org-left">≡ <code>:folded "Hint" :boxed "Lemma"</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:within (box "Aside" :shadow t)</code></td>
+<td class="org-left">A box with a shadow, which <code>:boxed</code> lacks</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:within center</code></td>
+<td class="org-left">Org's own <code>#+begin_center</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:within (margin "see")</code></td>
+<td class="org-left">A margin note on the word “see”, holding the block</td>
+</tr>
+</tbody>
+</table>
+<p>
+A block that <code>org-defblock</code> made is called by its handler; any other, such as <code>quote</code>,
+<code>center</code>, or a special block of no declaration, is left to Org. The first of a list is
+outermost. Since a heading's drawer takes every switch, <code>:within: (details "Proof")</code>
+folds a section's text away.
+</p>
+
+<p>
+Why not <code>:wrap</code>? Babel has it already: <code>#+begin_src python :wrap example</code> wraps the
+block's <i>results</i>, not the block. A src block's language keeps every header argument
+Babel declares for it &mdash;its common ones, such as <code>:wrap</code>, and those of
+<code>org-babel-header-args:LANG</code>&mdash; just as a block of ours keeps a keyword it declares;
+so <code>ob-elvish</code>'s own <code>:log</code>, say, stays its own.
+</p>
+</div>
+</div>
+<div id="outline-container-code-filename-copy-highlight-tab" class="outline-3">
+<h3 id="code-filename-copy-highlight-tab"><span class="section-number-3">12.3.</span> <a href="#code-filename-copy-highlight-tab">Code: <code>:filename</code>, <code>:copy</code>, <code>:highlight</code>, <code>:tab</code></a></h3>
+<div class="outline-text-3" id="text-code-filename-copy-highlight-tab">
+<p>
+Literate configurations name the file each block tangles to; <code>:filename t</code> shows it atop
+the block, from its <code>:tangle</code>, as inherited. Then <code>#+PROPERTY: header-args:emacs-lisp
+  :tangle init.el :filename t</code> titles every block of the file, sans repeating ourselves.
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_src emacs-lisp :tangle init.el :filename t :highlight "2"
+</span>(<span style="color: #a626a4;">use-package</span> org
+  <span style="color: #e44649;">:custom</span> (org-hide-emphasis-markers t))
+<span style="color: #a0a1a7;">#+end_src</span>
+</code></pre>
+</div>
+</div>
+
+<p>
+Every src and example block has a copy button in HTML, by <code>:copy t</code>, which each
+inherits from <code>org-babel-default-header-args:src</code> and <code>org-babel-default-header-args:example</code>.
+The button copies the code sans its <code>-n</code> line numbers. To turn it off, write <code>:copy nil</code>
+for a block, <code>#+PROPERTY: header-args:haskell :copy nil</code> for a language, or
+<code>#+PROPERTY: header-args:src :copy nil</code> for every src block of the file; <code>header-args:src</code>
+is weaker than a language's own, as Babel's language-agnostic <code>header-args</code> is weaker still.
+A src block whose code is not exported, by <code>:exports results</code> or <code>none</code>, has neither a
+button nor a file name.
+</p>
+
+<p>
+<code>:highlight</code> lights lines up, by number &mdash;as <code>-n</code> shows them, else counting from 1&mdash; or
+by Org's own coderef labels. In the following, the second line is lit by its label, and
+hovering over the link lights it too, as Org's own manual promises:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_src C -n :highlight (loop)
+</span><span style="color: #c18401;">int</span> <span style="color: #8b4513;">tot</span> = 1;
+<span id="coderef-loop" class="coderef-off"><span style="color: #a626a4;">for</span> (<span style="color: #c18401;">int</span> <span style="color: #8b4513;">i</span> = 0; i != 10; i++) (loop)</span>
+   <span style="color: #c18401;">tot</span> *= i;
+<span style="color: #a0a1a7;">#+end_src
+</span>
+The loop on line <span style="text-decoration: underline;"><a href="(loop)">(loop)</a></span> multiplies.
+</code></pre>
+</div>
+</div>
+<p>
+Org writes the hover's script only when <code>org-html-head-include-scripts</code> is on, which is
+off by default; we add the script whenever a page has a <code>[[(label)]]</code> link.
+</p>
+
+<p>
+Adjacent <code>:tab</code> blocks are one tabset, in HTML; <code>:tab t</code> is titled by a src block's
+language. One algorithm in three languages takes the room of one:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_src haskell :tab t
+</span>sum [1 .. 10]
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src python :tab Python3
+</span><span style="color: #e44649;">sum</span>(<span style="color: #e44649;">range</span>(1, 11))
+<span style="color: #a0a1a7;">#+end_src
+</span><span style="color: #a0a1a7;">#+begin_src emacs-lisp :tab "Emacs Lisp"
+</span>(apply #'+ (number-sequence 1 10))
+<span style="color: #a0a1a7;">#+end_src</span>
+</code></pre>
+</div>
+</div>
+<p>
+Elsewhere &mdash;LaTeX, Markdown, or a page sans JavaScript&mdash; each block appears in turn,
+beneath its title.
+</p>
+</div>
+</div>
+<div id="outline-container-what-does-a-block-transpile-to-log" class="outline-3">
+<h3 id="what-does-a-block-transpile-to-log"><span class="section-number-3">12.4.</span> <a href="#what-does-a-block-transpile-to-log">What does a block transpile to?: <code>:log</code></a></h3>
+<div class="outline-text-3" id="text-what-does-a-block-transpile-to-log">
+<p>
+Every block becomes HTML, or LaTeX, in place of what it holds. To see that rendering apart
+from the page &mdash;when debugging a block of our own, say&mdash; we mark it <code>:log t</code>: each export
+then appends the block's rendering to the buffer <code>*Org Block Log*</code>, its other switches
+applied; <code>:log FILE</code> writes it to <code>FILE</code> instead. Moreover, <code>C-c C-c</code> within a <code>:log</code>
+block shows its rendering at once, along each of <code>org-demo-backends</code>, sans exporting
+the document; save within a src block, whose <code>C-c C-c</code> stays Babel's.
+</p>
+</div>
+</div>
 </div>
 <div id="outline-container-demos" class="outline-2">
-<h2 id="demos"><span class="section-number-2">12.</span> <a href="#demos">Demos &mdash;a block, then what it exports to, and a test that it still does</a></h2>
+<h2 id="demos"><span class="section-number-2">13.</span> <a href="#demos">Demos &mdash;a block, then what it exports to, and a test that it still does</a></h2>
 <div class="outline-text-2" id="text-demos">
 <p>
 Any block marked <code>:demo t</code> exports as ﴾What You Write﴿, the block as written sans its
@@ -2921,6 +3617,8 @@ that rendering, along HTML and LaTeX ---<code>org-demo-backends</code>&mdash; in
 after it, as Babel does a src block's results:
 </p>
 
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_box Title :demo t
 </span>Hi <span style="font-weight: bold;">*there*</span>
@@ -2936,6 +3634,7 @@ after it, as Babel does a src block's results:
 <span style="color: #a0a1a7;">#+end_export
 </span><span style="font-weight: bold;">:end:</span>
 </code></pre>
+</div>
 </div>
 
 <p>
@@ -2954,10 +3653,13 @@ source changed since its snapshot, or a rendering that changed for the same sour
 <b>A test suite in the large:</b> <code>org-demo-failures</code> checks every demo of a file, along every
 snapshotted backend; this manual's own are an ERT test,
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">ert-deftest</span> <span style="color: #0184bc;">manual</span> ()
   (should-not (org-demo-failures <span style="color: #50a14f;">"org-special-block-extras.org"</span>)))
 </code></pre>
+</div>
 </div></li>
 </ol>
 
@@ -2967,8 +3669,8 @@ block's own action, if any.
 </p>
 
 <p>
-A demo's value says what else to show: <code>:demo org-block/box</code> folds away the definition of
-<code>org-block/box</code>, below the rendering; <code>:demo (f v)</code> those of the function <code>f</code> and the
+A demo's value says what else to show: <code>:demo org--box-block</code> folds away the definition of
+<code>org--box-block</code>, below the rendering; <code>:demo (f v)</code> those of the function <code>f</code> and the
 variable <code>v</code>, wherever they are defined &mdash;a library, or this very document. A <code>live</code> demo,
 <code>:demo live</code>, keeps no snapshot: its rendering varies by machine, say, so it renders afresh
 each export and checks nothing; so <code>C-c C-c</code> in it is the block's own, such as a graph's.
@@ -2987,7 +3689,7 @@ with <code>*</code> or <code>#+</code> may be escaped by a comma, so a demo may 
 </div>
 </div>
 <div id="outline-container-callouts" class="outline-2">
-<h2 id="callouts"><span class="section-number-2">13.</span> <a href="#callouts">Callouts &mdash;Note, tip, important, warning, caution</a></h2>
+<h2 id="callouts"><span class="section-number-2">14.</span> <a href="#callouts">Callouts &mdash;Note, tip, important, warning, caution</a></h2>
 <div class="outline-text-2" id="text-callouts">
 <p>
 Five blocks, after GitHub's alerts, call out a paragraph with a coloured rule down its
@@ -3030,7 +3732,7 @@ See <a href="#markdown-export">Markdown export</a> for what the other blocks bec
 </div>
 </div>
 <div id="outline-container-colours-links" class="outline-2">
-<h2 id="colours-links"><span class="section-number-2">14.</span> <a href="#colours-links">Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></h2>
+<h2 id="colours-links"><span class="section-number-2">15.</span> <a href="#colours-links">Colours ---<code>red:𝒳</code>, <code>[[color:#ff0066][𝒳]]</code>, and <code>#+begin_red</code></a></h2>
 <div class="outline-text-2" id="text-colours-links">
 <p>
 Each of the 19 colours that HTML and LaTeX's <code>xcolor</code> share &mdash;black, blue, brown, cyan, darkgray, gray,
@@ -3085,18 +3787,21 @@ orange:Buddo!
 </div>
 </div>
 <div id="outline-container-quote-citations" class="outline-2">
-<h2 id="quote-citations"><span class="section-number-2">15.</span> <a href="#quote-citations">Quotations, cited ---<code>#+begin_quote KEY</code></a></h2>
+<h2 id="quote-citations"><span class="section-number-2">16.</span> <a href="#quote-citations">Quotations, cited ---<code>#+begin_quote KEY</code></a></h2>
 <div class="outline-text-2" id="text-quote-citations">
 <p>
 Org's own quote block, given a bibliography key, cites it, at its pages &mdash;the key given as the
 main argument, or as <code>:key</code>:
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 #+begin_quote zermelo1908 :pages 20-22
 Set theory is that branch of mathematics whose task is to investigate
 the fundamental notions of number, order, and function.
 #+end_quote
 </pre>
+</div>
 <p>
 In LaTeX, and so in beamer, this is csquotes' <code>\blockcquote[20-22]{zermelo1908}{…}</code>, cited by
 our bibliography &mdash;biblatex's <code>\addbibresource</code>, BibTeX's <code>\bibliography</code>, or org-cite&mdash;
@@ -3119,7 +3824,7 @@ smart quotes and all. A section tagged <code>:quote:</code> is a quote of its te
 </div>
 </div>
 <div id="outline-container-highlights" class="outline-2">
-<h2 id="highlights"><span class="section-number-2">16.</span> <a href="#highlights">Highlights &mdash;Colour the background, not the text</a></h2>
+<h2 id="highlights"><span class="section-number-2">17.</span> <a href="#highlights">Highlights &mdash;Colour the background, not the text</a></h2>
 <div class="outline-text-2" id="text-highlights">
 <p>
 Where <code>red:𝒳</code> colours text, <code>[[highlight:pink][𝒳]]</code> colours its background; the colour
@@ -3138,7 +3843,9 @@ A whole paragraph, gently set apart.
   <p>
   A whole paragraph, gently set apart.
   </p>
-  </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="org-src-container">
+  </div> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> highlight
               (<span style="color: #c18401;">&amp;optional</span> (color <span style="color: #50a14f;">"yellow"</span>) <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"xcolor"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Highlights"</span>
                <span style="color: #e44649;">:link</span> [<span style="color: #e44649;">:face</span> (list <span style="color: #e44649;">:background</span> (<span style="color: #a626a4;">or</span> (org-string-nw-p label) <span style="color: #50a14f;">"yellow"</span>))]
@@ -3165,6 +3872,7 @@ In Markdown, the text is &lt;mark&gt;ed, paragraph by paragraph, which GitHub sh
                            color contents))))
 </code></pre>
 </div>
+</div>
  </details>
 
 <p>
@@ -3175,7 +3883,7 @@ For the reader who would rather pick the page's background colour themself,
 </div>
 </div>
 <div id="outline-container-markdown-export" class="outline-2">
-<h2 id="markdown-export"><span class="section-number-2">17.</span> <a href="#markdown-export">Markdown export &mdash;What survives GitHub, and how to change it</a></h2>
+<h2 id="markdown-export"><span class="section-number-2">18.</span> <a href="#markdown-export">Markdown export &mdash;What survives GitHub, and how to change it</a></h2>
 <div class="outline-text-2" id="text-markdown-export">
 <p>
 Exporting to Markdown, with <code>ox-md</code> or <code>ox-gfm</code>, our blocks see <code>backend</code> as <code>html</code>, since <code>md</code>
@@ -3266,12 +3974,14 @@ dress the page itself, and Markdown has no say over the page.</dd>
 </dl>
 
 <p>
-Dislike how a block B exports to Markdown? Advise <code>org-block/B</code> on your own machine; its
+Dislike how a block B exports to Markdown? Advise <code>org--B-block</code> on your own machine; its
 result is Org, so the export makes of it whatever it does of any Org. By way of example,
 boxes between horizontal rules:
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(advice-add 'org-block/box <span style="color: #e44649;">:around</span>
+<pre class="src src-emacs-lisp"><code>(advice-add 'org--box-block <span style="color: #e44649;">:around</span>
             (<span style="color: #a626a4;">lambda</span> (box backend raw-contents <span style="color: #c18401;">&amp;rest</span> args)
               <span style="color: #50a14f; font-style: italic;">"In Markdown, a box is its bold title and text, between rules; elsewhere, as before."</span>
               (<span style="color: #a626a4;">if</span> (org-export-markdown-p)
@@ -3281,15 +3991,16 @@ boxes between horizontal rules:
 </div>
 </div>
 </div>
+</div>
 <div id="outline-container-latex-packages" class="outline-2">
-<h2 id="latex-packages"><span class="section-number-2">18.</span> <a href="#latex-packages">PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></h2>
+<h2 id="latex-packages"><span class="section-number-2">19.</span> <a href="#latex-packages">PDF export &mdash;The LaTeX packages our blocks need, loaded for us</a></h2>
 <div class="outline-text-2" id="text-latex-packages">
 <p>
 Each block names the LaTeX packages it needs &mdash;a box, <code>xcolor</code> and <code>tcolorbox</code>; a cited quote,
 <code>csquotes</code>&mdash; and a LaTeX export that uses the block, or its link, loads them just before
 <code>\begin{document}</code>. So we declare none ourselves; a package we do load, options and all, is left be.
 To see what a block needs, read the <code>:latex-head</code> of its definition, or evaluate
-<code>(get 'org-block/box 'org-latex-head)</code> ⇒ <code>("xcolor" "tcolorbox")</code>.
+<code>(get 'org--box-block 'org-latex-head)</code> ⇒ <code>("xcolor" "tcolorbox")</code>.
 </p>
 
 <p>

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-14 Sat 22:10 -->
+<!-- 2026-11-15 Sun 06:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tooltips for Glossaries, Dictionaries, and Documentation</title>
@@ -404,7 +404,7 @@ note resized, to 1.3 the margin’s width ---requiring \usepackage{adjustbox}.
 
 ‘tooltip’ is an alias, for when we think in HTML rather than LaTeX.
 
-An alias of ‘org-block/margin’.
+An alias of ‘org--margin-block’.
 
 Regarding the Lisp function:
 + BACKEND refers to the current export backend.
@@ -420,7 +420,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/tooltip ‘latex "Hello, world")</pre></template></abbr> multiple times, so I write
+     (org--tooltip-block ‘latex "Hello, world")</pre></template></abbr> multiple times, so I write
 the tooltip content once in a <abbr class="tooltip" tabindex="0">documentation<template><pre>A glossary entry: CONTENTS defines NAME, cited as doc:LABEL; a heading tagged :documentation: is one too.
 
 The entries live in ‘org--docs’.
@@ -470,7 +470,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/documentation ‘latex "Hello, world")</pre></template></abbr> block and then
+     (org--documentation-block ‘latex "Hello, world")</pre></template></abbr> block and then
 reference it using the the <abbr class="tooltip" tabindex="0">doc<template><pre>Export LABEL as itself, or as the provided DESCRIPTION,
  along with a tooltip that shows the user’s
  documentation-glossary for LABEL and using that entry’s name
@@ -494,7 +494,7 @@ A theory of typed composition; e.g., typed monoids, such as matrices and matrix 
 <p>
 The <code>:label</code> is optional; when not provided it defaults to the name of
 the entry with spaces replaced by ‘_’.  For more, see
-<abbr class="tooltip" tabindex="0">org-block/documentation<template><pre>A glossary entry: CONTENTS defines NAME, cited as doc:LABEL; a heading tagged :documentation: is one too.
+<abbr class="tooltip" tabindex="0">org--documentation-block<template><pre>A glossary entry: CONTENTS defines NAME, cited as doc:LABEL; a heading tagged :documentation: is one too.
 
 The entries live in ‘org--docs’.
 
@@ -543,7 +543,7 @@ For example, upon LaTeX export, the Org special block
 
  is rewritten to the result of the call
 
-     (org-block/documentation ‘latex "Hello, world")</pre></template></abbr>.  Entry names do not need to be unique,
+     (org--documentation-block ‘latex "Hello, world")</pre></template></abbr>.  Entry names do not need to be unique,
 but labels do!  ( The labels are like the addresses used to look up a
 person's home. )
 </p>
@@ -557,6 +557,8 @@ An entry may also be a heading &mdash;an Org file as data&mdash; tagged <code>:d
 title is the name, its <code>:DOC_KEYS:</code> property holds space-separated labels, and its own
 text is the entry. Unlike the block, the heading exports as an ordinary section.
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <pre class="example">
 * Category Theory                                            :documentation:
 :PROPERTIES:
@@ -564,6 +566,7 @@ text is the entry. Unlike the block, the heading exports as an ordinary section.
 :END:
 A theory of typed composition; e.g., typed monoids.
 </pre>
+</div>
 <p>
 Entries are read afresh before each export, so <code>#+print_glossary:</code> lists every citation in a
 single export, wherever it sits; and the files in <code>org-docs-libraries</code> are read, not
@@ -748,6 +751,8 @@ They just happen to be referring to the same <i>named</i> entry.
 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Tests</font></strong></summary>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(deftest <span style="color: #50a14f;">"It gives a tooltip whose title is the Lisp docs of APPLY"</span>
   [doc]
@@ -786,6 +791,7 @@ They just happen to be referring to the same <i>named</i> entry.
                        (cl-second (org-docs-get <span style="color: #50a14f;">"ex-angst"</span>))))
                     <span style="color: #50a14f;">"\"&gt;Existential Angst&lt;/abbr&gt;.&lt;/p&gt; "</span>))
 </code></pre>
+</div>
 </div>
 
 </details>
@@ -864,6 +870,8 @@ this command gives a searchable way to insert doc links.</pre></template></abbr>
 </ul>
 </div>
 
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">org--docs</span> nil
   <span style="color: #50a14f; font-style: italic;">"An alist of (LABEL NAME DESCRIPTION) entries; our glossary.
@@ -926,6 +934,7 @@ this command gives a searchable way to insert doc links."</span>
     (insert)))
 </code></pre>
 </div>
+</div>
 
 <p>
 We may wish to use Emacs' <abbr class="tooltip" tabindex="0">documentation<template><pre>Return the documentation string of FUNCTION.
@@ -960,6 +969,8 @@ The files are read, not exported; so this is quick, and reloading replaces the p
 
 (fn &amp;optional (LIBS org-docs-libraries))</pre></template></abbr>
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">org-docs-fallback</span>
   (<span style="color: #a626a4;">lambda</span> (label) (list
@@ -989,24 +1000,31 @@ the word in the English dictionary.
 The English definition is obtained from the command line tool &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">wn</span><span style="color: #50a14f; font-style: italic;">&#8217;, WordNet."</span>)
 </code></pre>
 </div>
+</div>
 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Implementation matter for user libraries</font></strong></summary>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">org-docs-libraries</span> nil
   <span style="color: #50a14f; font-style: italic;">"List of Org files that have &#8216;#+begin_documentation&#8217; blocks that should be loaded
    for use with the &#8216;</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">doc:&#119987;</span><span style="color: #50a14f; font-style: italic;">&#8217; link type."</span>)
 </code></pre>
 </div>
+</div>
 
 <p>
 In your init, you could do the following. ( See the installation instructions
 below, for more! )
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp" id="startup-code"><code>(<span style="color: #a626a4;">setq</span> org-docs-libraries
   '(<span style="color: #50a14f;">"~/org-special-block-extras/documentation.org"</span>))
 </code></pre>
+</div>
 </div>
 
 <p>
@@ -1016,6 +1034,8 @@ or
 <a href="https://alhassy.com/personal-glossary"><img src="https://img.shields.io/badge/Pretty-HTML-green"></a>
 </p>
 
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">cl-defun</span> <span style="color: #0184bc;">org-docs-load-libraries</span>
     (<span style="color: #c18401;">&amp;optional</span> (libs org-docs-libraries))
@@ -1049,15 +1069,19 @@ to force your documentation libraries to be reloaded.
 See also `</span><span style="color: #50a14f; font-weight: bold; font-style: italic; text-decoration: underline;">org-docs-libraries</span><span style="color: #50a14f; font-style: italic;">'."</span>)
 </code></pre>
 </div>
+</div>
 
 <p>
 When the mode is actually enabled, then we load the user's libraries.
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Ensure user's documentation libraries have loaded
 </span>(<span style="color: #a626a4;">unless</span> org--docs-from-libraries
   (org-docs-load-libraries))
 </code></pre>
+</div>
 </div>
 
 </details>
@@ -1066,6 +1090,8 @@ When the mode is actually enabled, then we load the user's libraries.
 Let's keep track of where documentation comes from &mdash;either the current article
 or from the fallback&mdash; so that we may process it later on.
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">org--docs-actually-used</span> nil
   <span style="color: #50a14f; font-style: italic;">"Which words are actually cited in the current article.
@@ -1073,6 +1099,7 @@ or from the fallback&mdash; so that we may process it later on.
 We use this listing to actually print a glossary using
 &#8220;#+print_glossary:&#8221;."</span>)
 </code></pre>
+</div>
 </div>
 
 <p>
@@ -1084,6 +1111,8 @@ time. E.g., upon export <code>doc:wombo</code> will produce a no-entry error.
 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">‘doc’ link implementation</font></strong></summary>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp" id="startup-code"><code>(<span style="color: #a626a4;">org-deflink</span> doc (label <span style="color: #c18401;">&amp;optional</span> description backend)
  <span style="color: #50a14f;">"Export LABEL as itself, or as the provided DESCRIPTION,
@@ -1152,6 +1181,7 @@ newlines.
 </span>    (s-replace-regexp <span style="color: #50a14f;">"\\\""</span> <span style="color: #50a14f;">"''"</span>)))
 </code></pre>
 </div>
+</div>
 
 <p>
 Since tooltips are not clickable and do not support MathJax,
@@ -1170,6 +1200,8 @@ the problem of <b>producing</b> documentation entries with a block type interfac
 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">‘documentation’ Implementation: An Example of Mandatory Arguments and Using ‘raw-contents’</font></strong></summary>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> documentation
   (<span style="color: #c18401;">&amp;optional</span> (name (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Documentation block: Name must be provided"</span>)) <span style="color: #c18401;">&amp;key</span> label show (color <span style="color: #50a14f;">"green"</span>)
@@ -1208,6 +1240,7 @@ That'd require the &#8216;</span><span style="color: #50a14f; font-weight: bold;
 </span>  (<span style="color: #a626a4;">if</span> show (<span style="color: #a626a4;">org--blockcall</span> box name <span style="color: #e44649;">:background-color</span> color raw-contents) <span style="color: #50a14f;">""</span>))
 </code></pre>
 </div>
+</div>
 
 
 
@@ -1224,6 +1257,8 @@ sets up the required magic to make this happen.
 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Fast, Sleek, and Beautiful Tooltips: Touching ‘org-html-head-extra’</font></strong></summary>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">org--tooltip-html-setup</span> nil
   <span style="color: #50a14f; font-style: italic;">"Has the necessary HTML beeen added?"</span>)
@@ -1275,6 +1310,7 @@ sets up the required magic to make this happen.
 &lt;/style&gt;
 "</span>)))
 </code></pre>
+</div>
 </div>
 
 <p>
@@ -1356,6 +1392,8 @@ exported according to the backend being exported to, hence if we decide to
 switch between different backends then only the first rendition will be used
 <i>unless</i> we erase the database each time after export.
 </p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">defvar</span> <span style="color: #8b4513;">org--docs-empty!</span> (list nil t)
   <span style="color: #50a14f; font-style: italic;">"An indicator of when glossary entries should be erased.
@@ -1371,6 +1409,7 @@ The first export collects all citations, which are used in the second export."</
       (<span style="color: #a626a4;">setq</span> org--docs-actually-used nil <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The &#119987; of each &#8220;doc:&#119987;&#8221; that appears in the current buffer.
 </span>            org--docs nil))))           <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">The &#8220;#+begin_documentation &#8943; :label &#119987;&#8221; of the current buffer.</span>
 </code></pre>
+</div>
 </div>
 </div>
 </div>

@@ -103,7 +103,7 @@
 <span style="color: #a0a1a7;"># For example, &#8220;<a href="doc: !Here's more explanatory prose">doc: !Here's more explanatory prose</a>&#8221; &#8776; &#8220;<a href="margin: Here's more explanatory prose">[[margin: Here's more explanatory prose]]</a>&#8221;; i.e.,</span>
 <span style="color: #a0a1a7;"># doc links that start with &#8216;!&#8217; are considered to be inline literals and not addresses to look-up information.</span>
   
-<span style="color: #a0a1a7;"># TODO: Introduce org-defblock-alias which alises org-block/X, org-link/X, registers the new name in org-supported-blocks, and registers the new name as an org-link.</span>
+<span style="color: #a0a1a7;"># TODO: Introduce org-defblock-alias which alises org--X-block, org--X-link, registers the new name in org-supported-blocks, and registers the new name as an org-link.</span>
 
 
 <span style="color: #a0a1a7;"># TODO: Add tests involving header-args</span>
@@ -1390,7 +1390,7 @@ Alternatively, if you don't find much value in these basic bindings, you can rem
   (let* ((link (s-chop-suffix ":" (org-link-at-point)))
          (msg (ignore-errors
                 (concat
-                 (documentation (intern (format "org-link/%s" link)))
+                 (documentation (intern (format "org--%s-link" link)))
                  "\nKEY BINDINGS:\n"
                  "\nUnless indicated below otherwise..."
                  "\n\tC-h: Shows this helpful message buffer"
@@ -1420,10 +1420,10 @@ Alternatively, if you don't find much value in these basic bindings, you can rem
   "Make a new Org-link NAME that exports using form BODY.
 
 Since Org links are essentially string-valued functions,
-a function &#8216;org-link/NAME&#8217; is created.
+a function &#8216;org--NAME-link&#8217; is created.
 
 DOCSTRING is optional; it is visible with
-   (documentation 'org-link/NAME)
+   (documentation 'org--NAME-link)
 
 BODY is a string-valued expression, that may make use of the names
 o-label, o-description, o-backend. The final one refers to the export
@@ -1491,7 +1491,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
   know what/how the link exports, and actually see the HTML export.
 
   That is to say, for the &#8216;shout&#8217; example aboce, the default display is essentially:
-  [:help-echo (org-link/shout o-label o-description 'html)]
+  [:help-echo (org--shout-link o-label o-description 'html)]
 
   You may want to add the following to your Emacs init file:
 
@@ -1537,7 +1537,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
                                       display   #'vectorp
                                       body)
     (setq display (seq--into-list display))
-    (let ((org-link/NAME (intern (format "org-link/%s" name)))
+    (let ((org--NAME-link (intern (format "org--%s-link" name)))
           (navigation "Press &#8220;C-h&#8221; to see possible actions on this link type.")
           (lets (cl-loop for (variable value)
                       on (cl-getf display :let)
@@ -1545,7 +1545,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
                       collect (list variable value))))
       `(progn
        ;; Declare the underlying function and documentation
-       (cl-defun ,org-link/NAME ;; function name
+       (cl-defun ,org--NAME-link ;; function name
            (o-label o-description o-backend)         ;; function args
            ;; new function documentation
            ,docstring
@@ -1554,7 +1554,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
        ;; Construct the Org-link
        (org-link-set-parameters
         ,(format "%s" name)
-        :export (quote ,org-link/NAME)
+        :export (quote ,org--NAME-link)
         ;; How should these links be displayed?
         ;; (We augment the namespace with the missing o-description that local variables may be using.)
         :face (lambda (o-label)  (let (o-description) (let* ,lets ,(cl-getf display :face))))
@@ -1603,10 +1603,10 @@ is displayed in Emacs Org buffers. The keys are as follows.
                                      (quote ,name)
                                      (or o-description o-label)
                                      ,(concat (or docstring "") "\n\n" navigation "\n")
-                                     (,org-link/NAME o-label o-description 'html)))))))
+                                     (,org--NAME-link o-label o-description 'html)))))))
         ;; Return value is the name of the underlying function.
         ;; We do this to be consistent with `defun'.
-        (quote ,org-link/NAME)))))
+        (quote ,org--NAME-link)))))
  #+end_src
 
  # shout:hi
@@ -1618,7 +1618,7 @@ is displayed in Emacs Org buffers. The keys are as follows.
 
 The link text appears as red bold in both Emacs and in HTML export."
   [:face '(:foreground "red" :weight bold)
-   ;; :help-echo (org-link/shout label description 'html)
+   ;; :help-echo (org--shout-link label description 'html)
    :display 'full
    :keymap (C-m (message-box "hola"))
    :follow (message-box "%s and %s" pre current-prefix-arg)
@@ -1628,14 +1628,14 @@ The link text appears as red bold in both Emacs and in HTML export."
 
 (deftest "org-deflink makes documented functions"
   [org-deflink]
-  (&#8669; (documentation #'org-link/shout)
+  (&#8669; (documentation #'org--shout-link)
      "Capitalise the link description, if any, otherwise capitalise the label.
 
      The link text appears as red bold in both Emacs and in HTML export."))
 
 (deftest "org-deflink works as expected, plain links"
   [org-deflink]
-  (should (not (null (symbol-function 'org-link/shout))))
+  (should (not (null (symbol-function 'org--shout-link))))
   (&#8669; (&#10224; "shout:hello")
      "&lt;p&gt; &lt;span style=\"<span style="color: #ff0000;"><a href="color:red">color:red</a></span>\"&gt; HELLO &lt;/span&gt;&lt;/p&gt;"))
 
@@ -1869,7 +1869,7 @@ Three example uses:
                    ,(vconcat `[:help-echo (format "%s:%s\n\n%s" (quote ,name) label ,docstring)] (or link-display (cdr (assoc name org--block--link-display))))
                    ;; s-replace-all `((,(format "@@%s:" backend) . "") ("#+end_export" . "") (,(format "#+begin_export %s" backend) . ""))
                    (s-replace-regexp "@@" ""
-                                     (,(intern (format "org-block/%s" name)) backend (or description label) label :o-link? t)))))))))
+                                     (,(intern (format "org--%s-block" name)) backend (or description label) label :o-link? t)))))))))
 
 ;; WHERE ...
 
@@ -1888,10 +1888,10 @@ Three example uses:
         (kwds (cddr kwds)))
        ;; Unless we've already set the docs for the generic function, don't re-declare it.
        `(progn ;; if ,(null body)
-         (cl-defgeneric ,(intern (format "org-block/%s" name)) (backend raw-contents &amp;rest _)
+         (cl-defgeneric ,(intern (format "org--%s-block" name)) (backend raw-contents &amp;rest _)
            ,docstring)
 
-       (cl-defmethod ,(intern (format "org-block/%s" name))
+       (cl-defmethod ,(intern (format "org--%s-block" name))
      ((backend ,(if backend-type `(eql ,backend-type) t))
       (raw-contents string)
       &amp;optional
@@ -2008,7 +2008,7 @@ BACKEND is the export back-end being used, as a symbol."
           ;; TODO: Make the `main-arg' just be the first keyword arg. That is &#8220;begin_X main-value :key&#8342; value-k&#8221; &#8776; &#8220;begin_X :key&#8320; main-value :key&#8342; value-k&#8221;.
           ;; This will simplify cases where this is no sense of a main-arg, such as org-demo, whose arg list starts with &#8220;nil nil&#8221; since there's no main-arg and its default is nil.
           ;; One consequence of this approach is that the first keyword arg is special, it's key can be omitted when it occurs first: &#8220;begin_X main-value&#8221; &#8776; &#8220;begin_X :key&#8320; main-value&#8221;.
-          (-let [val (eval `(,(intern (format "org-block/%s" blk))
+          (-let [val (eval `(,(intern (format "org--%s-block" blk))
                              (quote ,backend)
                              ,blk-contents
                              ,main-arg
@@ -2364,7 +2364,7 @@ Usage: (blockcall blk-name main-arg even-many:key-values raw-contents)
 One should rarely use this directly; instead use
 `org-thread-blockcall'.
 "
-  `(concat "#+end_export\n" (,(intern (format "org-block/%s" blk))
+  `(concat "#+end_export\n" (,(intern (format "org--%s-block" blk))
     backend ;; defblock internal
     ; (format "\n#+begin_export html\n\n%s\n#+end_export\n" ,(car (last keyword-args-then-contents))) ;; contents
     ,@(last keyword-args-then-contents) ;; contents
@@ -2423,7 +2423,7 @@ A full example:
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">short-example-an-opportunity-to-learn</span>
   <span style="font-weight: bold;">:END:</span>
 
-The following tiny block is composed from two <a href="doc:org-block/details">details</a> blocks and a <a href="doc:org-block/box">box</a> block
+The following tiny block is composed from two <a href="doc:org--details-block">details</a> blocks and a <a href="doc:org--box-block">box</a> block
 ---defined elsewhere in this article. It is intended to give the reader another
 opportunity to make sure they have tried to solve the puzzle posed in the main
 text before seeing the answer ----this works well in HTML, not so in LaTeX.
@@ -2914,8 +2914,9 @@ and (indented) child premises of its own.
 
 If there are multiple trees, they are shown one after the other.
 
-The text in this block should be considered LaTeX;
-as such, Org markup is not recognised.
+The text in this block is maths, as a math block's is; so our links,
+such as red:x and <span style="color: #bebebe; font-weight: bold; text-decoration: underline; text-decoration: overline;"><a href="tooltip:x">[[tooltip:x][a tip]]</a></span>, and Org's <span style="font-weight: bold;">*markup*</span> are LaTeX's;
+see `org--math-markup'.
 
 A proof tree, derivation, is then just a deeply nested
 itemisation.  For instance, assuming P = Q(X), X = Y, Q(Y) = R,
@@ -3017,7 +3018,7 @@ defined, otherwise, we leave the CONTENTS of the block as is.
 We also support the seemingly useless blocks that have no
 contents at all, not even an empty new line."</span>
   (<span style="color: #a626a4;">let*</span> ((type    (nth 1 (nth 1 blk)))
-         (handler (intern (format <span style="color: #50a14f;">"org-block/%s"</span> type))))
+         (handler (intern (format <span style="color: #50a14f;">"org--%s-block"</span> type))))
     (<span style="color: #a626a4;">ignore-errors</span> (apply handler backend (<span style="color: #a626a4;">or</span> contents <span style="color: #50a14f;">""</span>) nil))))
 <span style="color: #a0a1a7;"> #+END_SRC
 </span>
@@ -3291,7 +3292,7 @@ This could be declared via ...
   (<span style="color: #a626a4;">pcase</span> backend
     ('html (format <span style="color: #50a14f;">"Yuck/%s: &lt;strong&gt;%s&lt;/strong&gt;"</span> speaker contents))
     ('latex (format <span style="color: #50a14f;">"Yuck/%s: \\emph{\\LARGE %s}"</span> speaker contents))
-    (t (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"org-block/shout: Unsupported backend &#8220;%s&#8221;"</span> backend))))
+    (t (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"org--shout-block: Unsupported backend &#8220;%s&#8221;"</span> backend))))
 <span style="color: #a0a1a7;">#+end_src
 </span>
 Rather than defining it with a single defblock declaration and a condition on the backend, we can define it using three
@@ -3328,9 +3329,9 @@ Such &#8220;open methods&#8221; are known as &#8220;multimethods&#8221;; e.g., s
 <span style="font-weight: bold;">:Multimethod_invocation_examples_of_SHOUT:</span>
 <span style="color: #a0a1a7;">#+begin_src elisp :tangle no
 </span><span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Example uses of the multimethods approach
-</span>(org-block/shout 'random-backend <span style="color: #50a14f;">"hi"</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">should error!
-</span>(org-block/shout 'html <span style="color: #50a14f;">"hi"</span>)
-(org-block/shout 'latex <span style="color: #50a14f;">"hi"</span>)
+</span>(org--shout-block 'random-backend <span style="color: #50a14f;">"hi"</span>) <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">should error!
+</span>(org--shout-block 'html <span style="color: #50a14f;">"hi"</span>)
+(org--shout-block 'latex <span style="color: #50a14f;">"hi"</span>)
 <span style="color: #a0a1a7;">#+end_src
 </span><span style="font-weight: bold;">:End:</span>
 
@@ -3463,15 +3464,15 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
 
 <span style="color: #a0a1a7;">#+begin_graph :svg t :size "10,10" :layout twopi :root osbe :ranksep 1.6 :wrap 16 :directed nil :node.fontname Helvetica :node.shape box :node.style "rounded,filled" :node.fillcolor white :edge.color gray50 :overlap false
 </span><span style="font-weight: bold;">:TEMPLATES:</span>
-#+name: glance_write
-| fillcolor | "#e5f5e5" |
-#+name: glance_read
-| fillcolor | "#ffe8cc" |
-#+name: glance_act
-| fillcolor | "#e0ecff" |
-#+name: glance_make
-| fillcolor | "#f3e0ff" |
-<span style="font-weight: bold;">:END:</span>
+<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> glance_write
+</span><span style="background-color: #fff4c2;">| fillcolor | "#e5f5e5" |</span><span style="background-color: #fff4c2;">
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> glance_read
+</span><span style="background-color: #fde0ea;">| fillcolor | "#ffe8cc" |</span><span style="background-color: #fde0ea;">
+</span><span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> glance_act
+</span><span style="background-color: #d9f3ee;">| fillcolor | "#e0ecff" |</span><span style="background-color: #d9f3ee;">
+</span><span style="color: #a626a4; background-color: #e9e1fb; font-weight: bold;">#+name:</span><span style="background-color: #e9e1fb;"> glance_make
+</span><span style="background-color: #e9e1fb;">| fillcolor | "#f3e0ff" |</span><span style="background-color: #e9e1fb;">
+</span><span style="font-weight: bold;">:END:</span>
 + <span style="text-decoration: underline;">&lt;&lt;osbe&gt;&gt;</span> <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras">[[https://github.com/alhassy/org-special-block-extras][*org-special-block-extras*]]</a></span> <span style="text-decoration: underline;">[fn::Blocks, links, and switches for Org, exported alike to HTML, LaTeX, and Markdown.]</span>
   + Blocks to write <span style="font-weight: bold;">:glance_write:</span>
     + <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#callouts">[[https://alhassy.com/org-special-block-extras-blocks-and-links#callouts][Callouts]]</a></span> \\ note &#183; tip &#183; important &#183; warning &#183; caution <span style="text-decoration: underline;">[fn::GitHub's alerts: a coloured rule and a titled heading; Markdown gets the alerts themselves.]</span> <span style="font-weight: bold;">:glance_write:</span>
@@ -3518,9 +3519,9 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">boxed-text</span>
    <span style="font-weight: bold;">:END:</span>
 
-<span style="color: #a0a1a7;">   #+begin_org :ignore t :demo org-block/box
+<span style="color: #a0a1a7;">   #+begin_org :ignore t :demo org--box-block
 </span>   It can be useful to draw attention to some important text by
-   enclosing it in a <a href="doc:org-block/box">box</a>.
+   enclosing it in a <a href="doc:org--box-block">box</a>.
 
    #+begin_box Uses of callout boxes
    Such boxes often callout tips, warnings, cautionary info or
@@ -3528,7 +3529,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    #+end_box
 <span style="color: #a0a1a7;">   #+end_org
 </span>
-<span style="color: #a0a1a7;">   #+RESULTS[e8b9...]:</span>
+<span style="color: #a0a1a7;">   #+RESULTS[141a...]:</span>
    <span style="font-weight: bold;">:results:</span>
 <span style="color: #a0a1a7;">   #+begin_export html
 </span>   &lt;<span style="color: #0184bc;">p</span>&gt;
@@ -3573,7 +3574,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
    
     is rewritten to the result of the call
    
-        (org-block/box &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt;.
+        (org--box-block &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt;.
    &lt;/<span style="color: #0184bc;">p</span>&gt;
    
    &lt;<span style="color: #0184bc;">div</span> <span style="color: #8b4513;">style</span>=<span style="color: #50a14f;">"padding: 1em;background-color: #CCFFCC;border-radius: 15px;font-size: 0.9em;"</span>&gt; &lt;<span style="color: #0184bc;">h3</span>&gt;<span style="font-style: italic; text-decoration: underline;">Uses of callout boxes</span>&lt;/<span style="color: #0184bc;">h3</span>&gt; 
@@ -3585,7 +3586,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
 <span style="color: #a0a1a7;">   #+end_export
 </span><span style="color: #a0a1a7;">   #+begin_export latex
 </span>   It can be useful to draw attention to some important text by
-   enclosing it in a <span style="color: #a626a4;">\hyperref</span>[o-glossary-org-block/box]{box}<span style="color: #a626a4;">\label</span>{<span style="font-weight: bold; text-decoration: underline;">o-glossary-declaration-site-org-block/box</span>}.
+   enclosing it in a <span style="color: #a626a4;">\hyperref</span>[o-glossary-org--box-block]{box}<span style="color: #a626a4;">\label</span>{<span style="font-weight: bold; text-decoration: underline;">o-glossary-declaration-site-org--box-block</span>}.
    
    <span style="color: #a626a4;">\colorlet</span>{osbe-box-back}{red!5!white}<span style="color: #a626a4;">\colorlet</span>{osbe-box-frame}{red!75!black}<span style="color: #a626a4;">\colorlet</span>{osbe-box-title}{yellow!50!red}<span style="color: #a626a4;">\begin</span>{<span style="color: #0184bc;">tcolorbox</span>}[title={Uses of callout boxes},colback=osbe-box-back,colframe=osbe-box-frame,colbacktitle=osbe-box-title,coltitle=red!25!black, fonttitle=<span style="color: #a626a4;">\bfseries</span><span style="font-weight: bold;">,subtitle style={boxrule=0.4pt, colback=yellow!50!red!25!white}]
    Such boxes often callout tips, warnings, cautionary info or
@@ -3596,7 +3597,7 @@ block ---an Org list, coloured by ~#+name:~ tables folded in its ~:TEMPLATES:~ d
 
 <span style="color: #a626a4; font-weight: bold;">*** </span><span style="color: #a626a4; font-weight: bold;">TODO</span><span style="color: #a626a4; font-weight: bold;"> </span><span style="color: #a626a4; font-weight: bold;">COMMENT</span><span style="color: #a626a4; font-weight: bold;"> Extra notes, either make into yaml tests or more to an FAQ section</span>
    
-<span style="color: #a0a1a7; font-weight: bold;">**** Three demos of  </span><span style="color: #a0a1a7; font-weight: bold;"><a href="doc:org-block/box">box</a></span>
+<span style="color: #a0a1a7; font-weight: bold;">**** Three demos of  </span><span style="color: #a0a1a7; font-weight: bold;"><a href="doc:org--box-block">box</a></span>
 <span style="color: #a0a1a7;"> #+latex_header: \newunicodechar{&#7506;}{\ensuremath{{}^o}}</span>
 <span style="color: #a0a1a7;"> #+html: &lt;br&gt;</span>
 <span style="color: #a0a1a7;"> #+begin_box Example: A super boring observation presented obscurely :background-color blue
@@ -3628,7 +3629,7 @@ Or, with the header option ~:shadow (:left "inset cyan" :right "inset pink"
 
 <span style="color: #a0a1a7;"> #+end_box
 </span>
- For further header options, see the documentation of <a href="doc:org-block/box">box</a>.
+ For further header options, see the documentation of <a href="doc:org--box-block">box</a>.
 
 <span style="color: #a0a1a7; font-weight: bold;">**** Subtle Colours</span>
 <span style="color: #a0a1a7;"> #+html: &lt;br&gt;</span>
@@ -3693,10 +3694,10 @@ src_<span style="color: #a0a1a7;">latex</span>[:exports code]{<span style="color
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">folded-details</span>
   <span style="font-weight: bold;">:END:</span>
 
-<span style="color: #a0a1a7;">   #+begin_org :ignore t :demo org-block/details
+<span style="color: #a0a1a7;">   #+begin_org :ignore t :demo org--details-block
 </span>   Sometimes there is a remark or a code snippet that is useful to
    have, but not relevant to the discussion at hand and so we want to
-   <span style="font-style: italic;">/fold away such </span><span style="font-style: italic;"><a href="doc:org-block/details">details</a></span><span style="font-style: italic;">/</span>.
+   <span style="font-style: italic;">/fold away such </span><span style="font-style: italic;"><a href="doc:org--details-block">details</a></span><span style="font-style: italic;">/</span>.
 
    #+begin_details Example use cases
    + &#8216;Conversation-style&#8217; articles, where the author asks the reader questions
@@ -3710,7 +3711,7 @@ src_<span style="color: #a0a1a7;">latex</span>[:exports code]{<span style="color
    Full syntax ~#+begin_details "title" :background-color "cyan" :title-color "green"~.
 <span style="color: #a0a1a7;">   #+end_org
 </span>
-<span style="color: #a0a1a7;">   #+RESULTS[ca8d...]:</span>
+<span style="color: #a0a1a7;">   #+RESULTS[f9cf...]:</span>
    <span style="font-weight: bold;">:results:</span>
 <span style="color: #a0a1a7;">   #+begin_export html
 </span>   &lt;<span style="color: #0184bc;">p</span>&gt;
@@ -3739,7 +3740,7 @@ src_<span style="color: #a0a1a7;">latex</span>[:exports code]{<span style="color
    
     is rewritten to the result of the call
    
-        (org-block/details &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt;&lt;/<span style="color: #0184bc;">i</span>&gt;.
+        (org--details-block &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt;&lt;/<span style="color: #0184bc;">i</span>&gt;.
    &lt;/<span style="color: #0184bc;">p</span>&gt;
    
    &lt;<span style="color: #0184bc;">details</span> <span style="color: #8b4513;">class</span>=<span style="color: #50a14f;">"code-details"</span> <span style="color: #8b4513;">style</span>=<span style="color: #50a14f;">"padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;"</span>&gt;
@@ -3762,7 +3763,7 @@ src_<span style="color: #a0a1a7;">latex</span>[:exports code]{<span style="color
 </span><span style="color: #a0a1a7;">   #+begin_export latex
 </span>   Sometimes there is a remark or a code snippet that is useful to
    have, but not relevant to the discussion at hand and so we want to
-   <span style="color: #a626a4;">\emph</span>{<span style="font-style: italic;">fold away such </span><span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org-block/details]{details}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org-block/details</span><span style="font-style: italic;">}</span>}.
+   <span style="color: #a626a4;">\emph</span>{<span style="font-style: italic;">fold away such </span><span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org--details-block]{details}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org--details-block</span><span style="font-style: italic;">}</span>}.
    
    <span style="color: #a626a4;">\definecolor</span>{osbe-bg}{HTML}{e5f5e5}<span style="color: #a626a4;">\colorlet</span>{osbe-fg}{green}<span style="color: #a626a4;">\begin</span>{<span style="color: #0184bc;">quote</span>}
    <span style="color: #a626a4;">\begin</span>{<span style="color: #0184bc;">tcolorbox</span>}[colback=osbe-bg,colframe=osbe-fg,title={Example use cases},sharp corners,boxrule=0.4pt]
@@ -3846,8 +3847,8 @@ your Org file or place it into your ~org-html-head~ variable.
 <span style="color: #a0a1a7;">#+end_box
 </span>
 
-Sometimes you want to remark on <a href="doc:org-block/details">details</a> without drawing too much
-attention, and so a tooltip via <a href="doc:org-block/tooltip">tooltip</a> suffices.
+Sometimes you want to remark on <a href="doc:org--details-block">details</a> without drawing too much
+attention, and so a tooltip via <a href="doc:org--tooltip-block">tooltip</a> suffices.
 
 <span style="color: #8b4513; font-weight: bold;">** Nice Keystroke Renditions: &#12308;</span><span style="color: #8b4513; font-weight: bold;"><a href="kbd:C-h_t">C-h</a> t&#12309;</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
@@ -4030,12 +4031,12 @@ Let's have some sanity tests...
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">tooltip</span>
   <span style="font-weight: bold;">:END:</span>
 
-Sometimes you want to remark on <a href="doc:org-block/details">details</a> without drawing too much
-attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffices.
+Sometimes you want to remark on <a href="doc:org--details-block">details</a> without drawing too much
+attention, and so a tooltip via <a href="doc:org--remark-block">remark</a> suffices.
   
-<span style="color: #a0a1a7;">   #+begin_org :ignore t :demo org-block/tooltip
+<span style="color: #a0a1a7;">   #+begin_org :ignore t :demo org--tooltip-block
 </span>   It can be annoying to make readers jump to the bottom of the page to
-   read a footnote.  Instead, I prefer to write an <span style="font-style: italic;">/inline </span><span style="font-style: italic;"><a href="doc:org-block/tooltip">remark</a></span><span style="font-style: italic;">/</span>
+   read a footnote.  Instead, I prefer to write an <span style="font-style: italic;">/inline </span><span style="font-style: italic;"><a href="doc:org--tooltip-block">remark</a></span><span style="font-style: italic;">/</span>
    containing, say, references or additional explanation.
 
       <span style="font-style: italic;">/</span><span style="color: #bebebe; font-weight: bold; font-style: italic; text-decoration: underline; text-decoration: overline;"><a href="tooltip:Allah">[[tooltip:Allah][The God of Abraham; known as Elohim in the Bible]]</a></span><span style="font-style: italic;"> does not burden a
@@ -4047,7 +4048,7 @@ attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffic
           burden a soul beyond what it can bear./</span> --- Quran 2:286
 <span style="color: #a0a1a7;">   #+end_org
 </span>
-<span style="color: #a0a1a7;">   #+RESULTS[a29b...]:</span>
+<span style="color: #a0a1a7;">   #+RESULTS[23e7...]:</span>
    <span style="font-weight: bold;">:results:</span>
 <span style="color: #a0a1a7;">   #+begin_export html
 </span>   &lt;<span style="color: #0184bc;">p</span>&gt;
@@ -4072,7 +4073,7 @@ attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffic
    
    &#8216;tooltip&#8217; is an alias, for when we think in HTML rather than LaTeX.
    
-   An alias of &#8216;org-block/margin&#8217;.
+   An alias of &#8216;org--margin-block&#8217;.
    
    Regarding the Lisp function:
    + BACKEND refers to the current export backend.
@@ -4088,7 +4089,7 @@ attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffic
    
     is rewritten to the result of the call
    
-        (org-block/tooltip &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt;&lt;/<span style="color: #0184bc;">i</span>&gt;
+        (org--tooltip-block &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt;&lt;/<span style="color: #0184bc;">i</span>&gt;
    containing, say, references or additional explanation.
    &lt;/<span style="color: #0184bc;">p</span>&gt;
    
@@ -4110,7 +4111,7 @@ attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffic
 <span style="color: #a0a1a7;">   #+end_export
 </span><span style="color: #a0a1a7;">   #+begin_export latex
 </span>   It can be annoying to make readers jump to the bottom of the page to
-   read a footnote.  Instead, I prefer to write an <span style="color: #a626a4;">\emph</span>{<span style="font-style: italic;">inline </span><span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org-block/tooltip]{remark}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org-block/tooltip</span><span style="font-style: italic;">}</span>}
+   read a footnote.  Instead, I prefer to write an <span style="color: #a626a4;">\emph</span>{<span style="font-style: italic;">inline </span><span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org--tooltip-block]{remark}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org--tooltip-block</span><span style="font-style: italic;">}</span>}
    containing, say, references or additional explanation.
    
    <span style="color: #a626a4;">\emph</span>{<span style="font-style: italic;">Allah</span><span style="color: #a626a4; font-style: italic;">\refstepcounter</span><span style="font-style: italic;">{footnote}</span><span style="color: #50a14f; font-style: italic;">${}^</span><span style="color: #50a14f; font-style: italic;">{\textnormal{{\thefootnote}</span><span style="color: #50a14f;">}}</span><span style="color: #50a14f;">$</span><span style="color: #a626a4;">\newsavebox</span>{<span style="color: #a626a4;">\OrgSpecialBlockExtrasMarginBox</span>}<span style="color: #a626a4;">\begin</span>{<span style="color: #0184bc;">lrbox</span>}{<span style="color: #a626a4;">\OrgSpecialBlockExtrasMarginBox</span>}<span style="color: #a626a4;">\begin</span>{<span style="color: #0184bc;">minipage</span>}{<span style="color: #a626a4;">\marginparwidth</span>}
@@ -4142,7 +4143,7 @@ attention, and so a tooltip via <a href="doc:org-block/remark">remark</a> suffic
 
    Org's own footnotes are such remarks too: in HTML, each footnote's number is a tooltip of its
    definition, the footnotes section staying below, for print; in LaTeX, each is a margin note, as
-   the <a href="doc:org-block/margin">margin</a> block's are, numbered as footnotes are. All three of Org's spellings serve: an
+   the <a href="doc:org--margin-block">margin</a> block's are, numbered as footnotes are. All three of Org's spellings serve: an
    anonymous =<span style="text-decoration: underline;">[fn::&#8230;]</span>=, a named =<span style="text-decoration: underline;">[fn:NAME]</span>= defined elsewhere, and a named inline =<span style="text-decoration: underline;">[fn:NAME: &#8230;]</span>=, which
    later =<span style="text-decoration: underline;">[fn:NAME]</span>= references share.
 
@@ -4455,7 +4456,7 @@ from&#8728;to m = {! try it! }
   reference in LaTeX. Here &#119987; is an Emacs Lisp function or variable, a word in the English
   dictionary ---via <span style="text-decoration: underline;"><a href="https://wordnet.princeton.edu">WordNet</a></span>'s =wn=, should we have it--- or, best of all, a term of our own.
 
-<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org-link/doc
+<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org--doc-link
 </span>  The ~doc~ link type can be used to show tooltips for Emacs Lisp commands such as
 
                            <a href="doc:thread-last">doc:thread-last</a>
@@ -4613,7 +4614,7 @@ from&#8728;to m = {! try it! }
   =<span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;monoid&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>= is a unital semigroup&#8221;, Org already links each later &#8220;monoid&#8221; to its
   definition; in HTML, each such mention is also a tooltip of the defining paragraph.
 
-<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org-block/documentation
+<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org--documentation-block
 </span>  Our glossary, listing every term this page cites ---even those cited further below:
 
   #+print_glossary:
@@ -4705,9 +4706,9 @@ from&#8728;to m = {! try it! }
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">parallel</span>
   <span style="font-weight: bold;">:END:</span>
 
-<span style="color: #a0a1a7;">     #+begin_org :ignore t :demo org-block/parallel
+<span style="color: #a0a1a7;">     #+begin_org :ignore t :demo org--parallel-block
 </span>     Reduce the amount of whitespace noise in your articles by using the
-     <a href="doc:org-block/parallel">parallel</a> block to place ideas
+     <a href="doc:org--parallel-block">parallel</a> block to place ideas
      side-by-side ---with up to &#120003;-many columns.
 
      ----------------------------------------------------------------------
@@ -4742,10 +4743,10 @@ from&#8728;to m = {! try it! }
 
      In summary, articles can get lengthy when vertical whitespace is
      wasted on thin lines; instead, one could save space by using
-     <span style="font-style: italic;">/</span><span style="font-style: italic;"><a href="doc:org-block/parallel">parallel</a></span><span style="font-style: italic;"> columns of text/</span>.
+     <span style="font-style: italic;">/</span><span style="font-style: italic;"><a href="doc:org--parallel-block">parallel</a></span><span style="font-style: italic;"> columns of text/</span>.
 <span style="color: #a0a1a7;">     #+end_org
 </span>
-<span style="color: #a0a1a7;">     #+RESULTS[16f5...]:</span>
+<span style="color: #a0a1a7;">     #+RESULTS[f2dd...]:</span>
      <span style="font-weight: bold;">:results:</span>
 <span style="color: #a0a1a7;">     #+begin_export html
 </span>     &lt;<span style="color: #0184bc;">p</span>&gt;
@@ -4806,7 +4807,7 @@ from&#8728;to m = {! try it! }
      
       is rewritten to the result of the call
      
-          (org-block/parallel &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt; block to place ideas
+          (org--parallel-block &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt; block to place ideas
      side-by-side <span style="color: #8b4513;">&amp;mdash;</span>with up to &#120003;-many columns.
      &lt;/<span style="color: #0184bc;">p</span>&gt;
      
@@ -4903,12 +4904,12 @@ from&#8728;to m = {! try it! }
      
       is rewritten to the result of the call
      
-          (org-block/parallel &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt; columns of text&lt;/<span style="color: #0184bc;">i</span>&gt;.
+          (org--parallel-block &#8216;latex "Hello, world")&lt;/<span style="color: #0184bc;">pre</span>&gt;&lt;/<span style="color: #0184bc;">template</span>&gt;&lt;/<span style="color: #0184bc;">abbr</span>&gt; columns of text&lt;/<span style="color: #0184bc;">i</span>&gt;.
      &lt;/<span style="color: #0184bc;">p</span>&gt;
 <span style="color: #a0a1a7;">     #+end_export
 </span><span style="color: #a0a1a7;">     #+begin_export latex
 </span>     Reduce the amount of whitespace noise in your articles by using the
-     <span style="color: #a626a4;">\hyperref</span>[o-glossary-org-block/parallel]{parallel}<span style="color: #a626a4;">\label</span>{<span style="font-weight: bold; text-decoration: underline;">o-glossary-declaration-site-org-block/parallel</span>} block to place ideas
+     <span style="color: #a626a4;">\hyperref</span>[o-glossary-org--parallel-block]{parallel}<span style="color: #a626a4;">\label</span>{<span style="font-weight: bold; text-decoration: underline;">o-glossary-declaration-site-org--parallel-block</span>} block to place ideas
      side-by-side ---with up to &#120003;-many columns.
      
      <span style="color: #a626a4;">\noindent\rule</span>{<span style="color: #a626a4;">\textwidth</span>}{0.5pt}
@@ -4945,7 +4946,7 @@ from&#8728;to m = {! try it! }
      
      In summary, articles can get lengthy when vertical whitespace is
      wasted on thin lines; instead, one could save space by using
-     <span style="color: #a626a4;">\emph</span>{<span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org-block/parallel]{parallel}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org-block/parallel</span><span style="font-style: italic;">} columns of text</span>}.
+     <span style="color: #a626a4;">\emph</span>{<span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org--parallel-block]{parallel}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org--parallel-block</span><span style="font-style: italic;">} columns of text</span>}.
 <span style="color: #a0a1a7;">     #+end_export
 </span>     <span style="font-weight: bold;">:end:</span>
 
@@ -4955,7 +4956,7 @@ from&#8728;to m = {! try it! }
   <span style="font-weight: bold;">:END:</span>
 
   To colour a formula, LaTeX ---and MathJax, which typesets it in HTML--- would have us write
-  ={\color{red} x}=; yet our prose colours by =red:x=. A <a href="doc:org-block/math">math</a> block is display maths
+  ={\color{red} x}=; yet our prose colours by =red:x=. A <a href="doc:org--math-block">math</a> block is display maths
   wherein our links are LaTeX's: =<span style="color: #ff0000;"><a href="red:ATOM">red:ATOM</a></span>= colours a ={group}=, =\left(&#8230;\right)=, a
   =\command{with}{arguments}=, a word, else one character; =<span style="color: #ff0000;"><a href="red:">[[red:][a + b]]</a></span>= colours =a + b=. So too
   for =<span style="color: #ff0066;"><a href="color:#ff0066">color:#ff0066</a></span>=, =highlight:=, web links, and =tooltip:= and =doc:=, which hover in
@@ -4969,7 +4970,7 @@ from&#8728;to m = {! try it! }
   knows it page-wide. A line =# &#8230;= is a comment. Below, the first block is only definitions, and so
   shows nothing.
 
-<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org-block/math
+<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org--math-block
 </span>  Hello, in this blog post I'd like to talk about quantifiers.
 
   # First, I'll define some helpers that I use multiple times; they are declared, not shown.
@@ -5088,7 +5089,9 @@ R_{<a href="teal:\theta">teal:\theta</a>} =
   named thing: =<span style="text-decoration: underline;"><a href="NAME">[[NAME]]</a></span>= is its number, or name, as LaTeX's =\eqref=
   shows it; and =<span style="text-decoration: underline;"><a href="NAME">[[NAME][these words]]</a></span>= links the words to it. =C-c C-o= on the link, in Emacs, visits
   the line; failing that, any =\tag{&#8230;NAME&#8230;}=. A =NAME= may hold maths, such as =&#8849;-Definition= or
-  =Distributivity of \meet=, which shows as maths in the tag, and is cited by the very same name. With
+  =Distributivity of \meet=, which shows as maths in the tag, and is cited by the very same name. A line
+  may have several names, =blue:<span style="text-decoration: underline;">&lt;&lt;&#8849;-Definition&gt;&gt;</span> <span style="text-decoration: underline;">&lt;&lt;Order&gt;&gt;</span>=: the first is its tag, and the rest are
+  aliases, which cite it just as well ---one equation, one number, many names. With
   =:numbered t=, the untagged lines are numbered too. Only the block's
   own =&amp;= counts: one within a ={group}= or a =\begin{cases}&#8230;\end{cases}= belongs to it, so a
   piecewise definition is one equation, unless its line aligns at an =&amp;= of its own. A hint,
@@ -5628,15 +5631,15 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">graphs</span>
   <span style="font-weight: bold;">:END:</span>
 
-<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo (live org-block/graph)
+<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo (live org--graph-block)
 </span>  Org lists are already trees, so the ~graph~ block draws them with Graphviz:
   nesting makes an edge, and a two-column table styles the item above it.
 
   #+begin_graph :file lambda-calculus.png
-  #+graph:
+  <span style="color: #a626a4; font-weight: bold;">#+graph:</span>
   | rankdir | LR |
 
-  #+node:
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
   | shape | box |
 
   + &#955;-calculus
@@ -5652,18 +5655,18 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
   Press =C-c C-c= inside the block to render it to a PNG; =C-u C-c C-c= shows the dot source instead.
 <span style="color: #a0a1a7;">  #+end_org
 </span>
-  The <a href="doc:org-block/graph">graph</a> block is opt-in, so we load it separately with
+  The <a href="doc:org--graph-block">graph</a> block is opt-in, so we load it separately with
   ~(require 'org-graph-block)~. Rendering needs the =dot= executable from <span style="text-decoration: underline;"><a href="https://graphviz.org">Graphviz</a></span>:
   HTML export embeds an inline SVG, whose tooltips hover as any other's do ---or a PNG, sans
   tooltips, via =:svg nil=--- whereas other backends receive the dot source. Inside the block, =#+graph:=, =#+node:= and =#+edge:=
-  tables set Graphviz's defaults; =C-h o org-block/graph= documents every option.
+  tables set Graphviz's defaults; =C-h o org--graph-block= documents every option.
 
 <span style="color: #a0a1a7;">  #+begin_org :ignore t :demo live
 </span>  Some lists want a picture rather than a graph: a centre and what orbits it, or a flow of steps.
   ~:smartdiagram TYPE~ hands the very same list to LaTeX's smartdiagram package instead of Graphviz:
 
   #+begin_graph One Org source, rich HTML and LaTeX :smartdiagram constellation
-  #+graph:
+  <span style="color: #a626a4; font-weight: bold;">#+graph:</span>
   | planet color              | black!75        |
   | planet font               | \bfseries       |
   | planet text width         | 3cm             |
@@ -5690,6 +5693,126 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
   links, src blocks--- replaces LaTeX's =\newcommand=, =\texttt=, =\textcolor=, and
   hand-tuned =\hspace='s; <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org">graphs-README.org</a></span> sets the two side by side.
 
+  Class diagrams, state machines, entity-relationship diagrams, mindmaps, and even sequence
+  diagrams are graphs too: tags such as =:inherits:=, =:start:=, and =:one-to-many:= ---templates
+  every graph has, in ~org-graph-builtin-templates~--- and =#+begin_graph :mindmap t= draw them; see
+  <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org#diagrams-we-draw-sequences-classes-states-entities-mindmaps">Diagrams we draw</a></span>.
+
+<span style="color: #8b4513; font-weight: bold;">** Images ---LaTeX, HTML, SVG, dot, PlantUML, Mermaid, D2: itself where read natively, else a picture</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">images</span>
+  <span style="font-weight: bold;">:END:</span>
+
+  A TikZ picture belongs in a web page as much as in a PDF; an HTML widget, in a PDF as much as
+  in a web page. A =#+begin_image LANG= block is its =LANG=, raw, along its own backend; along
+  any other, an image of itself:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+name: arrow
+,#+begin_image latex
+\begin{tikzpicture}
+  \draw[-&gt;, thick] (0,0) -- (2,1) node[right] {$f(x)$};
+\end{tikzpicture}
+,#+end_image
+
+,#+begin_image html :css "button { background: gold; padding: 1em }"
+&lt;button&gt;Click me&lt;/button&gt;
+,#+end_image
+<span style="color: #a0a1a7;">  #+end_src
+</span>  | Block                | HTML                   | LaTeX                    | Markdown, and the rest |
+  |----------------------+------------------------+--------------------------+------------------------|
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image latex=</span><span style="font-weight: bold; font-style: italic;"> </span>| an SVG, inlined        | itself, raw              | a PNG                  |
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image html=</span><span style="font-weight: bold; font-style: italic;">  </span>| itself, raw            | a PDF, by =\includegraphics= | a PNG                  |
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image svg=</span><span style="font-weight: bold; font-style: italic;">   </span>| itself, raw            | a PDF, by =\includegraphics= | a PNG                  |
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image dot=</span><span style="font-weight: bold; font-style: italic;">   </span>| an SVG, inlined        | a PDF, by =\includegraphics= | a PNG                  |
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image plantuml=</span><span style="font-weight: bold; font-style: italic;"> </span>| an SVG, inlined     | a PDF, by =\includegraphics= | a PNG                  |
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image mermaid=</span><span style="font-weight: bold; font-style: italic;">  </span>| itself, drawn by the browser | a PDF, by =\includegraphics= | itself, drawn by GitHub |
+  | <span style="font-weight: bold; font-style: italic;">=#+begin_image d2=</span><span style="font-weight: bold; font-style: italic;">       </span>| an SVG, inlined     | a PDF, by =\includegraphics= | a PNG                  |
+  The SVG and PDF are vector, so they stay crisp at any zoom; the SVG is inlined, as a =data:=
+  URI, so a page carries its images along, wherever it is published.
+
+  Above a line of five or more dashes ---Org's horizontal rule--- is the block's own preamble:
+  LaTeX's, before =\begin{document}=, or HTML's =&lt;head&gt;=. Along its own backend, a LaTeX
+  block's preamble joins the document's; an HTML block's precedes it.
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_image latex
+\usepackage{smartdiagram}
+-----
+\smartdiagram[bubble diagram]{Emacs, Org, \LaTeX, HTML}
+,#+end_image
+<span style="color: #a0a1a7;">  #+end_src
+</span>  Five dashes, since three alone are LaTeX's em-dash.
+
+  =C-c C-c= within the block renders it, and shows its PNG atop the block; again, to remove it.
+  The renderings are =images/NAME.{svg,pdf,png}=, by ~org-image-block-directory~; each way of
+  naming them has its price:
+  | Naming       | <span style="font-weight: bold; font-style: italic;">=NAME=</span><span style="font-weight: bold; font-style: italic;">                                  </span>| Upon an edit                     | Link to it from elsewhere? |
+  |--------------+-----------------------------------------+----------------------------------+----------------------------|
+  | Sans =:file= | <span style="font-weight: bold; font-style: italic;">=#+name:=</span><span style="font-weight: bold; font-style: italic;">, else </span><span style="font-weight: bold; font-style: italic;">=image=</span><span style="font-weight: bold; font-style: italic;">, then its hash  </span>| rendered afresh; the former axed | No: the name changes       |
+  | =:file tree= | <span style="font-weight: bold; font-style: italic;">=tree=</span><span style="font-weight: bold; font-style: italic;">, exactly                         </span>| stale, till =C-c C-c=            | Yes: an intentional figure |
+  A block never rendered is rendered upon export, when the tools are at hand; else it is shown
+  as source, with a warning.
+
+  Moreover:
+  + =:as-image t= is an image even along its own backend. Its preamble ---a heavy package, say---
+    then stays out of the document's; yet a PDF's picture of text is neither searchable nor in
+    the document's font, and an HTML picture is no longer interactive.
+  + =:resolution 300= sharpens its PNG; by default, ~org-image-block-png-resolution~, 144.
+  + ~org-image-block-shell-escape~ compiles LaTeX with =-shell-escape=, as =minted= needs; it is
+    off by default, since it lets a document's LaTeX run any shell command.
+
+  Each language becomes a PDF, cropped, whence =pdftocairo= makes the SVG and PNG:
+  + LaTeX, by =pdflatex= ---else the document's =#+latex_compiler:=--- and the =standalone=
+    class; ~org-image-block-latex-preamble~ loads =amsmath= and TikZ, then the document's own
+    =#+latex_header:= lines, then the block's preamble.
+  + HTML, by a headless Chrome, ~org-image-block-browser~, then =pdfcrop=; =:css= styles it and
+    =:width 600px= fixes its width. It sees none of the page's own CSS, being rendered alone.
+  + SVG, by =rsvg-convert=, at the SVG's own size.
+  + Graphviz's dot, such as =digraph { Org -&gt; HTML }=, by =dot=, then =pdfcrop=; =:layout neato=
+    chooses the layout engine. It is the escape hatch for raw Graphviz; the <span style="text-decoration: underline;"><a href="#graphs">graph</a></span> block stays
+    the Org-native way to draw one.
+  + PlantUML, by =plantuml=, then =pdfcrop=; a body sans =@startuml= is put within =@startuml= &#8230;
+    =@enduml=, so =Alice -&gt; Bob: Hi= alone suffices.
+  + Mermaid, by =mmdc=, the Mermaid CLI ---=npm install -g @mermaid-js/mermaid-cli=--- then
+    =pdfcrop=; yet only for LaTeX and the rest. In HTML, a =&lt;pre class="mermaid"&gt;= is drawn by
+    Mermaid itself, from a CDN; in Markdown, a fenced =mermaid= block is drawn by GitHub. So a
+    Mermaid diagram stays live, and needs no tool at all, in a web page or a README.
+  + <span style="text-decoration: underline;"><a href="https://d2lang.com">D2</a></span>, by =d2=, to SVG, then =rsvg-convert=; =:layout elk= chooses its layout engine, =:theme 200=
+    its theme, and =:sketch t= its hand-drawn look.
+    By way of example, a sketched diagram in theme 101:
+<span style="color: #a0a1a7;">    #+begin_src org :tangle no
+</span>,#+begin_image d2 :file flags :theme 101 :sketch t
+High Mem Instance -&gt; EC2 &lt;- High CPU Instance: Hosted By
+,#+end_image
+<span style="color: #a0a1a7;">    #+end_src
+</span>    ---=flags.{svg,pdf,png}= within ~org-image-block-directory~, each backend taking its own.
+  None of SVG, dot, PlantUML, Mermaid, or D2 has a preamble, so a line of dashes in one is an error.
+
+  =C-c C-c=, and export, need each language's tools; a missing one is an error saying how to
+  install it. On macOS, by <span style="text-decoration: underline;"><a href="https://brew.sh">Homebrew</a></span>:
+  | Language | Its tools                | Installed by                                                    |
+  |----------+--------------------------+-----------------------------------------------------------------|
+  | Every one | <span style="font-weight: bold; font-style: italic;">=pdftocairo=</span><span style="font-weight: bold; font-style: italic;">, </span><span style="font-weight: bold; font-style: italic;">=pdfcrop=</span><span style="font-weight: bold; font-style: italic;">  </span>| =brew install poppler=; =pdfcrop= comes with TeX Live            |
+  | =latex=   | <span style="font-weight: bold; font-style: italic;">=pdflatex=</span><span style="font-weight: bold; font-style: italic;">               </span>| TeX Live; e.g., =brew install --cask mactex=                     |
+  | <span style="font-weight: bold; font-style: italic;">=html=</span><span style="font-weight: bold; font-style: italic;">    </span>| Chrome, or Chromium      | ~org-image-block-browser~ finds it                               |
+  | =svg=     | <span style="font-weight: bold; font-style: italic;">=rsvg-convert=</span><span style="font-weight: bold; font-style: italic;">           </span>| =brew install librsvg=                                           |
+  | =dot=     | <span style="font-weight: bold; font-style: italic;">=dot=</span><span style="font-weight: bold; font-style: italic;">                    </span>| =brew install graphviz=                                          |
+  | =plantuml= | <span style="font-weight: bold; font-style: italic;">=plantuml=</span><span style="font-weight: bold; font-style: italic;">              </span>| =brew install plantuml=                                          |
+  | =mermaid= | <span style="font-weight: bold; font-style: italic;">=mmdc=</span><span style="font-weight: bold; font-style: italic;">, for LaTeX alone  </span>| =npm install -g @mermaid-js/mermaid-cli=                         |
+  | =d2=      | <span style="font-weight: bold; font-style: italic;">=d2=</span><span style="font-weight: bold; font-style: italic;">, </span><span style="font-weight: bold; font-style: italic;">=rsvg-convert=</span><span style="font-weight: bold; font-style: italic;">     </span>| =brew install d2 librsvg=                                        |
+
+  <span style="font-weight: bold;">*Why not Babel's own </span><span style="font-weight: bold;">=ob-dot=</span><span style="font-weight: bold;">, </span><span style="font-weight: bold;">=ob-plantuml=</span><span style="font-weight: bold;">, or </span><span style="font-weight: bold;">=ob-mermaid=</span><span style="font-weight: bold;">?*</span> They render a src block to its
+  =:file= on =C-c C-c=, and =:exports results= shows it; that is the core of the job, and they do
+  it well. An image block adds three things:
+  1. <span style="font-weight: bold;">*A format per backend:*</span> an SVG, inlined, in HTML; a PDF, vector, in LaTeX; a PNG elsewhere.
+     Babel's =:file= is one format for every backend.
+  2. <span style="font-weight: bold;">*Freshness:*</span> renderings are named by the block's hash, so an edited block is rendered afresh;
+     Babel's =:file= keeps exporting the former image till the block is run again.
+  3. <span style="font-weight: bold;">*No boilerplate:*</span> no =:file=, nor =:exports results=, on every block.
+  For Mermaid, a fourth: =ob-mermaid= always renders by =mmdc= to a static file, whereas an image
+  block lets the browser, and GitHub, draw it live.
+  A new language, such as Mermaid, is one entry of ~org-image-block-languages~: a function
+  writing the block as a PDF.
+
 <span style="color: #8b4513; font-weight: bold;">** Switches for every block and section: </span><span style="color: #8b4513; font-weight: bold;">=:when=</span><span style="color: #8b4513; font-weight: bold;">, </span><span style="color: #8b4513; font-weight: bold;">=:let=</span><span style="color: #8b4513; font-weight: bold;">, </span><span style="color: #8b4513; font-weight: bold;">=:folded=</span><span style="color: #8b4513; font-weight: bold;">, &#8230;</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">switches-for-every-block</span>
@@ -5706,10 +5829,19 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
   | <span style="font-weight: bold; font-style: italic;">=:let (VAR VAL &#8230;)=</span><span style="font-weight: bold; font-style: italic;"> </span>| Each whole-word =VAR=, or operator such as =-&gt;=, in the contents becomes its value, beforehand |
   | <span style="font-weight: bold; font-style: italic;">=:let NAME=</span><span style="font-weight: bold; font-style: italic;">      </span>| Likewise, for the =VAR= and =VAL= of each row of the table =#+name: NAME=, else of the variable =NAME= |
   | <span style="font-weight: bold; font-style: italic;">=:ignore t=</span><span style="font-weight: bold; font-style: italic;">      </span>| The contents, as plain Org; i.e., the block's own behaviour is bypassed      |
-  | <span style="font-weight: bold; font-style: italic;">=:boxed TITLE=</span><span style="font-weight: bold; font-style: italic;">   </span>| The result, within a <a href="doc:org-block/box">box</a> titled =TITLE=; =t= for untitled               |
-  | <span style="font-weight: bold; font-style: italic;">=:folded TITLE=</span><span style="font-weight: bold; font-style: italic;">  </span>| The result, folded within <a href="doc:org-block/details">details</a> titled =TITLE=; =t= for the block's name |
+  | <span style="font-weight: bold; font-style: italic;">=:boxed TITLE=</span><span style="font-weight: bold; font-style: italic;">   </span>| The result, within a <a href="doc:org--box-block">box</a> titled =TITLE=; =t= for untitled               |
+  | <span style="font-weight: bold; font-style: italic;">=:folded TITLE=</span><span style="font-weight: bold; font-style: italic;">  </span>| The result, folded within <a href="doc:org--details-block">details</a> titled =TITLE=; =t= for the block's name |
   | <span style="font-weight: bold; font-style: italic;">=:verbatim t=</span><span style="font-weight: bold; font-style: italic;">    </span>| The block as written, sans its switches, shown as Org source                  |
   | <span style="font-weight: bold; font-style: italic;">=:demo t=</span><span style="font-weight: bold; font-style: italic;">        </span>| That source, then what it exports to; and a test that it still does; see <span style="text-decoration: underline;"><a href="#demos">Demos</a></span> |
+  | <span style="font-weight: bold; font-style: italic;">=:backend B=</span><span style="font-weight: bold; font-style: italic;">     </span>| Nothing at all, unless we export along =B=, or one of a list such as =(html latex)=, or a backend deriving from one |
+  | <span style="font-weight: bold; font-style: italic;">=:tags T=</span><span style="font-weight: bold; font-style: italic;">        </span>| Nothing at all, when the tag =T=, or one of a list, is among =#+exclude_tags:=; see <span style="text-decoration: underline;"><a href="#two-editions">Two editions</a></span> |
+  | <span style="font-weight: bold; font-style: italic;">=:within B=</span><span style="font-weight: bold; font-style: italic;">      </span>| The result, within the block =B=, or =(B ARG :KEY VAL &#8230;)=, or within each of a list of them, outermost first |
+  | <span style="font-weight: bold; font-style: italic;">=:permalink ID=</span><span style="font-weight: bold; font-style: italic;">  </span>| The result, after a &#128279; whose URL ends in =#ID=; =t= for its =#+name:=, else its title; see <span style="text-decoration: underline;"><a href="https://alhassy.com/permalinks#permalinks">Permalinks</a></span> |
+  | <span style="font-weight: bold; font-style: italic;">=:filename F=</span><span style="font-weight: bold; font-style: italic;">    </span>| The result, beneath its file name =F=; for a src block, =t= is the file it =:tangle=-s to |
+  | <span style="font-weight: bold; font-style: italic;">=:copy t=</span><span style="font-weight: bold; font-style: italic;">        </span>| The result, with a button copying its text, in HTML; every src and example block has one by default |
+  | <span style="font-weight: bold; font-style: italic;">=:tab T=</span><span style="font-weight: bold; font-style: italic;">         </span>| The result as the tab =T= of the tabset that adjacent =:tab= blocks make, in HTML; =t= for a src block's language |
+  | <span style="font-weight: bold; font-style: italic;">=:highlight L=</span><span style="font-weight: bold; font-style: italic;">   </span>| The lines =L=, such as ="2,4-6"=, or coderef labels, such as =(loop)=, lit up, in HTML |
+  | <span style="font-weight: bold; font-style: italic;">=:log t=</span><span style="font-weight: bold; font-style: italic;">         </span>| The result, as ever; and what it transpiles to, in the buffer =*Org Block Log*=; or in the file =:log FILE= |
 
 <span style="color: #a0a1a7;">  #+begin_org :ignore t :demo t
 </span>  #+begin_box Exercise :let (N 7)
@@ -5821,6 +5953,126 @@ Recall that p -&gt; q.
   run Lisp written in the document, Emacs asks once before running each distinct form;
   ~org-defblock-evaluate-switches~ may instead allow them freely, or never.
 
+<span style="color: #a626a4; font-weight: bold;">*** Two editions of one document: </span><span style="color: #a626a4; font-weight: bold;">=:tags=</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">two-editions</span>
+  <span style="font-weight: bold;">:END:</span>
+
+  A course's notes come in two editions: the students' and the instructor's. Org already
+  writes both from one file, for sections: a heading tagged =:solution:= is not exported
+  when =#+exclude_tags: solution= says so. The =:tags= switch brings the same to blocks,
+  sans a heading per answer:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+exclude_tags: solution instructor
+
+,#+begin_box Exercise
+What do the first =N= odd numbers sum to?
+,#+end_box
+
+,#+begin_box Answer :tags solution
+=N&#178;=, by induction on =N=.
+,#+end_box
+
+,#+begin_remark :tags instructor
+Most students guess =2N=; ask for a counterexample.
+,#+end_remark
+<span style="color: #a0a1a7;">  #+end_src
+</span>  So the students' edition is the file as is; the instructor's is the file sans its
+  =#+exclude_tags:= line. A block's tags are a symbol, a string of words, or a list of
+  them: =:tags solution=, =:tags "solution hard"=, =:tags (solution hard)=. Sans any
+  =#+exclude_tags:=, Org's own ~org-export-exclude-tags~ applies, which is =noexport=; so
+  =:tags noexport= is =:noexport t=. A heading inherits =:header-args:box: :tags solution=
+  for each box of its subtree, as with any other switch.
+
+  =:tags= is sugar for a =:when=, sans the Lisp, and so sans the question before running
+  it. The answer above is, longhand,
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_box Answer :when (not (member "solution" (split-string (or (cadar (org-collect-keywords '("EXCLUDE_TAGS"))) ""))))
+<span style="color: #a0a1a7;">  #+end_src
+</span>  In similar spirit, =:backend html= is =:when (eq backend 'html)=, save that it also
+  matches a backend deriving from =html=, such as Markdown or a blog's own.
+
+<span style="color: #a626a4; font-weight: bold;">*** Wrap a block in others: </span><span style="color: #a626a4; font-weight: bold;">=:within=</span>
+
+  =:folded T= and =:boxed T= wrap a block in a <a href="doc:org--details-block">details</a> and a <a href="doc:org--box-block">box</a>; =:within= wraps it in any
+  block, with any arguments, as written on its =#+begin_= line:
+  | <span style="font-weight: bold; font-style: italic;">=:within (details "Hint")=</span><span style="font-weight: bold; font-style: italic;">                 </span>| &#8801; =:folded "Hint"=                        |
+  | <span style="font-weight: bold; font-style: italic;">=:within ((details "Hint") (box "Lemma"))=</span><span style="font-weight: bold; font-style: italic;"> </span>| &#8801; =:folded "Hint" :boxed "Lemma"=         |
+  | <span style="font-weight: bold; font-style: italic;">=:within (box "Aside" :shadow t)=</span><span style="font-weight: bold; font-style: italic;">          </span>| A box with a shadow, which =:boxed= lacks |
+  | <span style="font-weight: bold; font-style: italic;">=:within center=</span><span style="font-weight: bold; font-style: italic;">                           </span>| Org's own =#+begin_center=                |
+  | <span style="font-weight: bold; font-style: italic;">=:within (margin "see")=</span><span style="font-weight: bold; font-style: italic;">                   </span>| A margin note on the word &#8220;see&#8221;, holding the block |
+  A block that ~org-defblock~ made is called by its handler; any other, such as =quote=,
+  =center=, or a special block of no declaration, is left to Org. The first of a list is
+  outermost. Since a heading's drawer takes every switch, =:within: (details "Proof")=
+  folds a section's text away.
+
+  Why not =:wrap=? Babel has it already: =#+begin_src python :wrap example= wraps the
+  block's <span style="font-style: italic;">/results/</span>, not the block. A src block's language keeps every header argument
+  Babel declares for it ---its common ones, such as =:wrap=, and those of
+  =org-babel-header-args:LANG=--- just as a block of ours keeps a keyword it declares;
+  so =ob-elvish='s own =:log=, say, stays its own.
+
+<span style="color: #a626a4; font-weight: bold;">*** Code: </span><span style="color: #a626a4; font-weight: bold;">=:filename=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:copy=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:highlight=</span><span style="color: #a626a4; font-weight: bold;">, </span><span style="color: #a626a4; font-weight: bold;">=:tab=</span>
+
+  Literate configurations name the file each block tangles to; =:filename t= shows it atop
+  the block, from its =:tangle=, as inherited. Then =#+PROPERTY: header-args:emacs-lisp
+  :tangle init.el :filename t= titles every block of the file, sans repeating ourselves.
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_src emacs-lisp :tangle init.el :filename t :highlight "2"
+(use-package org
+  :custom (org-hide-emphasis-markers t))
+,#+end_src
+<span style="color: #a0a1a7;">  #+end_src
+</span>
+  Every src and example block has a copy button in HTML, by =:copy t=, which each
+  inherits from ~org-babel-default-header-args:src~ and ~org-babel-default-header-args:example~.
+  The button copies the code sans its =-n= line numbers. To turn it off, write =:copy nil=
+  for a block, =#+PROPERTY: header-args:haskell :copy nil= for a language, or
+  =#+PROPERTY: header-args:src :copy nil= for every src block of the file; =header-args:src=
+  is weaker than a language's own, as Babel's language-agnostic =header-args= is weaker still.
+  A src block whose code is not exported, by =:exports results= or =none=, has neither a
+  button nor a file name.
+
+  =:highlight= lights lines up, by number ---as =-n= shows them, else counting from 1--- or
+  by Org's own coderef labels. In the following, the second line is lit by its label, and
+  hovering over the link lights it too, as Org's own manual promises:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_src C -n :highlight (loop)
+int tot = 1;
+for (int i = 0; i != 10; i++)   (ref:loop)
+   tot *= i;
+,#+end_src
+
+The loop on line <span style="text-decoration: underline;"><a href="(loop)">[[(loop)]]</a></span> multiplies.
+<span style="color: #a0a1a7;">  #+end_src
+</span>  Org writes the hover's script only when ~org-html-head-include-scripts~ is on, which is
+  off by default; we add the script whenever a page has a =<span style="text-decoration: underline;"><a href="(label)">[[(label)]]</a></span>= link.
+
+  Adjacent =:tab= blocks are one tabset, in HTML; =:tab t= is titled by a src block's
+  language. One algorithm in three languages takes the room of one:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_src haskell :tab t
+sum [1 .. 10]
+,#+end_src
+,#+begin_src python :tab Python3
+sum(range(1, 11))
+,#+end_src
+,#+begin_src emacs-lisp :tab "Emacs Lisp"
+(apply #'+ (number-sequence 1 10))
+,#+end_src
+<span style="color: #a0a1a7;">  #+end_src
+</span>  Elsewhere ---LaTeX, Markdown, or a page sans JavaScript--- each block appears in turn,
+  beneath its title.
+
+<span style="color: #a626a4; font-weight: bold;">*** What does a block transpile to?: </span><span style="color: #a626a4; font-weight: bold;">=:log=</span>
+
+  Every block becomes HTML, or LaTeX, in place of what it holds. To see that rendering apart
+  from the page ---when debugging a block of our own, say--- we mark it =:log t=: each export
+  then appends the block's rendering to the buffer =*Org Block Log*=, its other switches
+  applied; =:log FILE= writes it to =FILE= instead. Moreover, =C-c C-c= within a =:log=
+  block shows its rendering at once, along each of ~org-demo-backends~, sans exporting
+  the document; save within a src block, whose =C-c C-c= stays Babel's.
+
 <span style="color: #8b4513; font-weight: bold;">** Demos ---a block, then what it exports to, and a test that it still does</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">demos</span>
@@ -5866,8 +6118,8 @@ Hi <span style="font-weight: bold;">*there*</span>
   ~M-x org-demo-refresh-buffer~ snapshots them all; =C-u C-c C-c= leaves =C-c C-c= to the
   block's own action, if any.
 
-  A demo's value says what else to show: =:demo org-block/box= folds away the definition of
-  ~org-block/box~, below the rendering; =:demo (f v)= those of the function =f= and the
+  A demo's value says what else to show: =:demo org--box-block= folds away the definition of
+  ~org--box-block~, below the rendering; =:demo (f v)= those of the function =f= and the
   variable =v=, wherever they are defined ---a library, or this very document. A =live= demo,
   =:demo live=, keeps no snapshot: its rendering varies by machine, say, so it renders afresh
   each export and checks nothing; so =C-c C-c= in it is the block's own, such as a graph's.
@@ -6068,7 +6320,7 @@ the fundamental notions of number, order, and function.
   Where =red:&#119987;= colours text, =<span style="background-color: #ffc0cb;"><a href="highlight:pink">[[highlight:pink][&#119987;]]</a></span>= colours its background; the colour
   defaults to yellow, and the link shows so highlighted in Emacs too.
 
-<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org-block/highlight
+<span style="color: #a0a1a7;">  #+begin_org :ignore t :demo org--highlight-block
 </span>  Skimming readers see <span style="background-color: #ffff00;"><a href="highlight:yellow">the one sentence that matters</a></span>, and <span style="background-color: #ffc0cb;"><a href="highlight:pink">the one to reread</a></span>.
 
   #+begin_highlight #e5f5e5
@@ -6135,11 +6387,11 @@ the fundamental notions of number, order, and function.
     =#+html_export_style:=, and =toggle-details=, which are HTML-only by design: they
     dress the page itself, and Markdown has no say over the page.
 
-  Dislike how a block B exports to Markdown? Advise ~org-block/B~ on your own machine; its
+  Dislike how a block B exports to Markdown? Advise ~org--B-block~ on your own machine; its
   result is Org, so the export makes of it whatever it does of any Org. By way of example,
   boxes between horizontal rules:
 <span style="color: #a0a1a7;">  #+begin_src emacs-lisp
-</span>(advice-add 'org-block/box <span style="color: #e44649;">:around</span>
+</span>(advice-add 'org--box-block <span style="color: #e44649;">:around</span>
             (<span style="color: #a626a4;">lambda</span> (box backend raw-contents <span style="color: #c18401;">&amp;rest</span> args)
               <span style="color: #50a14f; font-style: italic;">"In Markdown, a box is its bold title and text, between rules; elsewhere, as before."</span>
               (<span style="color: #a626a4;">if</span> (org-export-markdown-p)
@@ -6156,7 +6408,7 @@ Each block names the LaTeX packages it needs ---a box, ~xcolor~ and ~tcolorbox~;
 ~csquotes~--- and a LaTeX export that uses the block, or its link, loads them just before
 =\begin{document}=. So we declare none ourselves; a package we do load, options and all, is left be.
 To see what a block needs, read the ~:latex-head~ of its definition, or evaluate
-~(get 'org-block/box 'org-latex-head)~ &#8658; ~("xcolor" "tcolorbox")~.
+~(get 'org--box-block 'org-latex-head)~ &#8658; ~("xcolor" "tcolorbox")~.
 
 A test, <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/tests/org-pdf-export-tests.el">tests/org-pdf-export-tests.el</a></span>, keeps this honest: it compiles every example of this manual to a
 PDF, and to beamer slides, declaring no packages at all. It uses LuaLaTeX, which reads Unicode such
@@ -6192,8 +6444,8 @@ margins, so there our margin notes, tooltips, and Org's footnotes are beamer's o
   <span style="color: #50a14f;">"Call out CONTENTS under TITLE, tinted COLOR."</span>
   (<span style="color: #a626a4;">pcase</span> backend
     ('html (format <span style="color: #50a14f;">"&lt;div style=\"border-left: 4px solid %s; padding-left: 1em\"&gt;&lt;b&gt;%s&lt;/b&gt;%s&lt;/div&gt;"</span>
-                   color title contents))
-    (_     (format <span style="color: #50a14f;">"\\textbf{\\color{%s}%s} %s"</span> color title contents))))
+                   color (org-inline title) contents))
+    (_     (format <span style="color: #50a14f;">"\\textbf{\\color{%s}%s} %s"</span> color (org-inline title) contents))))
 <span style="color: #a0a1a7;">  #+end_src
 </span>
   Now the following binds ~title~ to ="Heads up"= and ~color~ to =red=; omit either, and
@@ -6224,6 +6476,20 @@ Mind the gap.
 
   Every block is also a link, with the label as main argument and the description as
   contents: =<span style="text-decoration: underline;"><a href="note:Heads up">[[note:Heads up][Mind the gap.]]</a></span>=.
+
+  Our markup works in every block, for free: ~contents~ is Org, exported as prose is, so =<span style="color: #ff0000;"><a href="red:fire">red:fire</a></span>=,
+  =<span style="color: #bebebe; font-weight: bold; text-decoration: underline; text-decoration: overline;"><a href="tooltip:x">[[tooltip:x][a tip]]</a></span>=, =$\alpha$=, =<span style="text-decoration: underline;"><a href="https://orgmode.org">[[https://orgmode.org][Org]]</a></span>=, =<span style="text-decoration: underline;"><a href="file:notes.org">[[file:notes.org][notes]]</a></span>=,
+  =<span style="text-decoration: underline;"><a href="*Heading">[[*Heading]]</a></span>=, =<span style="text-decoration: underline;"><a href="target">[[target]]</a></span>=, and =<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>= all render within it. An argument is a different matter:
+  only the block knows whether its ~title~ is prose, or whether its ~color~ is a colour's name; so we
+  hand a prose argument to ~(org-inline title)~, as the ~note~ above does, and its markup renders too
+  ---links to the document's sections and targets included, and its own =<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>= joins the document,
+  so a =<span style="text-decoration: underline;"><a href="target">[[target]]</a></span>= elsewhere reaches the block. The package's own titles all do so.
+
+  Wherever the output is no prose, the same links mean the same things: in a math block, a proof tree,
+  and inline =$&#8230;$=, =red:x= is ={\color{red}x}= and =<span style="color: #bebebe; font-weight: bold; text-decoration: underline; text-decoration: overline;"><a href="tooltip:x">[[tooltip:x][a tip]]</a></span>= hovers; in a graph, =red:x=
+  colours its node's label, a =tooltip:= is the node's tooltip, a web link its URL, and =$\lambda_{x}$=
+  shows as &#955; subscripted x. Each link says what it means once, in ~org-markup-links~; a link of our own
+  joins that list to reach maths and graphs alike.
 
   A block names what its document's head needs, added once, by ~:latex-head~ and ~:html-head~; say,
   ~(org-defblock thm (&amp;optional title :latex-head ("amsthm" "\\newtheorem{theorem}{Theorem}")) &#8230;)~. A
@@ -6429,7 +6695,7 @@ Mind the gap.
   press, so Org does nothing else with it; nil declines it, leaving it to the block's
   =:C-c_C-c= switch, if any.
 
-  For a complete worked example, we may mimic the <a href="doc:org-block/graph">graph</a> block's handler,
+  For a complete worked example, we may mimic the <a href="doc:org--graph-block">graph</a> block's handler,
   <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-graph-block.el">org-graph--cc-handler</a></span>. It
   + finds its block via ~(re-search-backward "^[ \t]*#\\+begin_graph\\b")~ then ~(org-special-block-after-point "graph")~;
   + reads the block's keyword arguments, so =#+begin_graph :C-c_C-c dot= changes what =C-c C-c= does;
@@ -6447,6 +6713,47 @@ Mind the gap.
   The dispatcher itself ---a single function on ~org-ctrl-c-ctrl-c-hook~--- lives in
   <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/lisp/org-ctrl-c-ctrl-c-for-special-block.el">org-ctrl-c-ctrl-c-for-special-block.el</a></span>.
 
+<span style="color: #8b4513; font-weight: bold;">** Your own Babel: a block, and its </span><span style="color: #8b4513; font-weight: bold;">=C-c C-c=</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">your-own-babel</span>
+  <span style="font-weight: bold;">:END:</span>
+
+  Each =ob-LANG= package teaches Babel to run a language: =C-c C-c= evaluates the block and
+  writes its =#+RESULTS:= below; export shows the code, its results, or both. We have both
+  halves already: ~org-defblock~ says what a block exports to, and ~org-def-action~ what
+  =C-c C-c= does within it. By way of example, a =calc= block whose every line is maths for
+  Emacs's own calculator:
+<span style="color: #a0a1a7;">  #+begin_src emacs-lisp :tangle no
+</span>(<span style="color: #a626a4;">org-defblock</span> calc (<span style="color: #c18401;">&amp;context</span> raw-contents)
+  <span style="color: #50a14f;">"Each line of maths, beside its value by Emacs's calc."</span>
+  (org-parse (format <span style="color: #50a14f;">"#+begin_example\n%s\n#+end_example"</span>
+                     (mapconcat (<span style="color: #a626a4;">lambda</span> (line) (format <span style="color: #50a14f;">"%s  =  %s"</span> line (calc-eval line)))
+                                (split-string raw-contents <span style="color: #50a14f;">"\n"</span> t) <span style="color: #50a14f;">"\n"</span>))))
+
+(<span style="color: #a626a4;">org-def-action</span> calc ()
+  <span style="color: #50a14f; font-style: italic;">"Write each line's value below the block, as Babel writes a src block's results."</span>
+  (<span style="color: #a626a4;">let</span> ((results (mapconcat (<span style="color: #a626a4;">lambda</span> (line) (concat <span style="color: #50a14f;">": "</span> (calc-eval line))) (split-string raw-contents <span style="color: #50a14f;">"\n"</span> t) <span style="color: #50a14f;">"\n"</span>)))
+    (re-search-forward <span style="color: #50a14f;">"^[ \t]*#\\+end_calc"</span>)
+    (forward-line)
+    (<span style="color: #a626a4;">when</span> (looking-at-p <span style="color: #50a14f;">"[ \t]*#\\+RESULTS:"</span>)
+      (delete-region (point) (org-element-property <span style="color: #e44649;">:end</span> (org-element-at-point))))
+    (insert <span style="color: #50a14f;">"#+RESULTS:\n"</span> results <span style="color: #50a14f;">"\n"</span>)
+    t))
+<span style="color: #a0a1a7;">  #+end_src
+</span>  Then =C-c C-c= within
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_calc
+2^10
+sqrt(2)
+,#+end_calc
+<span style="color: #a0a1a7;">  #+end_src
+</span>  writes =: 1024= and =: 1.41421356237= below it; export shows each line beside its value.
+  That is the whole of an =ob-calc=: a language's evaluator is a function of the block's
+  text, so the block's arguments are its header arguments ---=#+begin_calc :precision 3=---
+  inherited by =:header-args:calc:= as ever, and every switch, such as =:folded= or =:tags=,
+  applies for free. For a single block, rather than a kind, the =:C-c_C-c= switch suffices;
+  and =:log t= shows what a block exports to, when the export half is the one in doubt.
+
 <span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold;">=C-c '=</span><span style="color: #8b4513; font-weight: bold;"> to edit a block in its own buffer</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">c-c-quote-for-your-own-blocks</span>
@@ -6458,7 +6765,7 @@ Mind the gap.
   edited as ever.
 
   A block may instead choose its buffer's mode: the option =:edit-indirect-mode MODE= makes
-  =C-c '= open the block's contents in a buffer in =MODE=. By way of example, the <a href="doc:org-block/graph">graph</a> block
+  =C-c '= open the block's contents in a buffer in =MODE=. By way of example, the <a href="doc:org--graph-block">graph</a> block
   is declared with ~:edit-indirect-mode org-graph-edit-mode~, an Org mode that completes Graphviz
   attributes.
 
@@ -6502,6 +6809,22 @@ Two.
   special block, it is the src block that is split, as ever. The command is
   ~org-special-block-split~, should you want it on a key of its own.
 
+<span style="color: #8b4513; font-weight: bold;">** </span><span style="color: #8b4513; font-weight: bold;">=C-c C-v C-j=</span><span style="color: #8b4513; font-weight: bold;"> to insert a block's argument</span>
+  <span style="font-weight: bold;">:PROPERTIES:</span>
+  <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">c-c-c-v-c-j-to-insert-an-argument</span>
+  <span style="font-weight: bold;">:END:</span>
+
+  In a src block, =C-c C-v C-j= completes a header argument, then its value, and appends both
+  to the =#+begin_src= line. Within a special block, it does the same for the block's own
+  keywords, as ~org-defblock~ declares them ---offering each one's default--- and for every
+  switch, such as =:folded= or =:tags=; an empty value, as for =:folded=, means =t=:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_details Hint                         C-c C-v C-j :title-color &#9166; red &#9166;
+body                                     &#8614;    #+begin_details Hint :title-color red
+,#+end_details
+<span style="color: #a0a1a7;">  #+end_src
+</span>  In a src block, our switches join Babel's own header arguments among those it completes.
+
 <span style="color: #8b4513; font-weight: bold;">** Hover for a block's arguments: </span><span style="color: #8b4513; font-weight: bold;">=eldoc=</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
   <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">eldoc-for-blocks-and-links</span>
@@ -6515,17 +6838,29 @@ Two.
 <span style="color: #a0a1a7;">  #+end_example
 </span>  This needs no setup beyond =org-special-block-extras-mode=, and works for our own blocks too.
 
-  A multi-line display, such as eldoc-box, shows more beneath that line: the keys that act on the
-  block ---e.g., a math block's =C-c C-c= preview and =C-c '= edit--- and two buttons: <span style="font-style: italic;">/Docs/</span>,
-  for the full story, =C-h o org-block/NAME=; and <span style="font-style: italic;">/See the manual/</span>, for the section of this
-  manual that documents it. Our own blocks declare these as =org-defblock= options:
+  A multi-line display, such as eldoc-box, shows more beneath that line: a representative example
+  of the block, fontified as Org, its =#= comments explaining each feature ---enough for the common
+  uses, sans the manual---; the keys that act on the block ---e.g., a math block's =C-c C-c= preview
+  and =C-c '= edit---; the switches every block understands, =:when=, =:folded=, =:let=, and the
+  rest; and two buttons: <span style="font-style: italic;">/Docs/</span>, for the full story, =C-h o org--NAME-block=; and <span style="font-style: italic;">/See the manual/</span>,
+  for the section of this manual that documents it. Our own blocks declare these as =org-defblock=
+  options:
 <span style="color: #a0a1a7;">  #+begin_example
 </span>(org-defblock shy (:hover "Prose that eldoc shows beneath the docstring's first line."
                    :manual "<a href="https://example.com/shy">https://example.com/shy</a>") ; or "#ANCHOR", a section of this manual
   "Be shy."
   contents)
+
+;; A long option reads best set apart, after the definition.
+(org-defblock-attribute shy :example "
+# Shy text is still Org: *bold* stays bold.
+#+begin_shy
+Hush, *now*.
+#+end_shy")
 <span style="color: #a0a1a7;">  #+end_example
-</span>  An =org-deflink= takes =:hover= and =:manual= too.
+</span>  Since =org-defblock-attribute= sets any option, after the fact, it serves us for blocks we did not
+  write too; e.g., =(org-defblock-attribute graph :manual "<span style="text-decoration: underline;"><a href="https://example.com/my-notes">https://example.com/my-notes</a></span>")=.
+  An =org-deflink= takes =:hover= and =:manual= too.
 
   Likewise, completing on a =#+begin_= line ---=M-TAB=, or any completion popup--- offers every
   block's name beside the first line of its docstring, and Org's own blocks beside them; a popup's
@@ -6537,7 +6872,7 @@ Two.
   <span style="font-weight: bold;">:END:</span>
 
 Let's develop blocks for colouring text and link types for inline colouring;
-e.g., <a href="doc:org-block/color">color</a> and <a href="doc:org-block/teal">teal</a>.
+e.g., <a href="doc:org--color-block">color</a> and <a href="doc:org--teal-block">teal</a>.
  + E.g., ~<span style="color: #a52a2a;"><a href="brown: Hello, World!">[[brown: Hello, World!]]</a></span>~ &#8658; <span style="color: #a52a2a;"><a href="brown: Hello, World!">Hello, World!</a></span>
  + E.g., ~<span style="color: #a52a2a;"><a href="brown:Friends">brown:Friends</a></span>!~
    &#8658; <span style="color: #a52a2a;"><a href="brown:Friends">Friends</a></span>! ( Note the &#8216;!&#8217; is not coloured; use ~<span style="text-decoration: underline;"><a href="...">[[...]]</a></span>~ ! )
@@ -6825,7 +7160,7 @@ Let's have some sanity tests...
                     (format <span style="color: #50a14f;">"Error: &#8220;<a href="color:%s">color:%s</a>&#8221; &#8658; Unsupported colour!"</span> path)))))
    <span style="color: #e44649;">:export</span> (<span style="color: #a626a4;">lambda</span> (colour description backend)
              (<span style="color: #a626a4;">-let</span> [block-colouring
-                    (intern (format <span style="color: #50a14f;">"org-block/%s"</span> colour))]
+                    (intern (format <span style="color: #50a14f;">"org--%s-block"</span> colour))]
                (<span style="color: #a626a4;">if</span> (member (intern colour) org--named-colors)
                    (funcall block-colouring backend description)
                  (<span style="font-weight: bold;">error</span> <span style="color: #50a14f;">"Error: &#8220;<a href="color:%s">color:%s</a>&#8221; &#8658; Unsupported colour!"</span> colour)))))
@@ -7292,9 +7627,12 @@ With =org-special-block-extras-mode= on, in HTML:
 
 Two targets whose names differ only in whitespace, such as =<span style="text-decoration: underline;">&lt;&lt;a b&gt;&gt;</span>= and =<span style="text-decoration: underline;">&lt;&lt;a-b&gt;&gt;</span>=, share an id; we name them apart.
 
-<span style="color: #a0a1a7;"># <a href="color:orange">Going forward,</a></span>
-Going forward, we could give every heading such a permalink too, producing clickable
-org-headings similar to Github's ---the necessary ingredients are likely <span style="text-decoration: underline;"><a href="https://github.com/alhassy/emacs.d#ensuring-useful-html-anchors">here</a></span>.
+The =:permalink= switch gives a block, or a section, a permalink sans writing =<span style="text-decoration: underline;">&lt;&lt;X&gt;&gt;</span>= ourselves:
++ =#+begin_box Lemma :permalink t= puts =<span style="text-decoration: underline;">&lt;&lt;Lemma&gt;&gt;</span>= atop the box: =t= names it by the block's =#+name:=, else its
+  title; =:permalink euclid= names it =euclid=.  A src block has no title, so =t= needs its =#+name:=.
++ A heading's =:permalink: t= puts the &#128279; beside the heading, as GitHub does, linking to its =CUSTOM_ID=; sans one,
+  the heading's text, with dashes for spaces, becomes it.  The table of contents shows the heading sans &#128279;.
++ A =#+PROPERTY: header-args:box :permalink t= gives every titled box one, as with any other switch.
 
 <span style="color: #a0a1a7;">#+html: &lt;br&gt;</span>
 <span style="color: #a0a1a7;">#+begin_org :ignore t :demo t
@@ -8123,10 +8461,10 @@ may be useful to colour the =|=-separated fields of a badge link.
 <span style="color: #a0a1a7;">#   explanation and we want it without the ceremony of first defining a glossary term</span>
 <span style="color: #a0a1a7;">#   then invoking it. Enter the ~margin~ link. For example:</span>
 <span style="color: #a0a1a7;">#       </span>
-<span style="color: #a0a1a7;"># The use of ~doc:&#119987;~ --- and <a href="doc:org-block/documentation">documentation</a> --- are for explanatory remarks, personal</span>
+<span style="color: #a0a1a7;"># The use of ~doc:&#119987;~ --- and <a href="doc:org--documentation-block">documentation</a> --- are for explanatory remarks, personal</span>
 <span style="color: #a0a1a7;"># documentation, or glossary, that is intended to be used in multiple places.</span>
 <span style="color: #a0a1a7;"># However, sometimes we want a &#8220;one-off&#8221; remark containing, say, references or</span>
-<span style="color: #a0a1a7;"># additional explanation; for that we provide <a href="doc:org-block/margin">margin</a>.</span>
+<span style="color: #a0a1a7;"># additional explanation; for that we provide <a href="doc:org--margin-block">margin</a>.</span>
 
 
 <span style="color: #8b4513; font-weight: bold;">** Intro, motivating examples                                        </span><span style="color: #8b4513; font-weight: bold;">:ignore:</span>
@@ -8134,9 +8472,9 @@ may be useful to colour the =|=-separated fields of a badge link.
    <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">comment-intro</span>
    <span style="font-weight: bold;">:END:</span>
 
-   Sometimes I want to use the same <a href="doc:org-block/tooltip">tooltip</a> multiple times, so I write
-   the tooltip content once in a <a href="doc:org-block/documentation">documentation</a> block and then
-   reference it using the the <a href="doc:org-link/doc">doc</a> link type.
+   Sometimes I want to use the same <a href="doc:org--tooltip-block">tooltip</a> multiple times, so I write
+   the tooltip content once in a <a href="doc:org--documentation-block">documentation</a> block and then
+   reference it using the the <a href="doc:org--doc-link">doc</a> link type.
 
 <span style="color: #a0a1a7;">   # For instance,</span>
    
@@ -8151,7 +8489,7 @@ may be useful to colour the =|=-separated fields of a badge link.
 
    The ~:label~ is optional; when not provided it defaults to the name of
    the entry with spaces replaced by &#8216;_&#8217;.  For more, see
-   <a href="doc:org-block/documentation">doc:org-block/documentation</a>.  Entry names do not need to be unique,
+   <a href="doc:org--documentation-block">doc:org--documentation-block</a>.  Entry names do not need to be unique,
    but labels do!  ( The labels are like the addresses used to look up a
    person's home. )
       
@@ -8177,7 +8515,7 @@ A theory of typed composition; e.g., typed monoids.
    <span style="text-decoration: underline;"><a href="badge:Pretty|HTML|green|https://alhassy.com/personal-glossary">badge:Pretty|HTML|green|https://alhassy.com/personal-glossary</a></span>
 
    
-   Moreover, the  <a href="doc:org-link/doc">doc</a> link type lets me reference Emacs-documentation such as
+   Moreover, the  <a href="doc:org--doc-link">doc</a> link type lets me reference Emacs-documentation such as
    <a href="doc:loop">doc:loop</a> or <a href="doc:thread-last">doc:thread-last</a>, and English-dictionary entries such as
    <a href="doc:happiness">doc:happiness</a>.
 
@@ -8866,18 +9204,18 @@ Let =&#119966;= be any of the following: =black=, =blue=, =brown=, =cyan=, =dark
 
 | Idea                   | Documentation                                                    | Link only?          |
 |------------------------+------------------------------------------------------------------+---------------------|
-| Colours                | <span style="font-weight: bold; font-style: italic;">=&#119966;=</span><span style="font-weight: bold; font-style: italic;">, </span><span style="font-weight: bold; font-style: italic;"><a href="doc:org-block/math">math</a></span><span style="font-weight: bold; font-style: italic;">, </span><span style="font-weight: bold; font-style: italic;"><a href="doc:org--color">color</a></span><span style="font-weight: bold; font-style: italic;">                                      </span>|                     |
-| Parallel               | <a href="doc:org-block/parallel">parallel</a>                             |                     |
-| Editorial Comments     | <a href="doc:org-block/remark">remark</a>                                 |                     |
-| Folded Details         | <a href="doc:org-block/details">details</a> ,  <a href="doc:org-block/box">box</a> |                     |
+| Colours                | <span style="font-weight: bold; font-style: italic;">=&#119966;=</span><span style="font-weight: bold; font-style: italic;">, </span><span style="font-weight: bold; font-style: italic;"><a href="doc:org--math-block">math</a></span><span style="font-weight: bold; font-style: italic;">, </span><span style="font-weight: bold; font-style: italic;"><a href="doc:org--color">color</a></span><span style="font-weight: bold; font-style: italic;">                                      </span>|                     |
+| Parallel               | <a href="doc:org--parallel-block">parallel</a>                             |                     |
+| Editorial Comments     | <a href="doc:org--remark-block">remark</a>                                 |                     |
+| Folded Details         | <a href="doc:org--details-block">details</a> ,  <a href="doc:org--box-block">box</a> |                     |
 | Keystrokes             |                                                                  | ~kbd~                 |
 | Permalinks             |                                                                  | ~<span style="text-decoration: underline;">&lt;&lt;X&gt;&gt;</span>~                 |
-| Documentation-Glossary | <a href="doc:org-block/documentation">documentation</a>                   | ~doc~               |
-| Marginal remarks       | <a href="doc:org-block/margin">margin</a>                                 |                     |
+| Documentation-Glossary | <a href="doc:org--documentation-block">documentation</a>                   | ~doc~               |
+| Marginal remarks       | <a href="doc:org--margin-block">margin</a>                                 |                     |
 | Badges                 | <a href="doc:org-make-badge">badge</a>                                    |                     |
-| Equational proofs      | <a href="doc:org-block/math">math</a>                                     |                     |
+| Equational proofs      | <a href="doc:org--math-block">math</a>                                     |                     |
 
-Other fun stuff: <a href="doc:org-block/solution">solution</a>, <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#demos">:demo</a></span>, <a href="doc:org-block/stutter">stutter</a>, <a href="doc:org-block/rename">rename</a>, <a href="doc:org-block/spoiler">spoiler</a>, <a href="doc:org-block/tree">tree</a> :grin:
+Other fun stuff: <a href="doc:org--solution-block">solution</a>, <span style="text-decoration: underline;"><a href="https://alhassy.com/org-special-block-extras-blocks-and-links#demos">:demo</a></span>, <a href="doc:org--stutter-block">stutter</a>, <a href="doc:org--rename-block">rename</a>, <a href="doc:org--spoiler-block">spoiler</a>, <a href="doc:org--tree-block">tree</a> :grin:
 
 There are also the social badge links:
 =reddit-subscribe-to=, =github-followers=, =github-forks=, =github-stars, github-watchers=, and =tweet=.

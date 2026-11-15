@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-14 Sat 22:10 -->
+<!-- 2026-11-15 Sun 06:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Permalinks &mdash;Org's own =&lt;&lt;X&gt;&gt;=, made visible---</title>
@@ -286,9 +286,15 @@ Two targets whose names differ only in whitespace, such as <code>&lt;&lt;a b&gt;
 </p>
 
 <p>
-Going forward, we could give every heading such a permalink too, producing clickable
-org-headings similar to Github's &mdash;the necessary ingredients are likely <a href="https://github.com/alhassy/emacs.d#ensuring-useful-html-anchors">here</a>.
+The <code>:permalink</code> switch gives a block, or a section, a permalink sans writing <code>&lt;&lt;X&gt;&gt;</code> ourselves:
 </p>
+<ul class="org-ul">
+<li><code>#+begin_box Lemma :permalink t</code> puts <code>&lt;&lt;Lemma&gt;&gt;</code> atop the box: <code>t</code> names it by the block's <code>#+name:</code>, else its
+title; <code>:permalink euclid</code> names it <code>euclid</code>.  A src block has no title, so <code>t</code> needs its <code>#+name:</code>.</li>
+<li>A heading's <code>:permalink: t</code> puts the 🔗 beside the heading, as GitHub does, linking to its <code>CUSTOM_ID</code>; sans one,
+the heading's text, with dashes for spaces, becomes it.  The table of contents shows the heading sans 🔗.</li>
+<li>A <code>#+PROPERTY: header-args:box :permalink t</code> gives every titled box one, as with any other switch.</li>
+</ul>
 
 <br>
 <div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">&lt;&lt;example-location&gt;&gt; (Click the icon and see the URL has changed!)</pre> </div><div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
@@ -297,6 +303,8 @@ org-headings similar to Github's &mdash;the necessary ingredients are likely <a 
 
 <details class="code-details" style="padding: 1em; background-color: #e5f5e5; border-radius: 15px; color: hsl(157 75% 20%); font-size: 0.9em; box-shadow: 0.05em 0.1em 5px 0.01em #00000057;">
 <summary><strong><font face="Courier" size="3" color="green">Tests</font></strong></summary>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(deftest <span style="color: #50a14f;">"It works as expected: We have an anchor with the given ID, and the default SVG chain icon."</span>
   [target]
@@ -306,6 +314,7 @@ org-headings similar to Github's &mdash;the necessary ingredients are likely <a 
      <span style="color: #50a14f;">"&lt;/svg&gt;&lt;/a&gt; (Click the icon and see the URL has changed!)"</span>
      (* anything)))
 </code></pre>
+</div>
 </div>
 
 </details>
