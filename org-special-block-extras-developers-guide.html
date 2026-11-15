@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-15 Sun 21:45 -->
+<!-- 2026-11-15 Sun 22:08 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Make your own blocks and links</title>
@@ -201,7 +201,7 @@
 
 /* A word with a tooltip.  The pointer cursor also makes iOS deliver taps on it, which it otherwise does not. */
 .tooltip { color: red; border-bottom: 1px dotted; text-decoration: none; cursor: pointer; }
-/* In maths, colour carries meaning, so a tooltip keeps the colour the maths gives it. */
+/* In maths, color carries meaning, so a tooltip keeps the color the maths gives it. */
 mjx-container .tooltip { color: inherit; }
 
 .tooltip-box {
@@ -471,7 +471,7 @@ contents: <code>[[note:Heads up][Mind the gap.]]</code>.
 Our markup works in every block, for free: <code>contents</code> is Org, exported as prose is, so <code>red:fire</code>,
 <code>[[tooltip:x][a tip]]</code>, <code>$\alpha$</code>, <code>[[https://orgmode.org][Org]]</code>, <code>[[file:notes.org][notes]]</code>,
 <code>[[*Heading]]</code>, <code>[[target]]</code>, and <code>&lt;&lt;target&gt;&gt;</code> all render within it. An argument is a different matter:
-only the block knows whether its <code>title</code> is prose, or whether its <code>color</code> is a colour's name; so we
+only the block knows whether its <code>title</code> is prose, or whether its <code>color</code> is a color's name; so we
 hand a prose argument to <code>(org-inline title)</code>, as the <code>note</code> above does, and its markup renders too
 &mdash;links to the document's sections and targets included, and its own <code>&lt;&lt;target&gt;&gt;</code> joins the document,
 so a <code>[[target]]</code> elsewhere reaches the block. The package's own titles all do so.
@@ -480,7 +480,7 @@ so a <code>[[target]]</code> elsewhere reaches the block. The package's own titl
 <p>
 Wherever the output is no prose, the same links mean the same things: in a math block, a proof tree,
 and inline <code>$…$</code>, <code>red:x</code> is <code>{\color{red}x}</code> and <code>[[tooltip:x][a tip]]</code> hovers; in a graph, <code>red:x</code>
-colours its node's label, a <code>tooltip:</code> is the node's tooltip, a web link its URL, and <code>$\lambda_{x}$</code>
+colors its node's label, a <code>tooltip:</code> is the node's tooltip, a web link its URL, and <code>$\lambda_{x}$</code>
 shows as λ subscripted x. Each link says what it means once, in <code>org-markup-links</code>; a link of our own
 joins that list to reach maths and graphs alike.
 </p>
@@ -576,7 +576,7 @@ Mind the gap.
 <p>
 Likewise, the package's own blocks are links and tags too; e.g., <code>:details_Hint:</code> folds a
 section's text away under the title <i>Hint</i>. Try tagging a heading <code>:red:</code> &mdash;or <code>:blue:</code>,
-<code>:teal:</code>, … any of the 19 colours&mdash; and its text exports in that colour.
+<code>:teal:</code>, … any of the 19 colors&mdash; and its text exports in that color.
 </p>
 
 <p>
@@ -685,7 +685,7 @@ renders any section tagged <code>:quote:</code> as a <code>&lt;blockquote&gt;</c
 <button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
 <pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-deftag</span> quote (<span style="color: #c18401;">&amp;optional</span> (color <span style="color: #50a14f;">"black"</span>) <span style="color: #c18401;">&amp;key</span> cite)
-  <span style="color: #50a14f; font-style: italic;">"HTML export a section as a &lt;blockquote&gt;, its text coloured COLOR, crediting CITE."</span>
+  <span style="color: #50a14f; font-style: italic;">"HTML export a section as a &lt;blockquote&gt;, its text colored COLOR, crediting CITE."</span>
   (insert <span style="color: #50a14f;">"\n#+html:"</span> (format <span style="color: #50a14f;">"&lt;blockquote style=\"color: %s\"&gt;"</span> color))
   (org-next-visible-heading 1)
   (insert (<span style="color: #a626a4;">if</span> cite (format <span style="color: #50a14f;">"\n#+html: &lt;cite&gt;%s&lt;/cite&gt;"</span> cite) <span style="color: #50a14f;">""</span>) <span style="color: #50a14f;">"\n#+html: &lt;/blockquote&gt;"</span>))
@@ -780,8 +780,9 @@ press, so Org does nothing else with it; nil declines it, leaving it to the bloc
 For a complete worked example, we may mimic the <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
 
 TITLE is the graph’s label.
-The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
-:directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
+The header’s other keys are graph attributes, such as :bgcolor white; :node.KEY and :edge.KEY set node and edge defaults;
+:direction right makes arcs flow rightwards ---else up, left, or down, the default---; #+edge: :undirected: makes
+arcs arrowless, an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
 wide rows of leaves over N ranks; and an unknown tag gets a made-up template, unless :unknown-tags error makes it
 an error.  Pass :file foo.png on the
 #+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
@@ -789,15 +790,13 @@ a figure that [[foo]] reaches and #+caption: captions; otherwise the name is gra
 dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
 
 For HTML export: embeds an inline &lt;svg&gt; element, whose nodes’ and arcs’ tooltips hover as prose’s do, by tooltips.js;
-under :svg nil, an inline base64 PNG, sans tooltips.  Either fits the page’s width, a click toggling its full size.
+it fits the page’s width, a click toggling its full size.
 For Markdown, it writes the image file and links it, as for a named graph.
 For LaTeX, dot writes a PDF beside the .tex, which \includegraphics shows, shrunk only to fit the line’s width;
 for other backends, or sans dot, it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
 
-With :smartdiagram TYPE ---constellation, flow:horizontal, descriptive, and so on--- LaTeX’s smartdiagram package
-typesets the list instead, as ‘org--smartdiagram’ says: the #+graph: rows are \smartdiagramset’s, and prose after the
-list sits beneath the diagram.  It renders by pdflatex, at :dpi dots per inch, 300 by default; LaTeX export typesets it
-in place, adding smartdiagram to the preamble.
+For a fixed picture of the list ---a planet amid its satellites, a flow, a bubble--- LaTeX’s smartdiagram typesets it
+instead, by #+begin_smartdiagram TITLE :type TYPE; see ‘org--smartdiagram-block’.
 
 Within the block body:
 
@@ -839,7 +838,7 @@ A two-column inline table on a list item supplies node attributes.
 
 Example:
 
-  #+begin_graph :rankdir LR
+  #+begin_graph :direction right
   + A
     + calls :: B
       + returns :: C
@@ -958,8 +957,9 @@ A block may instead choose its buffer's mode: the option <code>:edit-indirect-mo
 <code>C-c '</code> open the block's contents in a buffer in <code>MODE</code>. By way of example, the <abbr class="tooltip" tabindex="0">graph<template><pre>Render an Org list + tables as a Graphviz dot graph.
 
 TITLE is the graph’s label.
-The header’s other keys are graph attributes, such as :rankdir LR; :node.KEY and :edge.KEY set node and edge defaults;
-:directed nil makes an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
+The header’s other keys are graph attributes, such as :bgcolor white; :node.KEY and :edge.KEY set node and edge defaults;
+:direction right makes arcs flow rightwards ---else up, left, or down, the default---; #+edge: :undirected: makes
+arcs arrowless, an undirected graph; :wrap N fills labels to N characters a line; :unflatten N staggers
 wide rows of leaves over N ranks; and an unknown tag gets a made-up template, unless :unknown-tags error makes it
 an error.  Pass :file foo.png on the
 #+begin_graph line to fix the output filename; else a #+name: foo line above the block makes it foo.png, and the graph
@@ -967,15 +967,13 @@ a figure that [[foo]] reaches and #+caption: captions; otherwise the name is gra
 dot source, so re-exporting an unchanged graph rewrites one file rather than adding another.
 
 For HTML export: embeds an inline &lt;svg&gt; element, whose nodes’ and arcs’ tooltips hover as prose’s do, by tooltips.js;
-under :svg nil, an inline base64 PNG, sans tooltips.  Either fits the page’s width, a click toggling its full size.
+it fits the page’s width, a click toggling its full size.
 For Markdown, it writes the image file and links it, as for a named graph.
 For LaTeX, dot writes a PDF beside the .tex, which \includegraphics shows, shrunk only to fit the line’s width;
 for other backends, or sans dot, it emits a #+begin_src dot block.  In HTML, a node’s [[*Section]] link leads to that section.
 
-With :smartdiagram TYPE ---constellation, flow:horizontal, descriptive, and so on--- LaTeX’s smartdiagram package
-typesets the list instead, as ‘org--smartdiagram’ says: the #+graph: rows are \smartdiagramset’s, and prose after the
-list sits beneath the diagram.  It renders by pdflatex, at :dpi dots per inch, 300 by default; LaTeX export typesets it
-in place, adding smartdiagram to the preamble.
+For a fixed picture of the list ---a planet amid its satellites, a flow, a bubble--- LaTeX’s smartdiagram typesets it
+instead, by #+begin_smartdiagram TITLE :type TYPE; see ‘org--smartdiagram-block’.
 
 Within the block body:
 
@@ -1017,7 +1015,7 @@ A two-column inline table on a list item supplies node attributes.
 
 Example:
 
-  #+begin_graph :rankdir LR
+  #+begin_graph :direction right
   + A
     + calls :: B
       + returns :: C
