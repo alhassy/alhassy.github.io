@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-15 Sun 15:47 -->
+<!-- 2026-11-15 Sun 16:39 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Org lists, drawn as Graphviz graphs</title>
@@ -4636,8 +4636,25 @@ ranks, so the graph is a block rather than a ribbon:
 <div class="outline-text-2" id="text-diagrams-we-draw-sequences-classes-states-entities-mindmaps">
 <p>
 Many diagrams are graphs in disguise; they differ only in how their nodes and arcs look. So rather than a
-syntax per kind, every graph has a few templates already, in <code>org-graph-builtin-templates</code>; a tag applies
-one, as with any <code>#+name:</code> template of our own, and our own of the same name wins.
+syntax per kind, every graph has a few templates already, defined by <code>org-defgraph-tag</code>; a tag applies
+one, as with any <code>#+name:</code> template of our own, and our own of the same name wins. In Emacs, such a tag
+wears a face of its own, <code>org-graph-builtin-tag</code>, and clicking it says what it does.
+</p>
+
+<p>
+<code>org-defgraph-tag</code> is <code>defvar</code>-like, a value with its docstring, yet <code>setq</code>-like, since evaluating it anew
+redefines the tag; so our own tags, used across documents, live in our init file:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defgraph-tag</span> hot <span style="color: #50a14f;">"color=red penwidth=2"</span>
+  <span style="color: #50a14f; font-style: italic;">"Marks what needs attention now: red, and bold."</span>)
+</code></pre>
+</div>
+</div>
+<p>
+Its pairs read as a <code>#+name: hot color=red penwidth=2</code> line does.
 </p>
 
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
@@ -5955,6 +5972,10 @@ a graph shrinks to the page's width by itself, and a click toggles its full size
 
 <li>In a <code>:demo live</code> graph, as throughout this README, <code>C-c C-c</code> still renders the graph: a live demo keeps
 no snapshot to take.</li>
+
+<li>A tag is a link to its template: clicking it, or <code>C-c C-o</code> on it, jumps to its <code>#+name:</code> line &mdash;the
+graph's own, else one outside every graph&mdash; as a template's lookup goes. A tag every graph has, from
+<code>org-defgraph-tag</code>, says what it does instead, as eldoc does with point on it.</li>
 </ol>
 </div>
 </div>
@@ -6135,7 +6156,7 @@ Once the demo is over, this is the page we keep open.
 
 <tr>
 <td class="org-left"><code>:inherits:</code>, <code>:state:</code>, <code>:one-to-many:</code>, …</td>
-<td class="org-left">templates every graph has; see <code>org-graph-builtin-templates</code></td>
+<td class="org-left">templates every graph has; see <code>org-defgraph-tag</code></td>
 </tr>
 
 <tr>
