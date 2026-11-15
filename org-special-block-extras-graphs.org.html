@@ -14,6 +14,111 @@
 (<span style="color: #a626a4;">require</span> '<span style="font-weight: bold; text-decoration: underline;">org-graph-block</span>)
 <span style="color: #a0a1a7;">#+end_src
 </span>
+Every construct of a ~#+begin_graph~ block, on one page ---itself a graph. Hover a node for how it reads, and
+click it for its section below:
+<span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
+</span>#+macro: tint lightyellow
+
+#+begin_graph =#+begin_graph=, at a glance ---hover a node for how, click it for more :rankdir LR
+<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> syntax </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">shape</span><span style="background-color: #fff4c2;">=box </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">="rounded,filled" </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">=</span><span style="background-color: #fff4c2; text-decoration: underline;">{{{tint}}}</span><span style="background-color: #fff4c2;">
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> topic </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">penwidth</span><span style="background-color: #fde0ea;">=2 </span><span style="background-color: #fde0ea; font-weight: bold;">:syntax:</span><span style="background-color: #fde0ea;">
+</span><span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">fontname</span>=Courier
+<span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">color</span>=gray40 <span style="color: #8b4513; font-weight: bold;">fontsize</span>=10
+
++ <span style="text-decoration: underline;"><a href="*An outline is already a graph">[[*An outline is already a graph][#+begin_graph TITLE :KEY V]]</a></span>
+
+  An outline is already a graph: every item is a node, and nesting is an arc. The words before the first
+  :KEY title the graph; each :KEY V is a Graphviz graph attribute, and :node.KEY V or :edge.KEY V a default.
+  C-c C-c renders the block beneath it; C-u C-c C-c shows the dot it compiles to.
+  + <span style="font-weight: bold;">arcs ::</span> <span style="text-decoration: underline;"><a href="*Arcs that speak: description lists">[[*Arcs that speak: description lists][+ child]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    Indenting an item under another draws an arc from the parent to the child.
+    + <span style="font-weight: bold;">labelled ::</span> <span style="text-decoration: underline;"><a href="*Arcs that speak: description lists">[[*Arcs that speak: description lists][a labelled arc]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+      | label | + L :: child |
+
+      A description term labels the arc into its item.
+    + <span style="font-weight: bold;">up the tree ::</span> <span style="text-decoration: underline;"><a href="*Arcs that leave the tree: targets and links">[[*Arcs that leave the tree: targets and links][an inline link]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+      | label | <span style="text-decoration: underline;"><a href="T">[[T][</a><a href="T">L]</a><a href="T">]</a></span> |
+
+      A link to a node's id is an arc to it, labelled L; C-c C-o jumps to that node.
+    + <span style="font-weight: bold;">as a child ::</span> <span style="text-decoration: underline;"><a href="*A child that is just a link: references">[[*A child that is just a link: references][a reference]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+      | label | + <span style="text-decoration: underline;"><a href="T">[[</a><a href="T">T]</a><a href="T">]</a></span> |
+
+      A child that is nothing but a link is a reference: an arc to T, declared elsewhere, that may be
+      styled on its own.
+    + <span style="font-weight: bold;">from every mention ::</span> <span style="text-decoration: underline;"><a href="*Radio targets: arcs from every mention">[[*Radio targets: arcs from every mention][a radio target]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+      | label | <span style="text-decoration: underline;">&lt;</span><span style="text-decoration: underline;">&lt;&lt;</span><span style="text-decoration: underline;">NUMBER</span><span style="text-decoration: underline;">&gt;&gt;</span><span style="text-decoration: underline;">&gt;</span>, &#8230; |
+
+      A radio target is a node, and every item mentioning <span style="text-decoration: underline;">NUMBER</span>, in any case, has an arc to it.
+  + <span style="font-weight: bold;">names ::</span> <span style="text-decoration: underline;"><a href="*Ids and labels">[[*Ids and labels][+ </a></span><span style="text-decoration: underline;"><a href="*Ids and labels">&lt;&lt;id&gt;&gt;</a></span><span style="text-decoration: underline;"><a href="*Ids and labels"> label]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    A target gives the node an id, for links to name, apart from its drawn label; so does an :id row.
+  + <span style="font-weight: bold;">styles ::</span> <span style="text-decoration: underline;"><a href="*Styling: one key-value syntax">[[*Styling: one key-value syntax][| key | value |]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    A two-column table beneath an item sets the node's Graphviz attributes; values need no quotes.
+    + <span style="font-weight: bold;">the arc in ::</span> <span style="text-decoration: underline;"><a href="*An arc's table: :edge.KEY">[[*An arc's table: :edge.KEY][| :edge.KEY | V |]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      An :edge.KEY row styles the arc from the parent, rather than the node.
+    + <span style="font-weight: bold;">everything ::</span> <span style="text-decoration: underline;"><a href="*When the preamble outgrows the line">[[*When the preamble outgrows the line][#+node: shape=box]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      The lines #+graph:, #+node:, and #+edge: style the graph, every node, every arc; by a table below,
+      or KEY=VALUE pairs on the line. Within a subtree, they reach only that subtree.
+    + <span style="font-weight: bold;">side by side ::</span> <span style="text-decoration: underline;"><a href="*Ordered lists keep their order">[[*Ordered lists keep their order][#+rank: a b]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      Nodes with no common parent share a rank; ordered children, 1. 2. 3., share one in the order written.
+  + <span style="font-weight: bold;">templates ::</span> <span style="text-decoration: underline;"><a href="*Saying it once: templates">[[*Saying it once: templates][#+name: T k=v]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    A named bundle of rows, on its name's line or in a table below; one outside every graph serves the
+    whole buffer.
+    + <span style="font-weight: bold;">applied by ::</span> <span style="text-decoration: underline;"><a href="*Saying it once: templates">[[*Saying it once: templates][+ node :T:]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      A trailing tag applies template T; explicit rows win. This very node wears :syntax:, defined above.
+    + <span style="font-weight: bold;">explained by ::</span> <span style="text-decoration: underline;"><a href="*Legends: a glossary of templates">[[*Legends: a glossary of templates][- MEANING :T:]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      In a cluster titled Legend, an item is a sample of T, captioned MEANING; see the legend here.
+    + <span style="font-weight: bold;">[-]</span><span style="font-weight: bold;"> progress ::</span> <span style="text-decoration: underline;"><a href="*Checkboxes are templates">[[*Checkboxes are templates][checkboxes]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+      | label | [X] [-] [ ] |
+
+      A checkbox applies template checked, partial, or unchecked; C-c C-c on it toggles it.
+    + <span style="font-weight: bold;">single values ::</span> <span style="text-decoration: underline;"><a href="*Macros name single values">[[*Macros name single values][#+macro: M V]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      Names a single value; M in triple braces is V, anywhere in the block, as this graph's tint is.
+  + <span style="font-weight: bold;">labels ::</span> <span style="text-decoration: underline;"><a href="*Markup makes rich labels">[[*Markup makes rich labels][*bold* </a></span><span style="font-style: italic; text-decoration: underline;"><a href="*Markup makes rich labels">/italic/</a></span><span style="text-decoration: underline;"><a href="*Markup makes rich labels"> =code=]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    Org's markup, entities, and sub- and superscripts make a rich label; the id stays plain text.
+    + <span style="font-weight: bold;">lines ::</span> <span style="text-decoration: underline;"><a href="*\\ breaks a line, :wrap fills">[[*\\ breaks a line, :wrap fills][a label,]]</a></span> \\ broken in two <span style="font-weight: bold;">:syntax:</span>
+
+      A \\ breaks a label, mid-line too; :wrap N fills every label to N characters.
+  + <span style="font-weight: bold;">asides ::</span> <span style="text-decoration: underline;"><a href="*Footnotes are tooltips">[[*Footnotes are tooltips][footnotes]]</a></span> <span style="text-decoration: underline;">[fn::A footnote leaves the label and becomes the node's tooltip, as this one does.]</span> <span style="font-weight: bold;">:topic:</span>
+    | label | <span style="text-decoration: underline;">[fn::NOTE]</span> |
+    + <span style="font-weight: bold;">longer ::</span> <span style="text-decoration: underline;"><a href="*Notes are longer tooltips">[[*Notes are longer tooltips][a later paragraph]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      Every paragraph after an item's first is a note: its tooltip, as this one is. :notes inline draws
+      notes beneath their labels instead.
+    + <span style="font-weight: bold;">clickable ::</span> <span style="text-decoration: underline;"><a href="*Web links are URLs, image links are images">[[*Web links are URLs, image links are images][a web link]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+      | label | <span style="text-decoration: underline;"><a href="https://&#8230;">[[</a><a href="https://&#8230;">https://&#8230;]</a><a href="https://&#8230;">]</a></span> |
+
+      A web or section link makes the node clickable, as every node here is; an image link draws the image.
+  + <span style="font-weight: bold;">layout ::</span> <span style="text-decoration: underline;"><a href="*Clusters draw boxes">[[*Clusters draw boxes][#+begin_cluster TITLE]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    A cluster block draws a box around its nodes, styled by :KEY V as a graph is.
+    + <span style="font-weight: bold;">records ::</span> <span style="text-decoration: underline;"><a href="*Records: a #+record: table">[[*Records: a #+record: table][#+record:]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      A table under an item is its label, a record of fields; a <span style="text-decoration: underline;">&lt;&lt;P&gt;&gt;</span> cell is a port, which =<span style="text-decoration: underline;"><a href="node::P">[[node::P]]</a></span>= reaches.
+    + <span style="font-weight: bold;">mind maps ::</span> <span style="text-decoration: underline;"><a href="*Mind maps: :layout twopi">[[*Mind maps: :layout twopi][:layout twopi]]</a></span> <span style="font-weight: bold;">:syntax:</span>
+
+      A radial layout; :mindmap t gives an undirected one, radiating from the first item.
+  + <span style="font-weight: bold;">documents ::</span> <span style="text-decoration: underline;"><a href="*#+name: and #+caption: make a figure">[[*#+name: and #+caption: make a figure][#+name: N]]</a></span> <span style="font-weight: bold;">:topic:</span>
+
+    Above the block, it makes a figure that =<span style="text-decoration: underline;"><a href="N">[[N]]</a></span>= reaches, and #+caption: captions it; a :graph: tag on a
+    heading makes its whole section a graph.
+<span style="background-color: #eaf2fd;">#+begin_cluster Legend
+- a family of constructs </span><span style="background-color: #eaf2fd; font-weight: bold;">:topic:</span><span style="background-color: #eaf2fd;">
+- a construct             </span><span style="background-color: #eaf2fd; font-weight: bold;">:syntax:</span><span style="background-color: #eaf2fd;">
+#+end_cluster
+</span>#+end_graph
+<span style="color: #a0a1a7;">#+end_org
+</span>
 <span style="color: #0184bc; font-weight: bold;">* An outline is already a graph</span>
 
 Say we are showing a friend how ~1 * 2 + 3 - 4~ parses. On paper, we would draw a tree. In Org, we would

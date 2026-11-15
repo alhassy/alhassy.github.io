@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-15 Sun 14:05 -->
+<!-- 2026-11-15 Sun 15:10 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Org lists, drawn as Graphviz graphs</title>
@@ -474,6 +474,542 @@ document.addEventListener('DOMContentLoaded', () => {
 ⭐ The code lives at <a href="https://github.com/alhassy/org-special-block-extras">github.com/alhassy/org-special-block-extras</a> &mdash;star it, or <a href="https://github.com/alhassy/org-special-block-extras/issues">discuss it there</a>! <a href="https://github.com/alhassy/org-special-block-extras"><img src="https://img.shields.io/github/stars/alhassy/org-special-block-extras?style=social"></a>
 </p>
 </div>
+
+<p>
+Every construct of a <code>#+begin_graph</code> block, on one page &mdash;itself a graph. Hover a node for how it reads, and
+click it for its section below:
+</p>
+<div><div style="padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+macro: tint lightyellow
+
+#+begin_graph =#+begin_graph=, at a glance ---hover a node for how, click it for more :rankdir LR
+#+name: syntax shape=box style="rounded,filled" fillcolor={{{tint}}}
+#+name: topic penwidth=2 :syntax:
+#+node: fontname=Courier
+#+edge: color=gray40 fontsize=10
+
++ [[*An outline is already a graph][#+begin_graph TITLE :KEY V]]
+
+  An outline is already a graph: every item is a node, and nesting is an arc. The words before the first
+  :KEY title the graph; each :KEY V is a Graphviz graph attribute, and :node.KEY V or :edge.KEY V a default.
+  C-c C-c renders the block beneath it; C-u C-c C-c shows the dot it compiles to.
+  + arcs :: [[*Arcs that speak: description lists][+ child]] :topic:
+
+    Indenting an item under another draws an arc from the parent to the child.
+    + labelled :: [[*Arcs that speak: description lists][a labelled arc]] :syntax:
+      | label | + L :: child |
+
+      A description term labels the arc into its item.
+    + up the tree :: [[*Arcs that leave the tree: targets and links][an inline link]] :syntax:
+      | label | [[T][L]] |
+
+      A link to a node's id is an arc to it, labelled L; C-c C-o jumps to that node.
+    + as a child :: [[*A child that is just a link: references][a reference]] :syntax:
+      | label | + [[T]] |
+
+      A child that is nothing but a link is a reference: an arc to T, declared elsewhere, that may be
+      styled on its own.
+    + from every mention :: [[*Radio targets: arcs from every mention][a radio target]] :syntax:
+      | label | &lt;&lt;&lt;NUMBER&gt;&gt;&gt;, … |
+
+      A radio target is a node, and every item mentioning NUMBER, in any case, has an arc to it.
+  + names :: [[*Ids and labels][+ &lt;&lt;id&gt;&gt; label]] :topic:
+
+    A target gives the node an id, for links to name, apart from its drawn label; so does an :id row.
+  + styles :: [[*Styling: one key-value syntax][| key | value |]] :topic:
+
+    A two-column table beneath an item sets the node's Graphviz attributes; values need no quotes.
+    + the arc in :: [[*An arc's table: :edge.KEY][| :edge.KEY | V |]] :syntax:
+
+      An :edge.KEY row styles the arc from the parent, rather than the node.
+    + everything :: [[*When the preamble outgrows the line][#+node: shape=box]] :syntax:
+
+      The lines #+graph:, #+node:, and #+edge: style the graph, every node, every arc; by a table below,
+      or KEY=VALUE pairs on the line. Within a subtree, they reach only that subtree.
+    + side by side :: [[*Ordered lists keep their order][#+rank: a b]] :syntax:
+
+      Nodes with no common parent share a rank; ordered children, 1. 2. 3., share one in the order written.
+  + templates :: [[*Saying it once: templates][#+name: T k=v]] :topic:
+
+    A named bundle of rows, on its name's line or in a table below; one outside every graph serves the
+    whole buffer.
+    + applied by :: [[*Saying it once: templates][+ node :T:]] :syntax:
+
+      A trailing tag applies template T; explicit rows win. This very node wears :syntax:, defined above.
+    + explained by :: [[*Legends: a glossary of templates][- MEANING :T:]] :syntax:
+
+      In a cluster titled Legend, an item is a sample of T, captioned MEANING; see the legend here.
+    + [-] progress :: [[*Checkboxes are templates][checkboxes]] :syntax:
+      | label | [X] [-] [ ] |
+
+      A checkbox applies template checked, partial, or unchecked; C-c C-c on it toggles it.
+    + single values :: [[*Macros name single values][#+macro: M V]] :syntax:
+
+      Names a single value; M in triple braces is V, anywhere in the block, as this graph's tint is.
+  + labels :: [[*Markup makes rich labels][*bold* /italic/ =code=]] :topic:
+
+    Org's markup, entities, and sub- and superscripts make a rich label; the id stays plain text.
+    + lines :: [[*\\ breaks a line, :wrap fills][a label,]] \\ broken in two :syntax:
+
+      A \\ breaks a label, mid-line too; :wrap N fills every label to N characters.
+  + asides :: [[*Footnotes are tooltips][footnotes]] [fn::A footnote leaves the label and becomes the node's tooltip, as this one does.] :topic:
+    | label | [fn::NOTE] |
+    + longer :: [[*Notes are longer tooltips][a later paragraph]] :syntax:
+
+      Every paragraph after an item's first is a note: its tooltip, as this one is. :notes inline draws
+      notes beneath their labels instead.
+    + clickable :: [[*Web links are URLs, image links are images][a web link]] :syntax:
+      | label | [[https://…]] |
+
+      A web or section link makes the node clickable, as every node here is; an image link draws the image.
+  + layout :: [[*Clusters draw boxes][#+begin_cluster TITLE]] :topic:
+
+    A cluster block draws a box around its nodes, styled by :KEY V as a graph is.
+    + records :: [[*Records: a #+record: table][#+record:]] :syntax:
+
+      A table under an item is its label, a record of fields; a &lt;&lt;P&gt;&gt; cell is a port, which =[[node::P]]= reaches.
+    + mind maps :: [[*Mind maps: :layout twopi][:layout twopi]] :syntax:
+
+      A radial layout; :mindmap t gives an undirected one, radiating from the first item.
+  + documents :: [[*#+name: and #+caption: make a figure][#+name: N]] :topic:
+
+    Above the block, it makes a figure that =[[N]]= reaches, and #+caption: captions it; a :graph: tag on a
+    heading makes its whole section a graph.
+#+begin_cluster Legend
+- a family of constructs :topic:
+- a construct             :syntax:
+#+end_cluster
+#+end_graph</pre> </div><div style="padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <p>
+<a class="anchor" id="P" href="#P" aria-label="Permalink to P"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>
+</p>
+<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="780pt" height="883pt"
+ viewBox="0.00 0.00 780.00 883.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 879.25)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-879.25 776.07,-879.25 776.07,4 -4,4"/>
+<text xml:space="preserve" text-anchor="start" x="144.16" y="-8.95" font-family="monospace" font-size="14.00">#+begin_graph</text>
+<text xml:space="preserve" text-anchor="start" x="251.41" y="-8.95" font-family="Times,serif" font-size="14.00">, at a glance &#45;&#45;&#45;hover a node for how, click it for more</text>
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" points="37.16,-355.25 37.16,-486.25 217.66,-486.25 217.66,-355.25 37.16,-355.25"/>
+<text xml:space="preserve" text-anchor="middle" x="127.41" y="-468.95" font-family="Times,serif" font-size="14.00">Legend</text>
+</g>
+<!-- #+begin_graph TITLE :KEY V -->
+<g id="node1" class="node">
+<g id="a_node1"><a xlink:href="#an-outline-is-already-a-graph" class="tooltip osbe-tip-g1" tabindex="0">
+<ellipse fill="none" stroke="black" cx="127.41" cy="-327.25" rx="127.41" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="127.41" y="-321.82" font-family="Courier,monospace" font-size="14.00">#+begin_graph TITLE :KEY V</text>
+</a>
+</g>
+</g>
+<!-- + child -->
+<g id="node2" class="node">
+<g id="a_node2"><a xlink:href="#arcs-that-speak-description-lists" class="tooltip osbe-tip-g2" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M445.57,-767.25C445.57,-767.25 406.32,-767.25 406.32,-767.25 400.32,-767.25 394.32,-761.25 394.32,-755.25 394.32,-755.25 394.32,-743.25 394.32,-743.25 394.32,-737.25 400.32,-731.25 406.32,-731.25 406.32,-731.25 445.57,-731.25 445.57,-731.25 451.57,-731.25 457.57,-737.25 457.57,-743.25 457.57,-743.25 457.57,-755.25 457.57,-755.25 457.57,-761.25 451.57,-767.25 445.57,-767.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-743.83" font-family="Courier,monospace" font-size="14.00">+ child</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;+ child -->
+<g id="edge1" class="edge">
+<path fill="none" stroke="#666666" d="M236.37,-336.89C243.23,-340.65 249.51,-345.36 254.82,-351.25 286.06,-385.85 255.45,-516.99 272.82,-560.25 299.7,-627.2 358.7,-689.16 394.82,-722.84"/>
+<polygon fill="#666666" stroke="#666666" points="392.18,-725.18 401.92,-729.36 396.92,-720.02 392.18,-725.18"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-653.59" font-family="Times,serif" font-size="10.00">arcs</text>
+</g>
+<!-- + &lt;&lt;id&gt;&gt; label -->
+<g id="node7" class="node">
+<g id="a_node7"><a xlink:href="#ids-and-labels" class="tooltip osbe-tip-g7" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M469.2,-605.25C469.2,-605.25 382.7,-605.25 382.7,-605.25 376.7,-605.25 370.7,-599.25 370.7,-593.25 370.7,-593.25 370.7,-581.25 370.7,-581.25 370.7,-575.25 376.7,-569.25 382.7,-569.25 382.7,-569.25 469.2,-569.25 469.2,-569.25 475.2,-569.25 481.2,-575.25 481.2,-581.25 481.2,-581.25 481.2,-593.25 481.2,-593.25 481.2,-599.25 475.2,-605.25 469.2,-605.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-581.83" font-family="Courier,monospace" font-size="14.00">+ &lt;&lt;id&gt;&gt; label</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;+ &lt;&lt;id&gt;&gt; label -->
+<g id="edge6" class="edge">
+<path fill="none" stroke="#666666" d="M235.17,-337.17C242.39,-340.85 249.07,-345.47 254.82,-351.25 286.04,-382.66 256.16,-408.22 272.82,-449.25 295.14,-504.24 300.09,-523.98 347.07,-560.25 351,-563.28 355.29,-565.99 359.78,-568.4"/>
+<polygon fill="#666666" stroke="#666666" points="357.95,-571.41 368.48,-572.58 360.98,-565.1 357.95,-571.41"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-547.15" font-family="Times,serif" font-size="10.00">names</text>
+</g>
+<!-- | key | value | -->
+<g id="node8" class="node">
+<g id="a_node8"><a xlink:href="#styling-one-key-value-syntax" class="tooltip osbe-tip-g8" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M472.57,-551.25C472.57,-551.25 379.32,-551.25 379.32,-551.25 373.32,-551.25 367.32,-545.25 367.32,-539.25 367.32,-539.25 367.32,-527.25 367.32,-527.25 367.32,-521.25 373.32,-515.25 379.32,-515.25 379.32,-515.25 472.57,-515.25 472.57,-515.25 478.57,-515.25 484.57,-521.25 484.57,-527.25 484.57,-527.25 484.57,-539.25 484.57,-539.25 484.57,-545.25 478.57,-551.25 472.57,-551.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-527.83" font-family="Courier,monospace" font-size="14.00">| key | value |</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;| key | value | -->
+<g id="edge7" class="edge">
+<path fill="none" stroke="#666666" d="M227.31,-338.74C236.97,-341.98 246.33,-346.08 254.82,-351.25 265.91,-358 264.32,-364.44 272.82,-374.25 314.83,-422.77 367.21,-476.07 398.26,-507"/>
+<polygon fill="#666666" stroke="#666666" points="395.42,-509.1 404.98,-513.66 400.35,-504.13 395.42,-509.1"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-435.74" font-family="Times,serif" font-size="10.00">styles</text>
+</g>
+<!-- #+name: T k=v -->
+<g id="node12" class="node">
+<g id="a_node12"><a xlink:href="#saying-it-once-templates" class="tooltip osbe-tip-g12" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M465.82,-389.25C465.82,-389.25 386.07,-389.25 386.07,-389.25 380.07,-389.25 374.07,-383.25 374.07,-377.25 374.07,-377.25 374.07,-365.25 374.07,-365.25 374.07,-359.25 380.07,-353.25 386.07,-353.25 386.07,-353.25 465.82,-353.25 465.82,-353.25 471.82,-353.25 477.82,-359.25 477.82,-365.25 477.82,-365.25 477.82,-377.25 477.82,-377.25 477.82,-383.25 471.82,-389.25 465.82,-389.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-365.82" font-family="Courier,monospace" font-size="14.00">#+name: T k=v</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;#+name: T k=v -->
+<g id="edge11" class="edge">
+<path fill="none" stroke="#666666" d="M216.98,-340.39C263.72,-347.33 319.97,-355.67 362.17,-361.94"/>
+<polygon fill="#666666" stroke="#666666" points="361.51,-365.38 371.91,-363.38 362.53,-358.45 361.51,-365.38"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-360.27" font-family="Times,serif" font-size="10.00">templates</text>
+</g>
+<!-- bold italic code -->
+<g id="node17" class="node">
+<g id="a_node17"><a xlink:href="#markup-makes-rich-labels" class="tooltip osbe-tip-g17" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M478.95,-307.25C478.95,-307.25 372.95,-307.25 372.95,-307.25 366.95,-307.25 360.95,-301.25 360.95,-295.25 360.95,-295.25 360.95,-283.25 360.95,-283.25 360.95,-277.25 366.95,-271.25 372.95,-271.25 372.95,-271.25 478.95,-271.25 478.95,-271.25 484.95,-271.25 490.95,-277.25 490.95,-283.25 490.95,-283.25 490.95,-295.25 490.95,-295.25 490.95,-301.25 484.95,-307.25 478.95,-307.25"/>
+<text xml:space="preserve" text-anchor="start" x="368.95" y="-285.57" font-family="Courier,monospace" font-weight="bold" font-size="14.00">bold</text>
+<text xml:space="preserve" text-anchor="start" x="395.95" y="-285.57" font-family="Courier,monospace" font-size="14.00"> </text>
+<text xml:space="preserve" text-anchor="start" x="402.7" y="-285.57" font-family="Courier,monospace" font-style="italic" font-size="14.00">italic</text>
+<text xml:space="preserve" text-anchor="start" x="443.2" y="-285.57" font-family="Courier,monospace" font-size="14.00"> </text>
+<text xml:space="preserve" text-anchor="start" x="449.95" y="-285.57" font-family="monospace" font-size="14.00">code</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;bold italic code -->
+<g id="edge16" class="edge">
+<path fill="none" stroke="#666666" d="M223.46,-315.07C264.01,-309.87 310.68,-303.89 348.89,-299"/>
+<polygon fill="#666666" stroke="#666666" points="348.97,-302.51 358.44,-297.77 348.08,-295.57 348.97,-302.51"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-311.5" font-family="Times,serif" font-size="10.00">labels</text>
+</g>
+<!-- footnotes -->
+<g id="node19" class="node">
+<g id="a_node19"><a xlink:href="#footnotes-are-tooltips" class="tooltip osbe-tip-g19" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M455.7,-223.25C455.7,-223.25 396.2,-223.25 396.2,-223.25 390.2,-223.25 384.2,-217.25 384.2,-211.25 384.2,-211.25 384.2,-199.25 384.2,-199.25 384.2,-193.25 390.2,-187.25 396.2,-187.25 396.2,-187.25 455.7,-187.25 455.7,-187.25 461.7,-187.25 467.7,-193.25 467.7,-199.25 467.7,-199.25 467.7,-211.25 467.7,-211.25 467.7,-217.25 461.7,-223.25 455.7,-223.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-199.82" font-family="Courier,monospace" font-size="14.00">[fn::NOTE]</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;footnotes -->
+<g id="edge18" class="edge">
+<path fill="none" stroke="#666666" d="M170.58,-309.9C223.87,-287.98 315.55,-250.26 373.07,-226.59"/>
+<polygon fill="#666666" stroke="#666666" points="374.08,-229.96 382,-222.92 371.42,-223.49 374.08,-229.96"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-269.5" font-family="Times,serif" font-size="10.00">asides</text>
+</g>
+<!-- #+begin_cluster TITLE -->
+<g id="node22" class="node">
+<g id="a_node22"><a xlink:href="#clusters-draw-boxes" class="tooltip osbe-tip-g22" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M492.82,-142.25C492.82,-142.25 359.07,-142.25 359.07,-142.25 353.07,-142.25 347.07,-136.25 347.07,-130.25 347.07,-130.25 347.07,-118.25 347.07,-118.25 347.07,-112.25 353.07,-106.25 359.07,-106.25 359.07,-106.25 492.82,-106.25 492.82,-106.25 498.82,-106.25 504.82,-112.25 504.82,-118.25 504.82,-118.25 504.82,-130.25 504.82,-130.25 504.82,-136.25 498.82,-142.25 492.82,-142.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-118.83" font-family="Courier,monospace" font-size="14.00">#+begin_cluster TITLE</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;#+begin_cluster TITLE -->
+<g id="edge21" class="edge">
+<path fill="none" stroke="#666666" d="M154.19,-309.35C183.05,-289.33 231.21,-255.99 272.82,-227.5 311.8,-200.81 356.54,-170.48 387.37,-149.63"/>
+<polygon fill="#666666" stroke="#666666" points="389.28,-152.56 395.61,-144.06 385.36,-146.76 389.28,-152.56"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-230.75" font-family="Times,serif" font-size="10.00">layout</text>
+</g>
+<!-- #+name: N -->
+<g id="node25" class="node">
+<g id="a_node25"><a xlink:href="#name-and-caption-make-a-figure" class="tooltip osbe-tip-g25" tabindex="0">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M452.32,-88.25C452.32,-88.25 399.57,-88.25 399.57,-88.25 393.57,-88.25 387.57,-82.25 387.57,-76.25 387.57,-76.25 387.57,-64.25 387.57,-64.25 387.57,-58.25 393.57,-52.25 399.57,-52.25 399.57,-52.25 452.32,-52.25 452.32,-52.25 458.32,-52.25 464.32,-58.25 464.32,-64.25 464.32,-64.25 464.32,-76.25 464.32,-76.25 464.32,-82.25 458.32,-88.25 452.32,-88.25"/>
+<text xml:space="preserve" text-anchor="middle" x="425.95" y="-64.83" font-family="Courier,monospace" font-size="14.00">#+name: N</text>
+</a>
+</g>
+</g>
+<!-- #+begin_graph TITLE :KEY V&#45;&gt;#+name: N -->
+<g id="edge24" class="edge">
+<path fill="none" stroke="#666666" d="M140.73,-309.15C170.9,-266.18 252.91,-157.1 347.07,-97.25 355.94,-91.61 366.13,-86.99 376.15,-83.26"/>
+<polygon fill="#666666" stroke="#666666" points="377.14,-86.62 385.46,-80.05 374.86,-80 377.14,-86.62"/>
+<text xml:space="preserve" text-anchor="middle" x="300.95" y="-153.47" font-family="Times,serif" font-size="10.00">documents</text>
+</g>
+<!-- a labelled arc -->
+<g id="node3" class="node">
+<g id="a_node3"><a xlink:href="#arcs-that-speak-description-lists" class="tooltip osbe-tip-g3" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M743.2,-875.25C743.2,-875.25 670.2,-875.25 670.2,-875.25 664.2,-875.25 658.2,-869.25 658.2,-863.25 658.2,-863.25 658.2,-851.25 658.2,-851.25 658.2,-845.25 664.2,-839.25 670.2,-839.25 670.2,-839.25 743.2,-839.25 743.2,-839.25 749.2,-839.25 755.2,-845.25 755.2,-851.25 755.2,-851.25 755.2,-863.25 755.2,-863.25 755.2,-869.25 749.2,-875.25 743.2,-875.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-851.83" font-family="Courier,monospace" font-size="14.00">+ L :: child</text>
+</a>
+</g>
+</g>
+<!-- + child&#45;&gt;a labelled arc -->
+<g id="edge2" class="edge">
+<path fill="none" stroke="#666666" d="M457.2,-768.16C475.67,-779.14 500.03,-792.65 522.82,-802.25 563.11,-819.22 610.41,-833.3 646.81,-842.96"/>
+<polygon fill="#666666" stroke="#666666" points="645.72,-846.29 656.28,-845.44 647.49,-839.52 645.72,-846.29"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-839.09" font-family="Times,serif" font-size="10.00">labelled</text>
+</g>
+<!-- an inline link -->
+<g id="node4" class="node">
+<g id="a_node4"><a xlink:href="#arcs-that-leave-the-tree-targets-and-links" class="tooltip osbe-tip-g4" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M729.7,-821.25C729.7,-821.25 683.7,-821.25 683.7,-821.25 677.7,-821.25 671.7,-815.25 671.7,-809.25 671.7,-809.25 671.7,-797.25 671.7,-797.25 671.7,-791.25 677.7,-785.25 683.7,-785.25 683.7,-785.25 729.7,-785.25 729.7,-785.25 735.7,-785.25 741.7,-791.25 741.7,-797.25 741.7,-797.25 741.7,-809.25 741.7,-809.25 741.7,-815.25 735.7,-821.25 729.7,-821.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-797.83" font-family="Courier,monospace" font-size="14.00">[[T][L]]</text>
+</a>
+</g>
+</g>
+<!-- + child&#45;&gt;an inline link -->
+<g id="edge3" class="edge">
+<path fill="none" stroke="#666666" d="M458.38,-755.34C507.67,-764.89 603.35,-783.42 660.17,-794.43"/>
+<polygon fill="#666666" stroke="#666666" points="659.36,-797.84 669.85,-796.31 660.7,-790.97 659.36,-797.84"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-789.03" font-family="Times,serif" font-size="10.00">up the tree</text>
+</g>
+<!-- a reference -->
+<g id="node5" class="node">
+<g id="a_node5"><a xlink:href="#a-child-that-is-just-a-link-references" class="tooltip osbe-tip-g5" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M726.32,-767.25C726.32,-767.25 687.07,-767.25 687.07,-767.25 681.07,-767.25 675.07,-761.25 675.07,-755.25 675.07,-755.25 675.07,-743.25 675.07,-743.25 675.07,-737.25 681.07,-731.25 687.07,-731.25 687.07,-731.25 726.32,-731.25 726.32,-731.25 732.32,-731.25 738.32,-737.25 738.32,-743.25 738.32,-743.25 738.32,-755.25 738.32,-755.25 738.32,-761.25 732.32,-767.25 726.32,-767.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-743.83" font-family="Courier,monospace" font-size="14.00">+ [[T]]</text>
+</a>
+</g>
+</g>
+<!-- + child&#45;&gt;a reference -->
+<g id="edge4" class="edge">
+<path fill="none" stroke="#666666" d="M458.38,-749.25C508.63,-749.25 607.1,-749.25 663.45,-749.25"/>
+<polygon fill="#666666" stroke="#666666" points="663.29,-752.75 673.29,-749.25 663.29,-745.75 663.29,-752.75"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-752.5" font-family="Times,serif" font-size="10.00">as a child</text>
+</g>
+<!-- a radio target -->
+<g id="node6" class="node">
+<g id="a_node6"><a xlink:href="#radio-targets-arcs-from-every-mention" class="tooltip osbe-tip-g6" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M753.32,-713.25C753.32,-713.25 660.07,-713.25 660.07,-713.25 654.07,-713.25 648.07,-707.25 648.07,-701.25 648.07,-701.25 648.07,-689.25 648.07,-689.25 648.07,-683.25 654.07,-677.25 660.07,-677.25 660.07,-677.25 753.32,-677.25 753.32,-677.25 759.32,-677.25 765.32,-683.25 765.32,-689.25 765.32,-689.25 765.32,-701.25 765.32,-701.25 765.32,-707.25 759.32,-713.25 753.32,-713.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-689.83" font-family="Courier,monospace" font-size="14.00">&lt;&lt;&lt;NUMBER&gt;&gt;&gt;, …</text>
+</a>
+</g>
+</g>
+<!-- + child&#45;&gt;a radio target -->
+<g id="edge5" class="edge">
+<path fill="none" stroke="#666666" d="M458.38,-743.16C501.36,-734.83 579.63,-719.67 636.64,-708.63"/>
+<polygon fill="#666666" stroke="#666666" points="637.1,-712.1 646.25,-706.77 635.77,-705.23 637.1,-712.1"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-733.49" font-family="Times,serif" font-size="10.00">from every mention</text>
+</g>
+<!-- | :edge.KEY | V | -->
+<g id="node9" class="node">
+<g id="a_node9"><a xlink:href="#an-arcs-table-edgekey" class="tooltip osbe-tip-g9" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M760.07,-659.25C760.07,-659.25 653.32,-659.25 653.32,-659.25 647.32,-659.25 641.32,-653.25 641.32,-647.25 641.32,-647.25 641.32,-635.25 641.32,-635.25 641.32,-629.25 647.32,-623.25 653.32,-623.25 653.32,-623.25 760.07,-623.25 760.07,-623.25 766.07,-623.25 772.07,-629.25 772.07,-635.25 772.07,-635.25 772.07,-647.25 772.07,-647.25 772.07,-653.25 766.07,-659.25 760.07,-659.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-635.83" font-family="Courier,monospace" font-size="14.00">| :edge.KEY | V |</text>
+</a>
+</g>
+</g>
+<!-- | key | value |&#45;&gt;| :edge.KEY | V | -->
+<g id="edge8" class="edge">
+<path fill="none" stroke="#666666" d="M485.2,-548.79C492.16,-551.96 498.89,-555.75 504.82,-560.25 516.01,-568.75 511.45,-577.98 522.82,-586.25 554.03,-608.95 594.67,-622.37 629.71,-630.27"/>
+<polygon fill="#666666" stroke="#666666" points="628.88,-633.67 639.39,-632.33 630.34,-626.82 628.88,-633.67"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-631.61" font-family="Times,serif" font-size="10.00">the arc in</text>
+</g>
+<!-- #+node: shape=box -->
+<g id="node10" class="node">
+<g id="a_node10"><a xlink:href="#when-the-preamble-outgrows-the-line" class="tooltip osbe-tip-g10" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M760.07,-605.25C760.07,-605.25 653.32,-605.25 653.32,-605.25 647.32,-605.25 641.32,-599.25 641.32,-593.25 641.32,-593.25 641.32,-581.25 641.32,-581.25 641.32,-575.25 647.32,-569.25 653.32,-569.25 653.32,-569.25 760.07,-569.25 760.07,-569.25 766.07,-569.25 772.07,-575.25 772.07,-581.25 772.07,-581.25 772.07,-593.25 772.07,-593.25 772.07,-599.25 766.07,-605.25 760.07,-605.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-581.83" font-family="Courier,monospace" font-size="14.00">#+node: shape=box</text>
+</a>
+</g>
+</g>
+<!-- | key | value |&#45;&gt;#+node: shape=box -->
+<g id="edge9" class="edge">
+<path fill="none" stroke="#666666" d="M485.38,-544.57C527.32,-552.7 584.24,-563.72 629.71,-572.53"/>
+<polygon fill="#666666" stroke="#666666" points="629.04,-575.96 639.52,-574.43 630.37,-569.09 629.04,-575.96"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-573.03" font-family="Times,serif" font-size="10.00">everything</text>
+</g>
+<!-- #+rank: a b -->
+<g id="node11" class="node">
+<g id="a_node11"><a xlink:href="#ordered-lists-keep-their-order" class="tooltip osbe-tip-g11" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M739.82,-551.25C739.82,-551.25 673.57,-551.25 673.57,-551.25 667.57,-551.25 661.57,-545.25 661.57,-539.25 661.57,-539.25 661.57,-527.25 661.57,-527.25 661.57,-521.25 667.57,-515.25 673.57,-515.25 673.57,-515.25 739.82,-515.25 739.82,-515.25 745.82,-515.25 751.82,-521.25 751.82,-527.25 751.82,-527.25 751.82,-539.25 751.82,-539.25 751.82,-545.25 745.82,-551.25 739.82,-551.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-527.83" font-family="Courier,monospace" font-size="14.00">#+rank: a b</text>
+</a>
+</g>
+</g>
+<!-- | key | value |&#45;&gt;#+rank: a b -->
+<g id="edge10" class="edge">
+<path fill="none" stroke="#666666" d="M485.38,-533.25C533.76,-533.25 602.04,-533.25 649.72,-533.25"/>
+<polygon fill="#666666" stroke="#666666" points="649.56,-536.75 659.56,-533.25 649.56,-529.75 649.56,-536.75"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-536.5" font-family="Times,serif" font-size="10.00">side by side</text>
+</g>
+<!-- + node :T: -->
+<g id="node13" class="node">
+<g id="a_node13"><a xlink:href="#saying-it-once-templates" class="tooltip osbe-tip-g13" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M736.45,-497.25C736.45,-497.25 676.95,-497.25 676.95,-497.25 670.95,-497.25 664.95,-491.25 664.95,-485.25 664.95,-485.25 664.95,-473.25 664.95,-473.25 664.95,-467.25 670.95,-461.25 676.95,-461.25 676.95,-461.25 736.45,-461.25 736.45,-461.25 742.45,-461.25 748.45,-467.25 748.45,-473.25 748.45,-473.25 748.45,-485.25 748.45,-485.25 748.45,-491.25 742.45,-497.25 736.45,-497.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-473.82" font-family="Courier,monospace" font-size="14.00">+ node :T:</text>
+</a>
+</g>
+</g>
+<!-- #+name: T k=v&#45;&gt;+ node :T: -->
+<g id="edge12" class="edge">
+<path fill="none" stroke="#666666" d="M457.2,-390.16C475.67,-401.14 500.03,-414.65 522.82,-424.25 565.6,-442.27 616.29,-457.03 653.44,-466.71"/>
+<polygon fill="#666666" stroke="#666666" points="652.49,-470.07 663.04,-469.17 654.23,-463.29 652.49,-470.07"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-461.09" font-family="Times,serif" font-size="10.00">applied by</text>
+</g>
+<!-- &#45; MEANING :T: -->
+<g id="node14" class="node">
+<g id="a_node14"><a xlink:href="#legends-a-glossary-of-templates" class="tooltip osbe-tip-g14" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M746.57,-443.25C746.57,-443.25 666.82,-443.25 666.82,-443.25 660.82,-443.25 654.82,-437.25 654.82,-431.25 654.82,-431.25 654.82,-419.25 654.82,-419.25 654.82,-413.25 660.82,-407.25 666.82,-407.25 666.82,-407.25 746.57,-407.25 746.57,-407.25 752.57,-407.25 758.57,-413.25 758.57,-419.25 758.57,-419.25 758.57,-431.25 758.57,-431.25 758.57,-437.25 752.57,-443.25 746.57,-443.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-419.82" font-family="Courier,monospace" font-size="14.00">&#45; MEANING :T:</text>
+</a>
+</g>
+</g>
+<!-- #+name: T k=v&#45;&gt;&#45; MEANING :T: -->
+<g id="edge13" class="edge">
+<path fill="none" stroke="#666666" d="M478.72,-381.28C525.32,-390.31 593.88,-403.59 643.45,-413.19"/>
+<polygon fill="#666666" stroke="#666666" points="642.7,-416.61 653.18,-415.08 644.03,-409.74 642.7,-416.61"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-411.03" font-family="Times,serif" font-size="10.00">explained by</text>
+</g>
+<!-- checkboxes -->
+<g id="node15" class="node">
+<g id="a_node15"><a xlink:href="#checkboxes-are-templates" class="tooltip osbe-tip-g15" tabindex="0">
+<path fill="lightyellow" stroke="darkorange" d="M739.82,-389.25C739.82,-389.25 673.57,-389.25 673.57,-389.25 667.57,-389.25 661.57,-383.25 661.57,-377.25 661.57,-377.25 661.57,-365.25 661.57,-365.25 661.57,-359.25 667.57,-353.25 673.57,-353.25 673.57,-353.25 739.82,-353.25 739.82,-353.25 745.82,-353.25 751.82,-359.25 751.82,-365.25 751.82,-365.25 751.82,-377.25 751.82,-377.25 751.82,-383.25 745.82,-389.25 739.82,-389.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-365.82" font-family="Courier,monospace" font-size="14.00" fill="darkorange">[X] [&#45;] [ ]</text>
+</a>
+</g>
+</g>
+<!-- #+name: T k=v&#45;&gt;checkboxes -->
+<g id="edge14" class="edge">
+<path fill="none" stroke="#666666" d="M478.72,-371.25C527.36,-371.25 599.94,-371.25 649.86,-371.25"/>
+<polygon fill="#666666" stroke="#666666" points="649.58,-374.75 659.58,-371.25 649.58,-367.75 649.58,-374.75"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-374.5" font-family="Times,serif" font-size="10.00">progress</text>
+</g>
+<!-- #+macro: M V -->
+<g id="node16" class="node">
+<g id="a_node16"><a xlink:href="#macros-name-single-values" class="tooltip osbe-tip-g16" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M743.2,-335.25C743.2,-335.25 670.2,-335.25 670.2,-335.25 664.2,-335.25 658.2,-329.25 658.2,-323.25 658.2,-323.25 658.2,-311.25 658.2,-311.25 658.2,-305.25 664.2,-299.25 670.2,-299.25 670.2,-299.25 743.2,-299.25 743.2,-299.25 749.2,-299.25 755.2,-305.25 755.2,-311.25 755.2,-311.25 755.2,-323.25 755.2,-323.25 755.2,-329.25 749.2,-335.25 743.2,-335.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-311.82" font-family="Courier,monospace" font-size="14.00">#+macro: M V</text>
+</a>
+</g>
+</g>
+<!-- #+name: T k=v&#45;&gt;#+macro: M V -->
+<g id="edge15" class="edge">
+<path fill="none" stroke="#666666" d="M478.72,-361.22C526.34,-351.99 596.9,-338.33 646.68,-328.68"/>
+<polygon fill="#666666" stroke="#666666" points="647.28,-332.13 656.43,-326.79 645.95,-325.26 647.28,-332.13"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-355.49" font-family="Times,serif" font-size="10.00">single values</text>
+</g>
+<!-- a label, broken in two -->
+<g id="node18" class="node">
+<g id="a_node18"><a xlink:href="*\ breaks a line, :wrap fills" class="tooltip osbe-tip-g18" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M746.57,-281C746.57,-281 666.82,-281 666.82,-281 660.82,-281 654.82,-275 654.82,-269 654.82,-269 654.82,-253.5 654.82,-253.5 654.82,-247.5 660.82,-241.5 666.82,-241.5 666.82,-241.5 746.57,-241.5 746.57,-241.5 752.57,-241.5 758.57,-247.5 758.57,-253.5 758.57,-253.5 758.57,-269 758.57,-269 758.57,-275 752.57,-281 746.57,-281"/>
+<text xml:space="preserve" text-anchor="start" x="679.7" y="-263.7" font-family="Courier,monospace" font-size="14.00">a label,</text>
+<text xml:space="preserve" text-anchor="start" x="662.82" y="-247.95" font-family="Courier,monospace" font-size="14.00">broken in two</text>
+</a>
+</g>
+</g>
+<!-- bold italic code&#45;&gt;a label, broken in two -->
+<g id="edge17" class="edge">
+<path fill="none" stroke="#666666" d="M491.6,-282.76C537.17,-278.18 597.87,-272.08 643,-267.55"/>
+<polygon fill="#666666" stroke="#666666" points="643.3,-271.04 652.9,-266.55 642.6,-264.07 643.3,-271.04"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-282.64" font-family="Times,serif" font-size="10.00">lines</text>
+</g>
+<!-- a later paragraph -->
+<g id="node20" class="node">
+<g id="a_node20"><a xlink:href="#notes-are-longer-tooltips" class="tooltip osbe-tip-g20" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M760.07,-223.25C760.07,-223.25 653.32,-223.25 653.32,-223.25 647.32,-223.25 641.32,-217.25 641.32,-211.25 641.32,-211.25 641.32,-199.25 641.32,-199.25 641.32,-193.25 647.32,-187.25 653.32,-187.25 653.32,-187.25 760.07,-187.25 760.07,-187.25 766.07,-187.25 772.07,-193.25 772.07,-199.25 772.07,-199.25 772.07,-211.25 772.07,-211.25 772.07,-217.25 766.07,-223.25 760.07,-223.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-199.82" font-family="Courier,monospace" font-size="14.00">a later paragraph</text>
+</a>
+</g>
+</g>
+<!-- footnotes&#45;&gt;a later paragraph -->
+<g id="edge19" class="edge">
+<path fill="none" stroke="#666666" d="M468.68,-205.25C511.04,-205.25 577.58,-205.25 629.39,-205.25"/>
+<polygon fill="#666666" stroke="#666666" points="629.36,-208.75 639.36,-205.25 629.36,-201.75 629.36,-208.75"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-208.5" font-family="Times,serif" font-size="10.00">longer</text>
+</g>
+<!-- a web link -->
+<g id="node21" class="node">
+<g id="a_node21"><a xlink:href="#web-links-are-urls-image-links-are-images" class="tooltip osbe-tip-g21" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M746.57,-169.25C746.57,-169.25 666.82,-169.25 666.82,-169.25 660.82,-169.25 654.82,-163.25 654.82,-157.25 654.82,-157.25 654.82,-145.25 654.82,-145.25 654.82,-139.25 660.82,-133.25 666.82,-133.25 666.82,-133.25 746.57,-133.25 746.57,-133.25 752.57,-133.25 758.57,-139.25 758.57,-145.25 758.57,-145.25 758.57,-157.25 758.57,-157.25 758.57,-163.25 752.57,-169.25 746.57,-169.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-145.82" font-family="Courier,monospace" font-size="14.00">[[https://…]]</text>
+</a>
+</g>
+</g>
+<!-- footnotes&#45;&gt;a web link -->
+<g id="edge20" class="edge">
+<path fill="none" stroke="#666666" d="M468.68,-197.17C515.04,-188.18 590.38,-173.59 643.66,-163.27"/>
+<polygon fill="#666666" stroke="#666666" points="644.04,-166.76 653.19,-161.42 642.71,-159.89 644.04,-166.76"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-189.49" font-family="Times,serif" font-size="10.00">clickable</text>
+</g>
+<!-- #+record: -->
+<g id="node23" class="node">
+<g id="a_node23"><a xlink:href="#records-a-record-table" class="tooltip osbe-tip-g23" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M733.07,-115.25C733.07,-115.25 680.32,-115.25 680.32,-115.25 674.32,-115.25 668.32,-109.25 668.32,-103.25 668.32,-103.25 668.32,-91.25 668.32,-91.25 668.32,-85.25 674.32,-79.25 680.32,-79.25 680.32,-79.25 733.07,-79.25 733.07,-79.25 739.07,-79.25 745.07,-85.25 745.07,-91.25 745.07,-91.25 745.07,-103.25 745.07,-103.25 745.07,-109.25 739.07,-115.25 733.07,-115.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-91.83" font-family="Courier,monospace" font-size="14.00">#+record:</text>
+</a>
+</g>
+</g>
+<!-- #+begin_cluster TITLE&#45;&gt;#+record: -->
+<g id="edge22" class="edge">
+<path fill="none" stroke="#666666" d="M505.71,-116.62C554.27,-111.92 615.02,-106.03 656.75,-101.99"/>
+<polygon fill="#666666" stroke="#666666" points="656.87,-105.5 666.48,-101.05 656.19,-98.53 656.87,-105.5"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-118" font-family="Times,serif" font-size="10.00">records</text>
+</g>
+<!-- :layout twopi -->
+<g id="node24" class="node">
+<g id="a_node24"><a xlink:href="#mind-maps-layout-twopi" class="tooltip osbe-tip-g24" tabindex="0">
+<path fill="lightyellow" stroke="black" d="M746.57,-61.25C746.57,-61.25 666.82,-61.25 666.82,-61.25 660.82,-61.25 654.82,-55.25 654.82,-49.25 654.82,-49.25 654.82,-37.25 654.82,-37.25 654.82,-31.25 660.82,-25.25 666.82,-25.25 666.82,-25.25 746.57,-25.25 746.57,-25.25 752.57,-25.25 758.57,-31.25 758.57,-37.25 758.57,-37.25 758.57,-49.25 758.57,-49.25 758.57,-55.25 752.57,-61.25 746.57,-61.25"/>
+<text xml:space="preserve" text-anchor="middle" x="706.7" y="-37.83" font-family="Courier,monospace" font-size="14.00">:layout twopi</text>
+</a>
+</g>
+</g>
+<!-- #+begin_cluster TITLE&#45;&gt;:layout twopi -->
+<g id="edge23" class="edge">
+<path fill="none" stroke="#666666" d="M483.27,-105.27C490.55,-102.65 497.88,-99.94 504.82,-97.25 512.94,-94.1 514.57,-92.3 522.82,-89.5 562.28,-76.11 607.68,-64.61 643.38,-56.42"/>
+<polygon fill="#666666" stroke="#666666" points="644.15,-59.83 653.14,-54.22 642.61,-53.01 644.15,-59.83"/>
+<text xml:space="preserve" text-anchor="middle" x="573.07" y="-92.75" font-family="Times,serif" font-size="10.00">mind maps</text>
+</g>
+<!-- legend_1 -->
+<g id="node26" class="node">
+<path fill="lightyellow" stroke="black" stroke-width="2" d="M197.66,-399.25C197.66,-399.25 57.16,-399.25 57.16,-399.25 51.16,-399.25 45.16,-393.25 45.16,-387.25 45.16,-387.25 45.16,-375.25 45.16,-375.25 45.16,-369.25 51.16,-363.25 57.16,-363.25 57.16,-363.25 197.66,-363.25 197.66,-363.25 203.66,-363.25 209.66,-369.25 209.66,-375.25 209.66,-375.25 209.66,-387.25 209.66,-387.25 209.66,-393.25 203.66,-399.25 197.66,-399.25"/>
+<text xml:space="preserve" text-anchor="middle" x="127.41" y="-375.82" font-family="Courier,monospace" font-size="14.00">a family of constructs</text>
+</g>
+<!-- legend_2 -->
+<g id="node27" class="node">
+<path fill="lightyellow" stroke="black" d="M160.54,-453.25C160.54,-453.25 94.29,-453.25 94.29,-453.25 88.29,-453.25 82.29,-447.25 82.29,-441.25 82.29,-441.25 82.29,-429.25 82.29,-429.25 82.29,-423.25 88.29,-417.25 94.29,-417.25 94.29,-417.25 160.54,-417.25 160.54,-417.25 166.54,-417.25 172.54,-423.25 172.54,-429.25 172.54,-429.25 172.54,-441.25 172.54,-441.25 172.54,-447.25 166.54,-453.25 160.54,-453.25"/>
+<text xml:space="preserve" text-anchor="middle" x="127.41" y="-429.82" font-family="Courier,monospace" font-size="14.00">a construct</text>
+</g>
+</g>
+</svg>
+
+<template id="osbe-tip-g1"><p>
+An outline is already a graph: every item is a node, and nesting is an arc. The words before the first
+  :KEY title the graph; each :KEY V is a Graphviz graph attribute, and :node.KEY V or :edge.KEY V a default.
+  C-c C-c renders the block beneath it; C-u C-c C-c shows the dot it compiles to.</p></template>
+<template id="osbe-tip-g2"><p>
+Indenting an item under another draws an arc from the parent to the child.</p></template>
+<template id="osbe-tip-g3"><p>
+A description term labels the arc into its item.</p></template>
+<template id="osbe-tip-g4"><p>
+A link to a node's id is an arc to it, labelled L; C-c C-o jumps to that node.</p></template>
+<template id="osbe-tip-g5"><p>
+A child that is nothing but a link is a reference: an arc to T, declared elsewhere, that may be
+      styled on its own.</p></template>
+<template id="osbe-tip-g6"><p>
+A radio target is a node, and every item mentioning NUMBER, in any case, has an arc to it.</p></template>
+<template id="osbe-tip-g7"><p>
+A target gives the node an id, for links to name, apart from its drawn label; so does an :id row.</p></template>
+<template id="osbe-tip-g8"><p>
+A two-column table beneath an item sets the node's Graphviz attributes; values need no quotes.</p></template>
+<template id="osbe-tip-g9"><p>
+An :edge.KEY row styles the arc from the parent, rather than the node.</p></template>
+<template id="osbe-tip-g10"><p>
+The lines #+graph:, #+node:, and #+edge: style the graph, every node, every arc; by a table below,
+      or KEY=VALUE pairs on the line. Within a subtree, they reach only that subtree.</p></template>
+<template id="osbe-tip-g11"><p>
+Nodes with no common parent share a rank; ordered children, 1. 2. 3., share one in the order written.</p></template>
+<template id="osbe-tip-g12"><p>
+A named bundle of rows, on its name's line or in a table below; one outside every graph serves the
+    whole buffer.</p></template>
+<template id="osbe-tip-g13"><p>
+A trailing tag applies template T; explicit rows win. This very node wears :syntax:, defined above.</p></template>
+<template id="osbe-tip-g14"><p>
+In a cluster titled Legend, an item is a sample of T, captioned MEANING; see the legend here.</p></template>
+<template id="osbe-tip-g15"><p>
+A checkbox applies template checked, partial, or unchecked; C-c C-c on it toggles it.</p></template>
+<template id="osbe-tip-g16"><p>
+Names a single value; M in triple braces is V, anywhere in the block, as this graph's tint is.</p></template>
+<template id="osbe-tip-g17"><p>
+Org's markup, entities, and sub- and superscripts make a rich label; the id stays plain text.</p></template>
+<template id="osbe-tip-g18"><p>
+A \\ breaks a label, mid-line too; :wrap N fills every label to N characters.</p></template>
+<template id="osbe-tip-g19"><p>
+A footnote leaves the label and becomes the node's tooltip, as this one does.</p></template>
+<template id="osbe-tip-g20"><p>
+Every paragraph after an item's first is a note: its tooltip, as this one is. :notes inline draws
+      notes beneath their labels instead.</p></template>
+<template id="osbe-tip-g21"><p>
+A web or section link makes the node clickable, as every node here is; an image link draws the image.</p></template>
+<template id="osbe-tip-g22"><p>
+A cluster block draws a box around its nodes, styled by :KEY V as a graph is.</p></template>
+<template id="osbe-tip-g23"><p>
+A table under an item is its label, a record of fields; a cell is a port, which <code>[[node::P]]</code> reaches.</p></template>
+<template id="osbe-tip-g24"><p>
+A radial layout; :mindmap t gives an undirected one, radiating from the first item.</p></template>
+<template id="osbe-tip-g25"><p>
+Above the block, it makes a figure that <code>@@html:&lt;a href</code>"osbe-link:N"&gt;@@N</a>= reaches, and #+caption: captions it; a :graph: tag on a
+    heading makes its whole section a graph.</p></template></div></div> </div></div>
 <div id="outline-container-an-outline-is-already-a-graph" class="outline-2">
 <h2 id="an-outline-is-already-a-graph"><span class="section-number-2">1.</span> <a href="#an-outline-is-already-a-graph">An outline is already a graph</a></h2>
 <div class="outline-text-2" id="text-an-outline-is-already-a-graph">
