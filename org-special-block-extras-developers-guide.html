@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-15 Sun 16:42 -->
+<!-- 2026-11-15 Sun 20:33 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Make your own blocks and links</title>
@@ -806,7 +806,6 @@ Within the block body:
   #+edge:  table  ↦ default edge[ ] attributes
   #+rank:  n1 n2  ↦ { rank=same; n1; n2 } for nodes without a common parent; ids may be [[links]]
   Under an item, #+graph:, #+node:, #+edge:, and #+rank: reach its whole subtree, as Org’s inherited properties do.
-  #+begin_cluster TITLE :KEY V … #+end_cluster  ↦ subgraph cluster_TITLE { … }; nests, and may sit in an item
   :NAME: … :END:  ↦ a drawer of any name, folding such directives away
   - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
 
@@ -823,7 +822,7 @@ an inline footnote, [fn::NOTE], is the node’s tooltip, as is a note: a paragra
 #+begin_note block ---with ‘#+begin_note :edge’, the arc’s---, shown beneath the label instead under :notes inline;
 a web, file, or [[*Section]] link, its URL; an [[file:IMAGE.png]], its image;
 a checkbox, [X], [-], or [ ], applies the template checked, partial, or unchecked, when one exists; and a ‘\\’
-breaks the label’s line ---in a table value or #+record: cell, too.
+breaks the label’s line ---in a table value or record cell, too.
 Org’s {{{macros}}} expand, by the buffer’s #+macro: lines.
 A two-column inline table on a list item supplies node attributes.
 
@@ -836,9 +835,11 @@ A two-column inline table on a list item supplies node attributes.
   A child item that is a lone [[T]] link is a reference to T: an arc to it, styled by the child’s :edge.KEY rows.
   | :children-rank | same | ↦ constrain immediate children to the same rank;
                             also accepts min, max, source, sink.
-  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }.
-  #+record: table       ↦ the node’s &lt;TABLE&gt; label, as laid out: a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an arc from there;
-                            ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.
+  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }, its children its members; as does the
+                            :container: tag; a :container_TITLE: tag puts a node in the box TITLE.
+  | any | other | table | ↦ a record: the node’s &lt;TABLE&gt; label, as laid out; a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an
+                            arc from there; ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.  A
+                            table is a record unless each row is two cells, its key an attribute or a :key.
 
 Example:
 
@@ -987,7 +988,6 @@ Within the block body:
   #+edge:  table  ↦ default edge[ ] attributes
   #+rank:  n1 n2  ↦ { rank=same; n1; n2 } for nodes without a common parent; ids may be [[links]]
   Under an item, #+graph:, #+node:, #+edge:, and #+rank: reach its whole subtree, as Org’s inherited properties do.
-  #+begin_cluster TITLE :KEY V … #+end_cluster  ↦ subgraph cluster_TITLE { … }; nests, and may sit in an item
   :NAME: … :END:  ↦ a drawer of any name, folding such directives away
   - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
 
@@ -1004,7 +1004,7 @@ an inline footnote, [fn::NOTE], is the node’s tooltip, as is a note: a paragra
 #+begin_note block ---with ‘#+begin_note :edge’, the arc’s---, shown beneath the label instead under :notes inline;
 a web, file, or [[*Section]] link, its URL; an [[file:IMAGE.png]], its image;
 a checkbox, [X], [-], or [ ], applies the template checked, partial, or unchecked, when one exists; and a ‘\\’
-breaks the label’s line ---in a table value or #+record: cell, too.
+breaks the label’s line ---in a table value or record cell, too.
 Org’s {{{macros}}} expand, by the buffer’s #+macro: lines.
 A two-column inline table on a list item supplies node attributes.
 
@@ -1017,9 +1017,11 @@ A two-column inline table on a list item supplies node attributes.
   A child item that is a lone [[T]] link is a reference to T: an arc to it, styled by the child’s :edge.KEY rows.
   | :children-rank | same | ↦ constrain immediate children to the same rank;
                             also accepts min, max, source, sink.
-  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }.
-  #+record: table       ↦ the node’s &lt;TABLE&gt; label, as laid out: a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an arc from there;
-                            ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.
+  | shape | cluster |      ↦ make this node an inline subgraph cluster_ID { … }, its children its members; as does the
+                            :container: tag; a :container_TITLE: tag puts a node in the box TITLE.
+  | any | other | table | ↦ a record: the node’s &lt;TABLE&gt; label, as laid out; a cell’s &lt;&lt;p&gt;&gt; is port p, its [[T]] an
+                            arc from there; ^ or an empty cell spans, a &lt;l&gt;/&lt;c&gt;/&lt;r&gt; row aligns, and hlines rule.  A
+                            table is a record unless each row is two cells, its key an attribute or a :key.
 
 Example:
 
