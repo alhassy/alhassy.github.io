@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-15 Sun 22:31 -->
+<!-- 2026-11-15 Sun 22:44 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Org lists, drawn as Graphviz graphs</title>
@@ -487,7 +487,7 @@ click it for its section below:
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+macro: tint lightyellow
 
 #+begin_graph =#+begin_graph=, at a glance ---hover a node for how, click it for more :direction right
-#+name: syntax shape=box style="rounded,filled" fillcolor={{{tint}}}
+#+name: syntax style="rounded,filled" fillcolor={{{tint}}}
 #+name: topic penwidth=2 :syntax:
 #+node: fontname=Courier
 #+edge: color=gray40 fontsize=10
@@ -1647,7 +1647,9 @@ gives the label:
 </div></div> </div></div>
 
 <ul class="org-ul">
-<li>The id is the <code>&lt;&lt;target&gt;&gt;</code>, else the text &mdash;sans markup, links, footnotes, and tags.</li>
+<li>The id is the <code>&lt;&lt;target&gt;&gt;</code>, else the text &mdash;sans markup, links, footnotes, and tags. So <code>[[1]]</code> reaches
+<code>+ 1</code>, and <code>C-c C-o</code> on it jumps there, sans a <code>&lt;&lt;1&gt;&gt;</code>; a target earns its place only when the id should
+differ from the text, or the text is long.</li>
 <li>The label is the <code>label</code> row, else the text; markup makes it an HTML-like one.</li>
 <li>Two items with one id are one node, so an item may appear twice to gain more children.</li>
 </ul>
@@ -1657,8 +1659,8 @@ gives the label:
 <h2 id="styling-one-key-value-syntax"><span class="section-number-2">5.</span> <a href="#styling-one-key-value-syntax">Styling: one key-value syntax</a></h2>
 <div class="outline-text-2" id="text-styling-one-key-value-syntax">
 <p>
-Out of the box, Graphviz draws black ellipses; soon we want our tokens boxed and our rules round. Graphviz's
-attributes are key-value pairs, and Org's key-value syntax is the two-column table. So a table beneath an
+Out of the box, every node wears the same cream box; soon we want our tokens to read apart from our rules.
+Graphviz's attributes are key-value pairs, and Org's key-value syntax is the two-column table. So a table beneath an
 item styles that item: one syntax, from a single node up to the whole graph.
 </p>
 </div>
@@ -1666,20 +1668,20 @@ item styles that item: one syntax, from a single node up to the whole graph.
 <h3 id="a-nodes-table-and-two-kinds-of-keys"><span class="section-number-3">5.1.</span> <a href="#a-nodes-table-and-two-kinds-of-keys">A node's table, and two kinds of keys</a></h3>
 <div class="outline-text-3" id="text-a-nodes-table-and-two-kinds-of-keys">
 <p>
-In a parse tree, the leaves are tokens, straight from the lexer; we box them, so they read apart from the
+In a parse tree, the leaves are tokens, straight from the lexer; we tint them, so they read apart from the
 grammar's rules:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph
 + term
   + factor
-    + &lt;&lt;one&gt;&gt; NUMBER 1
-      | shape | box   |
+    + NUMBER 1
+      | fillcolor | lightblue |
   + STAR
-    | shape | box |
-    | label | *   |
+    | fillcolor | lightblue |
+    | label     | *         |
   + factor
     + NUMBER 2
-      | shape | box |
+      | fillcolor | lightblue |
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="254pt" height="192pt"
  viewBox="0.00 0.00 254.00 192.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 188.05)">
@@ -1706,7 +1708,7 @@ grammar's rules:
 </g>
 <!-- STAR -->
 <g id="node4" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="235.22,-110.7 181.22,-110.7 181.22,-73.35 235.22,-73.35 235.22,-110.7"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="235.22,-110.7 181.22,-110.7 181.22,-73.35 235.22,-73.35 235.22,-110.7"/>
 <text xml:space="preserve" text-anchor="middle" x="208.22" y="-86.6" font-family="Helvetica Bold" font-size="14.00" fill="#170206">*</text>
 </g>
 <!-- term&#45;&gt;STAR -->
@@ -1714,19 +1716,19 @@ grammar's rules:
 <path fill="none" stroke="#311602" stroke-width="2" d="M145.11,-146C155.05,-137.66 166.97,-127.65 177.76,-118.6"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="179.47,-120.82 183.8,-113.53 175.87,-116.53 179.47,-120.82"/>
 </g>
-<!-- one -->
+<!-- NUMBER 1 -->
 <g id="node3" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="114.45,-37.35 0,-37.35 0,0 114.45,0 114.45,-37.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="114.45,-37.35 0,-37.35 0,0 114.45,0 114.45,-37.35"/>
 <text xml:space="preserve" text-anchor="middle" x="57.22" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER 1</text>
 </g>
-<!-- factor&#45;&gt;one -->
+<!-- factor&#45;&gt;NUMBER 1 -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M106.23,-72.65C98.82,-64.64 89.99,-55.09 81.88,-46.33"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="83.94,-44.43 76.45,-40.46 79.83,-48.23 83.94,-44.43"/>
 </g>
 <!-- NUMBER 2 -->
 <g id="node5" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="246.45,-37.35 132,-37.35 132,0 246.45,0 246.45,-37.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="246.45,-37.35 132,-37.35 132,0 246.45,0 246.45,-37.35"/>
 <text xml:space="preserve" text-anchor="middle" x="189.22" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER 2</text>
 </g>
 <!-- factor&#45;&gt;NUMBER 2 -->
@@ -1739,7 +1741,7 @@ grammar's rules:
 </div></div> </div></div>
 
 <p>
-A <i>plain</i> key, such as <code>shape</code>, is a Graphviz attribute of the node, passed straight through. We quote its
+A <i>plain</i> key, such as <code>fillcolor</code>, is a Graphviz attribute of the node, passed straight through. We quote its
 value for you, so <code>NUMBER 1</code>, <code>#00ff00</code>, and <code>x -&gt; y</code> all need no quotes; already-quoted values, and <code>&lt;…&gt;</code>
 HTML labels, are left alone.
 </p>
@@ -1899,9 +1901,9 @@ A reference is styled just the same; this is why an inline link graduates to one
 <div class="outline-text-3" id="text-the-whole-graph-the-begingraph-line">
 <p>
 Small graphs deserve no preamble at all. So the header line takes the graph's title and any graph
-attribute; a parse tree laid out left to right, every node boxed, every arc grey:
+attribute; a parse tree laid out left to right, every node a circle, every arc grey:
 </p>
-<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph How 1 * 2 + 3 - 4 parses :direction right :node.shape box :edge.color grey
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph How 1 * 2 + 3 - 4 parses :direction right :node.shape circle :edge.color grey
 + -
   + +
     + *
@@ -1909,75 +1911,75 @@ attribute; a parse tree laid out left to right, every node boxed, every arc grey
       + 2
     + 3
   + 4
-#+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="332pt" height="186pt"
- viewBox="0.00 0.00 332.00 186.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 182.35)">
-<polygon fill="white" stroke="none" points="-4,4 -4,-182.35 328,-182.35 328,4 -4,4"/>
-<text xml:space="preserve" text-anchor="middle" x="162" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">How 1 * 2 + 3 &#45; 4 parses</text>
+#+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="400pt" height="291pt"
+ viewBox="0.00 0.00 400.00 291.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 286.7)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-286.7 395.62,-286.7 395.62,4 -4,4"/>
+<text xml:space="preserve" text-anchor="middle" x="195.81" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">How 1 * 2 + 3 &#45; 4 parses</text>
 <!-- &#45; -->
 <g id="node1" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="54,-96.35 0,-96.35 0,-59 54,-59 54,-96.35"/>
-<text xml:space="preserve" text-anchor="middle" x="27" y="-72.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">&#45;</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="33.73" cy="-112.85" rx="33.73" ry="33.73"/>
+<text xml:space="preserve" text-anchor="middle" x="33.73" y="-107.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">&#45;</text>
 </g>
 <!-- + -->
 <g id="node2" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="144,-124.35 90,-124.35 90,-87 144,-87 144,-124.35"/>
-<text xml:space="preserve" text-anchor="middle" x="117" y="-100.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">+</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="139.84" cy="-157.85" rx="36.38" ry="36.38"/>
+<text xml:space="preserve" text-anchor="middle" x="139.84" y="-152.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">+</text>
 </g>
 <!-- &#45;&#45;&gt;+ -->
 <g id="edge1" class="edge">
-<path fill="none" stroke="grey" stroke-width="2" d="M54.88,-86.23C62.47,-88.64 70.87,-91.32 78.95,-93.88"/>
-<polygon fill="grey" stroke="grey" stroke-width="2" points="77.93,-96.5 86.4,-96.26 79.62,-91.16 77.93,-96.5"/>
+<path fill="none" stroke="grey" stroke-width="2" d="M65.68,-126.23C75.12,-130.31 85.68,-134.87 95.77,-139.23"/>
+<polygon fill="grey" stroke="grey" stroke-width="2" points="94.41,-141.7 102.87,-142.3 96.64,-136.56 94.41,-141.7"/>
 </g>
 <!-- 4 -->
 <g id="node7" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="144,-69.35 90,-69.35 90,-32 144,-32 144,-69.35"/>
-<text xml:space="preserve" text-anchor="middle" x="117" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">4</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="139.84" cy="-67.85" rx="35.85" ry="35.85"/>
+<text xml:space="preserve" text-anchor="middle" x="139.84" y="-62.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">4</text>
 </g>
 <!-- &#45;&#45;&gt;4 -->
 <g id="edge6" class="edge">
-<path fill="none" stroke="grey" stroke-width="2" d="M54.88,-69.43C62.47,-67.1 70.87,-64.52 78.95,-62.04"/>
-<polygon fill="grey" stroke="grey" stroke-width="2" points="79.56,-64.78 86.39,-59.76 77.92,-59.43 79.56,-64.78"/>
+<path fill="none" stroke="grey" stroke-width="2" d="M65.68,-99.47C75.21,-95.35 85.88,-90.74 96.06,-86.34"/>
+<polygon fill="grey" stroke="grey" stroke-width="2" points="97,-88.98 103.23,-83.24 94.78,-83.84 97,-88.98"/>
 </g>
 <!-- * -->
 <g id="node3" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="234,-151.35 180,-151.35 180,-114 234,-114 234,-151.35"/>
-<text xml:space="preserve" text-anchor="middle" x="207" y="-127.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">*</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="248.07" cy="-201.85" rx="34.26" ry="34.26"/>
+<text xml:space="preserve" text-anchor="middle" x="248.07" y="-196.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">*</text>
 </g>
 <!-- +&#45;&gt;* -->
 <g id="edge2" class="edge">
-<path fill="none" stroke="grey" stroke-width="2" d="M144.88,-113.92C152.47,-116.25 160.87,-118.83 168.95,-121.31"/>
-<polygon fill="grey" stroke="grey" stroke-width="2" points="167.92,-123.92 176.39,-123.59 169.56,-118.57 167.92,-123.92"/>
+<path fill="none" stroke="grey" stroke-width="2" d="M174.45,-171.77C184.3,-175.85 195.18,-180.36 205.47,-184.62"/>
+<polygon fill="grey" stroke="grey" stroke-width="2" points="204.23,-187.14 212.69,-187.61 206.37,-181.96 204.23,-187.14"/>
 </g>
 <!-- 3 -->
 <g id="node6" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="234,-96.35 180,-96.35 180,-59 234,-59 234,-96.35"/>
-<text xml:space="preserve" text-anchor="middle" x="207" y="-72.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">3</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="248.07" cy="-113.85" rx="35.85" ry="35.85"/>
+<text xml:space="preserve" text-anchor="middle" x="248.07" y="-108.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">3</text>
 </g>
 <!-- +&#45;&gt;3 -->
 <g id="edge5" class="edge">
-<path fill="none" stroke="grey" stroke-width="2" d="M144.88,-97.12C152.47,-94.71 160.87,-92.03 168.95,-89.47"/>
-<polygon fill="grey" stroke="grey" stroke-width="2" points="169.62,-92.19 176.4,-87.09 167.93,-86.85 169.62,-92.19"/>
+<path fill="none" stroke="grey" stroke-width="2" d="M174.45,-143.93C183.83,-140.04 194.16,-135.76 204.01,-131.69"/>
+<polygon fill="grey" stroke="grey" stroke-width="2" points="204.92,-134.34 211.24,-128.69 202.78,-129.16 204.92,-134.34"/>
 </g>
 <!-- 1 -->
 <g id="node4" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="324,-178.35 270,-178.35 270,-141 324,-141 324,-178.35"/>
-<text xml:space="preserve" text-anchor="middle" x="297" y="-154.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">1</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="355.77" cy="-246.85" rx="35.85" ry="35.85"/>
+<text xml:space="preserve" text-anchor="middle" x="355.77" y="-241.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">1</text>
 </g>
 <!-- *&#45;&gt;1 -->
 <g id="edge3" class="edge">
-<path fill="none" stroke="grey" stroke-width="2" d="M234.88,-140.92C242.47,-143.25 250.87,-145.83 258.95,-148.31"/>
-<polygon fill="grey" stroke="grey" stroke-width="2" points="257.92,-150.92 266.39,-150.59 259.56,-145.57 257.92,-150.92"/>
+<path fill="none" stroke="grey" stroke-width="2" d="M280.5,-215.23C290.37,-219.43 301.43,-224.14 311.95,-228.62"/>
+<polygon fill="grey" stroke="grey" stroke-width="2" points="310.57,-231.08 319.03,-231.63 312.76,-225.92 310.57,-231.08"/>
 </g>
 <!-- 2 -->
 <g id="node5" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="324,-123.35 270,-123.35 270,-86 324,-86 324,-123.35"/>
-<text xml:space="preserve" text-anchor="middle" x="297" y="-99.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">2</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="355.77" cy="-156.85" rx="35.85" ry="35.85"/>
+<text xml:space="preserve" text-anchor="middle" x="355.77" y="-151.43" font-family="Helvetica Bold" font-size="14.00" fill="#170206">2</text>
 </g>
 <!-- *&#45;&gt;2 -->
 <g id="edge4" class="edge">
-<path fill="none" stroke="grey" stroke-width="2" d="M234.88,-124.12C242.47,-121.71 250.87,-119.03 258.95,-116.47"/>
-<polygon fill="grey" stroke="grey" stroke-width="2" points="259.62,-119.19 266.4,-114.09 257.93,-113.85 259.62,-119.19"/>
+<path fill="none" stroke="grey" stroke-width="2" d="M280.5,-188.47C290.37,-184.27 301.43,-179.56 311.95,-175.08"/>
+<polygon fill="grey" stroke="grey" stroke-width="2" points="312.76,-177.78 319.03,-172.07 310.57,-172.63 312.76,-177.78"/>
 </g>
 </g>
 </svg>
@@ -2004,22 +2006,16 @@ understands.</li>
 <h3 id="when-the-preamble-outgrows-the-line"><span class="section-number-3">5.4.</span> <a href="#when-the-preamble-outgrows-the-line">When the preamble outgrows the line</a></h3>
 <div class="outline-text-3" id="text-when-the-preamble-outgrows-the-line">
 <p>
-A real graph's settings outgrow one line. Then <code>#+graph:</code>, <code>#+node:</code>, and <code>#+edge:</code> name what the table
-below them styles &mdash;the graph, every node, every arc&mdash; and they override the header. A drawer of any
-name, <code>:SETTINGS:</code> or <code>:PALETTE:</code>, folds them away with <code>TAB</code>, along with <code>#+name:</code> lines:
+A real graph's settings outgrow one line. Then <code>#+graph:</code>, <code>#+node:</code>, and <code>#+edge:</code> lines style the graph,
+every node, every arc &mdash;by <code>KEY=VALUE</code> pairs, as Graphviz's own <code>edge [fontsize=10 color=gray]</code> writes
+them, a value with spaces in double quotes, beside any <code>:tags:</code>&mdash; and they override the header. A drawer
+of any name, <code>:SETTINGS:</code> or <code>:PALETTE:</code>, folds them away with <code>TAB</code>, along with <code>#+name:</code> lines:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph A compiler's front end
 :SETTINGS:
-#+graph:
-| rankdir  | LR        |
-| fontname | Helvetica |
-#+node:
-| shape    | box       |
-| style    | rounded   |
-| fontname | Helvetica |
-#+edge:
-| fontsize | 10   |
-| color    | gray |
+#+graph: rankdir=LR fontname=Helvetica
+#+node: style=rounded fontname=Helvetica
+#+edge: fontsize=10 color=gray
 :END:
 + characters
   + lexer :: tokens
@@ -2061,16 +2057,17 @@ name, <code>:SETTINGS:</code> or <code>:PALETTE:</code>, folds them away with <c
 </div></div> </div></div>
 
 <p>
-A short table may instead be written on its keyword's line, as Graphviz's own <code>edge [fontsize=10
-color=gray]</code> writes it: <code>KEY=VALUE</code> pairs, a value with spaces in double quotes, beside any <code>:tags:</code>.
-The <code>:SETTINGS:</code> above is then three lines:
+When the pairs outgrow their line, a two-column table below the keyword holds them instead, a row a key,
+as a node's table does; a line's pairs and a table below it join:
 </p>
 <div class="osbe-copy" style="position: relative;">
 <button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
-<pre class="src src-org"><code><span style="color: #a0a1a7;">#+graph: rankdir=LR fontname=Helvetica</span>
-<span style="color: #a0a1a7;">#+node: shape=box style=rounded fontname=Helvetica</span>
-<span style="color: #a0a1a7;">#+edge: fontsize=10 color=gray</span>
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+node:</span>
+| style     | rounded,filled |
+| fillcolor | white          |
+| fontname  | Helvetica      |
+| fontcolor | gray30         |
 </code></pre>
 </div>
 </div>
@@ -2090,7 +2087,7 @@ so a mistake shows before we export: a typo, as <code>colour=red</code>, or a mi
 Sometimes a style belongs to one branch, not the whole graph. A compiler folds constants: <code>1 * 2</code> is
 known before the program runs, so its whole subtree collapses to <code>2</code>. We want that subtree shaded. Org's
 properties are inherited: a <code>:PROPERTIES:</code> drawer on a heading reaches its subheadings. So it is with an
-item's <code>#+node:</code> and <code>#+edge:</code> tables: they style every node and arc beneath the item, while the item
+item's <code>#+node:</code> and <code>#+edge:</code> lines: they style every node and arc beneath the item, while the item
 itself keeps its own <code>| key | value |</code> rows:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Constant folding
@@ -2098,10 +2095,8 @@ itself keeps its own <code>| key | value |</code> rows:
   + +
     + *
       | xlabel | folds to 2 |
-      #+node:
-      | fillcolor | lightgrey |
-      #+edge:
-      | style | dotted |
+      #+node: fillcolor=lightgrey
+      #+edge: style=dotted
       + 1
       + 2
     + 3
@@ -2184,7 +2179,7 @@ itself keeps its own <code>| key | value |</code> rows:
 <p>
 Above, <code>*</code> keeps its plain look &mdash;only what lies <i>beneath</i> it is shaded&mdash; just as a heading's own
 properties drawer is not one of its subheadings'. Graphviz scopes such defaults by an anonymous
-<code>subgraph</code>, which draws no box. A deeper item's tables override a shallower one's, as nested
+<code>subgraph</code>, which draws no box. A deeper item's lines override a shallower one's, as nested
 <code>:PROPERTIES:</code> do; a node first declared elsewhere keeps the defaults of where it was declared.
 </p>
 </div>
@@ -2244,23 +2239,19 @@ container; so a new one is a <code>push</code> away, and a new default a <code>s
 <h2 id="saying-it-once-templates"><span class="section-number-2">6.</span> <a href="#saying-it-once-templates">Saying it once: templates</a></h2>
 <div class="outline-text-2" id="text-saying-it-once-templates">
 <p>
-A parse tree repeats itself: every token the same box, every rule the same ellipse. Restating those rows
-at each leaf is how styles drift apart. So we name them once: a <code>#+name:</code> table is a reusable bundle of
-rows, and a tag applies it. On a headline, <code>:work:urgent:</code> classifies the entry; on an item, tags classify
-the node:
+A parse tree repeats itself: every token the same tint, every rule the same outline. Restating those rows
+at each leaf is how styles drift apart. So we name them once: a <code>#+name:</code> line is a reusable bundle of
+<code>KEY=VALUE</code> pairs &mdash;as <a href="#when-the-preamble-outgrows-the-line">#+edge: lines</a> take them&mdash; and a tag applies it. On a headline,
+<code>:work:urgent:</code> classifies the entry; on an item, tags classify the node:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph
-#+name: token
-| shape     | box       |
-| fillcolor | lightblue |
-#+name: rule
-| style | bold |
+#+name: token fillcolor=lightblue
+#+name: rule style=bold
 
 + expr :rule:
   + term :rule:
     + NUMBER 1 :token:
-    + STAR :token:
-      | label | * |
+    + * :token:
     + NUMBER 2 :token:
   + PLUS :token:
     | fillcolor | pink |
@@ -2314,12 +2305,12 @@ the node:
 <path fill="none" stroke="#311602" stroke-width="2" d="M132.69,-72.46C120.41,-63.88 105.66,-53.55 92.46,-44.32"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="94.27,-42.17 86.11,-39.88 91.06,-46.76 94.27,-42.17"/>
 </g>
-<!-- STAR -->
+<!-- * -->
 <g id="node4" class="node">
 <polygon fill="lightblue" stroke="#311602" stroke-width="2" points="186.22,-37.35 132.22,-37.35 132.22,0 186.22,0 186.22,-37.35"/>
 <text xml:space="preserve" text-anchor="middle" x="159.22" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">*</text>
 </g>
-<!-- term&#45;&gt;STAR -->
+<!-- term&#45;&gt;* -->
 <g id="edge3" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M159.22,-72.65C159.22,-65.47 159.22,-57.05 159.22,-49.06"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="162.03,-49.26 159.23,-41.26 156.43,-49.26 162.03,-49.26"/>
@@ -2339,12 +2330,10 @@ the node:
 </div></div> </div></div>
 
 <p>
-A short template fits on its name's line, as <code>KEY=VALUE</code> pairs &mdash;as <a href="#when-the-preamble-outgrows-the-line">#+edge: lines</a> take them&mdash; so the
-two above are, tersely, <code>#+name: token shape=box fillcolor=lightblue</code> and
-<code>#+name: rule style=bold</code>. Several such lines in a row are several templates, and a table below one adds
-rows to it. In Emacs, each template of a graph &mdash;its name's line, and the table below it&mdash; wears
-a background of its own, from <code>org-graph-template-backgrounds</code>, so where one ends and the next begins
-shows at a glance.
+Several such lines in a row are several templates. A long template holds its rows in a table below its
+name instead, as a <code>#+node:</code> line may; a line's pairs and a table below it join. In Emacs, each template
+of a graph &mdash;its name's line, and the table below it&mdash; wears a background of its own, from
+<code>org-graph-template-backgrounds</code>, so where one ends and the next begins shows at a glance.
 </p>
 
 <p>
@@ -2398,11 +2387,8 @@ template could apply to; in a link's description, or a description term, a tag s
 </table>
 
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph
-#+name: recursion
-| color | red    |
-| style | dashed |
-#+name: keyword
-| fontname | Courier |
+#+name: recursion color=red style=dashed
+#+name: keyword fontname=Courier
 #+node: :keyword:
 
 + &lt;&lt;expr&gt;&gt; expression
@@ -2583,39 +2569,37 @@ A template inherits others by the tags on its name's line, as an item does: <cod
 tags':
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph
-#+name: token
-| shape | box |
-#+name: keyword :token:
-| fontname | Courier |
+#+name: token fillcolor=lightblue
+#+name: keyword :token: fontname=Courier
 
-+ &lt;&lt;expr&gt;&gt; expression
++ expression
   + if :keyword:
   + NUMBER :token:
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="186pt" height="119pt"
  viewBox="0.00 0.00 186.00 119.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 114.7)">
 <polygon fill="white" stroke="none" points="-4,4 -4,-114.7 181.95,-114.7 181.95,4 -4,4"/>
-<!-- expr -->
+<!-- expression -->
 <g id="node1" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="134.57,-110.7 20.12,-110.7 20.12,-73.35 134.57,-73.35 134.57,-110.7"/>
 <text xml:space="preserve" text-anchor="middle" x="77.35" y="-86.6" font-family="Helvetica Bold" font-size="14.00" fill="#170206">expression</text>
 </g>
 <!-- if -->
 <g id="node2" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="56.7,-37.35 0,-37.35 0,0 56.7,0 56.7,-37.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="56.7,-37.35 0,-37.35 0,0 56.7,0 56.7,-37.35"/>
 <text xml:space="preserve" text-anchor="middle" x="28.35" y="-13.25" font-family="Courier,monospace" font-size="14.00" fill="#170206">if</text>
 </g>
-<!-- expr&#45;&gt;if -->
+<!-- expression&#45;&gt;if -->
 <g id="edge1" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M64.73,-72.65C59.4,-64.89 53.08,-55.68 47.21,-47.14"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="49.65,-45.74 42.81,-40.73 45.03,-48.91 49.65,-45.74"/>
 </g>
 <!-- NUMBER -->
 <g id="node3" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="177.95,-37.35 74.75,-37.35 74.75,0 177.95,0 177.95,-37.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="177.95,-37.35 74.75,-37.35 74.75,0 177.95,0 177.95,-37.35"/>
 <text xml:space="preserve" text-anchor="middle" x="126.35" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER</text>
 </g>
-<!-- expr&#45;&gt;NUMBER -->
+<!-- expression&#45;&gt;NUMBER -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M89.97,-72.65C95.3,-64.89 101.62,-55.68 107.49,-47.14"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="109.67,-48.91 111.89,-40.73 105.05,-45.74 109.67,-48.91"/>
@@ -2636,43 +2620,26 @@ As with Babel's named tables, a <code>#+name:</code> table anywhere in the buffe
 every graph in the buffer may use; so a house style is named once per file rather than once per graph.
 A graph's own template of the same name wins, and a template inside one graph stays that graph's own:
 </p>
-<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+name: token
-| shape | box |
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+name: token fillcolor=lightblue
 
 #+begin_graph Lexing
 + 1 * 2 :token:
   + NUMBER 1 :token:
   + STAR :token:
   + NUMBER 2 :token:
-#+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <table id="token" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-left" />
-</colgroup>
-<tbody>
-<tr>
-<td class="org-left">shape</td>
-<td class="org-left">box</td>
-</tr>
-</tbody>
-</table>
-
-<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="352pt" height="151pt"
+#+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="352pt" height="151pt"
  viewBox="0.00 0.00 352.00 151.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 146.7)">
 <polygon fill="white" stroke="none" points="-4,4 -4,-146.7 348.45,-146.7 348.45,4 -4,4"/>
 <text xml:space="preserve" text-anchor="middle" x="172.22" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">Lexing</text>
 <!-- 1 * 2 -->
 <g id="node1" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="207.7,-142.7 136.75,-142.7 136.75,-105.35 207.7,-105.35 207.7,-142.7"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="207.7,-142.7 136.75,-142.7 136.75,-105.35 207.7,-105.35 207.7,-142.7"/>
 <text xml:space="preserve" text-anchor="middle" x="172.22" y="-118.6" font-family="Helvetica Bold" font-size="14.00" fill="#170206">1 * 2</text>
 </g>
 <!-- NUMBER 1 -->
 <g id="node2" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="114.45,-69.35 0,-69.35 0,-32 114.45,-32 114.45,-69.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="114.45,-69.35 0,-69.35 0,-32 114.45,-32 114.45,-69.35"/>
 <text xml:space="preserve" text-anchor="middle" x="57.22" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER 1</text>
 </g>
 <!-- 1 * 2&#45;&gt;NUMBER 1 -->
@@ -2682,7 +2649,7 @@ A graph's own template of the same name wins, and a template inside one graph st
 </g>
 <!-- STAR -->
 <g id="node3" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="211.82,-69.35 132.62,-69.35 132.62,-32 211.82,-32 211.82,-69.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="211.82,-69.35 132.62,-69.35 132.62,-32 211.82,-32 211.82,-69.35"/>
 <text xml:space="preserve" text-anchor="middle" x="172.22" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">STAR</text>
 </g>
 <!-- 1 * 2&#45;&gt;STAR -->
@@ -2692,7 +2659,7 @@ A graph's own template of the same name wins, and a template inside one graph st
 </g>
 <!-- NUMBER 2 -->
 <g id="node4" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="344.45,-69.35 230,-69.35 230,-32 344.45,-32 344.45,-69.35"/>
+<polygon fill="lightblue" stroke="#311602" stroke-width="2" points="344.45,-69.35 230,-69.35 230,-32 344.45,-32 344.45,-69.35"/>
 <text xml:space="preserve" text-anchor="middle" x="287.23" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER 2</text>
 </g>
 <!-- 1 * 2&#45;&gt;NUMBER 2 -->
@@ -2715,8 +2682,7 @@ trailing <code>:word:</code> of its own &mdash;Smalltalk's <code>at:put:</code> 
 <code>| label |</code> row:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Colons that are just text
-#+name: faint
-| style | dotted |
+#+name: faint style=dotted
 
 + Python's xs[1:2]
 + C++'s std::vector
@@ -2884,12 +2850,8 @@ by template <code>T</code>, captioned <code>MEANING</code>&mdash; rather than a 
 explains:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph
-#+name: token
-| shape     | box       |
-| fillcolor | lightblue |
-#+name: recursion
-| color | red    |
-| style | dashed |
+#+name: token fillcolor=lightblue
+#+name: recursion color=red style=dashed
 
 + &lt;&lt;expr&gt;&gt; expression
   + term
@@ -3005,8 +2967,7 @@ as a <code>:checked:</code> tag would; and <code>C-c C-c</code> on a checkbox to
 graph:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Our calculator, so far
-#+name: unchecked
-| style | dashed |
+#+name: unchecked style=dashed
 
 + [-] compiler
   + [X] lexer
@@ -3262,7 +3223,7 @@ mid-line too, so a two-line node stays one terse line:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph
 + parser
-  + reports :: &lt;&lt;err&gt;&gt; Unexpected token =)= \\ at line 3, column 7
+  + reports :: Unexpected token =)= \\ at line 3, column 7
   + *Recursive descent* \\
     one function per rule
   + every grammar \\ needs a lexer :: lexer
@@ -3275,14 +3236,14 @@ mid-line too, so a two-line node stays one terse line:
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="319.95,-154.45 235.5,-154.45 235.5,-117.1 319.95,-117.1 319.95,-154.45"/>
 <text xml:space="preserve" text-anchor="middle" x="277.73" y="-130.35" font-family="Helvetica Bold" font-size="14.00" fill="#170206">parser</text>
 </g>
-<!-- err -->
+<!-- Unexpected token ) at line 3, column 7 -->
 <g id="node2" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="171.45,-49.6 0,-49.6 0,0 171.45,0 171.45,-49.6"/>
 <text xml:space="preserve" text-anchor="start" x="21.6" y="-26.5" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Unexpected token </text>
 <text xml:space="preserve" text-anchor="start" x="141.6" y="-26.5" font-family="monospace" font-size="14.00" fill="#170206">)</text>
 <text xml:space="preserve" text-anchor="start" x="26.85" y="-12.5" font-family="Helvetica Bold" font-size="14.00" fill="#170206">at line 3, column 7</text>
 </g>
-<!-- parser&#45;&gt;err -->
+<!-- parser&#45;&gt;Unexpected token ) at line 3, column 7 -->
 <g id="edge1" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M245.15,-116.29C216.01,-99.75 172.75,-75.2 138.65,-55.84"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="140.26,-53.53 131.92,-52.02 137.5,-58.4 140.26,-53.53"/>
@@ -3317,7 +3278,7 @@ mid-line too, so a two-line node stays one terse line:
 
 <p>
 The label becomes an HTML-like one, as with markup; the id joins the lines with a space, so a node reached
-by a link usually wants a <code>&lt;&lt;target&gt;&gt;</code>, as <code>err</code> above. It is the one line break wherever a label is
+by a link usually wants a terse <code>&lt;&lt;target&gt;&gt;</code>. It is the one line break wherever a label is
 written: a description term, as above; a table value, <code>| :edge.label | consumes \\ tokens |</code>; a
 record's cell.
 </p>
@@ -3561,7 +3522,6 @@ picture of the rules it follows:
   + [[https://en.wikipedia.org/wiki/Recursive_descent_parser][Recursive descent]]
   + [[https://en.wikipedia.org/wiki/LR_parser][LR]] parsing
   + then, typing by :: [[https://raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png]]
-    | shape  | box |
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="816pt" height="391pt"
  viewBox="0.00 0.00 816.00 391.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 387.18)">
@@ -3917,7 +3877,7 @@ table styles the box, and its <code>#+node:</code> and <code>#+edge:</code> set 
 + compiler
   + Front end :container:
     | bgcolor | lightgrey |
-    #+node: shape=box
+    #+node: fillcolor=white
     + lexer
       + parser
         + :container:
@@ -3948,7 +3908,7 @@ table styles the box, and its <code>#+node:</code> and <code>#+edge:</code> set 
 </g>
 <!-- lexer -->
 <g id="node2" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="243.9,-147.68 169.2,-147.68 169.2,-110.33 243.9,-110.33 243.9,-147.68"/>
+<polygon fill="white" stroke="#311602" stroke-width="2" points="243.9,-147.68 169.2,-147.68 169.2,-110.33 243.9,-110.33 243.9,-147.68"/>
 <text xml:space="preserve" text-anchor="middle" x="206.55" y="-123.58" font-family="Helvetica Bold" font-size="14.00" fill="#170206">lexer</text>
 </g>
 <!-- compiler&#45;&gt;lexer -->
@@ -3968,7 +3928,7 @@ table styles the box, and its <code>#+node:</code> and <code>#+edge:</code> set 
 </g>
 <!-- parser -->
 <g id="node3" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="397.35,-151.68 312.9,-151.68 312.9,-114.33 397.35,-114.33 397.35,-151.68"/>
+<polygon fill="white" stroke="#311602" stroke-width="2" points="397.35,-151.68 312.9,-151.68 312.9,-114.33 397.35,-114.33 397.35,-151.68"/>
 <text xml:space="preserve" text-anchor="middle" x="355.13" y="-127.58" font-family="Helvetica Bold" font-size="14.00" fill="#170206">parser</text>
 </g>
 <!-- lexer&#45;&gt;parser -->
@@ -3978,7 +3938,7 @@ table styles the box, and its <code>#+node:</code> and <code>#+edge:</code> set 
 </g>
 <!-- syntax tree -->
 <g id="node4" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="553.8,-155.68 439.35,-155.68 439.35,-118.33 553.8,-118.33 553.8,-155.68"/>
+<polygon fill="white" stroke="#311602" stroke-width="2" points="553.8,-155.68 439.35,-155.68 439.35,-118.33 553.8,-118.33 553.8,-155.68"/>
 <text xml:space="preserve" text-anchor="middle" x="496.58" y="-131.57" font-family="Helvetica Bold" font-size="14.00" fill="#170206">syntax tree</text>
 </g>
 <!-- parser&#45;&gt;syntax tree -->
@@ -3988,7 +3948,7 @@ table styles the box, and its <code>#+node:</code> and <code>#+edge:</code> set 
 </g>
 <!-- symbol table -->
 <g id="node5" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="559.8,-210.68 433.35,-210.68 433.35,-173.32 559.8,-173.32 559.8,-210.68"/>
+<polygon fill="white" stroke="#311602" stroke-width="2" points="559.8,-210.68 433.35,-210.68 433.35,-173.32 559.8,-173.32 559.8,-210.68"/>
 <text xml:space="preserve" text-anchor="middle" x="496.58" y="-186.57" font-family="Helvetica Bold" font-size="14.00" fill="#170206">symbol table</text>
 </g>
 </g>
@@ -4151,23 +4111,23 @@ tags of other kinds color the node in stripes, as above:
 Some nodes have insides: an AST node has a left operand, an operator, and a right operand, and each arc
 should leave from its own field. A record is a node drawn as a table, and Org already has tables: an
 item's table is its label, laid out exactly as written &mdash;unless it is the <code>| key | value |</code> rows of
-<a href="#a-nodes-table-and-two-kinds-of-keys">a node's table</a>. A cell's <code>&lt;&lt;target&gt;&gt;</code> is its <i>port</i>, a cell's <code>[[link]]</code>
-is an arc from that port, and an arc reaches a port by <code>record::port</code> &mdash;just as Org's
-<code>[[file:notes.org::target]]</code> reaches into a file:
+<a href="#a-nodes-table-and-two-kinds-of-keys">a node's table</a>. A cell's <code>[[link]]</code> is an arc from that cell, its
+<i>port</i>, named by its text; a <code>&lt;&lt;target&gt;&gt;</code> makes any cell a port; and an arc reaches a port by
+<code>record::port</code> &mdash;just as Org's <code>[[file:notes.org::target]]</code> reaches into a file:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Our expression, as an AST
 + minus
-  | &lt;&lt;l&gt;&gt; left [[plus]] | - | &lt;&lt;r&gt;&gt; right [[four]] |
+  | left [[plus]] | - | right [[4]] |
 + plus
-  | &lt;&lt;l&gt;&gt; left [[times]] | + | &lt;&lt;r&gt;&gt; right [[three]] |
+  | left [[times]] | + | right [[3]] |
 + times
-  | &lt;&lt;l&gt;&gt; left [[one]] | * | &lt;&lt;r&gt;&gt; right [[two]] |
-+ &lt;&lt;one&gt;&gt; 1
-+ &lt;&lt;two&gt;&gt; 2
-+ &lt;&lt;three&gt;&gt; 3
-+ &lt;&lt;four&gt;&gt; 4
+  | left [[1]] | * | right [[2]] |
++ 1
++ 2
++ 3
++ 4
 + evaluator
-  + starts at :: [[minus::l]]
+  + starts at :: [[minus::left]]
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="284pt" height="374pt"
  viewBox="0.00 0.00 284.00 374.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 369.9)">
@@ -4198,12 +4158,12 @@ is an arc from that port, and an arc reaches a port by <code>record::port</code>
 <path fill="none" stroke="#311602" stroke-width="2" d="M174,-255.05C174,-241.44 166.55,-228.18 158.86,-218.13"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="161.18,-216.53 153.89,-212.2 156.89,-220.13 161.18,-216.53"/>
 </g>
-<!-- four -->
+<!-- 4 -->
 <g id="node3" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="252.25,-218.05 198.25,-218.05 198.25,-180.7 252.25,-180.7 252.25,-218.05"/>
 <text xml:space="preserve" text-anchor="middle" x="225.25" y="-193.95" font-family="Helvetica Bold" font-size="14.00" fill="#170206">4</text>
 </g>
-<!-- minus&#45;&gt;four -->
+<!-- minus&#45;&gt;4 -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M215.62,-255.05C215.62,-246.7 216.73,-237.74 218.19,-229.54"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="220.88,-230.32 219.72,-221.93 215.4,-229.21 220.88,-230.32"/>
@@ -4223,32 +4183,32 @@ is an arc from that port, and an arc reaches a port by <code>record::port</code>
 <path fill="none" stroke="#311602" stroke-width="2" d="M117.12,-187.5C117.12,-172.27 109.94,-156.67 102.87,-144.99"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="105.26,-143.52 98.53,-138.37 100.58,-146.6 105.26,-143.52"/>
 </g>
-<!-- three -->
+<!-- 3 -->
 <g id="node5" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="198.25,-143.7 144.25,-143.7 144.25,-106.35 198.25,-106.35 198.25,-143.7"/>
 <text xml:space="preserve" text-anchor="middle" x="171.25" y="-119.6" font-family="Helvetica Bold" font-size="14.00" fill="#170206">3</text>
 </g>
-<!-- plus&#45;&gt;three -->
+<!-- plus&#45;&gt;3 -->
 <g id="edge4" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M162.5,-187.5C162.5,-176.93 163.78,-165.43 165.37,-155.27"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="168.11,-155.83 166.72,-147.47 162.6,-154.88 168.11,-155.83"/>
 </g>
-<!-- one -->
+<!-- 1 -->
 <g id="node6" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="77.25,-69.35 23.25,-69.35 23.25,-32 77.25,-32 77.25,-69.35"/>
 <text xml:space="preserve" text-anchor="middle" x="50.25" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">1</text>
 </g>
-<!-- times&#45;&gt;one -->
+<!-- times&#45;&gt;1 -->
 <g id="edge5" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M65.62,-113.15C65.62,-102.32 63.35,-90.74 60.56,-80.57"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="63.29,-79.94 58.28,-73.1 57.93,-81.57 63.29,-79.94"/>
 </g>
-<!-- two -->
+<!-- 2 -->
 <g id="node7" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="149.25,-69.35 95.25,-69.35 95.25,-32 149.25,-32 149.25,-69.35"/>
 <text xml:space="preserve" text-anchor="middle" x="122.25" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">2</text>
 </g>
-<!-- times&#45;&gt;two -->
+<!-- times&#45;&gt;2 -->
 <g id="edge6" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M108,-113.15C108,-102.37 110.11,-90.79 112.7,-80.63"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="115.33,-81.62 114.8,-73.16 109.94,-80.1 115.33,-81.62"/>
@@ -4281,7 +4241,7 @@ over three rows; a token's heading spans its two fields:
   | ^           | term          |
 + token
   | Token  |        |
-  | &lt;&lt;kind&gt;&gt; kind | lexeme |
+  | kind   | lexeme |
   | NUMBER | ="42"= |
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="260pt" height="76pt"
  viewBox="0.00 0.00 260.00 76.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -4370,10 +4330,11 @@ record, rather than vanishing; and a record whose first field names an attribute
 and templates apply as usual; <code>color</code>, <code>fillcolor</code>, and <code>fontcolor</code> color the table. An item may carry
 both tables, a blank line between, since Org reads adjacent rows as one table.</li>
 <li>A record is <code>shape=plain</code>, the table being its whole outline; an explicit <code>shape</code> row wins.</li>
-<li>A cell with a link but no target is ported by its text, spaces as underscores; <code>&lt;&lt;left operand&gt;&gt;</code> is
-likewise reached as <code>[[minus::left operand]]</code>.</li>
-<li>Ports belong to their record, so all three records above have an <code>l</code> port: <code>minus::l</code>, <code>plus::l</code>.</li>
-<li>A link's tags style its arc, as in an item's text: <code>| &lt;&lt;l&gt;&gt; left [[plus][:dashed:]] |</code> draws a dashed
+<li>A port's name is its cell's text sans links, spaces as underscores: <code>[[minus::left operand]]</code> reaches
+<code>| left operand [[plus]] |</code>. A <code>&lt;&lt;target&gt;&gt;</code> names a cell sans link, or gives a long one a terse name:
+<code>| &lt;&lt;x&gt;&gt; where the parse resumes |</code> is <code>[[rec::x]]</code>.</li>
+<li>Ports belong to their record, so all three records above have a <code>left</code> port: <code>minus::left</code>, <code>plus::left</code>.</li>
+<li>A link's tags style its arc, as in an item's text: <code>| left [[plus][:dashed:]] |</code> draws a dashed
 arc. A cell's trailing tags are an error; write <code>=:x:=</code> for literal text.</li>
 <li><code>a::b</code> names a port only when <code>a</code> names a record; otherwise it is an ordinary node, such as
 <code>std::vector</code>. Record and port names may contain dots: <code>[[org.el::v1.2]]</code>.</li>
@@ -4389,7 +4350,7 @@ Every graph so far flows top to bottom; a mind map grows outward from its centre
 attribute picks its engine, so the header line turns a tree into a mind map: <code>twopi</code> places <code>root</code> in the
 middle and each generation on a ring around it. With <code>:wrap</code>, long labels stay compact:
 </p>
-<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Parsing, radially :layout twopi :root Parsing :wrap 12 :node.shape box :node.style rounded
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Parsing, radially :layout twopi :root Parsing :wrap 12 :node.style rounded
 #+edge: :undirected:
 + Parsing
   + Top-down
@@ -4844,7 +4805,7 @@ tagged with its kind. The arrow points at what is inherited, implemented, or dep
 owner's end:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph :direction up
-+ &lt;&lt;Animal&gt;&gt; Animal
++ Animal
   | &lt;l&gt;               |
   | *Animal*          |
   |-------------------|
@@ -4862,9 +4823,9 @@ owner's end:
   + [[Owner][:aggregates:]]
   + [[Bone][:depends:]]
 + &lt;&lt;Pet&gt;&gt; «interface» Pet
-+ &lt;&lt;Tail&gt;&gt; Tail
-+ &lt;&lt;Owner&gt;&gt; Owner
-+ &lt;&lt;Bone&gt;&gt; Bone
++ Tail
++ Owner
++ Bone
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="559pt" height="151pt"
  viewBox="0.00 0.00 559.00 151.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 147.25)">
@@ -4945,32 +4906,32 @@ owner's end:
 <div class="outline-text-3" id="text-a-state-machine-pseudo-states-as-tags">
 <p>
 A state machine is an outline of what follows what; the description term is the event, or the guard,
-that takes us along the arc. An unnamed <code>:start:</code>, <code>:final:</code>, or <code>:choice:</code> item needs a <code>&lt;&lt;target&gt;&gt;</code> only
-to be told apart; a composite state is a <a href="#containers-draw-boxes">container</a>:
+that takes us along the arc. A <code>:start:</code>, <code>:final:</code>, or <code>:choice:</code> item of tags alone is a node of its
+own, apart from every other; a composite state is a <a href="#containers-draw-boxes">container</a>:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph :direction right
-+ &lt;&lt;start&gt;&gt; :start:
-  + &lt;&lt;idle&gt;&gt; Idle :state:
++ :start:
+  + Idle :state:
     + coin :: Paid :state:
-      + push :: &lt;&lt;check&gt;&gt; :choice:
+      + push :: :choice:
         + [stock] :: Vending :state:
-          + done :: [[idle]]
+          + done :: [[Idle]]
         + [empty] :: Refunding :state:
-          + done :: &lt;&lt;end&gt;&gt; :final:
+          + done :: :final:
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="625pt" height="108pt"
  viewBox="0.00 0.00 625.00 108.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 104.35)">
 <polygon fill="white" stroke="none" points="-4,4 -4,-104.35 621.25,-104.35 621.25,4 -4,4"/>
-<!-- start -->
+<!-- anonymous 1 -->
 <g id="node1" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="7.2" cy="-25.67" rx="7.2" ry="7.2"/>
 </g>
-<!-- idle -->
+<!-- Idle -->
 <g id="node2" class="node">
 <path fill="none" stroke="#311602" stroke-width="2" d="M105.85,-44.35C105.85,-44.35 63.4,-44.35 63.4,-44.35 57.4,-44.35 51.4,-38.35 51.4,-32.35 51.4,-32.35 51.4,-19 51.4,-19 51.4,-13 57.4,-7 63.4,-7 63.4,-7 105.85,-7 105.85,-7 111.85,-7 117.85,-13 117.85,-19 117.85,-19 117.85,-32.35 117.85,-32.35 117.85,-38.35 111.85,-44.35 105.85,-44.35"/>
 <text xml:space="preserve" text-anchor="middle" x="84.63" y="-20.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Idle</text>
 </g>
-<!-- start&#45;&gt;idle -->
+<!-- anonymous 1&#45;&gt;Idle -->
 <g id="edge1" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M15.16,-25.67C21.04,-25.67 30.01,-25.67 39.54,-25.67"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="39.38,-28.48 47.38,-25.68 39.38,-22.88 39.38,-28.48"/>
@@ -4980,17 +4941,17 @@ to be told apart; a composite state is a <a href="#containers-draw-boxes">contai
 <path fill="none" stroke="#311602" stroke-width="2" d="M238.3,-75.35C238.3,-75.35 190.6,-75.35 190.6,-75.35 184.6,-75.35 178.6,-69.35 178.6,-63.35 178.6,-63.35 178.6,-50 178.6,-50 178.6,-44 184.6,-38 190.6,-38 190.6,-38 238.3,-38 238.3,-38 244.3,-38 250.3,-44 250.3,-50 250.3,-50 250.3,-63.35 250.3,-63.35 250.3,-69.35 244.3,-75.35 238.3,-75.35"/>
 <text xml:space="preserve" text-anchor="middle" x="214.45" y="-51.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Paid</text>
 </g>
-<!-- idle&#45;&gt;Paid -->
+<!-- Idle&#45;&gt;Paid -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M118.54,-33.66C133.47,-37.28 151.37,-41.62 167.59,-45.55"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="166.58,-48.19 175.01,-47.35 167.9,-42.75 166.58,-48.19"/>
 <text xml:space="preserve" text-anchor="middle" x="148.23" y="-45.48" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">coin</text>
 </g>
-<!-- check -->
+<!-- anonymous 4 -->
 <g id="node4" class="node">
 <polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="327.1,-67.47 316.3,-56.68 327.1,-45.88 337.9,-56.67 327.1,-67.47"/>
 </g>
-<!-- Paid&#45;&gt;check -->
+<!-- Paid&#45;&gt;anonymous 4 -->
 <g id="edge3" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M251.07,-56.67C268.52,-56.67 288.97,-56.67 304.11,-56.67"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="303.93,-59.48 311.93,-56.68 303.93,-53.88 303.93,-59.48"/>
@@ -5001,7 +4962,7 @@ to be told apart; a composite state is a <a href="#containers-draw-boxes">contai
 <path fill="none" stroke="#311602" stroke-width="2" d="M509.73,-37.35C509.73,-37.35 438.03,-37.35 438.03,-37.35 432.03,-37.35 426.03,-31.35 426.03,-25.35 426.03,-25.35 426.03,-12 426.03,-12 426.03,-6 432.03,0 438.03,0 438.03,0 509.73,0 509.73,0 515.73,0 521.73,-6 521.73,-12 521.73,-12 521.73,-25.35 521.73,-25.35 521.73,-31.35 515.73,-37.35 509.73,-37.35"/>
 <text xml:space="preserve" text-anchor="middle" x="473.88" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Vending</text>
 </g>
-<!-- check&#45;&gt;Vending -->
+<!-- anonymous 4&#45;&gt;Vending -->
 <g id="edge4" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M334.7,-52.46C340.18,-49.14 348.28,-44.64 355.9,-41.92 374.49,-35.31 395.46,-30.39 414.45,-26.83"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="414.71,-29.63 422.09,-25.47 413.72,-24.12 414.71,-29.63"/>
@@ -5012,24 +4973,24 @@ to be told apart; a composite state is a <a href="#containers-draw-boxes">contai
 <path fill="none" stroke="#311602" stroke-width="2" d="M516.85,-100.35C516.85,-100.35 430.9,-100.35 430.9,-100.35 424.9,-100.35 418.9,-94.35 418.9,-88.35 418.9,-88.35 418.9,-75 418.9,-75 418.9,-69 424.9,-63 430.9,-63 430.9,-63 516.85,-63 516.85,-63 522.85,-63 528.85,-69 528.85,-75 528.85,-75 528.85,-88.35 528.85,-88.35 528.85,-94.35 522.85,-100.35 516.85,-100.35"/>
 <text xml:space="preserve" text-anchor="middle" x="473.88" y="-76.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Refunding</text>
 </g>
-<!-- check&#45;&gt;Refunding -->
+<!-- anonymous 4&#45;&gt;Refunding -->
 <g id="edge6" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M337.6,-58.32C351.93,-60.79 380.28,-65.69 407.34,-70.36"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="406.67,-73.08 415.03,-71.69 407.62,-67.57 406.67,-73.08"/>
 <text xml:space="preserve" text-anchor="middle" x="378.4" y="-71.62" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">[empty]</text>
 </g>
-<!-- Vending&#45;&gt;idle -->
+<!-- Vending&#45;&gt;Idle -->
 <g id="edge5" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M425.09,-19.54C349.27,-20.91 202.49,-23.56 129.31,-24.89"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="129.62,-22.08 121.67,-25.02 129.72,-27.68 129.62,-22.08"/>
 <text xml:space="preserve" text-anchor="middle" x="283.3" y="-24.79" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">done</text>
 </g>
-<!-- end -->
+<!-- anonymous 8 -->
 <g id="node7" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="606.05" cy="-81.67" rx="7.2" ry="7.2"/>
 <ellipse fill="none" stroke="#311602" stroke-width="2" cx="606.05" cy="-81.67" rx="11.2" ry="11.2"/>
 </g>
-<!-- Refunding&#45;&gt;end -->
+<!-- Refunding&#45;&gt;anonymous 8 -->
 <g id="edge7" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M529.7,-81.67C548.59,-81.67 568.67,-81.67 583.34,-81.67"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="583.23,-84.48 591.23,-81.68 583.23,-78.88 583.23,-84.48"/>
@@ -5048,7 +5009,7 @@ Each relationship is a description term, its cardinality a tag on that term, rea
 to the child's: a customer places <i>many</i> orders, each order placed by <i>one</i> customer. Graphviz draws the
 crow's foot for “many” and the bar for “one”:
 </p>
-<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph :direction right :node.shape box
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph :direction right
 + Customer
   + places :one-to-many: :: Order
     + contains :one-to-many: :: Line item
@@ -5574,9 +5535,7 @@ from one moment to another. Graphviz orders a rank's nodes by its arcs' directio
 off the left lifeline, and a <code>reply</code> template turns its arrow back:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Ordering a latte :labelloc t
-#+name: actor
-| shape | box     |
-| style | rounded |
+#+name: actor style=rounded
 
 #+name: moment
 | shape           | point  |
@@ -5586,18 +5545,16 @@ off the left lifeline, and a <code>reply</code> template turns its arrow back:
 | :edge.color     | gray   |
 | :edge.weight    | 100    |
 
-#+name: reply
-| dir   | back   |
-| style | dashed |
+#+name: reply dir=back style=dashed
 
 + Customer :actor:@actors:
-  + &lt;&lt;c1&gt;&gt; :moment:@t1:
+  + :moment:@t1:
     + order a latte :: [[b1]]
-    + &lt;&lt;c2&gt;&gt; :moment:@t2:
+    + :moment:@t2:
       + “that’s $5” :reply: :: [[b2]]
-      + &lt;&lt;c3&gt;&gt; :moment:@t3:
+      + :moment:@t3:
         + pay :: [[b3]]
-        + &lt;&lt;c4&gt;&gt; :moment:@t4:
+        + :moment:@t4:
           + here you go :reply: :: [[b4]]
 + Barista :actor:@actors:
   + &lt;&lt;b1&gt;&gt; :moment:@t1:
@@ -5614,11 +5571,11 @@ off the left lifeline, and a <code>reply</code> template turns its arrow back:
 <path fill="none" stroke="#311602" stroke-width="2" d="M94.95,-196.87C94.95,-196.87 12,-196.87 12,-196.87 6,-196.87 0,-190.87 0,-184.87 0,-184.87 0,-171.52 0,-171.52 0,-165.52 6,-159.52 12,-159.52 12,-159.52 94.95,-159.52 94.95,-159.52 100.95,-159.52 106.95,-165.52 106.95,-171.52 106.95,-171.52 106.95,-184.87 106.95,-184.87 106.95,-190.87 100.95,-196.87 94.95,-196.87"/>
 <text xml:space="preserve" text-anchor="middle" x="53.47" y="-172.77" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Customer</text>
 </g>
-<!-- c1 -->
+<!-- anonymous 14 -->
 <g id="node2" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="53.47" cy="-121.08" rx="1.44" ry="1.44"/>
 </g>
-<!-- Customer&#45;&gt;c1 -->
+<!-- Customer&#45;&gt;anonymous 14 -->
 <g id="edge1" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M53.47,-158.54C53.47,-145.04 53.47,-128.37 53.47,-123.48"/>
 </g>
@@ -5626,17 +5583,17 @@ off the left lifeline, and a <code>reply</code> template turns its arrow back:
 <g id="node3" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="169.47" cy="-121.08" rx="1.44" ry="1.44"/>
 </g>
-<!-- c1&#45;&gt;b1 -->
+<!-- anonymous 14&#45;&gt;b1 -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M55.9,-121.08C68.69,-121.08 128.85,-121.08 156.06,-121.08"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="156.04,-123.88 164.04,-121.08 156.04,-118.28 156.04,-123.88"/>
 <text xml:space="preserve" text-anchor="middle" x="111.47" y="-126.53" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">order a latte</text>
 </g>
-<!-- c2 -->
+<!-- anonymous 16 -->
 <g id="node4" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="53.47" cy="-81.2" rx="1.44" ry="1.44"/>
 </g>
-<!-- c1&#45;&gt;c2 -->
+<!-- anonymous 14&#45;&gt;anonymous 16 -->
 <g id="edge3" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M53.47,-118.82C53.47,-113.07 53.47,-89.34 53.47,-83.5"/>
 </g>
@@ -5648,17 +5605,17 @@ off the left lifeline, and a <code>reply</code> template turns its arrow back:
 <g id="edge10" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M169.47,-118.82C169.47,-113.07 169.47,-89.34 169.47,-83.5"/>
 </g>
-<!-- c2&#45;&gt;b2 -->
+<!-- anonymous 16&#45;&gt;b2 -->
 <g id="edge4" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" stroke-dasharray="5,2" d="M66.92,-81.2C94.15,-81.2 154.3,-81.2 167.07,-81.2"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="66.92,-78.4 58.92,-81.2 66.92,-84 66.92,-78.4"/>
 <text xml:space="preserve" text-anchor="middle" x="111.47" y="-86.65" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">“that’s $5”</text>
 </g>
-<!-- c3 -->
+<!-- anonymous 18 -->
 <g id="node6" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="53.47" cy="-41.32" rx="1.44" ry="1.44"/>
 </g>
-<!-- c2&#45;&gt;c3 -->
+<!-- anonymous 16&#45;&gt;anonymous 18 -->
 <g id="edge5" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M53.47,-78.94C53.47,-73.19 53.47,-49.46 53.47,-43.62"/>
 </g>
@@ -5670,17 +5627,17 @@ off the left lifeline, and a <code>reply</code> template turns its arrow back:
 <g id="edge11" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M169.47,-78.94C169.47,-73.19 169.47,-49.46 169.47,-43.62"/>
 </g>
-<!-- c3&#45;&gt;b3 -->
+<!-- anonymous 18&#45;&gt;b3 -->
 <g id="edge6" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M55.9,-41.32C68.69,-41.32 128.85,-41.32 156.06,-41.32"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="156.04,-44.12 164.04,-41.32 156.04,-38.52 156.04,-44.12"/>
 <text xml:space="preserve" text-anchor="middle" x="111.47" y="-46.77" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">pay</text>
 </g>
-<!-- c4 -->
+<!-- anonymous 20 -->
 <g id="node8" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="53.47" cy="-1.44" rx="1.44" ry="1.44"/>
 </g>
-<!-- c3&#45;&gt;c4 -->
+<!-- anonymous 18&#45;&gt;anonymous 20 -->
 <g id="edge7" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M53.47,-39.06C53.47,-33.31 53.47,-9.58 53.47,-3.74"/>
 </g>
@@ -5692,7 +5649,7 @@ off the left lifeline, and a <code>reply</code> template turns its arrow back:
 <g id="edge12" class="edge">
 <path fill="none" stroke="gray" stroke-width="2" stroke-dasharray="5,2" d="M169.47,-39.06C169.47,-33.31 169.47,-9.58 169.47,-3.74"/>
 </g>
-<!-- c4&#45;&gt;b4 -->
+<!-- anonymous 20&#45;&gt;b4 -->
 <g id="edge8" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" stroke-dasharray="5,2" d="M66.92,-1.44C94.15,-1.44 154.3,-1.44 167.07,-1.44"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="66.92,1.36 58.92,-1.44 66.92,-4.24 66.92,1.36"/>
@@ -5769,66 +5726,66 @@ still labels it; its extension picks the format, so <code>:file parse-tree.svg</
 Sometimes a whole section is nothing but the outline we want drawn; wrapping it in a block is ceremony.
 A <code>#+begin_graph</code> block is a function on a region; a <code>:graph:</code> tag is the same function on a section. The
 section's text is the graph, and its <code>:PROPERTIES:</code> drawer &mdash;Org's own home for key-value settings&mdash; is
-the <code>#+begin_graph</code> line: <code>:DIRECTION: right</code> is <code>:direction right</code>, <code>:NODE.SHAPE: box</code> is <code>:node.shape box</code>, and
+the <code>#+begin_graph</code> line: <code>:DIRECTION: right</code> is <code>:direction right</code>, <code>:NODE.SHAPE: oval</code> is <code>:node.shape oval</code>, and
 <code>:FILE:</code> is <code>:file</code>:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">* Our grammar :graph_The_Grammar:
 :PROPERTIES:
 :DIRECTION: right
-:NODE.SHAPE: box
+:NODE.SHAPE: oval
 :END:
-+ &lt;&lt;expr&gt;&gt; expr
++ expr
   + term
     + factor
       + NUMBER
       + ( … ) :: [[expr]]</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div id="outline-container-org0000001" class="outline-2">
 <h2>Our grammar</h2>
 <div class="outline-text-2" id="text-org0000001">
-<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="448pt" height="117pt"
- viewBox="0.00 0.00 448.00 117.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 113.35)">
-<polygon fill="white" stroke="none" points="-4,4 -4,-113.35 443.8,-113.35 443.8,4 -4,4"/>
-<text xml:space="preserve" text-anchor="middle" x="219.9" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">The Grammar</text>
+<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="584pt" height="141pt"
+ viewBox="0.00 0.00 584.00 141.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 136.82)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-136.82 579.99,-136.82 579.99,4 -4,4"/>
+<text xml:space="preserve" text-anchor="middle" x="288" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">The Grammar</text>
 <!-- expr -->
 <g id="node1" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="71.7,-69.35 0,-69.35 0,-32 71.7,-32 71.7,-69.35"/>
-<text xml:space="preserve" text-anchor="middle" x="35.85" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">expr</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="50.7" cy="-58.41" rx="50.7" ry="26.41"/>
+<text xml:space="preserve" text-anchor="middle" x="50.7" y="-52.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">expr</text>
 </g>
 <!-- term -->
 <g id="node2" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="181.9,-109.35 108.7,-109.35 108.7,-72 181.9,-72 181.9,-109.35"/>
-<text xml:space="preserve" text-anchor="middle" x="145.3" y="-85.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">term</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="190.16" cy="-106.41" rx="51.76" ry="26.41"/>
+<text xml:space="preserve" text-anchor="middle" x="190.16" y="-100.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">term</text>
 </g>
 <!-- expr&#45;&gt;term -->
 <g id="edge1" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M72.63,-63.99C80.7,-67 89.39,-70.23 97.83,-73.37"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="96.63,-75.92 105.11,-76.08 98.59,-70.67 96.63,-75.92"/>
+<path fill="none" stroke="#311602" stroke-width="2" d="M94.06,-73.2C107.26,-77.81 121.99,-82.96 135.84,-87.79"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="134.89,-90.43 143.37,-90.42 136.74,-85.14 134.89,-90.43"/>
 </g>
 <!-- factor -->
 <g id="node3" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="299.6,-69.35 218.9,-69.35 218.9,-32 299.6,-32 299.6,-69.35"/>
-<text xml:space="preserve" text-anchor="middle" x="259.25" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">factor</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="335.98" cy="-58.41" rx="57.06" ry="26.41"/>
+<text xml:space="preserve" text-anchor="middle" x="335.98" y="-52.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">factor</text>
 </g>
 <!-- term&#45;&gt;factor -->
 <g id="edge2" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M182.65,-77.69C190.73,-74.8 199.43,-71.69 207.96,-68.64"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="208.77,-71.33 215.36,-66 206.89,-66.05 208.77,-71.33"/>
+<path fill="none" stroke="#311602" stroke-width="2" d="M234.7,-91.88C248.34,-87.33 263.6,-82.23 278.02,-77.42"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="278.76,-80.12 285.47,-74.94 276.99,-74.81 278.76,-80.12"/>
 </g>
 <!-- factor&#45;&gt;expr -->
 <g id="edge4" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M218.24,-48.34C206.53,-47.76 193.71,-47.21 181.9,-46.92 149.38,-46.13 141.22,-46.08 108.7,-46.92 100.54,-47.14 91.86,-47.49 83.46,-47.89"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="83.52,-45.08 75.67,-48.28 83.81,-50.67 83.52,-45.08"/>
-<text xml:space="preserve" text-anchor="middle" x="145.3" y="-49.38" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">( … )</text>
+<path fill="none" stroke="#311602" stroke-width="2" d="M278.39,-56.47C266.35,-56.13 253.72,-55.83 241.92,-55.66 195.92,-54.98 184.4,-54.93 138.4,-55.66 130.14,-55.79 121.44,-55.99 112.87,-56.23"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="113.06,-53.42 105.15,-56.45 113.23,-59.02 113.06,-53.42"/>
+<text xml:space="preserve" text-anchor="middle" x="190.16" y="-58.11" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">( … )</text>
 </g>
 <!-- NUMBER -->
 <g id="node4" class="node">
-<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="439.8,-69.35 336.6,-69.35 336.6,-32 439.8,-32 439.8,-69.35"/>
-<text xml:space="preserve" text-anchor="middle" x="388.2" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER</text>
+<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="503.02" cy="-58.41" rx="72.97" ry="26.41"/>
+<text xml:space="preserve" text-anchor="middle" x="503.02" y="-52.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER</text>
 </g>
 <!-- factor&#45;&gt;NUMBER -->
 <g id="edge3" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M300.42,-50.67C308.2,-50.67 316.52,-50.67 324.81,-50.67"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="324.63,-53.48 332.63,-50.68 324.63,-47.88 324.63,-53.48"/>
+<path fill="none" stroke="#311602" stroke-width="2" d="M393.78,-58.41C401.69,-58.41 409.95,-58.41 418.23,-58.41"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="418.06,-61.21 426.06,-58.41 418.06,-55.61 418.06,-61.21"/>
 </g>
 </g>
 </svg>
@@ -6436,7 +6393,7 @@ members rather than arc targets, so arcs out of them are inline links, styled as
   + Front end
     | shape | cluster |
     + lexer [[parser]]
-    + &lt;&lt;parser&gt;&gt; parser
+    + parser
 #+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="355pt" height="110pt"
  viewBox="0.00 0.00 355.00 110.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
@@ -6493,19 +6450,13 @@ and outcomes (bare text), with each chance's arcs labelled by how likely it is. 
 description terms label the arcs, and an item's <code>#+edge:</code> dashes every arc of chance beneath it:
 </p>
 <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph Should our package go lexical? :direction right
-#+name: decision
-| shape | box |
-#+name: chance
-| shape | circle |
-| label | ""     |
-| width | 0.3    |
-#+name: outcome
-| shape | plaintext |
+#+name: decision shape=box
+#+name: chance shape=circle label="" width=0.3
+#+name: outcome shape=plaintext
 
 + Enable =lexical-binding=? :decision:
-  + yes :: &lt;&lt;specials&gt;&gt; :chance:
-    #+edge:
-    | style | dashed |
+  + yes :: :chance:
+    #+edge: style=dashed
     + 80% :: Closures capture \\ their environment :outcome:
     + 20% :: An undeclared special \\ breaks; we =defvar= it :outcome:
   + no :: Dynamic scope; \\ the byte-compiler warns :outcome:
@@ -6521,11 +6472,11 @@ description terms label the arcs, and an item's <code>#+edge:</code> dashes ever
 <text xml:space="preserve" text-anchor="start" x="69.6" y="-73.88" font-family="monospace" font-size="14.00" fill="#170206">lexical&#45;binding</text>
 <text xml:space="preserve" text-anchor="start" x="193.35" y="-73.88" font-family="Helvetica Bold" font-size="14.00" fill="#170206">?</text>
 </g>
-<!-- specials -->
+<!-- anonymous 6 -->
 <g id="node2" class="node">
 <ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="380.18" cy="-113.55" rx="10.8" ry="10.8"/>
 </g>
-<!-- Enable lexical&#45;binding?&#45;&gt;specials -->
+<!-- Enable lexical&#45;binding?&#45;&gt;anonymous 6 -->
 <g id="edge1" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" d="M224.11,-92.61C274.29,-99.39 328.71,-106.74 357.86,-110.67"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="357.42,-113.44 365.72,-111.73 358.17,-107.89 357.42,-113.44"/>
@@ -6549,7 +6500,7 @@ description terms label the arcs, and an item's <code>#+edge:</code> dashes ever
 <text xml:space="preserve" text-anchor="start" x="582" y="-150" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Closures capture</text>
 <text xml:space="preserve" text-anchor="start" x="579.75" y="-134.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">their environment</text>
 </g>
-<!-- specials&#45;&gt;Closures capture their environment -->
+<!-- anonymous 6&#45;&gt;Closures capture their environment -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" stroke-dasharray="5,2" d="M391.81,-114.97C418.2,-118.49 488.82,-127.91 547.39,-135.72"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="546.87,-138.47 555.17,-136.75 547.61,-132.92 546.87,-138.47"/>
@@ -6563,7 +6514,7 @@ description terms label the arcs, and an item's <code>#+edge:</code> dashes ever
 <text xml:space="preserve" text-anchor="start" x="643.5" y="-66.25" font-family="monospace" font-size="14.00" fill="#170206">defvar</text>
 <text xml:space="preserve" text-anchor="start" x="693" y="-66.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206"> it</text>
 </g>
-<!-- specials&#45;&gt;An undeclared special breaks; we defvar it -->
+<!-- anonymous 6&#45;&gt;An undeclared special breaks; we defvar it -->
 <g id="edge3" class="edge">
 <path fill="none" stroke="#311602" stroke-width="2" stroke-dasharray="5,2" d="M391.81,-112.09C416.15,-108.75 478.14,-100.24 533.57,-92.63"/>
 <polygon fill="#311602" stroke="#311602" stroke-width="2" points="533.66,-95.44 541.2,-91.58 532.89,-89.9 533.66,-95.44"/>
@@ -6574,7 +6525,7 @@ description terms label the arcs, and an item's <code>#+edge:</code> dashes ever
 </div></div> </div></div>
 
 <p>
-The chance node is all target: <code>&lt;&lt;specials&gt;&gt;</code> names it, and its template's empty <code>label</code> leaves a dot.
+The chance node is tags alone, so it needs no name, and its template's empty <code>label</code> leaves a dot.
 </p>
 </div>
 </div>
@@ -6583,42 +6534,46 @@ The chance node is all target: <code>&lt;&lt;specials&gt;&gt;</code> names it, a
 <div class="outline-text-3" id="text-a-mind-map-from-a-book-how-to-take-smart-notes">
 <p>
 A chapter of Sönke Ahrens' <i>How to Take Smart Notes</i>, as we would outline it while reading. Each
-connective, such as “is an aid for”, sits on its arc, as a description term; ordered steps are numbered
-arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleeting]]</code> arcs back to a note met earlier:
+connective, such as “is an aid for”, sits on its arc, as a description term; when every child of an item
+shares one, an <code>#+edge:</code> line beneath the item says it once, and a child's own term still wins. Ordered
+steps are numbered arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[Fleeting]]</code> arcs back to a
+note met earlier:
 </p>
-<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph How to Take Smart Notes ---Sönke Ahrens :direction right :wrap 24 :fontname Helvetica :node.shape box :node.style "rounded,filled" :node.fillcolor white :node.fontname Helvetica :edge.fontname Helvetica :edge.fontsize 10 :edge.fontcolor gray30 :edge.color gray60
-#+edge: :undirected:
-#+name: smart_kind
-| shape     | note      |
-| fillcolor | "#fff5cc" |
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">#+begin_graph How to Take Smart Notes ---Sönke Ahrens :direction right :wrap 24
+#+graph: fontname=Helvetica
+#+node: style="rounded,filled" fillcolor=white fontname=Helvetica
+#+edge: :undirected: fontname=Helvetica fontsize=10 fontcolor=gray30 color=gray60
+#+name: smart_kind :note: fillcolor="#fff5cc"
 
-+ &lt;&lt;notes&gt;&gt; *Smart notes*
++ *Smart notes*
   + Writing
-    + is an aid for :: thinking
-    + is an aid for :: studying
-    + is an aid for :: generating ideas
-    + is an aid for :: reading
-    + is an aid for :: understanding
+    #+edge: label="is an aid for"
+    + thinking
+    + studying
+    + generating ideas
+    + reading
+    + understanding
   + Thinking
     + happens :: on paper
   + Rule
     + keep a pen at hand
   + Process
     + 1 :: collect notes
-      + &lt;&lt;fleeting&gt;&gt; Fleeting :smart_kind:
+      + Fleeting :smart_kind:
         + reminders of thoughts
           + put in one place
           + process later
-      + &lt;&lt;literature&gt;&gt; Literature :smart_kind:
-        + taken :: when reading
-        + taken :: briefly
-        + taken :: selectively, for your own topics
-        + taken :: in your own words
-        + taken :: with bibliographic data
+      + Literature :smart_kind:
+        #+edge: label=taken
+        + when reading
+        + briefly
+        + selectively, for your own topics
+        + in your own words
+        + with bibliographic data
         + kept :: in the reference system
       + Permanent :smart_kind:
-        + review :: [[fleeting]]
-        + review :: [[literature]]
+        + review :: [[Fleeting]]
+        + review :: [[Literature]]
         + review :: once a day
         + think :: how they relate to your research, reflections, interests
         + one note for each idea
@@ -6634,7 +6589,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1017.1)">
 <polygon fill="white" stroke="none" points="-4,4 -4,-1017.1 1732.15,-1017.1 1732.15,4 -4,4"/>
 <text xml:space="preserve" text-anchor="middle" x="864.07" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">How to Take Smart Notes &#45;&#45;&#45;Sönke Ahrens</text>
-<!-- notes -->
+<!-- Smart notes -->
 <g id="node1" class="node">
 <path fill="white" stroke="#311602" stroke-width="2" d="M127.2,-691.1C127.2,-691.1 12,-691.1 12,-691.1 6,-691.1 0,-685.1 0,-679.1 0,-679.1 0,-664.25 0,-664.25 0,-658.25 6,-652.25 12,-652.25 12,-652.25 127.2,-652.25 127.2,-652.25 133.2,-652.25 139.2,-658.25 139.2,-664.25 139.2,-664.25 139.2,-679.1 139.2,-679.1 139.2,-685.1 133.2,-691.1 127.2,-691.1"/>
 <text xml:space="preserve" text-anchor="start" x="21.6" y="-668" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00" fill="#170206">Smart notes</text>
@@ -6644,7 +6599,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M262.52,-870.1C262.52,-870.1 193.07,-870.1 193.07,-870.1 187.07,-870.1 181.07,-864.1 181.07,-858.1 181.07,-858.1 181.07,-843.25 181.07,-843.25 181.07,-837.25 187.07,-831.25 193.07,-831.25 193.07,-831.25 262.52,-831.25 262.52,-831.25 268.52,-831.25 274.52,-837.25 274.52,-843.25 274.52,-843.25 274.52,-858.1 274.52,-858.1 274.52,-864.1 268.52,-870.1 262.52,-870.1"/>
 <text xml:space="preserve" text-anchor="middle" x="227.8" y="-846" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">Writing</text>
 </g>
-<!-- notes&#45;&gt;Writing -->
+<!-- Smart notes&#45;&gt;Writing -->
 <g id="edge1" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M88.21,-691.86C118.21,-726.24 178.89,-795.77 209.01,-830.29"/>
 </g>
@@ -6653,7 +6608,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M267.4,-728.1C267.4,-728.1 188.2,-728.1 188.2,-728.1 182.2,-728.1 176.2,-722.1 176.2,-716.1 176.2,-716.1 176.2,-701.25 176.2,-701.25 176.2,-695.25 182.2,-689.25 188.2,-689.25 188.2,-689.25 267.4,-689.25 267.4,-689.25 273.4,-689.25 279.4,-695.25 279.4,-701.25 279.4,-701.25 279.4,-716.1 279.4,-716.1 279.4,-722.1 273.4,-728.1 267.4,-728.1"/>
 <text xml:space="preserve" text-anchor="middle" x="227.8" y="-704" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">Thinking</text>
 </g>
-<!-- notes&#45;&gt;Thinking -->
+<!-- Smart notes&#45;&gt;Thinking -->
 <g id="edge7" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M140.02,-688.12C151.92,-690.94 164.09,-693.82 175.4,-696.5"/>
 </g>
@@ -6662,7 +6617,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M252.4,-671.1C252.4,-671.1 203.2,-671.1 203.2,-671.1 197.2,-671.1 191.2,-665.1 191.2,-659.1 191.2,-659.1 191.2,-644.25 191.2,-644.25 191.2,-638.25 197.2,-632.25 203.2,-632.25 203.2,-632.25 252.4,-632.25 252.4,-632.25 258.4,-632.25 264.4,-638.25 264.4,-644.25 264.4,-644.25 264.4,-659.1 264.4,-659.1 264.4,-665.1 258.4,-671.1 252.4,-671.1"/>
 <text xml:space="preserve" text-anchor="middle" x="227.8" y="-647" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">Rule</text>
 </g>
-<!-- notes&#45;&gt;Rule -->
+<!-- Smart notes&#45;&gt;Rule -->
 <g id="edge9" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M140.02,-662.79C157.46,-660.55 175.48,-658.25 190.55,-656.32"/>
 </g>
@@ -6671,7 +6626,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M263.65,-580.1C263.65,-580.1 191.95,-580.1 191.95,-580.1 185.95,-580.1 179.95,-574.1 179.95,-568.1 179.95,-568.1 179.95,-553.25 179.95,-553.25 179.95,-547.25 185.95,-541.25 191.95,-541.25 191.95,-541.25 263.65,-541.25 263.65,-541.25 269.65,-541.25 275.65,-547.25 275.65,-553.25 275.65,-553.25 275.65,-568.1 275.65,-568.1 275.65,-574.1 269.65,-580.1 263.65,-580.1"/>
 <text xml:space="preserve" text-anchor="middle" x="227.8" y="-556" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">Process</text>
 </g>
-<!-- notes&#45;&gt;Process -->
+<!-- Smart notes&#45;&gt;Process -->
 <g id="edge11" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M99.25,-651.32C127.34,-631.35 169.94,-601.08 198.07,-581.09"/>
 </g>
@@ -6774,25 +6729,25 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="none" stroke="#999999" stroke-width="2" d="M267.07,-540.32C276.81,-535.57 287.36,-530.78 297.4,-526.92 340.77,-510.28 392.65,-496.61 426.16,-488.55"/>
 <text xml:space="preserve" text-anchor="middle" x="326.27" y="-530.17" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">3</text>
 </g>
-<!-- fleeting -->
+<!-- Fleeting -->
 <g id="node14" class="node">
 <polygon fill="#fff5cc" stroke="#311602" stroke-width="2" points="1072.62,-666.1 979.92,-666.1 979.92,-627.25 1078.62,-627.25 1078.62,-660.1 1072.62,-666.1"/>
 <polyline fill="none" stroke="#311602" stroke-width="2" points="1072.62,-666.1 1072.62,-660.1"/>
 <polyline fill="none" stroke="#311602" stroke-width="2" points="1078.62,-660.1 1072.62,-660.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1029.27" y="-642" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">Fleeting</text>
 </g>
-<!-- collect notes&#45;&gt;fleeting -->
+<!-- collect notes&#45;&gt;Fleeting -->
 <g id="edge13" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M527.97,-603.07C541.4,-604.69 555.45,-606.31 568.6,-607.67 717.97,-623.19 895.12,-636.9 979.24,-643.12"/>
 </g>
-<!-- literature -->
+<!-- Literature -->
 <g id="node18" class="node">
 <polygon fill="#fff5cc" stroke="#311602" stroke-width="2" points="1078.25,-609.1 974.3,-609.1 974.3,-570.25 1084.25,-570.25 1084.25,-603.1 1078.25,-609.1"/>
 <polyline fill="none" stroke="#311602" stroke-width="2" points="1078.25,-609.1 1078.25,-603.1"/>
 <polyline fill="none" stroke="#311602" stroke-width="2" points="1084.25,-603.1 1078.25,-603.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1029.27" y="-585" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">Literature</text>
 </g>
-<!-- collect notes&#45;&gt;literature -->
+<!-- collect notes&#45;&gt;Literature -->
 <g id="edge17" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M527.73,-594.1C639.99,-593.11 868.52,-591.09 973.41,-590.16"/>
 </g>
@@ -6812,7 +6767,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M1519.7,-780.1C1519.7,-780.1 1345.25,-780.1 1345.25,-780.1 1339.25,-780.1 1333.25,-774.1 1333.25,-768.1 1333.25,-768.1 1333.25,-753.25 1333.25,-753.25 1333.25,-747.25 1339.25,-741.25 1345.25,-741.25 1345.25,-741.25 1519.7,-741.25 1519.7,-741.25 1525.7,-741.25 1531.7,-747.25 1531.7,-753.25 1531.7,-753.25 1531.7,-768.1 1531.7,-768.1 1531.7,-774.1 1525.7,-780.1 1519.7,-780.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-756" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">reminders of thoughts</text>
 </g>
-<!-- fleeting&#45;&gt;reminders of thoughts -->
+<!-- Fleeting&#45;&gt;reminders of thoughts -->
 <g id="edge14" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1079.26,-661.28C1130.25,-676.42 1212.48,-700.62 1283.75,-720.67 1306.9,-727.19 1332.14,-734.09 1355.11,-740.3"/>
 </g>
@@ -6839,7 +6794,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M1489.32,-552.1C1489.32,-552.1 1375.62,-552.1 1375.62,-552.1 1369.62,-552.1 1363.62,-546.1 1363.62,-540.1 1363.62,-540.1 1363.62,-525.25 1363.62,-525.25 1363.62,-519.25 1369.62,-513.25 1375.62,-513.25 1375.62,-513.25 1489.32,-513.25 1489.32,-513.25 1495.32,-513.25 1501.32,-519.25 1501.32,-525.25 1501.32,-525.25 1501.32,-540.1 1501.32,-540.1 1501.32,-546.1 1495.32,-552.1 1489.32,-552.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-528" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">when reading</text>
 </g>
-<!-- literature&#45;&gt;when reading -->
+<!-- Literature&#45;&gt;when reading -->
 <g id="edge18" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1085.09,-583.63C1132.87,-578.19 1204,-569.69 1265.75,-560.67 1297.66,-556.02 1332.89,-550.16 1362.64,-545.01"/>
 <text xml:space="preserve" text-anchor="middle" x="1297.25" y="-561.22" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">taken</text>
@@ -6849,7 +6804,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M1464.2,-495.1C1464.2,-495.1 1400.75,-495.1 1400.75,-495.1 1394.75,-495.1 1388.75,-489.1 1388.75,-483.1 1388.75,-483.1 1388.75,-468.25 1388.75,-468.25 1388.75,-462.25 1394.75,-456.25 1400.75,-456.25 1400.75,-456.25 1464.2,-456.25 1464.2,-456.25 1470.2,-456.25 1476.2,-462.25 1476.2,-468.25 1476.2,-468.25 1476.2,-483.1 1476.2,-483.1 1476.2,-489.1 1470.2,-495.1 1464.2,-495.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-471" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">briefly</text>
 </g>
-<!-- literature&#45;&gt;briefly -->
+<!-- Literature&#45;&gt;briefly -->
 <g id="edge19" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1084.84,-594.28C1135.03,-596.01 1209.91,-592.05 1265.75,-560.67 1276.99,-554.36 1274.48,-546.89 1283.75,-537.92 1301.62,-520.63 1306.42,-515.62 1328.75,-504.67 1347.3,-495.58 1369.18,-488.91 1387.97,-484.27"/>
 <text xml:space="preserve" text-anchor="middle" x="1297.25" y="-541.17" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">taken</text>
@@ -6860,7 +6815,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-414.62" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">selectively, for your</text>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-397.37" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">own topics</text>
 </g>
-<!-- literature&#45;&gt;selectively, for your own topics -->
+<!-- Literature&#45;&gt;selectively, for your own topics -->
 <g id="edge20" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1085.13,-598.71C1137.67,-604.09 1216.11,-603.08 1265.75,-560.67 1287.81,-541.83 1269.72,-523.32 1283.75,-497.92 1298.25,-471.69 1303.89,-464.43 1328.75,-447.67 1332.99,-444.81 1337.49,-442.15 1342.12,-439.66"/>
 <text xml:space="preserve" text-anchor="middle" x="1297.25" y="-501.17" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">taken</text>
@@ -6870,7 +6825,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M1505.82,-723.1C1505.82,-723.1 1359.12,-723.1 1359.12,-723.1 1353.12,-723.1 1347.12,-717.1 1347.12,-711.1 1347.12,-711.1 1347.12,-696.25 1347.12,-696.25 1347.12,-690.25 1353.12,-684.25 1359.12,-684.25 1359.12,-684.25 1505.82,-684.25 1505.82,-684.25 1511.82,-684.25 1517.82,-690.25 1517.82,-696.25 1517.82,-696.25 1517.82,-711.1 1517.82,-711.1 1517.82,-717.1 1511.82,-723.1 1505.82,-723.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-699" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">in your own words</text>
 </g>
-<!-- literature&#45;&gt;in your own words -->
+<!-- Literature&#45;&gt;in your own words -->
 <g id="edge21" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1084.88,-585C1135.09,-583.22 1210,-587.15 1265.75,-618.67 1277.05,-625.06 1274.43,-632.64 1283.75,-641.67 1301.56,-658.94 1306.46,-663.8 1328.75,-674.67 1335.25,-677.84 1342.15,-680.72 1349.18,-683.32"/>
 <text xml:space="preserve" text-anchor="middle" x="1297.25" y="-667.66" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">taken</text>
@@ -6880,7 +6835,7 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M1521.57,-666.1C1521.57,-666.1 1343.37,-666.1 1343.37,-666.1 1337.37,-666.1 1331.37,-660.1 1331.37,-654.1 1331.37,-654.1 1331.37,-639.25 1331.37,-639.25 1331.37,-633.25 1337.37,-627.25 1343.37,-627.25 1343.37,-627.25 1521.57,-627.25 1521.57,-627.25 1527.57,-627.25 1533.57,-633.25 1533.57,-639.25 1533.57,-639.25 1533.57,-654.1 1533.57,-654.1 1533.57,-660.1 1527.57,-666.1 1521.57,-666.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-642" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">with bibliographic data</text>
 </g>
-<!-- literature&#45;&gt;with bibliographic data -->
+<!-- Literature&#45;&gt;with bibliographic data -->
 <g id="edge22" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1085.09,-595.72C1132.87,-601.16 1204,-609.66 1265.75,-618.67 1286.83,-621.75 1309.36,-625.35 1330.8,-628.92"/>
 <text xml:space="preserve" text-anchor="middle" x="1297.25" y="-628.24" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">taken</text>
@@ -6890,17 +6845,17 @@ arcs; <code>:smart_kind:</code> marks the three kinds of note; and <code>[[fleet
 <path fill="white" stroke="#311602" stroke-width="2" d="M1524.2,-609.1C1524.2,-609.1 1340.75,-609.1 1340.75,-609.1 1334.75,-609.1 1328.75,-603.1 1328.75,-597.1 1328.75,-597.1 1328.75,-582.25 1328.75,-582.25 1328.75,-576.25 1334.75,-570.25 1340.75,-570.25 1340.75,-570.25 1524.2,-570.25 1524.2,-570.25 1530.2,-570.25 1536.2,-576.25 1536.2,-582.25 1536.2,-582.25 1536.2,-597.1 1536.2,-597.1 1536.2,-603.1 1530.2,-609.1 1524.2,-609.1"/>
 <text xml:space="preserve" text-anchor="middle" x="1432.47" y="-585" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#170206">in the reference system</text>
 </g>
-<!-- literature&#45;&gt;in the reference system -->
+<!-- Literature&#45;&gt;in the reference system -->
 <g id="edge23" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M1085.22,-589.67C1147.56,-589.67 1250.63,-589.67 1328.14,-589.67"/>
 <text xml:space="preserve" text-anchor="middle" x="1297.25" y="-592.92" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">kept</text>
 </g>
-<!-- Permanent&#45;&gt;fleeting -->
+<!-- Permanent&#45;&gt;Fleeting -->
 <g id="edge25" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M653.84,-422.87C668.86,-468.13 712.22,-576.94 792.8,-617.67 851.8,-647.5 929.38,-651.33 979.05,-650.03"/>
 <text xml:space="preserve" text-anchor="middle" x="749.3" y="-606.45" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">review</text>
 </g>
-<!-- Permanent&#45;&gt;literature -->
+<!-- Permanent&#45;&gt;Literature -->
 <g id="edge26" class="edge">
 <path fill="none" stroke="#999999" stroke-width="2" d="M661.76,-422.86C676.08,-442.64 699.56,-473.03 723.8,-495.67 744.12,-514.66 755.72,-511.69 774.8,-531.92 785.14,-542.89 780.08,-552.58 792.8,-560.67 847,-595.19 922.59,-598.41 973.37,-595.65"/>
 <text xml:space="preserve" text-anchor="middle" x="749.3" y="-535.17" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#4d4d4d">review</text>
@@ -7152,13 +7107,14 @@ it repeats are named once, by Org's own macros:
 | color     | #6c7086   |
 | arrowhead | vee       |
 
-#+name: lineage
-| style | solid |
-#+name: inspiration
-| style | dashed |
+#+name: lineage style=solid
+#+name: inspiration style=dashed
 #+name: equivalence
-| style      | dotted |
-| constraint | false  |
+| style      | dotted       |
+| constraint | false        |
+| color      | #f9e2af |
+| fontcolor  | #f9e2af |
+#+name: typed fillcolor=#2a1e3f color={{{mauve}}} fontcolor={{{mauve}}}
 
 + &lt;&lt;lambda&gt;&gt; λ-Calculus \\ (Church, 1930s) :@origins:
   | shape     | ellipse       |
@@ -7166,16 +7122,14 @@ it repeats are named once, by Org's own macros:
   | color     | #f38ba8       |
   | fontcolor | #f38ba8       |
   | penwidth  | 2             |
-  + encodes :: &lt;&lt;church&gt;&gt; Church Encoding \\ ℕ, Bool, Pairs :@models:
-    + Church– \\ Turing thesis :equivalence: :: &lt;&lt;turing&gt;&gt; Turing Machines \\ (equivalent power) :@models:
-      | :edge.color     | #f9e2af |
-      | :edge.fontcolor | #f9e2af |
-  + inspired :inspiration: :: &lt;&lt;lisp&gt;&gt; Lisp \\ (McCarthy, 1958) \\ car · cdr · cons :@languages:
+  + encodes :: Church Encoding \\ ℕ, Bool, Pairs :@models:
+    + Church– \\ Turing thesis :equivalence: :: Turing Machines \\ (equivalent power) :@models:
+  + inspired :inspiration: :: Lisp \\ (McCarthy, 1958) \\ car · cdr · cons :@languages:
     | fillcolor | #1e3a5f   |
     | color     | #89dceb |
     | fontcolor | #89dceb |
     | penwidth  | 2         |
-    + subset of :: &lt;&lt;emacs&gt;&gt; Emacs Lisp \\ buffers · modes · hooks :@runtimes:
+    + subset of :: Emacs Lisp \\ buffers · modes · hooks :@runtimes:
       | :edge.penwidth | 2             |
       | :edge.color    | #89dceb     |
       | shape          | doubleoctagon |
@@ -7187,24 +7141,16 @@ it repeats are named once, by Org's own macros:
       + implements :: [[advice]]
     + enables :: [[macros]]
     + provides :: [[closures]]
-  + formalises :inspiration: :: &lt;&lt;haskell&gt;&gt; Haskell \\ pure · lazy · typed :@languages:
-    | fillcolor | #2a1e3f     |
-    | color     | #cba6f7 |
-    | fontcolor | #cba6f7 |
-    + &lt;&lt;ghc&gt;&gt; GHC \\ Core → STG → Cmm :@runtimes:
-      | fillcolor | #2a1e3f     |
-      | color     | #cba6f7 |
-      | fontcolor | #cba6f7 |
+  + formalises :inspiration: :: Haskell \\ pure · lazy · typed :typed:@languages:
+    + GHC \\ Core → STG → Cmm :typed:@runtimes:
     + uses :inspiration: :: [[monad]]
 
-+ &lt;&lt;combinatory&gt;&gt; Combinatory Logic \\ (Schönfinkel/Curry) :@origins:
++ Combinatory Logic \\ (Schönfinkel/Curry) :@origins:
   | shape     | ellipse       |
   | fillcolor | #45475a |
   | color     | #fab387       |
   | fontcolor | #fab387       |
-  + equivalent :: [[lambda]]
-    | :edge.dir   | both         |
-    | :edge.color | #f9e2af |
+  + equivalent :equivalence:bidirectional: :: [[lambda]]
 
 + Emacs Concepts :container:
   | fontcolor | #a6e3a1 |
@@ -7220,13 +7166,13 @@ it repeats are named once, by Org's own macros:
   | style     | dashed        |
   + &lt;&lt;monad&gt;&gt; Monad \\ η · μ · associativity
     | shape | parallelogram |
-    + &lt;&lt;adjoint&gt;&gt; Adjunction \\ F ⊣ G
+    + Adjunction \\ F ⊣ G
       | :edge.label     | every monad \\ is an adjunction |
       | :edge.color     | #f9e2af                    |
       | :edge.fontcolor | #f9e2af                    |
       | shape           | parallelogram                   |
     + models :equivalence: :: [[closures]]
-  + &lt;&lt;functor&gt;&gt; Functor \\ F : C → D
+  + Functor \\ F : C → D
     | shape | parallelogram |
     + F∘F with η,μ :: [[monad]]
 
@@ -7238,11 +7184,11 @@ it repeats are named once, by Org's own macros:
   - :lineage: :: direct lineage
   - :inspiration: :: inspiration
   - :equivalence: :: equivalence
-#+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="1433pt" height="944pt"
- viewBox="0.00 0.00 1433.00 944.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 915.51)">
-<polygon fill="#1e1e2e" stroke="none" points="-28.8,28.8 -28.8,-915.51 1404.65,-915.51 1404.65,28.8 -28.8,28.8"/>
-<text xml:space="preserve" text-anchor="middle" x="687.92" y="-865.61" font-family="Helvetica,sans-Serif" font-size="18.00" fill="#170206">From λ&#45;Calculus to Emacs Lisp</text>
+#+end_graph</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="1433pt" height="971pt"
+ viewBox="0.00 0.00 1433.00 971.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 942.41)">
+<polygon fill="#1e1e2e" stroke="none" points="-28.8,28.8 -28.8,-942.41 1404.65,-942.41 1404.65,28.8 -28.8,28.8"/>
+<text xml:space="preserve" text-anchor="middle" x="687.92" y="-892.51" font-family="Helvetica,sans-Serif" font-size="18.00" fill="#170206">From λ&#45;Calculus to Emacs Lisp</text>
 <g id="clust1" class="cluster">
 <polygon fill="#1e1e2e" stroke="#313244" stroke-width="2" stroke-dasharray="5,2" points="87.85,-189 87.85,-290.85 632.85,-290.85 632.85,-189 87.85,-189"/>
 <text xml:space="preserve" text-anchor="middle" x="360.35" y="-269.75" font-family="Helvetica,sans-Serif" font-size="18.00" fill="#a6e3a1">Emacs Concepts</text>
@@ -7261,67 +7207,67 @@ it repeats are named once, by Org's own macros:
 <text xml:space="preserve" text-anchor="start" x="509.85" y="-810.92" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#f38ba8">λ&#45;Calculus</text>
 <text xml:space="preserve" text-anchor="start" x="489.6" y="-793.67" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#f38ba8">(Church, 1930s)</text>
 </g>
-<!-- church -->
+<!-- Church Encoding ℕ, Bool, Pairs -->
 <g id="node2" class="node">
 <path fill="#313244" stroke="#89b4fa" stroke-width="2" d="M149.7,-647.75C149.7,-647.75 12,-647.75 12,-647.75 6,-647.75 0,-641.75 0,-635.75 0,-635.75 0,-603.65 0,-603.65 0,-597.65 6,-591.65 12,-591.65 12,-591.65 149.7,-591.65 149.7,-591.65 155.7,-591.65 161.7,-597.65 161.7,-603.65 161.7,-603.65 161.7,-635.75 161.7,-635.75 161.7,-641.75 155.7,-647.75 149.7,-647.75"/>
 <text xml:space="preserve" text-anchor="start" x="21.6" y="-623.65" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Church Encoding</text>
 <text xml:space="preserve" text-anchor="start" x="34.72" y="-606.4" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">ℕ, Bool, Pairs</text>
 </g>
-<!-- lambda&#45;&gt;church -->
+<!-- lambda&#45;&gt;Church Encoding ℕ, Bool, Pairs -->
 <g id="edge1" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M439.48,-795.66C251.67,-774.4 219.39,-758.1 116.64,-655.74"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="111.17,-650.27 119.37,-653.38 112.63,-651.02 117.18,-655.57 116.83,-655.93 116.48,-656.28 111.92,-651.73 114.28,-658.47 111.17,-650.27"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M439.74,-795.17C250.77,-772.89 218.44,-756.74 116.7,-655.7"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="111.3,-650.32 119.51,-653.42 112.76,-651.07 117.32,-655.61 116.97,-655.97 116.62,-656.32 112.06,-651.78 114.43,-658.52 111.3,-650.32"/>
 <text xml:space="preserve" text-anchor="middle" x="289.1" y="-724.8" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">encodes</text>
 </g>
-<!-- lisp -->
+<!-- Lisp (McCarthy, 1958) car · cdr · cons -->
 <g id="node4" class="node">
 <path fill="#1e3a5f" stroke="#89dceb" stroke-width="2" d="M616.2,-656.38C616.2,-656.38 475.5,-656.38 475.5,-656.38 469.5,-656.38 463.5,-650.38 463.5,-644.38 463.5,-644.38 463.5,-595.03 463.5,-595.03 463.5,-589.03 469.5,-583.03 475.5,-583.03 475.5,-583.03 616.2,-583.03 616.2,-583.03 622.2,-583.03 628.2,-589.03 628.2,-595.03 628.2,-595.03 628.2,-644.38 628.2,-644.38 628.2,-650.38 622.2,-656.38 616.2,-656.38"/>
 <text xml:space="preserve" text-anchor="start" x="531.98" y="-632.28" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#89dceb">Lisp</text>
 <text xml:space="preserve" text-anchor="start" x="485.1" y="-615.03" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#89dceb">(McCarthy, 1958)</text>
 <text xml:space="preserve" text-anchor="start" x="494.1" y="-597.78" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#89dceb">car · cdr · cons</text>
 </g>
-<!-- lambda&#45;&gt;lisp -->
+<!-- lambda&#45;&gt;Lisp (McCarthy, 1958) car · cdr · cons -->
 <g id="edge3" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M535.94,-766.9C531.7,-743.13 532.96,-722.06 539.73,-667.55"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="540.7,-659.77 543.28,-668.16 541.01,-661.39 540.2,-667.77 539.71,-667.71 539.21,-667.65 540.01,-661.26 536.14,-667.26 540.7,-659.77"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M535.58,-766.72C531.19,-742.88 532.5,-721.83 539.51,-667.43"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="540.52,-659.68 543.05,-668.08 540.81,-661.3 539.98,-667.68 539.48,-667.62 538.99,-667.55 539.82,-661.17 535.91,-667.15 540.52,-659.68"/>
 <text xml:space="preserve" text-anchor="middle" x="565.35" y="-724.8" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">inspired</text>
 </g>
-<!-- haskell -->
+<!-- Haskell pure · lazy · typed -->
 <g id="node9" class="node">
 <path fill="#2a1e3f" stroke="#cba6f7" stroke-width="2" d="M1182.45,-647.75C1182.45,-647.75 1037.25,-647.75 1037.25,-647.75 1031.25,-647.75 1025.25,-641.75 1025.25,-635.75 1025.25,-635.75 1025.25,-603.65 1025.25,-603.65 1025.25,-597.65 1031.25,-591.65 1037.25,-591.65 1037.25,-591.65 1182.45,-591.65 1182.45,-591.65 1188.45,-591.65 1194.45,-597.65 1194.45,-603.65 1194.45,-603.65 1194.45,-635.75 1194.45,-635.75 1194.45,-641.75 1188.45,-647.75 1182.45,-647.75"/>
 <text xml:space="preserve" text-anchor="start" x="1085.1" y="-623.65" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cba6f7">Haskell</text>
 <text xml:space="preserve" text-anchor="start" x="1046.85" y="-606.4" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cba6f7">pure · lazy · typed</text>
 </g>
-<!-- lambda&#45;&gt;haskell -->
+<!-- lambda&#45;&gt;Haskell pure · lazy · typed -->
 <g id="edge8" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M656.05,-810.99C866.85,-816.82 903.56,-798.38 1069.2,-655.04"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1074.84,-650.16 1071.15,-658.12 1073.98,-651.56 1069.12,-655.77 1068.79,-655.4 1068.46,-655.02 1073.33,-650.8 1066.43,-652.68 1074.84,-650.16"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M656.28,-810.68C868.46,-815.97 905.09,-797.66 1069.26,-655.11"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1074.83,-650.27 1071.15,-658.24 1073.97,-651.68 1069.12,-655.9 1068.79,-655.52 1068.46,-655.14 1073.32,-650.92 1066.43,-652.8 1074.83,-650.27"/>
 <text xml:space="preserve" text-anchor="middle" x="896.73" y="-724.8" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">formalises</text>
 </g>
-<!-- turing -->
+<!-- Turing Machines (equivalent power) -->
 <g id="node3" class="node">
 <path fill="#313244" stroke="#89b4fa" stroke-width="2" d="M408.7,-647.75C408.7,-647.75 259,-647.75 259,-647.75 253,-647.75 247,-641.75 247,-635.75 247,-635.75 247,-603.65 247,-603.65 247,-597.65 253,-591.65 259,-591.65 259,-591.65 408.7,-591.65 408.7,-591.65 414.7,-591.65 420.7,-597.65 420.7,-603.65 420.7,-603.65 420.7,-635.75 420.7,-635.75 420.7,-641.75 414.7,-647.75 408.7,-647.75"/>
 <text xml:space="preserve" text-anchor="start" x="277.23" y="-623.65" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Turing Machines</text>
 <text xml:space="preserve" text-anchor="start" x="268.6" y="-606.4" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">(equivalent power)</text>
 </g>
-<!-- church&#45;&gt;turing -->
+<!-- Church Encoding ℕ, Bool, Pairs&#45;&gt;Turing Machines (equivalent power) -->
 <g id="edge2" class="edge">
 <path fill="none" stroke="#f9e2af" stroke-width="2" stroke-dasharray="1,5" d="M162.57,-633.9C181.12,-634.53 202.99,-633.27 236.03,-630.12"/>
 <polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="243.73,-629.37 236.11,-633.73 242.22,-630.02 235.81,-630.65 235.76,-630.15 235.72,-629.65 242.12,-629.03 235.41,-626.57 243.73,-629.37"/>
 <text xml:space="preserve" text-anchor="start" x="184.87" y="-623.29" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">Church–</text>
 <text xml:space="preserve" text-anchor="start" x="173.62" y="-610.54" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">Turing thesis</text>
 </g>
-<!-- emacs -->
+<!-- Emacs Lisp buffers · modes · hooks -->
 <g id="node5" class="node">
 <path fill="#7c3aed" stroke="#a78bfa" stroke-width="3" d="M334.31,-422.98C334.31,-422.98 334.31,-434.52 334.31,-434.52 334.31,-440.29 328.75,-447.58 323.18,-449.11 323.18,-449.11 256.13,-467.49 256.13,-467.49 250.57,-469.01 239.23,-470.54 233.46,-470.54 233.46,-470.54 130.24,-470.54 130.24,-470.54 124.47,-470.54 113.13,-469.01 107.57,-467.49 107.57,-467.49 40.52,-449.11 40.52,-449.11 34.95,-447.58 29.39,-440.29 29.39,-434.52 29.39,-434.52 29.39,-422.98 29.39,-422.98 29.39,-417.21 34.95,-409.92 40.52,-408.39 40.52,-408.39 107.57,-390.01 107.57,-390.01 113.13,-388.49 124.47,-386.96 130.24,-386.96 130.24,-386.96 233.46,-386.96 233.46,-386.96 239.23,-386.96 250.57,-388.49 256.13,-390.01 256.13,-390.01 323.18,-408.39 323.18,-408.39 328.75,-409.92 334.31,-417.21 334.31,-422.98"/>
 <path fill="none" stroke="#a78bfa" stroke-width="3" d="M338.31,-420.39C338.31,-420.39 338.31,-437.11 338.31,-437.11 338.31,-443.11 332.52,-450.7 326.74,-452.28 326.74,-452.28 257.11,-471.37 257.11,-471.37 251.33,-472.95 239.54,-474.54 233.54,-474.54 233.54,-474.54 130.16,-474.54 130.16,-474.54 124.16,-474.54 112.37,-472.95 106.59,-471.37 106.59,-471.37 36.96,-452.28 36.96,-452.28 31.18,-450.7 25.39,-443.11 25.39,-437.11 25.39,-437.11 25.39,-420.39 25.39,-420.39 25.39,-414.39 31.18,-406.8 36.96,-405.22 36.96,-405.22 106.59,-386.13 106.59,-386.13 112.37,-384.55 124.16,-382.96 130.16,-382.96 130.16,-382.96 233.54,-382.96 233.54,-382.96 239.54,-382.96 251.33,-384.55 257.11,-386.13 257.11,-386.13 326.74,-405.22 326.74,-405.22 332.52,-406.8 338.31,-414.39 338.31,-420.39"/>
 <text xml:space="preserve" text-anchor="start" x="144.72" y="-432.9" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#ffffff">Emacs Lisp</text>
 <text xml:space="preserve" text-anchor="start" x="103.85" y="-416.4" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#ffffff">buffers · modes · hooks</text>
 </g>
-<!-- lisp&#45;&gt;emacs -->
+<!-- Lisp (McCarthy, 1958) car · cdr · cons&#45;&gt;Emacs Lisp buffers · modes · hooks -->
 <g id="edge4" class="edge">
-<path fill="none" stroke="#89dceb" stroke-width="2" d="M462.63,-596.85C320.37,-557.13 284.39,-540.99 229.73,-482.89"/>
-<polygon fill="#89dceb" stroke="#89dceb" stroke-width="2" points="224.62,-477.37 232.7,-480.79 226.05,-478.18 230.43,-482.9 230.06,-483.24 229.7,-483.58 225.32,-478.86 227.42,-485.69 224.62,-477.37"/>
+<path fill="none" stroke="#89dceb" stroke-width="2" d="M462.66,-596.03C321.04,-555.12 284.37,-538.81 230.87,-483.2"/>
+<polygon fill="#89dceb" stroke="#89dceb" stroke-width="2" points="225.58,-477.61 233.69,-480.94 227.02,-478.4 231.44,-483.07 231.08,-483.42 230.72,-483.76 226.29,-479.09 228.47,-485.89 225.58,-477.61"/>
 <text xml:space="preserve" text-anchor="middle" x="290.35" y="-521.1" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">subset of</text>
 </g>
 <!-- macros -->
@@ -7330,10 +7276,10 @@ it repeats are named once, by Org's own macros:
 <text xml:space="preserve" text-anchor="start" x="343.48" y="-229" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Macros</text>
 <text xml:space="preserve" text-anchor="start" x="317.6" y="-211.75" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">(code&#45;as&#45;data)</text>
 </g>
-<!-- lisp&#45;&gt;macros -->
+<!-- Lisp (McCarthy, 1958) car · cdr · cons&#45;&gt;macros -->
 <g id="edge6" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M512.47,-582.06C381.05,-433.33 370.94,-411.4 368.39,-264.05"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="368.26,-256.13 371.99,-264.07 368.79,-257.68 368.89,-264.12 368.39,-264.12 367.89,-264.13 367.79,-257.7 364.79,-264.18 368.26,-256.13"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M513.39,-582.2C381.53,-429.36 371.13,-407.4 368.44,-264.08"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="368.3,-256.44 372.04,-264.38 368.83,-258 368.94,-264.43 368.44,-264.44 367.94,-264.45 367.83,-258.02 364.84,-264.5 368.3,-256.44"/>
 <text xml:space="preserve" text-anchor="middle" x="443.98" y="-425.62" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">enables</text>
 </g>
 <!-- closures -->
@@ -7342,10 +7288,10 @@ it repeats are named once, by Org's own macros:
 <text xml:space="preserve" text-anchor="start" x="524.23" y="-229" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Closures</text>
 <text xml:space="preserve" text-anchor="start" x="504.35" y="-211.75" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">(lexical scope)</text>
 </g>
-<!-- lisp&#45;&gt;closures -->
+<!-- Lisp (McCarthy, 1958) car · cdr · cons&#45;&gt;closures -->
 <g id="edge7" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M531.72,-582.28C475.76,-432.89 476.08,-411.22 537.84,-263.15"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="540.86,-255.92 541.1,-264.69 540.72,-257.56 538.24,-263.5 537.78,-263.31 537.32,-263.11 539.8,-257.17 534.46,-261.92 540.86,-255.92"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M532.27,-582.24C476.29,-426.8 476.26,-405.03 537.31,-263.16"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="540.46,-255.87 540.59,-264.65 540.3,-257.51 537.75,-263.42 537.29,-263.22 536.83,-263.02 539.38,-257.11 533.98,-261.79 540.46,-255.87"/>
 <text xml:space="preserve" text-anchor="middle" x="570.85" y="-425.62" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">provides</text>
 </g>
 <!-- advice -->
@@ -7354,22 +7300,22 @@ it repeats are named once, by Org's own macros:
 <text xml:space="preserve" text-anchor="start" x="151.97" y="-229" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Advice</text>
 <text xml:space="preserve" text-anchor="start" x="117.85" y="-211.75" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">(open recursion)</text>
 </g>
-<!-- emacs&#45;&gt;advice -->
+<!-- Emacs Lisp buffers · modes · hooks&#45;&gt;advice -->
 <g id="edge5" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M163.56,-381.9C143.95,-329.1 143.55,-310.4 160.24,-263.61"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="162.97,-256.15 163.6,-264.9 162.9,-257.79 160.69,-263.84 160.22,-263.66 159.75,-263.49 161.96,-257.45 156.84,-262.43 162.97,-256.15"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M163.64,-381.51C144.16,-328.4 143.72,-309.67 160.21,-263.55"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="162.89,-256.23 163.52,-264.98 162.82,-257.86 160.6,-263.91 160.14,-263.74 159.67,-263.56 161.88,-257.52 156.76,-262.5 162.89,-256.23"/>
 <text xml:space="preserve" text-anchor="middle" x="209.1" y="-323.77" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">implements</text>
 </g>
-<!-- ghc -->
+<!-- GHC Core → STG → Cmm -->
 <g id="node10" class="node">
 <path fill="#2a1e3f" stroke="#cba6f7" stroke-width="2" d="M1221.45,-456.8C1221.45,-456.8 1064.25,-456.8 1064.25,-456.8 1058.25,-456.8 1052.25,-450.8 1052.25,-444.8 1052.25,-444.8 1052.25,-412.7 1052.25,-412.7 1052.25,-406.7 1058.25,-400.7 1064.25,-400.7 1064.25,-400.7 1221.45,-400.7 1221.45,-400.7 1227.45,-400.7 1233.45,-406.7 1233.45,-412.7 1233.45,-412.7 1233.45,-444.8 1233.45,-444.8 1233.45,-450.8 1227.45,-456.8 1221.45,-456.8"/>
 <text xml:space="preserve" text-anchor="start" x="1127.47" y="-432.7" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cba6f7">GHC</text>
 <text xml:space="preserve" text-anchor="start" x="1073.85" y="-415.45" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cba6f7">Core → STG → Cmm</text>
 </g>
-<!-- haskell&#45;&gt;ghc -->
+<!-- Haskell pure · lazy · typed&#45;&gt;GHC Core → STG → Cmm -->
 <g id="edge9" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M1127.72,-590.85C1157.88,-541.04 1161.19,-524.92 1150.58,-467.67"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1149.14,-460.11 1154.18,-467.29 1149.93,-461.55 1151.13,-467.87 1150.64,-467.97 1150.15,-468.06 1148.94,-461.74 1147.11,-468.64 1149.14,-460.11"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M1127.55,-590.91C1157.98,-540.34 1161.4,-524.22 1150.75,-467.71"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1149.22,-459.88 1154.29,-467.04 1150.01,-461.31 1151.24,-467.63 1150.75,-467.73 1150.26,-467.82 1149.03,-461.51 1147.22,-468.42 1149.22,-459.88"/>
 </g>
 <!-- monad -->
 <g id="node11" class="node">
@@ -7377,62 +7323,62 @@ it repeats are named once, by Org's own macros:
 <text xml:space="preserve" text-anchor="start" x="805.6" y="-432.7" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Monad</text>
 <text xml:space="preserve" text-anchor="start" x="763.6" y="-415.45" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">η · μ · associativity</text>
 </g>
-<!-- haskell&#45;&gt;monad -->
+<!-- Haskell pure · lazy · typed&#45;&gt;monad -->
 <g id="edge10" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M1079.2,-590.92C1041.48,-556.27 1017.21,-538.95 935.64,-490.88"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="929.13,-487.05 937.85,-488 930.73,-487.41 936.28,-490.68 936.02,-491.11 935.77,-491.54 930.22,-488.27 934.2,-494.21 929.13,-487.05"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M1080.59,-590.92C1042.93,-554.72 1019.08,-537.39 937.91,-490.61"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="931.45,-486.9 940.18,-487.76 933.06,-487.24 938.64,-490.45 938.39,-490.88 938.14,-491.32 932.56,-488.11 936.59,-494.01 931.45,-486.9"/>
 <text xml:space="preserve" text-anchor="middle" x="1026.1" y="-521.1" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">uses</text>
 </g>
 <!-- monad&#45;&gt;closures -->
 <g id="edge14" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="1,5" d="M783.38,-371.72C717.24,-289.81 690.68,-264.95 635.39,-246.55"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="627.81,-244.15 636.52,-243.14 629.45,-244.15 635.59,-246.09 635.44,-246.57 635.29,-247.05 629.15,-245.1 634.35,-250 627.81,-244.15"/>
-<text xml:space="preserve" text-anchor="middle" x="1093.85" y="-323.77" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">models</text>
+<path fill="none" stroke="#f9e2af" stroke-width="2" stroke-dasharray="1,5" d="M783.28,-371.72C717.18,-290.01 690.57,-265.07 635.65,-246.69"/>
+<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="628.15,-244.3 636.86,-243.3 629.79,-244.3 635.92,-246.25 635.77,-246.73 635.62,-247.2 629.49,-245.25 634.68,-250.16 628.15,-244.3"/>
+<text xml:space="preserve" text-anchor="middle" x="1093.85" y="-323.77" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">models</text>
 </g>
-<!-- adjoint -->
+<!-- Adjunction F ⊣ G -->
 <g id="node13" class="node">
 <path fill="#313244" stroke="#89b4fa" stroke-width="2" d="M937.84,-281.15C937.84,-281.15 769.37,-281.15 769.37,-281.15 763.37,-281.15 754.95,-275.66 752.53,-270.17 752.53,-270.17 712.71,-179.93 712.71,-179.93 710.28,-174.44 713.86,-168.95 719.86,-168.95 719.86,-168.95 888.33,-168.95 888.33,-168.95 894.33,-168.95 902.75,-174.44 905.17,-179.93 905.17,-179.93 944.99,-270.17 944.99,-270.17 947.42,-275.66 943.84,-281.15 937.84,-281.15"/>
 <text xml:space="preserve" text-anchor="start" x="792.1" y="-229" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Adjunction</text>
 <text xml:space="preserve" text-anchor="start" x="808.98" y="-211.75" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">F ⊣ G</text>
 </g>
-<!-- monad&#45;&gt;adjoint -->
+<!-- monad&#45;&gt;Adjunction F ⊣ G -->
 <g id="edge12" class="edge">
-<path fill="none" stroke="#f9e2af" stroke-width="2" d="M843.84,-371.85C853.24,-334.02 856.16,-313.1 852.6,-291.89"/>
-<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="850.94,-284.11 856.13,-291.18 851.76,-285.53 853.1,-291.83 852.61,-291.93 852.12,-292.04 850.78,-285.74 849.09,-292.68 850.94,-284.11"/>
+<path fill="none" stroke="#f9e2af" stroke-width="2" d="M843.04,-371.76C851.94,-333.92 854.89,-312.81 851.87,-292.2"/>
+<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="850.37,-284.45 855.42,-291.62 851.16,-285.89 852.38,-292.21 851.89,-292.3 851.4,-292.4 850.18,-286.08 848.35,-292.98 850.37,-284.45"/>
 <text xml:space="preserve" text-anchor="middle" x="867.48" y="-330.15" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">every monad</text>
 <text xml:space="preserve" text-anchor="middle" x="867.48" y="-317.4" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">is an adjunction</text>
 </g>
-<!-- combinatory -->
+<!-- Combinatory Logic (Schönfinkel/Curry) -->
 <g id="node12" class="node">
-<ellipse fill="#45475a" stroke="#fab387" stroke-width="2" cx="224.85" cy="-806.97" rx="124.95" ry="39.67"/>
-<text xml:space="preserve" text-anchor="start" x="159.97" y="-810.92" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#fab387">Combinatory Logic</text>
-<text xml:space="preserve" text-anchor="start" x="158.1" y="-793.67" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#fab387">(Schönfinkel/Curry)</text>
+<ellipse fill="#45475a" stroke="#fab387" stroke-width="2" cx="987.85" cy="-806.97" rx="124.95" ry="39.67"/>
+<text xml:space="preserve" text-anchor="start" x="922.98" y="-810.92" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#fab387">Combinatory Logic</text>
+<text xml:space="preserve" text-anchor="start" x="921.1" y="-793.67" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#fab387">(Schönfinkel/Curry)</text>
 </g>
-<!-- combinatory&#45;&gt;lambda -->
+<!-- Combinatory Logic (Schönfinkel/Curry)&#45;&gt;lambda -->
 <g id="edge11" class="edge">
-<path fill="none" stroke="#f9e2af" stroke-width="2" d="M316.66,-840.45C351.68,-848.31 383.62,-845.46 443.89,-831.9"/>
-<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="317.51,-837.77 309.07,-838.53 316.14,-843.2 317.51,-837.77"/>
-<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="451.44,-830.18 444.44,-835.47 450.03,-831.01 443.75,-832.45 443.64,-831.96 443.53,-831.47 449.8,-830.04 442.84,-828.45 451.44,-830.18"/>
-<text xml:space="preserve" text-anchor="middle" x="396.67" y="-847.46" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">equivalent</text>
+<path fill="none" stroke="#f9e2af" stroke-width="2" stroke-dasharray="1,5" d="M556.36,-810.78C780.98,-892.18 787.53,-892.28 978.19,-811.08"/>
+<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="557.52,-808.22 549.05,-808.13 555.61,-813.49 557.52,-808.22"/>
+<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="985.31,-808.05 979.36,-814.5 984.07,-809.12 978.15,-811.65 977.95,-811.19 977.75,-810.73 983.68,-808.2 976.54,-807.87 985.31,-808.05"/>
+<text xml:space="preserve" text-anchor="middle" x="735.7" y="-874.36" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">equivalent</text>
 </g>
-<!-- functor -->
+<!-- Functor F : C → D -->
 <g id="node14" class="node">
 <path fill="#313244" stroke="#89b4fa" stroke-width="2" d="M926.95,-675.8C926.95,-675.8 775.8,-675.8 775.8,-675.8 769.8,-675.8 761.57,-670.23 759.33,-664.66 759.33,-664.66 723.22,-574.74 723.22,-574.74 720.98,-569.17 724.75,-563.6 730.75,-563.6 730.75,-563.6 881.9,-563.6 881.9,-563.6 887.9,-563.6 896.13,-569.17 898.37,-574.74 898.37,-574.74 934.48,-664.66 934.48,-664.66 936.72,-670.23 932.95,-675.8 926.95,-675.8"/>
 <text xml:space="preserve" text-anchor="start" x="802.6" y="-623.65" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">Functor</text>
 <text xml:space="preserve" text-anchor="start" x="797.35" y="-606.4" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#cdd6f4">F : C → D</text>
 </g>
-<!-- functor&#45;&gt;monad -->
+<!-- Functor F : C → D&#45;&gt;monad -->
 <g id="edge13" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M849.81,-562.64C853.93,-543.57 852.59,-525.9 845.78,-495.54"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="844.05,-488.07 849.36,-495.04 844.89,-489.48 846.34,-495.75 845.86,-495.86 845.37,-495.97 843.91,-489.7 842.35,-496.67 844.05,-488.07"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M850.38,-562.67C854.98,-543.1 853.79,-525.63 846.83,-495.86"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="844.94,-488.11 850.33,-495.03 845.8,-489.51 847.32,-495.77 846.83,-495.89 846.35,-496 844.82,-489.75 843.34,-496.74 844.94,-488.11"/>
 <text xml:space="preserve" text-anchor="middle" x="858.85" y="-521.1" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">F∘F with η,μ</text>
 </g>
 <!-- legend_1 -->
 <!-- legend_1_end -->
 <!-- legend_1&#45;&gt;legend_1_end -->
 <g id="edge15" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" d="M1293.83,-804.72C1325.32,-732.51 1326.27,-728.66 1296.68,-632.18"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1294.34,-624.56 1300.13,-631.15 1295.28,-625.91 1297.17,-632.06 1296.69,-632.21 1296.21,-632.35 1294.32,-626.2 1293.25,-633.26 1294.34,-624.56"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" d="M1293.84,-804.7C1325.58,-731.95 1326.54,-728.08 1296.72,-632.12"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1294.36,-624.54 1300.17,-631.11 1295.3,-625.89 1297.21,-632.03 1296.74,-632.18 1296.26,-632.33 1294.35,-626.18 1293.3,-633.25 1294.36,-624.54"/>
 <text xml:space="preserve" text-anchor="middle" x="1326.22" y="-724.8" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">direct lineage</text>
 </g>
 <!-- legend_2 -->
@@ -7440,8 +7386,8 @@ it repeats are named once, by Org's own macros:
 <!-- legend_2_end -->
 <!-- legend_2&#45;&gt;legend_2_end -->
 <g id="edge16" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M1293.79,-426.23C1331.37,-325.1 1332.72,-320.01 1297.85,-236.93"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1294.84,-229.77 1301.26,-235.75 1295.91,-231.02 1298.4,-236.95 1297.94,-237.14 1297.48,-237.34 1294.98,-231.41 1294.62,-238.54 1294.84,-229.77"/>
+<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="5,2" d="M1293.78,-426.21C1331.23,-324.32 1332.58,-319.2 1297.83,-236.82"/>
+<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1294.84,-229.75 1301.27,-235.71 1295.91,-230.99 1298.42,-236.92 1297.96,-237.12 1297.5,-237.31 1294.99,-231.38 1294.64,-238.52 1294.84,-229.75"/>
 <text xml:space="preserve" text-anchor="middle" x="1318.72" y="-323.77" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">inspiration</text>
 </g>
 <!-- legend_3 -->
@@ -7449,9 +7395,9 @@ it repeats are named once, by Org's own macros:
 <!-- legend_3_end -->
 <!-- legend_3&#45;&gt;legend_3_end -->
 <g id="edge17" class="edge">
-<path fill="none" stroke="#6c7086" stroke-width="2" stroke-dasharray="1,5" d="M1293.58,-97.58C1305.06,-57.13 1306.51,-50.99 1297.91,-29.74"/>
-<polygon fill="#6c7086" stroke="#6c7086" stroke-width="2" points="1294.9,-22.61 1301.33,-28.58 1295.97,-23.86 1298.47,-29.79 1298.01,-29.98 1297.55,-30.18 1295.05,-24.24 1294.69,-31.38 1294.9,-22.61"/>
-<text xml:space="preserve" text-anchor="middle" x="1322.47" y="-55.85" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#a6e3a1">equivalence</text>
+<path fill="none" stroke="#f9e2af" stroke-width="2" stroke-dasharray="1,5" d="M1293.57,-97.57C1304.9,-57.12 1306.37,-50.84 1297.98,-29.94"/>
+<polygon fill="#f9e2af" stroke="#f9e2af" stroke-width="2" points="1294.89,-22.59 1301.31,-28.58 1295.96,-23.84 1298.45,-29.78 1297.99,-29.97 1297.53,-30.16 1295.03,-24.23 1294.67,-31.36 1294.89,-22.59"/>
+<text xml:space="preserve" text-anchor="middle" x="1322.47" y="-55.85" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#f9e2af">equivalence</text>
 </g>
 </g>
 </svg>

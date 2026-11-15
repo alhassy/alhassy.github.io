@@ -20,7 +20,7 @@ click it for its section below:
 </span>#+macro: tint lightyellow
 
 #+begin_graph =#+begin_graph=, at a glance ---hover a node for how, click it for more :direction right
-<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #931f8d; background-color: #f7ddf6;">syntax</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">shape</span><span style="background-color: #fff4c2;">=box </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">="rounded,filled" </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">=</span><span style="background-color: #fff4c2; text-decoration: underline;">{{{tint}}}</span><span style="background-color: #fff4c2;">
+<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #931f8d; background-color: #f7ddf6;">syntax</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">="rounded,filled" </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">=</span><span style="background-color: #fff4c2; text-decoration: underline;">{{{tint}}}</span><span style="background-color: #fff4c2;">
 </span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #1f938b; background-color: #ddf7f6;">topic</span><span style="background-color: #fde0ea;"> </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">penwidth</span><span style="background-color: #fde0ea;">=2 :</span><span style="color: #931f8d; background-color: #f7ddf6; font-weight: bold;">syntax</span><span style="background-color: #fde0ea;">:
 </span><span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">fontname</span>=Courier
 <span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">color</span>=gray40 <span style="color: #8b4513; font-weight: bold;">fontsize</span>=10
@@ -294,34 +294,36 @@ gives the label:
   + <span style="text-decoration: underline;"><a href="term">[[term]]</a></span>
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-- The id is the ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, else the text ---sans markup, links, footnotes, and tags.
+- The id is the ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, else the text ---sans markup, links, footnotes, and tags. So ~<span style="text-decoration: underline;"><a href="1">[[1]]</a></span>~ reaches
+  ~+ 1~, and ~C-c C-o~ on it jumps there, sans a ~<span style="text-decoration: underline;">&lt;&lt;1&gt;&gt;</span>~; a target earns its place only when the id should
+  differ from the text, or the text is long.
 - The label is the ~label~ row, else the text; markup makes it an HTML-like one.
 - Two items with one id are one node, so an item may appear twice to gain more children.
 
 <span style="color: #0184bc; font-weight: bold;">* Styling: one key-value syntax</span>
 
-Out of the box, Graphviz draws black ellipses; soon we want our tokens boxed and our rules round. Graphviz's
-attributes are key-value pairs, and Org's key-value syntax is the two-column table. So a table beneath an
+Out of the box, every node wears the same cream box; soon we want our tokens to read apart from our rules.
+Graphviz's attributes are key-value pairs, and Org's key-value syntax is the two-column table. So a table beneath an
 item styles that item: one syntax, from a single node up to the whole graph.
 
 <span style="color: #8b4513; font-weight: bold;">** A node's table, and two kinds of keys</span>
 
-In a parse tree, the leaves are tokens, straight from the lexer; we box them, so they read apart from the
+In a parse tree, the leaves are tokens, straight from the lexer; we tint them, so they read apart from the
 grammar's rules:
 <span style="color: #a0a1a7;">#+begin_graph :demo live
 </span>+ term
   + factor
-    + <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> <span style="text-decoration: underline;">NUMBER</span> 1
-      | shape | box   |
+    + <span style="text-decoration: underline;">NUMBER</span> 1
+      | fillcolor | lightblue |
   + STAR
-    | shape | box |
-    | label | *   |
+    | fillcolor | lightblue |
+    | label     | *         |
   + factor
     + <span style="text-decoration: underline;">NUMBER</span> 2
-      | shape | box |
+      | fillcolor | lightblue |
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-A <span style="font-style: italic;">/plain/</span> key, such as ~shape~, is a Graphviz attribute of the node, passed straight through. We quote its
+A <span style="font-style: italic;">/plain/</span> key, such as ~fillcolor~, is a Graphviz attribute of the node, passed straight through. We quote its
 value for you, so ~<span style="text-decoration: underline;">NUMBER</span> 1~, ~#00ff00~, and ~x -&gt; y~ all need no quotes; already-quoted values, and ~&lt;&#8230;&gt;~
 HTML labels, are left alone.
 
@@ -368,8 +370,8 @@ A reference is styled just the same; this is why an inline link graduates to one
 <span style="color: #8b4513; font-weight: bold;">** The whole graph: the #+begin_graph line</span>
 
 Small graphs deserve no preamble at all. So the header line takes the graph's title and any graph
-attribute; a parse tree laid out left to right, every node boxed, every arc grey:
-<span style="color: #a0a1a7;">#+begin_graph How 1 * 2 + 3 - 4 parses :direction right :node.shape box :edge.color grey :demo live
+attribute; a parse tree laid out left to right, every node a circle, every arc grey:
+<span style="color: #a0a1a7;">#+begin_graph How 1 * 2 + 3 - 4 parses :direction right :node.shape circle :edge.color grey :demo live
 </span>+ -
   + +
     + *
@@ -395,34 +397,29 @@ attribute; a parse tree laid out left to right, every node boxed, every arc grey
 
 <span style="color: #8b4513; font-weight: bold;">** When the preamble outgrows the line</span>
 
-A real graph's settings outgrow one line. Then ~#+graph:~, ~#+node:~, and ~#+edge:~ name what the table
-below them styles ---the graph, every node, every arc--- and they override the header. A drawer of any
-name, ~:SETTINGS:~ or ~:PALETTE:~, folds them away with ~TAB~, along with ~#+name:~ lines:
+A real graph's settings outgrow one line. Then ~#+graph:~, ~#+node:~, and ~#+edge:~ lines style the graph,
+every node, every arc ---by ~KEY=VALUE~ pairs, as Graphviz's own ~edge [fontsize=10 color=gray]~ writes
+them, a value with spaces in double quotes, beside any ~:tags:~--- and they override the header. A drawer
+of any name, ~:SETTINGS:~ or ~:PALETTE:~, folds them away with ~TAB~, along with ~#+name:~ lines:
 <span style="color: #a0a1a7;">#+begin_graph A compiler's front end :demo live
 </span><span style="font-weight: bold;">:SETTINGS:</span>
-<span style="color: #a626a4; font-weight: bold;">#+graph:</span>
-| rankdir  | LR        |
-| fontname | Helvetica |
-<span style="color: #a626a4; font-weight: bold;">#+node:</span>
-| shape    | box       |
-| style    | rounded   |
-| fontname | Helvetica |
-<span style="color: #a626a4; font-weight: bold;">#+edge:</span>
-| fontsize | 10   |
-| color    | gray |
+<span style="color: #a626a4; font-weight: bold;">#+graph:</span> <span style="color: #8b4513; font-weight: bold;">rankdir</span>=LR <span style="color: #8b4513; font-weight: bold;">fontname</span>=Helvetica
+<span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">style</span>=rounded <span style="color: #8b4513; font-weight: bold;">fontname</span>=Helvetica
+<span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">fontsize</span>=10 <span style="color: #8b4513; font-weight: bold;">color</span>=gray
 <span style="font-weight: bold;">:END:</span>
 + characters
   + <span style="font-weight: bold;">lexer ::</span> tokens
     + <span style="font-weight: bold;">parser ::</span> syntax tree
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-A short table may instead be written on its keyword's line, as Graphviz's own ~edge [fontsize=10
-color=gray]~ writes it: ~KEY=VALUE~ pairs, a value with spaces in double quotes, beside any ~:tags:~.
-The ~:SETTINGS:~ above is then three lines:
+When the pairs outgrow their line, a two-column table below the keyword holds them instead, a row a key,
+as a node's table does; a line's pairs and a table below it join:
 <span style="color: #a0a1a7;">#+begin_src org :tangle no
-</span>,#+graph: rankdir=LR fontname=Helvetica
-,#+node: shape=box style=rounded fontname=Helvetica
-,#+edge: fontsize=10 color=gray
+</span>,#+node:
+| style     | rounded,filled |
+| fillcolor | white          |
+| fontname  | Helvetica      |
+| fontcolor | gray30         |
 <span style="color: #a0a1a7;">#+end_src
 </span>Anything else on such a line is an error, rather than silently ignored. In Emacs, the keyword stands out,
 and so does each key that means something on its line ---a graph's attribute on ~#+graph:~, a node's on
@@ -435,17 +432,15 @@ so a mistake shows before we export: a typo, as ~colour=red~, or a misplaced key
 Sometimes a style belongs to one branch, not the whole graph. A compiler folds constants: ~1 * 2~ is
 known before the program runs, so its whole subtree collapses to ~2~. We want that subtree shaded. Org's
 properties are inherited: a ~:PROPERTIES:~ drawer on a heading reaches its subheadings. So it is with an
-item's ~#+node:~ and ~#+edge:~ tables: they style every node and arc beneath the item, while the item
+item's ~#+node:~ and ~#+edge:~ lines: they style every node and arc beneath the item, while the item
 itself keeps its own ~| key | value |~ rows:
 <span style="color: #a0a1a7;">#+begin_graph Constant folding :demo live
 </span>+ -
   + +
     + *
       | xlabel | folds to 2 |
-      <span style="color: #a626a4; font-weight: bold;">#+node:</span>
-      | fillcolor | lightgrey |
-      <span style="color: #a626a4; font-weight: bold;">#+edge:</span>
-      | style | dotted |
+      <span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">fillcolor</span>=lightgrey
+      <span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">style</span>=dotted
       + 1
       + 2
     + 3
@@ -454,7 +449,7 @@ itself keeps its own ~| key | value |~ rows:
 </span>
 Above, ~*~ keeps its plain look ---only what lies <span style="font-style: italic;">/beneath/</span> it is shaded--- just as a heading's own
 properties drawer is not one of its subheadings'. Graphviz scopes such defaults by an anonymous
-~subgraph~, which draws no box. A deeper item's tables override a shallower one's, as nested
+~subgraph~, which draws no box. A deeper item's lines override a shallower one's, as nested
 ~:PROPERTIES:~ do; a node first declared elsewhere keeps the defaults of where it was declared.
 
 <span style="color: #8b4513; font-weight: bold;">** Themes: a look for every graph</span>
@@ -477,34 +472,28 @@ container; so a new one is a ~push~ away, and a new default a ~setq~:
 </span>
 <span style="color: #0184bc; font-weight: bold;">* Saying it once: templates</span>
 
-A parse tree repeats itself: every token the same box, every rule the same ellipse. Restating those rows
-at each leaf is how styles drift apart. So we name them once: a ~#+name:~ table is a reusable bundle of
-rows, and a tag applies it. On a headline, ~:work:urgent:~ classifies the entry; on an item, tags classify
-the node:
+A parse tree repeats itself: every token the same tint, every rule the same outline. Restating those rows
+at each leaf is how styles drift apart. So we name them once: a ~#+name:~ line is a reusable bundle of
+~KEY=VALUE~ pairs ---as <span style="text-decoration: underline;"><a href="*When the preamble outgrows the line">#+edge: lines</a></span> take them--- and a tag applies it. On a headline,
+~:work:urgent:~ classifies the entry; on an item, tags classify the node:
 <span style="color: #a0a1a7;">#+begin_graph :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #571f93; background-color: #eaddf7;">token</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| shape     | box       |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fillcolor | lightblue |</span><span style="background-color: #fff4c2;">
-</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #591f93; background-color: #eaddf7;">rule</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| style | bold |</span><span style="background-color: #fde0ea;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #571f93; background-color: #eaddf7;">token</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">=lightblue
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #591f93; background-color: #eaddf7;">rule</span><span style="background-color: #fde0ea;"> </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">style</span><span style="background-color: #fde0ea;">=bold
 </span>
 + expr :<span style="color: #591f93; background-color: #eaddf7; font-weight: bold;">rule</span>:
   + term :<span style="color: #591f93; background-color: #eaddf7; font-weight: bold;">rule</span>:
     + <span style="text-decoration: underline;">NUMBER</span> 1 :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
-    + STAR :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
-      | label | * |
+    + * :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
     + <span style="text-decoration: underline;">NUMBER</span> 2 :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
   + <span style="text-decoration: underline;">PLUS</span> :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
     | fillcolor | pink |
   + <span style="text-decoration: underline;">NUMBER</span> 3 :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-A short template fits on its name's line, as ~KEY=VALUE~ pairs ---as <span style="text-decoration: underline;"><a href="*When the preamble outgrows the line">#+edge: lines</a></span> take them--- so the
-two above are, tersely, ~#+name: token shape=box fillcolor=lightblue~ and
-~#+name: rule style=bold~. Several such lines in a row are several templates, and a table below one adds
-rows to it. In Emacs, each template of a graph ---its name's line, and the table below it--- wears
-a background of its own, from ~org-graph-template-backgrounds~, so where one ends and the next begins
-shows at a glance.
+Several such lines in a row are several templates. A long template holds its rows in a table below its
+name instead, as a ~#+node:~ line may; a line's pairs and a table below it join. In Emacs, each template
+of a graph ---its name's line, and the table below it--- wears a background of its own, from
+~org-graph-template-backgrounds~, so where one ends and the next begins shows at a glance.
 
 Explicit rows win over a template's, so ~<span style="text-decoration: underline;">PLUS</span>~ above is pink. A line may carry several tags,
 ~:token:rule:~, each a template, the earlier winning on a clash ---save colors: when the tags' templates
@@ -521,11 +510,8 @@ template could apply to; in a link's description, or a description term, a tag s
 | ~#+name: keyword :token:~                | the template ~keyword~, which inherits ~token~                |
 
 <span style="color: #a0a1a7;">#+begin_graph :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #93911f; background-color: #f7f7dd;">recursion</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| color | red    |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| style | dashed |</span><span style="background-color: #fff4c2;">
-</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #1f9343; background-color: #ddf7e5;">keyword</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| fontname | Courier |</span><span style="background-color: #fde0ea;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #93911f; background-color: #f7f7dd;">recursion</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">color</span><span style="background-color: #fff4c2;">=red </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">=dashed
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #1f9343; background-color: #ddf7e5;">keyword</span><span style="background-color: #fde0ea;"> </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">fontname</span><span style="background-color: #fde0ea;">=Courier
 </span><span style="color: #a626a4; font-weight: bold;">#+node:</span> :<span style="color: #1f9343; background-color: #ddf7e5; font-weight: bold;">keyword</span>:
 
 + <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
@@ -568,12 +554,10 @@ A template inherits others by the tags on its name's line, as an item does: ~#+n
 ~token~, set in Courier. Its own rows win over those it inherits, as an item's explicit rows win over its
 tags':
 <span style="color: #a0a1a7;">#+begin_graph :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #571f93; background-color: #eaddf7;">token</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| shape | box |</span><span style="background-color: #fff4c2;">
-</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #1f9343; background-color: #ddf7e5;">keyword</span><span style="background-color: #fde0ea;"> :</span><span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span><span style="background-color: #fde0ea;">:
-</span><span style="background-color: #fde0ea;">| fontname | Courier |</span><span style="background-color: #fde0ea;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #571f93; background-color: #eaddf7;">token</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">=lightblue
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #1f9343; background-color: #ddf7e5;">keyword</span><span style="background-color: #fde0ea;"> :token: </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">fontname</span><span style="background-color: #fde0ea;">=Courier
 </span>
-+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
++ expression
   + if :<span style="color: #1f9343; background-color: #ddf7e5; font-weight: bold;">keyword</span>:
   + <span style="text-decoration: underline;">NUMBER</span> :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
 <span style="color: #a0a1a7;">#+end_graph
@@ -587,8 +571,7 @@ As with Babel's named tables, a ~#+name:~ table anywhere in the buffer, outside 
 every graph in the buffer may use; so a house style is named once per file rather than once per graph.
 A graph's own template of the same name wins, and a template inside one graph stays that graph's own:
 <span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
-</span><span style="color: #a626a4; font-weight: bold;">#+name:</span> token
-| shape | box |
+</span><span style="color: #a626a4; font-weight: bold;">#+name:</span> token <span style="color: #8b4513; font-weight: bold;">fillcolor</span>=lightblue
 
 #+begin_graph Lexing
 + 1 * 2 :<span style="color: #571f93; background-color: #eaddf7; font-weight: bold;">token</span>:
@@ -605,8 +588,7 @@ face, so they do not read as part of the label. Colons anywhere else are just te
 trailing ~:word:~ of its own ---Smalltalk's ~at:put:~ selector, say--- puts it in ~=verbatim=~, or in a
 ~| label |~ row:
 <span style="color: #a0a1a7;">#+begin_graph Colons that are just text :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #93321f; background-color: #f7e1dd;">faint</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| style | dotted |</span><span style="background-color: #fff4c2;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #93321f; background-color: #f7e1dd;">faint</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">=dotted
 </span>
 + Python's xs[1:2]
 + C++'s std::vector
@@ -646,12 +628,8 @@ templates. Within a container titled ~Legend~, an item ~- MEANING :T:~ is a lege
 by template ~T~, captioned ~MEANING~--- rather than a node; it reads as prose, a caption tagged with what it
 explains:
 <span style="color: #a0a1a7;">#+begin_graph :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #571f93; background-color: #eaddf7;">token</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| shape     | box       |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fillcolor | lightblue |</span><span style="background-color: #fff4c2;">
-</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #93911f; background-color: #f7f7dd;">recursion</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| color | red    |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| style | dashed |</span><span style="background-color: #fde0ea;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #571f93; background-color: #eaddf7;">token</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">=lightblue
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #93911f; background-color: #f7f7dd;">recursion</span><span style="background-color: #fde0ea;"> </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">color</span><span style="background-color: #fde0ea;">=red </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">style</span><span style="background-color: #fde0ea;">=dashed
 </span>
 + <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expression
   + term
@@ -690,8 +668,7 @@ compiler is half built. ~[X]~, ~[-]~, and ~[ ]~ apply the templates ~checked~, ~
 as a ~:checked:~ tag would; and ~C-c C-c~ on a checkbox toggles it, as Org's own does, then renders the
 graph:
 <span style="color: #a0a1a7;">#+begin_graph Our calculator, so far :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #5b931f; background-color: #ebf7dd;">unchecked</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| style | dashed |</span><span style="background-color: #fff4c2;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #5b931f; background-color: #ebf7dd;">unchecked</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">=dashed
 </span>
 + <span style="font-weight: bold;">[-]</span> compiler
   + <span style="font-weight: bold;">[X]</span> lexer
@@ -768,14 +745,14 @@ line break; in a graph, it breaks the node's label. Since a label seldom wants a
 mid-line too, so a two-line node stays one terse line:
 <span style="color: #a0a1a7;">#+begin_graph :demo live
 </span>+ parser
-  + <span style="font-weight: bold;">reports ::</span> <span style="text-decoration: underline;">&lt;&lt;err&gt;&gt;</span> Unexpected token =)= \\ at line 3, column 7
+  + <span style="font-weight: bold;">reports ::</span> Unexpected token =)= \\ at line 3, column 7
   + <span style="font-weight: bold;">*Recursive descent*</span> \\
     one function per rule
   + <span style="font-weight: bold;">every grammar \\ needs a lexer ::</span> lexer
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 The label becomes an HTML-like one, as with markup; the id joins the lines with a space, so a node reached
-by a link usually wants a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~, as ~err~ above. It is the one line break wherever a label is
+by a link usually wants a terse ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~. It is the one line break wherever a label is
 written: a description term, as above; a table value, ~| :edge.label | consumes \\ tokens |~; a
 record's cell.
 
@@ -862,7 +839,6 @@ picture of the rules it follows:
   + <span style="text-decoration: underline;"><a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">[[https://en.wikipedia.org/wiki/Recursive_descent_parser][Recursive descent]]</a></span>
   + <span style="text-decoration: underline;"><a href="https://en.wikipedia.org/wiki/LR_parser">[[https://en.wikipedia.org/wiki/LR_parser][LR]]</a></span> parsing
   + <span style="font-weight: bold;">then, typing by ::</span> <span style="text-decoration: underline;"><a href="file:/home/runner/work/alhassy.github.io/alhassy.github.io/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png">[[file:/home/runner/work/alhassy.github.io/alhassy.github.io/.redirect-images/raw.githubusercontent.com/alhassy/org-special-block-extras/master/images/inference-rules.png]]</a></span>
-    | shape  | box |
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 A node has one ~URL~, so an item with two web links is an error. Graphviz finds the image relative to the
@@ -956,7 +932,7 @@ table styles the box, and its ~#+node:~ and ~#+edge:~ set defaults within it:
 </span>+ compiler
   + Front end :<span style="color: #e44649; font-weight: bold;">container</span>:
     | bgcolor | lightgrey |
-    <span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">shape</span>=box
+    <span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">fillcolor</span>=white
     + lexer
       + parser
         + :<span style="color: #e44649; font-weight: bold;">container</span>:
@@ -1007,22 +983,22 @@ tags of other kinds color the node in stripes, as above:
 Some nodes have insides: an AST node has a left operand, an operator, and a right operand, and each arc
 should leave from its own field. A record is a node drawn as a table, and Org already has tables: an
 item's table is its label, laid out exactly as written ---unless it is the ~| key | value |~ rows of
-<span style="text-decoration: underline;"><a href="*A node's table, and two kinds of keys">a node's table</a></span>. A cell's ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ is its <span style="font-style: italic;">/port/</span>, a cell's ~<span style="text-decoration: underline;"><a href="link">[[link]]</a></span>~
-is an arc from that port, and an arc reaches a port by ~record::port~ ---just as Org's
-~<span style="text-decoration: underline;"><a href="file:notes.org::target">[[file:notes.org::target]]</a></span>~ reaches into a file:
+<span style="text-decoration: underline;"><a href="*A node's table, and two kinds of keys">a node's table</a></span>. A cell's ~<span style="text-decoration: underline;"><a href="link">[[link]]</a></span>~ is an arc from that cell, its
+<span style="font-style: italic;">/port/</span>, named by its text; a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ makes any cell a port; and an arc reaches a port by
+~record::port~ ---just as Org's ~<span style="text-decoration: underline;"><a href="file:notes.org::target">[[file:notes.org::target]]</a></span>~ reaches into a file:
 <span style="color: #a0a1a7;">#+begin_graph Our expression, as an AST :demo live
 </span>+ minus
-  | <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">]</a><a href="plus">]</a></span> | - | <span style="text-decoration: underline;">&lt;&lt;r&gt;&gt;</span> right <span style="text-decoration: underline;"><a href="four">[[</a><a href="four">four]</a><a href="four">]</a></span> |
+  | left <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">]</a><a href="plus">]</a></span> | - | right <span style="text-decoration: underline;"><a href="4">[[</a><a href="4">4]</a><a href="4">]</a></span> |
 + <span style="text-decoration: underline;">plus</span>
-  | <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="times">[[</a><a href="times">times]</a><a href="times">]</a></span> | + | <span style="text-decoration: underline;">&lt;&lt;r&gt;&gt;</span> right <span style="text-decoration: underline;"><a href="three">[[</a><a href="three">three]</a><a href="three">]</a></span> |
+  | left <span style="text-decoration: underline;"><a href="times">[[</a><a href="times">times]</a><a href="times">]</a></span> | + | right <span style="text-decoration: underline;"><a href="3">[[</a><a href="3">3]</a><a href="3">]</a></span> |
 + times
-  | <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="one">[[</a><a href="one">one]</a><a href="one">]</a></span> | * | <span style="text-decoration: underline;">&lt;&lt;r&gt;&gt;</span> right <span style="text-decoration: underline;"><a href="two">[[</a><a href="two">two]</a><a href="two">]</a></span> |
-+ <span style="text-decoration: underline;">&lt;&lt;one&gt;&gt;</span> 1
-+ <span style="text-decoration: underline;">&lt;&lt;two&gt;&gt;</span> 2
-+ <span style="text-decoration: underline;">&lt;&lt;three&gt;&gt;</span> 3
-+ <span style="text-decoration: underline;">&lt;&lt;four&gt;&gt;</span> 4
+  | left <span style="text-decoration: underline;"><a href="1">[[</a><a href="1">1]</a><a href="1">]</a></span> | * | right <span style="text-decoration: underline;"><a href="2">[[</a><a href="2">2]</a><a href="2">]</a></span> |
++ 1
++ 2
++ 3
++ 4
 + evaluator
-  + <span style="font-weight: bold;">starts at ::</span> <span style="text-decoration: underline;"><a href="minus::l">[[minus::l]]</a></span>
+  + <span style="font-weight: bold;">starts at ::</span> <span style="text-decoration: underline;"><a href="minus::left">[[minus::left]]</a></span>
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 Org tables have no merged cells, so two markers stand in for them: ~^~ continues the cell above, and an
@@ -1036,7 +1012,7 @@ over three rows; a token's heading spans its two fields:
   |<span style="font-weight: bold; font-style: italic;"> ^           | term          </span>|
 + token
   | Token  |        |
-  | <span style="text-decoration: underline;">&lt;&lt;kind&gt;&gt;</span> kind | lexeme |
+  | kind   | lexeme |
   | <span style="text-decoration: underline;">NUMBER</span> | <span style="font-weight: bold; font-style: italic;">="42"=</span><span style="font-weight: bold; font-style: italic;"> </span>|
 <span style="color: #a0a1a7;">#+end_graph
 </span>
@@ -1063,10 +1039,11 @@ markup:
   and templates apply as usual; ~color~, ~fillcolor~, and ~fontcolor~ color the table. An item may carry
   both tables, a blank line between, since Org reads adjacent rows as one table.
 - A record is ~shape=plain~, the table being its whole outline; an explicit ~shape~ row wins.
-- A cell with a link but no target is ported by its text, spaces as underscores; ~<span style="text-decoration: underline;">&lt;&lt;left operand&gt;&gt;</span>~ is
-  likewise reached as ~<span style="text-decoration: underline;"><a href="minus::left operand">[[minus::left operand]]</a></span>~.
-- Ports belong to their record, so all three records above have an ~l~ port: ~minus::l~, ~<span style="text-decoration: underline;">plus</span>::l~.
-- A link's tags style its arc, as in an item's text: ~| <span style="text-decoration: underline;">&lt;&lt;l&gt;&gt;</span> left <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">][:dashed:]]</a></span> |~ draws a dashed
+- A port's name is its cell's text sans links, spaces as underscores: ~<span style="text-decoration: underline;"><a href="minus::left operand">[[minus::left operand]]</a></span>~ reaches
+  ~| left operand <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">]]</a></span> |~. A ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ names a cell sans link, or gives a long one a terse name:
+  ~| <span style="text-decoration: underline;">&lt;&lt;x&gt;&gt;</span> where the parse resumes |~ is ~<span style="text-decoration: underline;"><a href="rec::x">[[rec::x]]</a></span>~.
+- Ports belong to their record, so all three records above have a ~left~ port: ~minus::left~, ~<span style="text-decoration: underline;">plus</span>::left~.
+- A link's tags style its arc, as in an item's text: ~| left <span style="text-decoration: underline;"><a href="plus">[[</a></span><span style="text-decoration: underline;"><a href="plus">plus</a></span><span style="text-decoration: underline;"><a href="plus">][:dashed:]]</a></span> |~ draws a dashed
   arc. A cell's trailing tags are an error; write ~=:x:=~ for literal text.
 - ~a::b~ names a port only when ~a~ names a record; otherwise it is an ordinary node, such as
   ~std::vector~. Record and port names may contain dots: ~<span style="text-decoration: underline;"><a href="org.el::v1.2">[[org.el::v1.2]]</a></span>~.
@@ -1077,7 +1054,7 @@ markup:
 Every graph so far flows top to bottom; a mind map grows outward from its centre. Graphviz's ~layout~
 attribute picks its engine, so the header line turns a tree into a mind map: ~twopi~ places ~root~ in the
 middle and each generation on a ring around it. With ~:wrap~, long labels stay compact:
-<span style="color: #a0a1a7;">#+begin_graph Parsing, radially :layout twopi :root Parsing :wrap 12 :node.shape box :node.style rounded :demo live
+<span style="color: #a0a1a7;">#+begin_graph Parsing, radially :layout twopi :root Parsing :wrap 12 :node.style rounded :demo live
 </span><span style="color: #a626a4; font-weight: bold;">#+edge:</span> :<span style="color: #e44649; font-weight: bold;">undirected</span>:
 + Parsing
   + Top-down
@@ -1155,7 +1132,7 @@ A class is the table we would write anyway, as in <span style="text-decoration: 
 tagged with its kind. The arrow points at what is inherited, implemented, or depended on; a diamond sits at the
 owner's end:
 <span style="color: #a0a1a7;">#+begin_graph :direction up :demo live
-</span>+ <span style="text-decoration: underline;">&lt;&lt;Animal&gt;&gt;</span> Animal
+</span>+ Animal
   | <span style="font-weight: bold; font-style: italic;">&lt;l&gt;</span>               |
   | <span style="font-weight: bold;">*Animal*</span>          |
   |-------------------|
@@ -1173,25 +1150,25 @@ owner's end:
   + <span style="text-decoration: underline;"><a href="Owner">[[Owner][:aggregates:]]</a></span>
   + <span style="text-decoration: underline;"><a href="Bone">[[Bone][:depends:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;Pet&gt;&gt;</span> &#171;interface&#187; Pet
-+ <span style="text-decoration: underline;">&lt;&lt;Tail&gt;&gt;</span> Tail
-+ <span style="text-decoration: underline;">&lt;&lt;Owner&gt;&gt;</span> Owner
-+ <span style="text-decoration: underline;">&lt;&lt;Bone&gt;&gt;</span> Bone
++ Tail
++ Owner
++ Bone
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #8b4513; font-weight: bold;">** A state machine: pseudo-states as tags</span>
 
 A state machine is an outline of what follows what; the description term is the event, or the guard,
-that takes us along the arc. An unnamed ~:start:~, ~:final:~, or ~:choice:~ item needs a ~<span style="text-decoration: underline;">&lt;&lt;target&gt;&gt;</span>~ only
-to be told apart; a composite state is a <span style="text-decoration: underline;"><a href="*Containers draw boxes">container</a></span>:
+that takes us along the arc. A ~:start:~, ~:final:~, or ~:choice:~ item of tags alone is a node of its
+own, apart from every other; a composite state is a <span style="text-decoration: underline;"><a href="*Containers draw boxes">container</a></span>:
 <span style="color: #a0a1a7;">#+begin_graph :direction right :demo live
-</span>+ <span style="text-decoration: underline;">&lt;&lt;start&gt;&gt;</span> :<span style="color: #e44649; font-weight: bold;">start</span>:
-  + <span style="text-decoration: underline;">&lt;&lt;idle&gt;&gt;</span> Idle :<span style="color: #e44649; font-weight: bold;">state</span>:
+</span>+ :<span style="color: #e44649; font-weight: bold;">start</span>:
+  + Idle :<span style="color: #e44649; font-weight: bold;">state</span>:
     + <span style="font-weight: bold;">coin ::</span> Paid :<span style="color: #e44649; font-weight: bold;">state</span>:
-      + <span style="font-weight: bold;">push ::</span> <span style="text-decoration: underline;">&lt;&lt;check&gt;&gt;</span> :<span style="color: #e44649; font-weight: bold;">choice</span>:
+      + <span style="font-weight: bold;">push ::</span> :<span style="color: #e44649; font-weight: bold;">choice</span>:
         + <span style="font-weight: bold;">[stock] ::</span> Vending :<span style="color: #e44649; font-weight: bold;">state</span>:
-          + <span style="font-weight: bold;">done ::</span> <span style="text-decoration: underline;"><a href="idle">[[idle]]</a></span>
+          + <span style="font-weight: bold;">done ::</span> <span style="text-decoration: underline;"><a href="Idle">[[Idle]]</a></span>
         + <span style="font-weight: bold;">[empty] ::</span> Refunding :<span style="color: #e44649; font-weight: bold;">state</span>:
-          + <span style="font-weight: bold;">done ::</span> <span style="text-decoration: underline;">&lt;&lt;end&gt;&gt;</span> :<span style="color: #e44649; font-weight: bold;">final</span>:
+          + <span style="font-weight: bold;">done ::</span> :<span style="color: #e44649; font-weight: bold;">final</span>:
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #8b4513; font-weight: bold;">** An entity-relationship diagram: cardinalities as tags</span>
@@ -1199,7 +1176,7 @@ to be told apart; a composite state is a <span style="text-decoration: underline
 Each relationship is a description term, its cardinality a tag on that term, read from the parent's end
 to the child's: a customer places <span style="font-style: italic;">/many/</span> orders, each order placed by <span style="font-style: italic;">/one/</span> customer. Graphviz draws the
 crow's foot for &#8220;many&#8221; and the bar for &#8220;one&#8221;:
-<span style="color: #a0a1a7;">#+begin_graph :direction right :node.shape box :demo live
+<span style="color: #a0a1a7;">#+begin_graph :direction right :demo live
 </span>+ Customer
   + <span style="font-weight: bold;">places :</span><span style="color: #e44649; font-weight: bold;">one-to-many</span><span style="font-weight: bold;">: ::</span> Order
     + <span style="font-weight: bold;">contains :</span><span style="color: #e44649; font-weight: bold;">one-to-many</span><span style="font-weight: bold;">: ::</span> Line item
@@ -1269,9 +1246,7 @@ straight. An ~:@X:~ tag puts the moments of one instant side by side, and a mess
 from one moment to another. Graphviz orders a rank's nodes by its arcs' direction, so every message hangs
 off the left lifeline, and a ~reply~ template turns its arrow back:
 <span style="color: #a0a1a7;">#+begin_graph Ordering a latte :labelloc t :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #60931f; background-color: #ecf7dd;">actor</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| shape | box     |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| style | rounded |</span><span style="background-color: #fff4c2;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #60931f; background-color: #ecf7dd;">actor</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">=rounded
 </span>
 <span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #8d931f; background-color: #f6f7dd;">moment</span><span style="background-color: #fde0ea;">
 </span><span style="background-color: #fde0ea;">| shape           | point  |</span><span style="background-color: #fde0ea;">
@@ -1281,18 +1256,16 @@ off the left lifeline, and a ~reply~ template turns its arrow back:
 </span><span style="background-color: #fde0ea;">| :edge.color     | gray   |</span><span style="background-color: #fde0ea;">
 </span><span style="background-color: #fde0ea;">| :edge.weight    | 100    |</span><span style="background-color: #fde0ea;">
 </span>
-<span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #1f3a93; background-color: #dde3f7;">reply</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| dir   | back   |</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| style | dashed |</span><span style="background-color: #d9f3ee;">
+<span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #1f3a93; background-color: #dde3f7;">reply</span><span style="background-color: #d9f3ee;"> </span><span style="color: #8b4513; background-color: #d9f3ee; font-weight: bold;">dir</span><span style="background-color: #d9f3ee;">=back </span><span style="color: #8b4513; background-color: #d9f3ee; font-weight: bold;">style</span><span style="background-color: #d9f3ee;">=dashed
 </span>
 + Customer :<span style="color: #60931f; background-color: #ecf7dd; font-weight: bold;">actor</span>:<span style="color: #1f933e; background-color: #ddf7e4; font-weight: bold;">@actors</span>:
-  + <span style="text-decoration: underline;">&lt;&lt;c1&gt;&gt;</span> :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #931f5f; background-color: #f7ddeb; font-weight: bold;">@t1</span>:
+  + :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #931f5f; background-color: #f7ddeb; font-weight: bold;">@t1</span>:
     + <span style="font-weight: bold;">order a latte ::</span> <span style="text-decoration: underline;"><a href="b1">[[b1]]</a></span>
-    + <span style="text-decoration: underline;">&lt;&lt;c2&gt;&gt;</span> :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #1f937f; background-color: #ddf7f3; font-weight: bold;">@t2</span>:
+    + :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #1f937f; background-color: #ddf7f3; font-weight: bold;">@t2</span>:
       + <span style="font-weight: bold;">&#8220;that&#8217;s $5&#8221; :</span><span style="color: #1f3a93; background-color: #dde3f7; font-weight: bold;">reply</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;"><a href="b2">[[b2]]</a></span>
-      + <span style="text-decoration: underline;">&lt;&lt;c3&gt;&gt;</span> :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #93871f; background-color: #f7f5dd; font-weight: bold;">@t3</span>:
+      + :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #93871f; background-color: #f7f5dd; font-weight: bold;">@t3</span>:
         + <span style="font-weight: bold;">pay ::</span> <span style="text-decoration: underline;"><a href="b3">[[b3]]</a></span>
-        + <span style="text-decoration: underline;">&lt;&lt;c4&gt;&gt;</span> :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #931f62; background-color: #f7ddec; font-weight: bold;">@t4</span>:
+        + :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #931f62; background-color: #f7ddec; font-weight: bold;">@t4</span>:
           + <span style="font-weight: bold;">here you go :</span><span style="color: #1f3a93; background-color: #dde3f7; font-weight: bold;">reply</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;"><a href="b4">[[b4]]</a></span>
 + Barista :<span style="color: #60931f; background-color: #ecf7dd; font-weight: bold;">actor</span>:<span style="color: #1f933e; background-color: #ddf7e4; font-weight: bold;">@actors</span>:
   + <span style="text-decoration: underline;">&lt;&lt;b1&gt;&gt;</span> :<span style="color: #8d931f; background-color: #f6f7dd; font-weight: bold;">moment</span>:<span style="color: #931f5f; background-color: #f7ddeb; font-weight: bold;">@t1</span>:
@@ -1340,15 +1313,15 @@ they always do. Its point is an image file beside our document, so we show it as
 Sometimes a whole section is nothing but the outline we want drawn; wrapping it in a block is ceremony.
 A ~#+begin_graph~ block is a function on a region; a ~:graph:~ tag is the same function on a section. The
 section's text is the graph, and its ~:PROPERTIES:~ drawer ---Org's own home for key-value settings--- is
-the ~#+begin_graph~ line: ~:DIRECTION: right~ is ~:direction right~, ~:NODE.SHAPE: box~ is ~:node.shape box~, and
+the ~#+begin_graph~ line: ~:DIRECTION: right~ is ~:direction right~, ~:NODE.SHAPE: oval~ is ~:node.shape oval~, and
 ~:FILE:~ is ~:file~:
 <span style="color: #a0a1a7;">#+begin_org :ignore t :demo live
 </span>,* Our grammar :graph_The_Grammar:
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:DIRECTION:</span> <span style="color: #383a42; background-color: #fafafa;">right</span>
-<span style="color: #a626a4;">:NODE.SHAPE:</span> <span style="color: #383a42; background-color: #fafafa;">box</span>
+<span style="color: #a626a4;">:NODE.SHAPE:</span> <span style="color: #383a42; background-color: #fafafa;">oval</span>
 <span style="font-weight: bold;">:END:</span>
-+ <span style="text-decoration: underline;">&lt;&lt;expr&gt;&gt;</span> expr
++ expr
   + term
     + factor
       + <span style="text-decoration: underline;">NUMBER</span>
@@ -1608,7 +1581,7 @@ members rather than arc targets, so arcs out of them are inline links, styled as
   + Front end
     | shape | cluster |
     + lexer <span style="text-decoration: underline;"><a href="parser">[[parser]]</a></span>
-    + <span style="text-decoration: underline;">&lt;&lt;parser&gt;&gt;</span> parser
+    + parser
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #0184bc; font-weight: bold;">* Gallery</span>
@@ -1622,64 +1595,62 @@ A decision tree is a tree whose nodes come in kinds: decisions we make (boxes), 
 and outcomes (bare text), with each chance's arcs labelled by how likely it is. Templates name the kinds,
 description terms label the arcs, and an item's ~#+edge:~ dashes every arc of chance beneath it:
 <span style="color: #a0a1a7;">#+begin_graph Should our package go lexical? :direction right :demo live
-</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #1f9353; background-color: #ddf7e9;">decision</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| shape | box |</span><span style="background-color: #fff4c2;">
-</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #931f5f; background-color: #f7ddeb;">chance</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| shape | circle |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| label | ""     |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| width | 0.3    |</span><span style="background-color: #fde0ea;">
-</span><span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #91931f; background-color: #f7f7dd;">outcome</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| shape | plaintext |</span><span style="background-color: #d9f3ee;">
+</span><span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #1f9353; background-color: #ddf7e9;">decision</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">shape</span><span style="background-color: #fff4c2;">=box
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #931f5f; background-color: #f7ddeb;">chance</span><span style="background-color: #fde0ea;"> </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">shape</span><span style="background-color: #fde0ea;">=circle </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">label</span><span style="background-color: #fde0ea;">="" </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">width</span><span style="background-color: #fde0ea;">=0.3
+</span><span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #91931f; background-color: #f7f7dd;">outcome</span><span style="background-color: #d9f3ee;"> </span><span style="color: #8b4513; background-color: #d9f3ee; font-weight: bold;">shape</span><span style="background-color: #d9f3ee;">=plaintext
 </span>
 + Enable =lexical-binding=? :<span style="color: #1f9353; background-color: #ddf7e9; font-weight: bold;">decision</span>:
-  + <span style="font-weight: bold;">yes ::</span> <span style="text-decoration: underline;">&lt;&lt;specials&gt;&gt;</span> :<span style="color: #931f5f; background-color: #f7ddeb; font-weight: bold;">chance</span>:
-    <span style="color: #a626a4; font-weight: bold;">#+edge:</span>
-    | style | dashed |
+  + <span style="font-weight: bold;">yes ::</span> :<span style="color: #931f5f; background-color: #f7ddeb; font-weight: bold;">chance</span>:
+    <span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">style</span>=dashed
     + <span style="font-weight: bold;">80% ::</span> Closures capture \\ their environment :<span style="color: #91931f; background-color: #f7f7dd; font-weight: bold;">outcome</span>:
     + <span style="font-weight: bold;">20% ::</span> An undeclared special \\ breaks; we =defvar= it :<span style="color: #91931f; background-color: #f7f7dd; font-weight: bold;">outcome</span>:
   + <span style="font-weight: bold;">no ::</span> Dynamic scope; \\ the byte-compiler warns :<span style="color: #91931f; background-color: #f7f7dd; font-weight: bold;">outcome</span>:
 <span style="color: #a0a1a7;">#+end_graph
 </span>
-The chance node is all target: ~<span style="text-decoration: underline;">&lt;&lt;specials&gt;&gt;</span>~ names it, and its template's empty ~label~ leaves a dot.
+The chance node is tags alone, so it needs no name, and its template's empty ~label~ leaves a dot.
 
 <span style="color: #8b4513; font-weight: bold;">** A mind map from a book: </span><span style="color: #8b4513; font-weight: bold; font-style: italic;">/How to Take Smart Notes/</span>
 
 A chapter of S&#246;nke Ahrens' <span style="font-style: italic;">/How to Take Smart Notes/</span>, as we would outline it while reading. Each
-connective, such as &#8220;is an aid for&#8221;, sits on its arc, as a description term; ordered steps are numbered
-arcs; ~:smart_kind:~ marks the three kinds of note; and ~<span style="text-decoration: underline;"><a href="fleeting">[[fleeting]]</a></span>~ arcs back to a note met earlier:
-<span style="color: #a0a1a7;">#+begin_graph How to Take Smart Notes ---S&#246;nke Ahrens :direction right :wrap 24 :fontname Helvetica :node.shape box :node.style "rounded,filled" :node.fillcolor white :node.fontname Helvetica :edge.fontname Helvetica :edge.fontsize 10 :edge.fontcolor gray30 :edge.color gray60 :demo live
-</span><span style="color: #a626a4; font-weight: bold;">#+edge:</span> :<span style="color: #e44649; font-weight: bold;">undirected</span>:
-<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #935d1f; background-color: #f7ebdd;">smart_kind</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| shape     | note      |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fillcolor | "#fff5cc" |</span><span style="background-color: #fff4c2;">
+connective, such as &#8220;is an aid for&#8221;, sits on its arc, as a description term; when every child of an item
+shares one, an ~#+edge:~ line beneath the item says it once, and a child's own term still wins. Ordered
+steps are numbered arcs; ~:smart_kind:~ marks the three kinds of note; and ~<span style="text-decoration: underline;"><a href="Fleeting">[[Fleeting]]</a></span>~ arcs back to a
+note met earlier:
+<span style="color: #a0a1a7;">#+begin_graph How to Take Smart Notes ---S&#246;nke Ahrens :direction right :wrap 24 :demo live
+</span><span style="color: #a626a4; font-weight: bold;">#+graph:</span> <span style="color: #8b4513; font-weight: bold;">fontname</span>=Helvetica
+<span style="color: #a626a4; font-weight: bold;">#+node:</span> <span style="color: #8b4513; font-weight: bold;">style</span>="rounded,filled" <span style="color: #8b4513; font-weight: bold;">fillcolor</span>=white <span style="color: #8b4513; font-weight: bold;">fontname</span>=Helvetica
+<span style="color: #a626a4; font-weight: bold;">#+edge:</span> :undirected: <span style="color: #8b4513; font-weight: bold;">fontname</span>=Helvetica <span style="color: #8b4513; font-weight: bold;">fontsize</span>=10 <span style="color: #8b4513; font-weight: bold;">fontcolor</span>=gray30 <span style="color: #8b4513; font-weight: bold;">color</span>=gray60
+<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #935d1f; background-color: #f7ebdd;">smart_kind</span><span style="background-color: #fff4c2;"> :note: </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">fillcolor</span><span style="background-color: #fff4c2;">="#fff5cc"
 </span>
-+ <span style="text-decoration: underline;">&lt;&lt;notes&gt;&gt;</span> <span style="font-weight: bold;">*Smart notes*</span>
++ <span style="font-weight: bold;">*Smart notes*</span>
   + Writing
-    + <span style="font-weight: bold;">is an aid for ::</span> thinking
-    + <span style="font-weight: bold;">is an aid for ::</span> studying
-    + <span style="font-weight: bold;">is an aid for ::</span> generating ideas
-    + <span style="font-weight: bold;">is an aid for ::</span> reading
-    + <span style="font-weight: bold;">is an aid for ::</span> understanding
+    <span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">label</span>="is an aid for"
+    + thinking
+    + studying
+    + generating ideas
+    + reading
+    + understanding
   + Thinking
     + <span style="font-weight: bold;">happens ::</span> on paper
   + Rule
     + keep a pen at hand
   + Process
     + <span style="font-weight: bold;">1 ::</span> collect notes
-      + <span style="text-decoration: underline;">&lt;&lt;fleeting&gt;&gt;</span> Fleeting :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">smart_kind</span>:
+      + Fleeting :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">smart_kind</span>:
         + reminders of thoughts
           + put in one place
           + process later
-      + <span style="text-decoration: underline;">&lt;&lt;literature&gt;&gt;</span> Literature :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">smart_kind</span>:
-        + <span style="font-weight: bold;">taken ::</span> when reading
-        + <span style="font-weight: bold;">taken ::</span> briefly
-        + <span style="font-weight: bold;">taken ::</span> selectively, for your own topics
-        + <span style="font-weight: bold;">taken ::</span> in your own words
-        + <span style="font-weight: bold;">taken ::</span> with bibliographic data
+      + Literature :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">smart_kind</span>:
+        <span style="color: #a626a4; font-weight: bold;">#+edge:</span> <span style="color: #8b4513; font-weight: bold;">label</span>=taken
+        + when reading
+        + briefly
+        + selectively, for your own topics
+        + in your own words
+        + with bibliographic data
         + <span style="font-weight: bold;">kept ::</span> in the reference system
       + Permanent :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">smart_kind</span>:
-        + <span style="font-weight: bold;">review ::</span> <span style="text-decoration: underline;"><a href="fleeting">[[fleeting]]</a></span>
-        + <span style="font-weight: bold;">review ::</span> <span style="text-decoration: underline;"><a href="literature">[[literature]]</a></span>
+        + <span style="font-weight: bold;">review ::</span> <span style="text-decoration: underline;"><a href="Fleeting">[[Fleeting]]</a></span>
+        + <span style="font-weight: bold;">review ::</span> <span style="text-decoration: underline;"><a href="Literature">[[Literature]]</a></span>
         + <span style="font-weight: bold;">review ::</span> once a day
         + <span style="font-weight: bold;">think ::</span> how they relate to your research, reflections, interests
         + one note for each idea
@@ -1716,7 +1687,6 @@ own, lest the prose become part of the graph.
 <span style="color: #8b4513; font-weight: bold;">** A section is a graph </span><span style="color: #8b4513; font-weight: bold;">:graph_Lineage:</span>
 <span style="font-weight: bold;">:PROPERTIES:</span>
 <span style="color: #a626a4;">:DIRECTION:</span> <span style="color: #383a42; background-color: #fafafa;">right</span>
-<span style="color: #a626a4;">:NODE.SHAPE:</span> <span style="color: #383a42; background-color: #fafafa;">box</span>
 <span style="color: #a626a4;">:EDGE.COLOR:</span> <span style="color: #383a42; background-color: #fafafa;">grey</span>
 <span style="font-weight: bold;">:END:</span>
 + &#955;-calculus
@@ -1763,13 +1733,14 @@ it repeats are named once, by Org's own macros:
 | color     | #6c7086   |
 | arrowhead | vee       |
 
-<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #1f3093; background-color: #dde1f7;">lineage</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| style | solid |</span><span style="background-color: #fff4c2;">
-</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #251f93; background-color: #deddf7;">inspiration</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| style | dashed |</span><span style="background-color: #fde0ea;">
+<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #1f3093; background-color: #dde1f7;">lineage</span><span style="background-color: #fff4c2;"> </span><span style="color: #8b4513; background-color: #fff4c2; font-weight: bold;">style</span><span style="background-color: #fff4c2;">=solid
+</span><span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #251f93; background-color: #deddf7;">inspiration</span><span style="background-color: #fde0ea;"> </span><span style="color: #8b4513; background-color: #fde0ea; font-weight: bold;">style</span><span style="background-color: #fde0ea;">=dashed
 </span><span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #1f933e; background-color: #ddf7e4;">equivalence</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| style      | dotted |</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| constraint | false  |</span><span style="background-color: #d9f3ee;">
+</span><span style="background-color: #d9f3ee;">| style      | dotted       |</span><span style="background-color: #d9f3ee;">
+</span><span style="background-color: #d9f3ee;">| constraint | false        |</span><span style="background-color: #d9f3ee;">
+</span><span style="background-color: #d9f3ee;">| color      | </span><span style="background-color: #d9f3ee; text-decoration: underline;">{{{yellow}}}</span><span style="background-color: #d9f3ee;"> |</span><span style="background-color: #d9f3ee;">
+</span><span style="background-color: #d9f3ee;">| fontcolor  | </span><span style="background-color: #d9f3ee; text-decoration: underline;">{{{yellow}}}</span><span style="background-color: #d9f3ee;"> |</span><span style="background-color: #d9f3ee;">
+</span><span style="color: #a626a4; background-color: #e9e1fb; font-weight: bold;">#+name:</span><span style="background-color: #e9e1fb;"> </span><span style="color: #1f9383; background-color: #ddf7f4;">typed</span><span style="background-color: #e9e1fb;"> </span><span style="color: #8b4513; background-color: #e9e1fb; font-weight: bold;">fillcolor</span><span style="background-color: #e9e1fb;">=#2a1e3f </span><span style="color: #8b4513; background-color: #e9e1fb; font-weight: bold;">color</span><span style="background-color: #e9e1fb;">=</span><span style="background-color: #e9e1fb; text-decoration: underline;">{{{mauve}}}</span><span style="background-color: #e9e1fb;"> </span><span style="color: #8b4513; background-color: #e9e1fb; font-weight: bold;">fontcolor</span><span style="background-color: #e9e1fb;">=</span><span style="background-color: #e9e1fb; text-decoration: underline;">{{{mauve}}}</span><span style="background-color: #e9e1fb;">
 </span>
 + <span style="text-decoration: underline;">&lt;&lt;lambda&gt;&gt;</span> &#955;-Calculus \\ (Church, 1930s) :<span style="color: #93251f; background-color: #f7dedd; font-weight: bold;">@origins</span>:
   | shape     | ellipse       |
@@ -1777,16 +1748,14 @@ it repeats are named once, by Org's own macros:
   | color     | #f38ba8       |
   | fontcolor | #f38ba8       |
   | penwidth  | 2             |
-  + <span style="font-weight: bold;">encodes ::</span> <span style="text-decoration: underline;">&lt;&lt;church&gt;&gt;</span> Church Encoding \\ &#8469;, Bool, Pairs :<span style="color: #1f9368; background-color: #ddf7ee; font-weight: bold;">@models</span>:
-    + <span style="font-weight: bold;">Church&#8211; \\ Turing thesis :</span><span style="color: #1f933e; background-color: #ddf7e4; font-weight: bold;">equivalence</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;">&lt;&lt;turing&gt;&gt;</span> Turing Machines \\ (equivalent power) :<span style="color: #1f9368; background-color: #ddf7ee; font-weight: bold;">@models</span>:
-      | :edge.color     | <span style="text-decoration: underline;">{{{yellow}}}</span> |
-      | :edge.fontcolor | <span style="text-decoration: underline;">{{{yellow}}}</span> |
-  + <span style="font-weight: bold;">inspired :</span><span style="color: #251f93; background-color: #deddf7; font-weight: bold;">inspiration</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;">&lt;&lt;lisp&gt;&gt;</span> Lisp \\ (McCarthy, 1958) \\ car &#183; cdr &#183; cons :<span style="color: #931f25; background-color: #f7ddde; font-weight: bold;">@languages</span>:
+  + <span style="font-weight: bold;">encodes ::</span> Church Encoding \\ &#8469;, Bool, Pairs :<span style="color: #1f9368; background-color: #ddf7ee; font-weight: bold;">@models</span>:
+    + <span style="font-weight: bold;">Church&#8211; \\ Turing thesis :</span><span style="color: #1f933e; background-color: #ddf7e4; font-weight: bold;">equivalence</span><span style="font-weight: bold;">: ::</span> Turing Machines \\ (equivalent power) :<span style="color: #1f9368; background-color: #ddf7ee; font-weight: bold;">@models</span>:
+  + <span style="font-weight: bold;">inspired :</span><span style="color: #251f93; background-color: #deddf7; font-weight: bold;">inspiration</span><span style="font-weight: bold;">: ::</span> Lisp \\ (McCarthy, 1958) \\ car &#183; cdr &#183; cons :<span style="color: #931f25; background-color: #f7ddde; font-weight: bold;">@languages</span>:
     | fillcolor | #1e3a5f   |
     | color     | <span style="text-decoration: underline;">{{{sky}}}</span> |
     | fontcolor | <span style="text-decoration: underline;">{{{sky}}}</span> |
     | penwidth  | 2         |
-    + <span style="font-weight: bold;">subset of ::</span> <span style="text-decoration: underline;">&lt;&lt;emacs&gt;&gt;</span> Emacs Lisp \\ buffers &#183; modes &#183; hooks :<span style="color: #93811f; background-color: #f7f3dd; font-weight: bold;">@runtimes</span>:
+    + <span style="font-weight: bold;">subset of ::</span> Emacs Lisp \\ buffers &#183; modes &#183; hooks :<span style="color: #93811f; background-color: #f7f3dd; font-weight: bold;">@runtimes</span>:
       | :edge.penwidth | 2             |
       | :edge.color    | <span style="text-decoration: underline;">{{{sky}}}</span>     |
       | shape          | doubleoctagon |
@@ -1798,24 +1767,16 @@ it repeats are named once, by Org's own macros:
       + <span style="font-weight: bold;">implements ::</span> <span style="text-decoration: underline;"><a href="advice">[[advice]]</a></span>
     + <span style="font-weight: bold;">enables ::</span> <span style="text-decoration: underline;"><a href="macros">[[macros]]</a></span>
     + <span style="font-weight: bold;">provides ::</span> <span style="text-decoration: underline;"><a href="closures">[[closures]]</a></span>
-  + <span style="font-weight: bold;">formalises :</span><span style="color: #251f93; background-color: #deddf7; font-weight: bold;">inspiration</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;">&lt;&lt;haskell&gt;&gt;</span> Haskell \\ pure &#183; lazy &#183; typed :<span style="color: #931f25; background-color: #f7ddde; font-weight: bold;">@languages</span>:
-    | fillcolor | #2a1e3f     |
-    | color     | <span style="text-decoration: underline;">{{{mauve}}}</span> |
-    | fontcolor | <span style="text-decoration: underline;">{{{mauve}}}</span> |
-    + <span style="text-decoration: underline;">&lt;&lt;ghc&gt;&gt;</span> GHC \\ Core &#8594; STG &#8594; Cmm :<span style="color: #93811f; background-color: #f7f3dd; font-weight: bold;">@runtimes</span>:
-      | fillcolor | #2a1e3f     |
-      | color     | <span style="text-decoration: underline;">{{{mauve}}}</span> |
-      | fontcolor | <span style="text-decoration: underline;">{{{mauve}}}</span> |
+  + <span style="font-weight: bold;">formalises :</span><span style="color: #251f93; background-color: #deddf7; font-weight: bold;">inspiration</span><span style="font-weight: bold;">: ::</span> Haskell \\ pure &#183; lazy &#183; typed :<span style="color: #1f9383; background-color: #ddf7f4; font-weight: bold;">typed</span>:<span style="color: #931f25; background-color: #f7ddde; font-weight: bold;">@languages</span>:
+    + GHC \\ Core &#8594; STG &#8594; Cmm :<span style="color: #1f9383; background-color: #ddf7f4; font-weight: bold;">typed</span>:<span style="color: #93811f; background-color: #f7f3dd; font-weight: bold;">@runtimes</span>:
     + <span style="font-weight: bold;">uses :</span><span style="color: #251f93; background-color: #deddf7; font-weight: bold;">inspiration</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;"><a href="monad">[[monad]]</a></span>
 
-+ <span style="text-decoration: underline;">&lt;&lt;combinatory&gt;&gt;</span> Combinatory Logic \\ (Sch&#246;nfinkel/Curry) :<span style="color: #93251f; background-color: #f7dedd; font-weight: bold;">@origins</span>:
++ Combinatory Logic \\ (Sch&#246;nfinkel/Curry) :<span style="color: #93251f; background-color: #f7dedd; font-weight: bold;">@origins</span>:
   | shape     | ellipse       |
   | fillcolor | <span style="text-decoration: underline;">{{{surface}}}</span> |
   | color     | #fab387       |
   | fontcolor | #fab387       |
-  + <span style="font-weight: bold;">equivalent ::</span> <span style="text-decoration: underline;"><a href="lambda">[[lambda]]</a></span>
-    | :edge.dir   | both         |
-    | :edge.color | <span style="text-decoration: underline;">{{{yellow}}}</span> |
+  + <span style="font-weight: bold;">equivalent :</span><span style="color: #1f933e; background-color: #ddf7e4; font-weight: bold;">equivalence</span><span style="font-weight: bold;">:</span><span style="color: #e44649; font-weight: bold;">bidirectional</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;"><a href="lambda">[[lambda]]</a></span>
 
 + Emacs Concepts :<span style="color: #e44649; font-weight: bold;">container</span>:
   | fontcolor | #a6e3a1 |
@@ -1831,13 +1792,13 @@ it repeats are named once, by Org's own macros:
   | style     | dashed        |
   + <span style="text-decoration: underline;">&lt;&lt;monad&gt;&gt;</span> Monad \\ &#951; &#183; &#956; &#183; associativity
     | shape | parallelogram |
-    + <span style="text-decoration: underline;">&lt;&lt;adjoint&gt;&gt;</span> Adjunction \\ F &#8867; G
+    + Adjunction \\ F &#8867; G
       | :edge.label     | every monad \\ is an adjunction |
       | :edge.color     | <span style="text-decoration: underline;">{{{yellow}}}</span>                    |
       | :edge.fontcolor | <span style="text-decoration: underline;">{{{yellow}}}</span>                    |
       | shape           | parallelogram                   |
     + <span style="font-weight: bold;">models :</span><span style="color: #1f933e; background-color: #ddf7e4; font-weight: bold;">equivalence</span><span style="font-weight: bold;">: ::</span> <span style="text-decoration: underline;"><a href="closures">[[closures]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;functor&gt;&gt;</span> Functor \\ F : C &#8594; D
+  + Functor \\ F : C &#8594; D
     | shape | parallelogram |
     + <span style="font-weight: bold;">F&#8728;F with &#951;,&#956; ::</span> <span style="text-decoration: underline;"><a href="monad">[[monad]]</a></span>
 
