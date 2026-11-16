@@ -2421,6 +2421,75 @@ registering it here lets every article, on every machine, resolve them.
 (add-to-list 'org-docs-libraries (expand-file-name "arabic-glossary.org" blog-posts-directory))
 #+end_src
 
+** Diagram articles open on their graph alone
+:PROPERTIES:
+:CUSTOM_ID: diagram-articles-open-on-their-graph-alone
+:END:
+
+An article that is mostly one big diagram ---[[file:karbala.org][Karbala]], say, or [[file:family-tree.org][my family tree]]--- opens on that
+diagram alone, at full size, with a /← Back for the article/ button; so the reader meets the picture first,
+and the prose only on asking.  The opening view is a history entry of its own, so the browser's back button,
+or =Esc=, shows the article.  An article opts in by wrapping its graph in a =graph-only= div, whose optional
+=data-focus= names the node to open centred on, and including this block:
+#+begin_src org :tangle no
+#+include: "AlBasmala.org::graph-only"
+#+html: <div class="graph-only" data-focus="Hussain">
+#+begin_graph … #+end_graph
+#+html: </div>
+#+end_src
+
+#+name: graph-only
+#+begin_export html
+<style>
+  /* While the page shows only the graph, everything off its path is hidden, and its path spans the page. */
+  .graph-off { display: none !important; }
+  body.graph-only .graph-path { max-width: none !important; width: auto !important;
+                                margin: 0 !important; padding: 0 !important; }
+  /* The graph's own box would scroll it within the page's width; the page itself scrolls instead. */
+  body.graph-only .graph-only div { overflow: visible !important; }
+  #graph-back { position: fixed; top: 0.6em; left: 0.6em; z-index: 1001; padding: 0.3em 0.8em;
+                border: 1px solid #555; border-radius: 1em; background: #f5f5dc; cursor: pointer; }
+  body:not(.graph-only) #graph-back { display: none; }
+</style>
+<script>
+  // The page opens on the graph alone, as a history entry of its own; so “back” shows the article.
+  document.addEventListener('DOMContentLoaded', () => {
+    const graph = document.querySelector('div.graph-only');
+    const svg = graph?.querySelector('svg');
+    if (!svg) return;
+    const show = (only) => {
+      document.body.classList.toggle('graph-only', only);
+      for (let node = graph; node !== document.body; node = node.parentElement) {
+        node.classList.toggle('graph-path', only);
+        for (const sibling of node.parentElement.children)
+          // tooltips.js shows every tooltip in one box beside <body>'s children; it, and our button, stay.
+          if (sibling !== node && !sibling.matches('#graph-back, .tooltip-box')) sibling.classList.toggle('graph-off', only);
+      }
+      svg.style.maxWidth = only ? '' : '100%';
+      // At full size, a graph may be many screens wide; so we open on its focus, its heart, rather than its corner.
+      const focus = only && graph.dataset.focus
+                    && [...svg.querySelectorAll('text')].find(t => t.textContent === graph.dataset.focus);
+      if (focus) {
+        const box = focus.getBoundingClientRect();
+        window.scrollTo(box.left + scrollX - innerWidth / 2, box.top + scrollY - innerHeight / 3);
+      } else window.scrollTo(0, 0);
+    };
+    const back = document.createElement('button');
+    back.id = 'graph-back';
+    back.textContent = '← Back for the article';
+    back.onclick = () => history.back();
+    document.body.appendChild(back);
+    history.replaceState(null, '', location.pathname);
+    history.pushState({graph: true}, '', '#graph');
+    show(true);
+    window.addEventListener('popstate', (e) => show(e.state?.graph === true));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('graph-only')) history.back();
+    });
+  });
+</script>
+#+end_export
+
 * Look and Feel
 :PROPERTIES:
 :CREATED:  [2026-10-01 Thu 21:25]
