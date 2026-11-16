@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-16 Mon 17:35 -->
+<!-- 2026-11-16 Mon 18:43 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>My Family Tree</title>
@@ -195,6 +195,7 @@
     { background-color: #ffff00; color: #000000; font-weight: bold; }
   .org-svg { }
 </style>
+<meta http-equiv="refresh" content="0; url='http://alhassy.com/resources/family-tree.png'" />
 </head>
 <body>
 <div id="content" class="content">
@@ -267,61 +268,10 @@ Who's who in the old family tree
 <div id="outline-container-the-tree" class="outline-2">
 <h2 id="the-tree"><span class="section-number-2">1.</span> <a href="#the-tree">The tree</a></h2>
 <div class="outline-text-2" id="text-the-tree">
-<style>
-  /* While the page shows only the graph, everything off its path is hidden, and its path spans the page. */
-  .graph-off { display: none !important; }
-  body.graph-only .graph-path { max-width: none !important; width: auto !important;
-                                margin: 0 !important; padding: 0 !important; }
-  /* The graph's own box would scroll it within the page's width; the page itself scrolls instead. */
-  body.graph-only .graph-only div { overflow: visible !important; }
-  #graph-back { position: fixed; top: 0.6em; left: 0.6em; z-index: 1001; padding: 0.3em 0.8em;
-                border: 1px solid #555; border-radius: 1em; background: #f5f5dc; cursor: pointer; }
-  body:not(.graph-only) #graph-back { display: none; }
-</style>
-<script>
-  // The page opens on the graph alone, as a history entry of its own; so “back” shows the article.
-  document.addEventListener('DOMContentLoaded', () => {
-    const graph = document.querySelector('div.graph-only');
-    const svg = graph?.querySelector('svg');
-    if (!svg) return;
-    const show = (only) => {
-      document.body.classList.toggle('graph-only', only);
-      for (let node = graph; node !== document.body; node = node.parentElement) {
-        node.classList.toggle('graph-path', only);
-        for (const sibling of node.parentElement.children)
-          // tooltips.js shows every tooltip in one box beside <body>'s children; it, and our button, stay.
-          if (sibling !== node && !sibling.matches('#graph-back, .tooltip-box')) sibling.classList.toggle('graph-off', only);
-      }
-      svg.style.maxWidth = only ? '' : '100%';
-      // At full size, a graph may be many screens wide; so we open on its focus, its heart, rather than its corner.
-      const focus = only && graph.dataset.focus
-                    && [...svg.querySelectorAll('text')].find(t => t.textContent === graph.dataset.focus);
-      if (focus) {
-        const box = focus.getBoundingClientRect();
-        window.scrollTo(box.left + scrollX - innerWidth / 2, box.top + scrollY - innerHeight / 3);
-      } else window.scrollTo(0, 0);
-    };
-    const back = document.createElement('button');
-    back.id = 'graph-back';
-    back.textContent = '← Back for the article';
-    back.onclick = () => history.back();
-    document.body.appendChild(back);
-    history.replaceState(null, '', location.pathname);
-    history.pushState({graph: true}, '', '#graph');
-    show(true);
-    window.addEventListener('popstate', (e) => show(e.state?.graph === true));
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.body.classList.contains('graph-only')) history.back();
-    });
-  });
-</script>
-<div class="graph-only">
 
 <div id="family-tree" class="figure">
 <p><img src="resources/family-tree.png" alt="family-tree.png" />
 </p>
-</div>
-
 </div>
 </div>
 </div>

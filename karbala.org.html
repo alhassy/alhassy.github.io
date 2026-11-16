@@ -29,9 +29,56 @@ descent, and a template such as =:married:= styles an arc ---all without a singl
 <span style="color: #a626a4;">:CUSTOM_ID:</span> <span style="color: #383a42; background-color: #fafafa;">the-family</span>
 <span style="font-weight: bold;">:END:</span>
 
-<span style="color: #a0a1a7;">#+include: "AlBasmala.org::graph-only"</span>
-<span style="color: #a0a1a7;">#+html: &lt;div class="graph-only" data-focus="Hussain"&gt;</span>
-
+<span style="color: #a0a1a7;">#+begin_export html
+</span>&lt;<span style="color: #0184bc;">style</span>&gt;
+  /* While the page shows only the graph, everything off its path is hidden, and its path spans the page. */
+  .graph-off { display: none !important; }
+  body.graph-only .graph-path { max-width: none !important; width: auto !important;
+                                margin: 0 !important; padding: 0 !important; }
+  /* The graph's own box would scroll it within the page's width; the page itself scrolls instead. */
+  body.graph-only #karbala-graph div { overflow: visible !important; }
+  #graph-back { position: fixed; top: 0.6em; left: 0.6em; z-index: 1001; padding: 0.3em 0.8em;
+                border: 1px solid #555; border-radius: 1em; background: #f5f5dc; cursor: pointer; }
+  body:not(.graph-only) #graph-back { display: none; }
+&lt;/<span style="color: #0184bc;">style</span>&gt;
+&lt;<span style="color: #0184bc;">script</span>&gt;
+  // The page opens on the graph alone, as a history entry of its own; so &#8220;back&#8221; shows the article.
+  document.addEventListener('DOMContentLoaded', () =&gt; {
+    const graph = document.getElementById('karbala-graph');
+    const svg = graph.querySelector('svg');
+    const show = (only) =&gt; {
+      document.body.classList.toggle('graph-only', only);
+      for (let node = graph; node !== document.body; node = node.parentElement) {
+        node.classList.toggle('graph-path', only);
+        for (const sibling of node.parentElement.children)
+          // tooltips.js shows every tooltip in one box beside &lt;<span style="color: #0184bc;">body</span>&gt;'s children; it, and our button, stay.
+          if (sibling !== node &amp;&amp; !sibling.matches('#graph-back, .tooltip-box')) sibling.classList.toggle('graph-off', only);
+      }
+      svg.style.maxWidth = only ? '' : '100%';
+      // At full size, the graph is many screens wide; so we open on Hussain, its heart, rather than its corner.
+      const hussain = only &amp;&amp; [...svg.querySelectorAll('text')].find(t =&gt; t.textContent === 'Hussain');
+      if (hussain) {
+        const box = hussain.getBoundingClientRect();
+        window.scrollTo(box.left + scrollX - innerWidth / 2, box.top + scrollY - innerHeight / 3);
+      } else window.scrollTo(0, 0);
+    };
+    const back = document.createElement('button');
+    back.id = 'graph-back';
+    back.textContent = '&#8592; Back for the article';
+    back.onclick = () =&gt; history.back();
+    document.body.appendChild(back);
+    history.replaceState(null, '', location.pathname);
+    history.pushState({graph: true}, '', '#graph');
+    show(true);
+    window.addEventListener('popstate', (e) =&gt; show(e.state?.graph === true));
+    document.addEventListener('keydown', (e) =&gt; {
+      if (e.key === 'Escape' &amp;&amp; document.body.classList.contains('graph-only')) history.back();
+    });
+  });
+&lt;/<span style="color: #0184bc;">script</span>&gt;
+&lt;<span style="color: #0184bc;">div</span> <span style="color: #8b4513;">id</span>=<span style="color: #50a14f;">"karbala-graph"</span>&gt;
+<span style="color: #a0a1a7;">#+end_export
+</span>
 <span style="color: #a0a1a7;">#+begin_graph
 </span><span style="font-weight: bold;">:SETTINGS:</span>
 <span style="color: #a626a4; font-weight: bold;">#+graph:</span>
@@ -39,14 +86,14 @@ descent, and a template such as =:married:= styles an arc ---all without a singl
 | labelloc |                   t |
 | fontsize |                  36 |
 | rankdir  |                  TB |
-| splines  |                true |
+| splines  |              curved |
 | nodesep  |                 0.6 |
 | ranksep  |                 1.0 |
 | pad      |                 0.5 |
 
 <span style="color: #a626a4; font-weight: bold;">#+node:</span>
 | shape     | ellipse |
-| fillcolor | #ccffcc |
+| fillcolor | #d4a96a |
 | fontname  | Georgia |
 | fontcolor | #2b1a00 |
 
@@ -86,184 +133,127 @@ descent, and a template such as =:married:= styles an arc ---all without a singl
 </span><span style="background-color: #d9f3ee;">| color | #cc6600 |</span><span style="background-color: #d9f3ee;">
 </span><span style="background-color: #d9f3ee;">| style | dashed  |</span><span style="background-color: #d9f3ee;">
 </span>
-# Node fills, by allegiance to the Ahl al-Bayt.
-<span style="color: #a626a4; background-color: #e9e1fb; font-weight: bold;">#+name:</span><span style="background-color: #e9e1fb;"> </span><span style="color: #931f7f; background-color: #f7ddf3;">loyal</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| fillcolor | #ccffcc |</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| color     | #006600 |</span><span style="background-color: #e9e1fb;">
-</span>
-<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #28931f; background-color: #dff7dd;">ambiguous</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fillcolor | #fff3cc |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| color     | #886600 |</span><span style="background-color: #fff4c2;">
-</span>
-<span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #361f93; background-color: #e2ddf7;">lady</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| fillcolor | #ffc0dc |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| color     | #aa3366 |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| fontcolor | #660033 |</span><span style="background-color: #fde0ea;">
-</span>
-<span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #931f3c; background-color: #f7dde3;">abbasid</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| fillcolor | #e1bee7 |</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| color     | #6a0dad |</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| fontcolor | #3d0066 |</span><span style="background-color: #d9f3ee;">
-</span>
-<span style="color: #a626a4; background-color: #e9e1fb; font-weight: bold;">#+name:</span><span style="background-color: #e9e1fb;"> </span><span style="color: #1f9349; background-color: #ddf7e7;">umayyad</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| fillcolor | #ffe0b2 |</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| color     | #b34700 |</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| fontcolor | #7a2e00 |</span><span style="background-color: #e9e1fb;">
-</span>
-<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #1f9378; background-color: #ddf7f1;">companion</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fillcolor | #fde68a |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| color     | #92400e |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fontcolor | #78350f |</span><span style="background-color: #fff4c2;">
-</span>
-<span style="color: #a626a4; background-color: #fde0ea; font-weight: bold;">#+name:</span><span style="background-color: #fde0ea;"> </span><span style="color: #1f9351; background-color: #ddf7e8;">light</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| style         | radial          |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| fillcolor     | #fffbe0:#e0a800 |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| color         | #ffd700         |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| peripheries   | 3               |</span><span style="background-color: #fde0ea;">
-</span><span style="background-color: #fde0ea;">| penwidth      | 2               |</span><span style="background-color: #fde0ea;">
-</span>
-<span style="color: #a626a4; background-color: #d9f3ee; font-weight: bold;">#+name:</span><span style="background-color: #d9f3ee;"> </span><span style="color: #93511f; background-color: #f7e8dd;">other</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| fillcolor | #e8e8e8 |</span><span style="background-color: #d9f3ee;">
-</span><span style="background-color: #d9f3ee;">| color     | #666666 |</span><span style="background-color: #d9f3ee;">
-</span>
-<span style="color: #a626a4; background-color: #e9e1fb; font-weight: bold;">#+name:</span><span style="background-color: #e9e1fb;"> </span><span style="color: #937d1f; background-color: #f7f2dd;">prophet</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| fillcolor | #aaccff |</span><span style="background-color: #e9e1fb;">
-</span><span style="background-color: #e9e1fb;">| color     | #3355aa |</span><span style="background-color: #e9e1fb;">
-</span>
-<span style="color: #a626a4; background-color: #fff4c2; font-weight: bold;">#+name:</span><span style="background-color: #fff4c2;"> </span><span style="color: #701f93; background-color: #efddf7;">antagonist</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fillcolor | #ff9999 |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| color     | #cc0000 |</span><span style="background-color: #fff4c2;">
-</span><span style="background-color: #fff4c2;">| fontcolor | #660000 |</span><span style="background-color: #fff4c2;">
-</span>
-+ <span style="text-decoration: underline;">&lt;&lt;idris&gt;&gt;</span> Idris \\ (&#1573;&#1583;&#1585;&#1610;&#1587;)
-  <span style="text-decoration: underline;">[fn::Idris &#8212; mentioned in Quran (19:56-57). Raised to a high station. Often identified with the biblical Enoch.]</span> :prophet:
-  + <span style="text-decoration: underline;"><a href="noah">[[noah][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hud&gt;&gt;</span> Hud \\ (&#1607;&#1608;&#1583;)
-  <span style="text-decoration: underline;">[fn::Hud &#8212; sent to the &#703;&#256;d people (southern Arabia). They rejected him; destroyed by a violent wind.]</span> :@tribal:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;salih&gt;&gt;</span> Salih \\ (&#1589;&#1575;&#1604;&#1581;)
-  <span style="text-decoration: underline;">[fn::Salih &#8212; sent to the Thamud people. Brought a she-camel as a divine sign; they killed it and were destroyed.]</span> :@tribal:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;adam&gt;&gt;</span> Adam \\ (&#1570;&#1583;&#1605;)
-  <span style="text-decoration: underline;">[fn::Adam &#8212; first human and first prophet. Created from clay; placed in Paradise then sent to Earth.]</span> :prophet:
-  + <span style="text-decoration: underline;"><a href="idris">[[idris][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;noah&gt;&gt;</span> Noah \\ (&#1606;&#1608;&#1581;)
-  <span style="text-decoration: underline;">[fn::Noah (Nuh) &#8212; preached for 950 years. Built the Ark; the Flood destroyed those who rejected him.]</span> :prophet:
-  + <span style="text-decoration: underline;"><a href="hud">[[hud][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="salih">[[salih][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ibrahim&gt;&gt;</span> Ibrahim \\ (&#1573;&#1576;&#1585;&#1575;&#1607;&#1610;&#1605;)
-  <span style="text-decoration: underline;">[fn::Ibrahim (Abraham) &#8212; Friend of God (Khalilullah). Destroyed idols, survived fire. Father of Ismail and Ishaaq; built the Kaaba.]</span> :prophet:
-  + <span style="text-decoration: underline;"><a href="sarah">[[sarah][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="hajar">[[hajar][:married:]]</a></span>
-  + <span style="font-weight: bold;">nephew ::</span> <span style="text-decoration: underline;"><a href="lut">[[lut][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="shuayb">[[shuayb][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;lut&gt;&gt;</span> Lut \\ (&#1604;&#1608;&#1591;)
-  <span style="text-decoration: underline;">[fn::Lut (Lot) &#8212; nephew of Ibrahim. Sent to the people of Sodom; they were destroyed for their transgressions.]</span> :@ibrahims-loyal:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;ismail&gt;&gt;</span> Ismail \\ (&#1573;&#1587;&#1605;&#1575;&#1593;&#1610;&#1604;)
-  <span style="text-decoration: underline;">[fn::Ismail (Ishmael) &#8212; eldest son of Ibrahim; ancestor of the Arab peoples and of Muhammad &#65018;. He and Ibrahim built the Kaaba in Mecca.]</span> :@ibrahims-loyal:prophet:
-  + <span style="text-decoration: underline;"><a href="hashim">[[hashim][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ishaaq&gt;&gt;</span> Ishaaq \\ (&#1573;&#1587;&#1581;&#1575;&#1602;)
-  <span style="text-decoration: underline;">[fn::Ishaaq (Isaac) &#8212; son of Ibrahim and Sarah. Father of Yaqub; ancestor of the Israelite prophets.]</span> :@ibrahims-loyal:prophet:
-  + <span style="text-decoration: underline;"><a href="rafqa">[[rafqa][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="ayyub">[[ayyub][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;yaqub&gt;&gt;</span> Yaqub \\ (&#1610;&#1593;&#1602;&#1608;&#1576;)
-  <span style="text-decoration: underline;">[fn::Yaqub (Jacob / Israel) &#8212; son of Ishaaq. Father of the twelve tribes of Israel, including Yusuf.]</span> :@next-generation:prophet:
-  + <span style="text-decoration: underline;"><a href="rahil">[[rahil][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="moses">[[moses][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="aaron">[[aaron][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="dawood">[[dawood][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="yunus">[[yunus][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;yusuf&gt;&gt;</span> Yusuf \\ (&#1610;&#1608;&#1587;&#1601;)
-  <span style="text-decoration: underline;">[fn::Yusuf (Joseph) &#8212; son of Yaqub. Sold into slavery by brothers; rose to power in Egypt. His beauty is legendary &#8212; Layla invoked it at Karbala.]</span> :prophet:
-  + <span style="text-decoration: underline;"><a href="rahma">[[rahma][:ancestry:]]</a></span>
-  + <span style="font-weight: bold;">invoked @ Karbala ::</span> <span style="text-decoration: underline;"><a href="layla">[[layla][:mention:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;rahma&gt;&gt;</span> Rahma \\ (&#1585;&#1581;&#1605;&#1577;)
-  <span style="text-decoration: underline;">[fn::Rahma &#8212; wife of Prophet Ayyub, and of the house of Yusuf: most of the tradition calls her Rahma bint Afrayim, Yusuf's granddaughter through his son Ephraim, while some call her his daughter. She alone stayed by Ayyub through his long affliction, tending him when all others had left; God bade him strike her lightly with a bundle of grass, so to keep an oath without harming her (Quran 38:44).]</span> :loyal:@ayyub-and-rahma:
-  + <span style="text-decoration: underline;"><a href="ayyub">[[ayyub][:married:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ayyub&gt;&gt;</span> Ayyub \\ (&#1571;&#1610;&#1608;&#1576;)
-  <span style="text-decoration: underline;">[fn::Ayyub (Job) &#8212; prophet of patience. Afflicted with severe trials for years; restored after steadfast faith.]</span> :prophet:@ayyub-and-rahma:
-+ <span style="text-decoration: underline;">&lt;&lt;shuayb&gt;&gt;</span> Shuayb \\ (&#1588;&#1593;&#1610;&#1576;)
-  <span style="text-decoration: underline;">[fn::Shuayb (Jethro) &#8212; sent to the people of Midian; warned against dishonest trade. Some traditions identify him as father-in-law of Moses.]</span> :@next-generation:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;yunus&gt;&gt;</span> Yunus \\ (&#1610;&#1608;&#1606;&#1587;)
-  <span style="text-decoration: underline;">[fn::Yunus (Jonah) &#8212; swallowed by a whale after leaving his people without permission. Remembered for his repentance (Dhul-Nun).]</span> :prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;moses&gt;&gt;</span> Moses \\ (&#1605;&#1608;&#1587;&#1609;)
-  <span style="text-decoration: underline;">[fn::Moses (Musa) &#8212; the prophet most mentioned in the Quran. Led the Exodus; received the Torah on Mount Sinai. A descendant of Yaqub, through Levi.]</span> :@exodus:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;aaron&gt;&gt;</span> Aaron \\ (&#1607;&#1575;&#1585;&#1608;&#1606;)
-  <span style="text-decoration: underline;">[fn::Aaron (Harun) &#8212; brother of Moses; assisted him in the mission to Pharaoh.]</span> :@exodus:prophet:
-  + <span style="text-decoration: underline;"><a href="ilyas">[[ilyas][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;dawood&gt;&gt;</span> Dawood \\ (&#1583;&#1575;&#1608;&#1583;)
-  <span style="text-decoration: underline;">[fn::Dawood (David) &#8212; king and prophet of Israel. Slew Goliath; given the Psalms (Zabur). Father of Sulayman.]</span> :@king-prophets:prophet:
-  + <span style="text-decoration: underline;"><a href="bathsheba">[[bathsheba][:married:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;sulayman&gt;&gt;</span> Sulayman \\ (&#1587;&#1604;&#1610;&#1605;&#1575;&#1606;)
-  <span style="text-decoration: underline;">[fn::Sulayman (Solomon) &#8212; son of Dawood; given extraordinary wisdom, control over jinn and wind, and speech with animals.]</span> :@successors:prophet:
-  + <span style="text-decoration: underline;"><a href="zakariya">[[zakariya][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ilyas&gt;&gt;</span> Ilyas \\ (&#1573;&#1604;&#1610;&#1575;&#1587;)
-  <span style="text-decoration: underline;">[fn::Ilyas (Elias) &#8212; prophet of Israel; called his people to abandon the idol Baal.]</span> :@king-prophets:prophet:
-  + <span style="font-weight: bold;">successor ::</span> <span style="text-decoration: underline;"><a href="alyasa">[[alyasa][:mention:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;alyasa&gt;&gt;</span> Al-Yasa \\ (&#1575;&#1604;&#1610;&#1587;&#1593;)
-  <span style="text-decoration: underline;">[fn::Al-Yasa (Elisha) &#8212; successor of Ilyas; praised in the Quran among the best.]</span> :@successors:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;zakariya&gt;&gt;</span> Zakariya \\ (&#1586;&#1603;&#1585;&#1610;&#1575;)
-  <span style="text-decoration: underline;">[fn::Zakariya (Zechariah) &#8212; prayed for a son in old age; miraculously given Yahya as a gift from God.]</span> :prophet:
-  + <span style="text-decoration: underline;"><a href="elizabeth">[[elizabeth][:married:]]</a></span>
-  + <span style="font-weight: bold;">guardian ::</span> <span style="text-decoration: underline;"><a href="maryam">[[maryam][:mention:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;yahya&gt;&gt;</span> Yahya \\ (&#1610;&#1581;&#1610;&#1609;)
-  <span style="text-decoration: underline;">[fn::Yahya (John the Baptist) &#8212; son of Zakariya; forerunner to Jesus. Praised in the Quran as wise from childhood.]</span> :@late-prophets:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;jesus&gt;&gt;</span> Jesus \\ (&#1593;&#1610;&#1587;&#1609;)
-  <span style="text-decoration: underline;">[fn::Jesus (Isa) &#8212; born miraculously to Maryam; given the Gospel (Injil). Performed miracles; raised to heaven; will return before the Day of Judgment.]</span> :@late-prophets:prophet:
-+ <span style="text-decoration: underline;">&lt;&lt;dhulkifl&gt;&gt;</span> Dhul-Kifl \\ (&#1584;&#1608; &#1575;&#1604;&#1603;&#1601;&#1604;)
-  <span style="text-decoration: underline;">[fn::Dhul-Kifl &#8212; mentioned twice in the Quran among the patient and righteous. Identity debated; some identify with Ezekiel or another prophet.]</span> :@late-prophets:prophet:
-# :@tribal: Pre-Ibrahim tribal prophets &#8212; sent to regional peoples (&#703;&#256;d, Thamud)
-# :@ibrahims-kin: Contemporaries of Ibrahim's immediate family
-# :@next-generation: Next generation: Yaqub, and roughly contemporary regional prophets
-# :@exodus: Moses and Aaron &#8212; the Exodus era
-# :@king-prophets: Israelite king-prophets
-# :@successors: Sulayman (son of Dawood), Al-Yasa (successor of Ilyas), Zakariya
-# :@late-prophets: Late Israelite prophets &#8212; Yahya (John the Baptist), Jesus, and Dhul-Kifl
++ Prophets (&#1593;&#1604;&#1610;&#1607;&#1605; &#1575;&#1604;&#1587;&#1604;&#1575;&#1605;) :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #ddeeff |
+  | color     | #3355aa |
+  | fontcolor | #003388 |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #aaccff |
+  | color     | #3355aa |
+  + <span style="text-decoration: underline;">&lt;&lt;idris&gt;&gt;</span> Idris \\ (&#1573;&#1583;&#1585;&#1610;&#1587;)
+    <span style="text-decoration: underline;">[fn::Idris &#8212; mentioned in Quran (19:56-57). Raised to a high station. Often identified with the biblical Enoch.]</span>
+  + <span style="text-decoration: underline;">&lt;&lt;hud&gt;&gt;</span> Hud \\ (&#1607;&#1608;&#1583;)
+    <span style="text-decoration: underline;">[fn::Hud &#8212; sent to the &#703;&#256;d people (southern Arabia). They rejected him; destroyed by a violent wind.]</span> :@tribal:
+  + <span style="text-decoration: underline;">&lt;&lt;salih&gt;&gt;</span> Salih \\ (&#1589;&#1575;&#1604;&#1581;)
+    <span style="text-decoration: underline;">[fn::Salih &#8212; sent to the Thamud people. Brought a she-camel as a divine sign; they killed it and were destroyed.]</span> :@tribal:
+  + <span style="text-decoration: underline;">&lt;&lt;adam&gt;&gt;</span> Adam \\ (&#1570;&#1583;&#1605;)
+    <span style="text-decoration: underline;">[fn::Adam &#8212; first human and first prophet. Created from clay; placed in Paradise then sent to Earth.]</span>
+  + <span style="text-decoration: underline;">&lt;&lt;noah&gt;&gt;</span> Noah \\ (&#1606;&#1608;&#1581;)
+    <span style="text-decoration: underline;">[fn::Noah (Nuh) &#8212; preached for 950 years. Built the Ark; the Flood destroyed those who rejected him.]</span>
+    + <span style="text-decoration: underline;"><a href="adam">[[adam][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ibrahim&gt;&gt;</span> Ibrahim \\ (&#1573;&#1576;&#1585;&#1575;&#1607;&#1610;&#1605;)
+    <span style="text-decoration: underline;">[fn::Ibrahim (Abraham) &#8212; Friend of God (Khalilullah). Destroyed idols, survived fire. Father of Ismail and Ishaaq; built the Kaaba.]</span>
+    + <span style="text-decoration: underline;"><a href="noah">[[noah][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;lut&gt;&gt;</span> Lut \\ (&#1604;&#1608;&#1591;)
+    <span style="text-decoration: underline;">[fn::Lut (Lot) &#8212; nephew of Ibrahim. Sent to the people of Sodom; they were destroyed for their transgressions.]</span> :@ibrahims-kin:
+    + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ismail&gt;&gt;</span> Ismail \\ (&#1573;&#1587;&#1605;&#1575;&#1593;&#1610;&#1604;)
+    <span style="text-decoration: underline;">[fn::Ismail (Ishmael) &#8212; eldest son of Ibrahim; ancestor of the Arab peoples and of Muhammad &#65018;. He and Ibrahim built the Kaaba in Mecca.]</span> :@ibrahims-kin:
+    + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ishaaq&gt;&gt;</span> Ishaaq \\ (&#1573;&#1587;&#1581;&#1575;&#1602;)
+    <span style="text-decoration: underline;">[fn::Ishaaq (Isaac) &#8212; son of Ibrahim and Sarah. Father of Yaqub; ancestor of the Israelite prophets.]</span> :@ibrahims-kin:
+    + <span style="text-decoration: underline;"><a href="ibrahim">[[ibrahim][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;yaqub&gt;&gt;</span> Yaqub \\ (&#1610;&#1593;&#1602;&#1608;&#1576;)
+    <span style="text-decoration: underline;">[fn::Yaqub (Jacob / Israel) &#8212; son of Ishaaq. Father of the twelve tribes of Israel, including Yusuf.]</span> :@next-generation:
+    + <span style="text-decoration: underline;"><a href="ishaaq">[[ishaaq][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;yusuf&gt;&gt;</span> Yusuf \\ (&#1610;&#1608;&#1587;&#1601;)
+    <span style="text-decoration: underline;">[fn::Yusuf (Joseph) &#8212; son of Yaqub. Sold into slavery by brothers; rose to power in Egypt. His beauty is legendary &#8212; Layla invoked it at Karbala.]</span>
+    + <span style="text-decoration: underline;"><a href="yaqub">[[yaqub][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ayyub&gt;&gt;</span> Ayyub \\ (&#1571;&#1610;&#1608;&#1576;)
+    <span style="text-decoration: underline;">[fn::Ayyub (Job) &#8212; prophet of patience. Afflicted with severe trials for years; restored after steadfast faith.]</span> :@next-generation:
+  + <span style="text-decoration: underline;">&lt;&lt;shuayb&gt;&gt;</span> Shuayb \\ (&#1588;&#1593;&#1610;&#1576;)
+    <span style="text-decoration: underline;">[fn::Shuayb (Jethro) &#8212; sent to the people of Midian; warned against dishonest trade. Some traditions identify him as father-in-law of Moses.]</span> :@next-generation:
+  + <span style="text-decoration: underline;">&lt;&lt;yunus&gt;&gt;</span> Yunus \\ (&#1610;&#1608;&#1606;&#1587;)
+    <span style="text-decoration: underline;">[fn::Yunus (Jonah) &#8212; swallowed by a whale after leaving his people without permission. Remembered for his repentance (Dhul-Nun).]</span> :@next-generation:
+  + <span style="text-decoration: underline;">&lt;&lt;moses&gt;&gt;</span> Moses \\ (&#1605;&#1608;&#1587;&#1609;)
+    <span style="text-decoration: underline;">[fn::Moses (Musa) &#8212; the prophet most mentioned in the Quran. Led the Exodus; received the Torah on Mount Sinai. Lineage traced through Ismail's descendants.]</span> :@exodus:
+    + <span style="text-decoration: underline;"><a href="ismail">[[ismail][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;aaron&gt;&gt;</span> Aaron \\ (&#1607;&#1575;&#1585;&#1608;&#1606;)
+    <span style="text-decoration: underline;">[fn::Aaron (Harun) &#8212; brother of Moses; assisted him in the mission to Pharaoh.]</span> :@exodus:
+  + <span style="text-decoration: underline;">&lt;&lt;dawood&gt;&gt;</span> Dawood \\ (&#1583;&#1575;&#1608;&#1583;)
+    <span style="text-decoration: underline;">[fn::Dawood (David) &#8212; king and prophet of Israel. Slew Goliath; given the Psalms (Zabur). Father of Sulayman.]</span> :@king-prophets:
+  + <span style="text-decoration: underline;">&lt;&lt;sulayman&gt;&gt;</span> Sulayman \\ (&#1587;&#1604;&#1610;&#1605;&#1575;&#1606;)
+    <span style="text-decoration: underline;">[fn::Sulayman (Solomon) &#8212; son of Dawood; given extraordinary wisdom, control over jinn and wind, and speech with animals.]</span> :@successors:
+    + <span style="text-decoration: underline;"><a href="dawood">[[dawood][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ilyas&gt;&gt;</span> Ilyas \\ (&#1573;&#1604;&#1610;&#1575;&#1587;)
+    <span style="text-decoration: underline;">[fn::Ilyas (Elias) &#8212; prophet of Israel; called his people to abandon the idol Baal.]</span> :@king-prophets:
+  + <span style="text-decoration: underline;">&lt;&lt;alyasa&gt;&gt;</span> Al-Yasa \\ (&#1575;&#1604;&#1610;&#1587;&#1593;)
+    <span style="text-decoration: underline;">[fn::Al-Yasa (Elisha) &#8212; successor of Ilyas; praised in the Quran among the best.]</span> :@successors:
+    + <span style="text-decoration: underline;"><a href="ilyas">[[ilyas][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;zakariya&gt;&gt;</span> Zakariya \\ (&#1586;&#1603;&#1585;&#1610;&#1575;)
+    <span style="text-decoration: underline;">[fn::Zakariya (Zechariah) &#8212; prayed for a son in old age; miraculously given Yahya as a gift from God.]</span> :@successors:
+  + <span style="text-decoration: underline;">&lt;&lt;yahya&gt;&gt;</span> Yahya \\ (&#1610;&#1581;&#1610;&#1609;)
+    <span style="text-decoration: underline;">[fn::Yahya (John the Baptist) &#8212; son of Zakariya; forerunner to Jesus. Praised in the Quran as wise from childhood.]</span> :@late-prophets:
+    + <span style="text-decoration: underline;"><a href="zakariya">[[zakariya][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;jesus&gt;&gt;</span> Jesus \\ (&#1593;&#1610;&#1587;&#1609;)
+    <span style="text-decoration: underline;">[fn::Jesus (Isa) &#8212; born miraculously to Maryam; given the Gospel (Injil). Performed miracles; raised to heaven; will return before the Day of Judgment.]</span> :@late-prophets:
+  + <span style="text-decoration: underline;">&lt;&lt;dhulkifl&gt;&gt;</span> Dhul-Kifl \\ (&#1584;&#1608; &#1575;&#1604;&#1603;&#1601;&#1604;)
+    <span style="text-decoration: underline;">[fn::Dhul-Kifl &#8212; mentioned twice in the Quran among the patient and righteous. Identity debated; some identify with Ezekiel or another prophet.]</span> :@late-prophets:
+  # :@tribal: Pre-Ibrahim tribal prophets &#8212; sent to regional peoples (&#703;&#256;d, Thamud)
+  # :@ibrahims-kin: Contemporaries of Ibrahim's immediate family
+  # :@next-generation: Next generation: Yaqub, and roughly contemporary regional prophets
+  # :@exodus: Moses and Aaron &#8212; the Exodus era
+  # :@king-prophets: Israelite king-prophets
+  # :@successors: Sulayman (son of Dawood), Al-Yasa (successor of Ilyas), Zakariya
+  # :@late-prophets: Late Israelite prophets &#8212; Yahya (John the Baptist), Jesus, and Dhul-Kifl
 
 # Hadith: the four greatest women of paradise &#8212; Khadija, Fatimah, Maryam, Asiya
-+ <span style="text-decoration: underline;">&lt;&lt;khadija&gt;&gt;</span> Khadija \\ (&#1582;&#1583;&#1610;&#1580;&#1577;) \\ First wife of Muhammad
-  <span style="text-decoration: underline;">[fn::Khadija bint Khuwaylid &#8212; the first Muslim and the Prophet's most beloved wife. A wealthy merchant; she proposed to Muhammad &#65018;. He took no other wife while she lived.]</span> :lady:
-  + <span style="text-decoration: underline;"><a href="fatimah">[[fatimah]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;fatimah&gt;&gt;</span> Fatimah \\ (&#1601;&#1575;&#1591;&#1605;&#1577;) \\ Daughter of Muhammad
-  <span style="text-decoration: underline;">[fn::Fatimah al-Zahra ('the Radiant') &#8212; daughter of Muhammad &#65018; and Khadija; wife of Ali; mother of Hasan, Hussain, and Zaynab. The Prophet said: 'Fatimah is a part of me &#8212; whoever angers her angers me.' In Shia tradition: after Abu Bakr's succession, Umar led a party to her house to force Ali's pledge of allegiance; the door was set alight or forced open, Fatimah was struck, and she miscarried her unborn son Muhsin (the fifth child of Ali and Fatimah). She died ~75&#8211;95 days after the Prophet &#8212; at most 18 years old &#8212; and was buried secretly at night, her grave kept hidden from the new government. Fadak (a fertile estate the Prophet had gifted her) was confiscated by Abu Bakr on the grounds that prophets leave no inheritance, a hadith Shia scholars hold as fabricated. She never spoke to Abu Bakr again until her death.]</span> :light:@imam-1:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="ali">[[ali][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="hasan">[[hasan]]</a></span>
-  + <span style="text-decoration: underline;"><a href="hussain">[[hussain]]</a></span>
-  + <span style="text-decoration: underline;"><a href="zaynab">[[zaynab]]</a></span>
-  + <span style="text-decoration: underline;"><a href="ummkulthum">[[ummkulthum]]</a></span>
-  + <span style="font-weight: bold;">Fadak / Muhsin ::</span> <span style="text-decoration: underline;"><a href="abubakr">[[abubakr][:killed-by:]]</a></span>
-  + <span style="font-weight: bold;">door incident ::</span> <span style="text-decoration: underline;"><a href="umar">[[umar][:killed-by:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;maryam&gt;&gt;</span> Maryam \\ (&#1605;&#1585;&#1610;&#1605;) \\ Mother of Jesus
-  <span style="text-decoration: underline;">[fn::Maryam (Mary) &#8212; the only woman named directly in the Quran, with a full chapter (Sura 19) devoted to her. Gave birth to Jesus without a father; a virgin chosen above all women.]</span> :lady:
-  + <span style="text-decoration: underline;"><a href="jesus">[[jesus][:motherhood:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;asiya&gt;&gt;</span> Asiya \\ (&#1570;&#1587;&#1610;&#1577;) \\ Wife of Pharaoh
-  <span style="text-decoration: underline;">[fn::Asiya bint Muzahim &#8212; wife of Pharaoh who adopted Moses as an infant. Believed in God and was tortured to death by Pharaoh; her prayer for a house in Paradise is in Quran 66:11.]</span> :lady:
-  + <span style="font-weight: bold;">adopted ::</span> <span style="text-decoration: underline;"><a href="moses">[[moses][:motherhood:]]</a></span>
++ Ladies of Heaven (&#1587;&#1610;&#1583;&#1575;&#1578; &#1575;&#1604;&#1580;&#1606;&#1577;) :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #fff0f5 |
+  | color     | #aa3366 |
+  | fontcolor | #660033 |
+  + <span style="text-decoration: underline;">&lt;&lt;khadija&gt;&gt;</span> Khadija \\ (&#1582;&#1583;&#1610;&#1580;&#1577;) \\ First wife of Muhammad
+    <span style="text-decoration: underline;">[fn::Khadija bint Khuwaylid &#8212; the first Muslim and the Prophet's most beloved wife. A wealthy merchant; she proposed to Muhammad &#65018;. He took no other wife while she lived.]</span>
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:married:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;fatimah&gt;&gt;</span> Fatimah \\ (&#1601;&#1575;&#1591;&#1605;&#1577;) \\ Daughter of Muhammad
+    <span style="text-decoration: underline;">[fn::Fatimah al-Zahra ('the Radiant') &#8212; daughter of Muhammad &#65018; and Khadija; wife of Ali; mother of Hasan, Hussain, and Zaynab. The Prophet said: 'Fatimah is a part of me &#8212; whoever angers her angers me.' In Shia tradition: after Abu Bakr's succession, Umar led a party to her house to force Ali's pledge of allegiance; the door was set alight or forced open, Fatimah was struck, and she miscarried her unborn son Muhsin (the fifth child of Ali and Fatimah). She died ~75&#8211;95 days after the Prophet &#8212; at most 18 years old &#8212; and was buried secretly at night, her grave kept hidden from the new government. Fadak (a fertile estate the Prophet had gifted her) was confiscated by Abu Bakr on the grounds that prophets leave no inheritance, a hadith Shia scholars hold as fabricated. She never spoke to Abu Bakr again until her death.]</span>
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span>
+    + <span style="font-weight: bold;">Fadak / Muhsin ::</span> <span style="text-decoration: underline;"><a href="abubakr">[[abubakr][:killed-by:]]</a></span>
+    + <span style="font-weight: bold;">door incident ::</span> <span style="text-decoration: underline;"><a href="umar">[[umar][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;maryam&gt;&gt;</span> Maryam \\ (&#1605;&#1585;&#1610;&#1605;) \\ Mother of Jesus
+    <span style="text-decoration: underline;">[fn::Maryam (Mary) &#8212; the only woman named directly in the Quran, with a full chapter (Sura 19) devoted to her. Gave birth to Jesus without a father; a virgin chosen above all women.]</span>
+    + <span style="text-decoration: underline;"><a href="jesus">[[jesus][:motherhood:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;asiya&gt;&gt;</span> Asiya \\ (&#1570;&#1587;&#1610;&#1577;) \\ Wife of Pharaoh
+    <span style="text-decoration: underline;">[fn::Asiya bint Muzahim &#8212; wife of Pharaoh who adopted Moses as an infant. Believed in God and was tortured to death by Pharaoh; her prayer for a house in Paradise is in Quran 66:11.]</span>
 
 + <span style="text-decoration: underline;">&lt;&lt;hashim&gt;&gt;</span> Hashim \\ (&#1607;&#1575;&#1588;&#1605;)
-  <span style="text-decoration: underline;">[fn::Hashim ibn Abd Manaf &#8212; great-grandfather of Muhammad &#65018;; ancestor of the Hashimite clan of Quraysh. Known for feeding pilgrims in Mecca.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="salma">[[salma][:married:]]</a></span>
+  <span style="text-decoration: underline;">[fn::Hashim ibn Abd Manaf &#8212; great-grandfather of Muhammad &#65018;; ancestor of the Hashimite clan of Quraysh. Known for feeding pilgrims in Mecca.]</span>
+  + <span style="text-decoration: underline;"><a href="ismail">[[ismail][:ancestry:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;abdmutallib&gt;&gt;</span> Abd Al Mutallib \\ (&#1593;&#1576;&#1583; &#1575;&#1604;&#1605;&#1591;&#1604;&#1576;)
-  <span style="text-decoration: underline;">[fn::Abd al-Muttalib &#8212; grandfather of Muhammad &#65018; and guardian after Abdullah's death. He discovered the Zamzam well and led the Quraysh against Abraha's elephant army.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="hala">[[hala][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="fatimahbintamr">[[fatimahbintamr][:married:]]</a></span>
+  <span style="text-decoration: underline;">[fn::Abd al-Muttalib &#8212; grandfather of Muhammad &#65018; and guardian after Abdullah's death. He discovered the Zamzam well and led the Quraysh against Abraha's elephant army.]</span>
+  + <span style="text-decoration: underline;"><a href="hashim">[[hashim]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;abdullah&gt;&gt;</span> Abdullah \\ (&#1593;&#1576;&#1583;&#1575;&#1604;&#1604;&#1607;)
-  <span style="text-decoration: underline;">[fn::Abdullah ibn Abd al-Muttalib &#8212; father of Muhammad &#65018;. Died before Muhammad's birth; his death and that of Aminah left Muhammad an orphan in infancy.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="aminah">[[aminah][:married:]]</a></span>
+  <span style="text-decoration: underline;">[fn::Abdullah ibn Abd al-Muttalib &#8212; father of Muhammad &#65018;. Died before Muhammad's birth; his death and that of Aminah left Muhammad an orphan in infancy.]</span>
+  + <span style="text-decoration: underline;"><a href="abdmutallib">[[abdmutallib]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;abutalib&gt;&gt;</span> Abu Talib \\ (&#1571;&#1576;&#1608; &#1591;&#1575;&#1604;&#1576;)
-  <span style="text-decoration: underline;">[fn::Abu Talib ibn Abd al-Muttalib &#8212; paternal uncle and guardian of Muhammad &#65018; after age 8; father of Ali. Protected the Prophet for decades though he did not publicly accept Islam.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="fatimahbintasad">[[fatimahbintasad][:married:]]</a></span>
+  <span style="text-decoration: underline;">[fn::Abu Talib ibn Abd al-Muttalib &#8212; paternal uncle and guardian of Muhammad &#65018; after age 8; father of Ali. Protected the Prophet for decades though he did not publicly accept Islam.]</span>
+  + <span style="text-decoration: underline;"><a href="abdmutallib">[[abdmutallib]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;aqil&gt;&gt;</span> Aqil \\ (&#1593;&#1602;&#1610;&#1604;) \\ brother of Ali
-  <span style="text-decoration: underline;">[fn::Aqil ibn Abi Talib &#8212; elder brother of Ali; son of Abu Talib. Renowned for his genealogical knowledge. Father of Muslim ibn Aqil, Hussain's envoy to Kufa. Initially supported Muawiya after the arbitration, though this is a contested point in Shia sources.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="hulayya">[[hulayya][:married:]]</a></span>
+  <span style="text-decoration: underline;">[fn::Aqil ibn Abi Talib &#8212; elder brother of Ali; son of Abu Talib. Renowned for his genealogical knowledge. Father of Muslim ibn Aqil, Hussain's envoy to Kufa. Initially supported Muawiya after the arbitration, though this is a contested point in Shia sources.]</span>
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;jafaribnabutalib&gt;&gt;</span> Ja'far \\ (&#1580;&#1593;&#1601;&#1585;) \\ brother of Ali
-  <span style="text-decoration: underline;">[fn::Ja'far ibn Abi Talib &#8212; brother of Ali; led the early Muslim emigration to Abyssinia and presented Islam to the Negus. Died at the Battle of Mu'ta (629 CE) fighting Byzantine forces; called 'Dhu'l-Janahayn' (the one with two wings) for his bravery.]</span> :loyal:
+  <span style="text-decoration: underline;">[fn::Ja'far ibn Abi Talib &#8212; brother of Ali; led the early Muslim emigration to Abyssinia and presented Islam to the Negus. Died at the Battle of Mu'ta (629 CE) fighting Byzantine forces; called 'Dhu'l-Janahayn' (the one with two wings) for his bravery.]</span>
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;aminah&gt;&gt;</span> Aminah \\ (&#1570;&#1605;&#1606;&#1577;) \\ Mother of Muhammad
-  <span style="text-decoration: underline;">[fn::Aminah bint Wahb &#8212; mother of Muhammad &#65018;. Died when Muhammad was ~6 years old; he was left in the care of his grandfather Abd al-Muttalib. Her grave is in al-Abwa' on the road between Mecca and Medina.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad]]</a></span>
+  <span style="text-decoration: underline;">[fn::Aminah bint Wahb &#8212; mother of Muhammad &#65018;. Died when Muhammad was ~6 years old; he was left in the care of his grandfather Abd al-Muttalib. Her grave is in al-Abwa' on the road between Mecca and Medina.]</span>
+  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:motherhood:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;muhammad&gt;&gt;</span> Muhammad &#65018; \\ (&#1605;&#1581;&#1605;&#1583;)
-  <span style="text-decoration: underline;">[fn::Muhammad ibn Abdullah &#65018; &#8212; the Seal of the Prophets. Born ~570 CE in Mecca; received the Quran over 23 years. United the Arabian peninsula through both preaching and key battles: Badr (624 CE), Uhud (625 CE), Khandaq (627 CE), Khaybar (628 CE), the Conquest of Mecca (630 CE), and Hunayn (630 CE). His family (Ahl al-Bayt) are central to both Sunni and Shia Islam.]</span> :light:
+  <span style="text-decoration: underline;">[fn::Muhammad ibn Abdullah &#65018; &#8212; the Seal of the Prophets. Born ~570 CE in Mecca; received the Quran over 23 years. United the Arabian peninsula through both preaching and key battles: Badr (624 CE), Uhud (625 CE), Khandaq (627 CE), and the Conquest of Mecca (630 CE). His family (Ahl al-Bayt) are central to both Sunni and Shia Islam.]</span>
   | shape     | doublecircle |
-  + <span style="text-decoration: underline;"><a href="khadija">[[khadija][:married:]]</a></span>
+  | fillcolor | #2d6a1f      |
+  | color     | #1a4d00      |
+  | fontcolor | #ffffff      |
+  + <span style="text-decoration: underline;"><a href="abdullah">[[abdullah]]</a></span>
   + <span style="font-weight: bold;">declared Ali his successor ::</span> <span style="text-decoration: underline;"><a href="ghadir">[[ghadir][:ancestry:]]</a></span>
 # Ghadir Khumm is the theological fulcrum of Shia Islam &#8212; the moment Muhammad &#65018; explicitly
 # designated Ali as his successor, making the Saqifa succession a wilful violation in Shia eyes.
@@ -273,33 +263,29 @@ descent, and a template such as =:married:= styles an arc ---all without a singl
   | fillcolor | #e8f4e8   |
   | color     | #006600   |
   | fontcolor | #004400   |
-  + <span style="font-weight: bold;">designated successor ::</span> <span style="text-decoration: underline;"><a href="ali">[[ali][:mention:]]</a></span>
+  + <span style="font-weight: bold;">designated successor ::</span> <span style="text-decoration: underline;"><a href="ali">[[ali][:motherhood:]]</a></span>
++ <span style="text-decoration: underline;">&lt;&lt;shahrbanu&gt;&gt;</span> Shahr Banu \\ (&#1588;&#1607;&#1585;&#1576;&#1575;&#1606;&#1608;) \\ wife of Hussain
+  <span style="text-decoration: underline;">[fn::Shahr Banu &#8212; Persian princess, daughter of Yazdegerd III (last Sasanid emperor). Married Hussain after her father's defeat; mother of Ali al-Sajjad (4th Imam). Her lineage connects the Imam line to Persian royalty.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;rabab&gt;&gt;</span> Rabab \\ (&#1585;&#1576;&#1575;&#1576;) \\ wife of Hussain
+  <span style="text-decoration: underline;">[fn::Rabab bint Imru al-Qays &#8212; wife of Hussain; mother of Ali Asghar (the infant martyr) and Sukaynah. She was present at Karbala and held her son as he was martyred by an arrow.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;layla&gt;&gt;</span> Layla \\ (&#1604;&#1610;&#1604;&#1609;) \\ wife of Hussain
+  <span style="text-decoration: underline;">[fn::Layla bint Abi Murra &#8212; mother of Ali al-Akbar. At Karbala, pleading for her son's life, she invoked Prophet Yusuf's legendary beauty to describe Ali al-Akbar &#8212; 'there is no youth more like the Prophet.']</span>
+  + <span style="font-weight: bold;">mentioned @ Karbala ::</span> <span style="text-decoration: underline;"><a href="yusuf">[[yusuf][:mention:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;ummsalamah&gt;&gt;</span> Umm Salamah \\ (&#1571;&#1605; &#1587;&#1604;&#1605;&#1577;) \\ wife of Muhammad
-  <span style="text-decoration: underline;">[fn::Umm Salamah (Hind bint Abi Umayyah) &#8212; one of Muhammad's wives; survived him by decades. Deeply close to Ahl al-Bayt; transmitted many hadith about Fatimah and the Imams. When Hussain departed for Karbala she wept, recalling a prophecy of his martyrdom.]</span> :loyal:
+  <span style="text-decoration: underline;">[fn::Umm Salamah (Hind bint Abi Umayyah) &#8212; one of Muhammad's wives; survived him by decades. Deeply close to Ahl al-Bayt; transmitted many hadith about Fatimah and the Imams. When Hussain departed for Karbala she wept, recalling a prophecy of his martyrdom.]</span>
   + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:married:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;ummalbanin&gt;&gt;</span> Umm al-Banin \\ (&#1571;&#1605; &#1575;&#1604;&#1576;&#1606;&#1610;&#1606;) \\ wife of Ali
-  <span style="text-decoration: underline;">[fn::Umm al-Banin (Fatimah bint Hizam) &#8212; second wife of Ali; mother of Abbas and three other sons, all martyred at Karbala alongside Hussain. Renowned for her elegies mourning them.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="abbas">[[abbas]]</a></span>
-# The Twelve Imams, first to last, each the father of the next save Ali, who fathered both Hasan and Hussain.
-+ The Twelve Imams (&#1593;&#1604;&#1610;&#1607;&#1605; &#1575;&#1604;&#1587;&#1604;&#1575;&#1605;) :<span style="color: #e44649; font-weight: bold;">container</span>:
-  | fillcolor | #eeffee |
-  | color     | #006600 |
-  | fontcolor | #004400 |
-  <span style="color: #a626a4; font-weight: bold;">#+node:</span> :<span style="color: #931f7f; background-color: #f7ddf3; font-weight: bold;">loyal</span>:
-  + <span style="text-decoration: underline;">&lt;&lt;ali&gt;&gt;</span> Ali \\ (&#1593;&#1604;&#1610;) \\ 1st Imam
-    <span style="text-decoration: underline;">[fn::Ali ibn Abi Talib &#8212; cousin and son-in-law of Muhammad &#65018;; 1st Imam (Shia) and 4th Caliph (Sunni). Renowned for justice, bravery, and wisdom. Assassinated in the mosque of Kufa, 661 CE.]</span> :light:@imam-1:
-    + <span style="text-decoration: underline;"><a href="ibnmuljam">[[ibnmuljam][:killed-by:]]</a></span>
-    + <span style="text-decoration: underline;"><a href="ummalbanin">[[ummalbanin][:married:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;hasan&gt;&gt;</span> Hasan \\ (&#1575;&#1604;&#1581;&#1587;&#1606;) \\ 2nd Imam
-    <span style="text-decoration: underline;">[fn::Hasan ibn Ali &#8212; 2nd Imam; grandson of Muhammad &#65018;. Abdicated the caliphate to Muawiya to prevent civil war, under a treaty. Died 670 CE, reportedly poisoned; buried in Medina.]</span> :@imam-2:
-    # Hussain's row lies beneath Hasan's; they are brothers, so no arc of theirs says so.
-    + <span style="text-decoration: underline;"><a href="hussain">[[hussain]]</a></span>
-      | :edge.style | invis |
-    + <span style="font-weight: bold;">poisoned, through Ja'da ::</span> <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:killed-by:]]</a></span>
-    + <span style="text-decoration: underline;"><a href="nafs">[[nafs][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;hussain&gt;&gt;</span> Hussain \\ (&#1575;&#1604;&#1581;&#1587;&#1610;&#1606;) \\ 3rd Imam
-    <span style="text-decoration: underline;">[fn::Hussain ibn Ali &#8212; 3rd Imam; grandson of Muhammad &#65018;. Refused to pledge allegiance to Yazid. Martyred with 72 companions at Karbala (10 Muharram 61 AH / 680 CE). His stand is the axis of Shia commemoration.]</span> :@imam-2b:
+  <span style="text-decoration: underline;">[fn::Umm al-Banin (Fatimah bint Hizam) &#8212; second wife of Ali; mother of Abbas and three other sons, all martyred at Karbala alongside Hussain. Renowned for her elegies mourning them.]</span>
++ <span style="text-decoration: underline;">&lt;&lt;ali&gt;&gt;</span> Ali \\ (&#1593;&#1604;&#1610;)
+  <span style="text-decoration: underline;">[fn::Ali ibn Abi Talib &#8212; cousin and son-in-law of Muhammad &#65018;; 1st Imam (Shia) and 4th Caliph (Sunni). Renowned for justice, bravery, and wisdom. Assassinated in the mosque of Kufa, 661 CE.]</span> :@rivals:
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
+  + <span style="text-decoration: underline;"><a href="fatimah">[[fatimah][:married:]]</a></span>
+  + <span style="text-decoration: underline;"><a href="ummalbanin">[[ummalbanin][:married:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;hussain&gt;&gt;</span> Hussain \\ (&#1575;&#1604;&#1581;&#1587;&#1610;&#1606;)
+    <span style="text-decoration: underline;">[fn::Hussain ibn Ali &#8212; 3rd Imam; grandson of Muhammad &#65018;. Refused to pledge allegiance to Yazid. Martyred with 72 companions at Karbala (10 Muharram 61 AH / 680 CE). His stand is the axis of Shia commemoration.]</span> :@alis-children:
     | shape | diamond |
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+    + <span style="text-decoration: underline;"><a href="shahrbanu">[[shahrbanu][:married:]]</a></span>
     + <span style="text-decoration: underline;"><a href="rabab">[[rabab][:married:]]</a></span>
     + <span style="text-decoration: underline;"><a href="layla">[[layla][:married:]]</a></span>
     + <span style="text-decoration: underline;"><a href="shimr">[[shimr][:killed-by:]]</a></span>
@@ -308,202 +294,226 @@ descent, and a template such as =:married:= styles an arc ---all without a singl
       | :edge.color | red    |
       | :edge.style | dashed |
       | :edge.dir   | back   |
-  + <span style="text-decoration: underline;">&lt;&lt;sajjad&gt;&gt;</span> Ali Al-Sajjad \\ (&#1575;&#1604;&#1587;&#1580;&#1575;&#1583;) \\ 4th Imam
-    <span style="text-decoration: underline;">[fn::Ali ibn Hussain al-Sajjad (Zayn al-Abidin) &#8212; 4th Imam; survived Karbala as he was too ill to fight. His Sahifa al-Sajjadiyya (the Psalms of the Ahl al-Bayt) is a landmark of Islamic spirituality.]</span> :@imam-3:
-    + <span style="text-decoration: underline;"><a href="walid1">[[walid1][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;baqir&gt;&gt;</span> Muhammad al-Baqir \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1576;&#1575;&#1602;&#1585;) \\ 5th Imam
-    <span style="text-decoration: underline;">[fn::Muhammad al-Baqir ('the one who opens up knowledge') &#8212; son of Sajjad; 5th Imam. Renowned for expansive religious scholarship; established the foundations of Shia jurisprudence in Medina.]</span> :@imam-4:
-    + <span style="text-decoration: underline;"><a href="hisham">[[hisham][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;sadiq&gt;&gt;</span> Jafar al-Sadiq \\ (&#1580;&#1593;&#1601;&#1585; &#1575;&#1604;&#1589;&#1575;&#1583;&#1602;) \\ 6th Imam
-    <span style="text-decoration: underline;">[fn::Jafar al-Sadiq ('the truthful') &#8212; son of Baqir; 6th Imam. The most prolific scholarly Imam; his students included Abu Hanifa and Malik ibn Anas. Shia fiqh is called the Ja'fari school in his honor.]</span> :@imam-5:
-    + <span style="text-decoration: underline;"><a href="almansur">[[almansur][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;kadhim&gt;&gt;</span> Musa al-Kadhim \\ (&#1605;&#1608;&#1587;&#1609; &#1575;&#1604;&#1603;&#1575;&#1592;&#1605;) \\ 7th Imam
-    <span style="text-decoration: underline;">[fn::Musa al-Kadhim ('the forbearing') &#8212; son of Sadiq; 7th Imam. Imprisoned repeatedly by the Abbasid caliphs Mahdi and Harun al-Rashid; died in prison in Baghdad, 799 CE.]</span> :@imam-6:
-    + <span style="text-decoration: underline;"><a href="harun">[[harun][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;ridha&gt;&gt;</span> Ali al-Ridha \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1585;&#1590;&#1575;) \\ 8th Imam
-    <span style="text-decoration: underline;">[fn::Ali al-Ridha ('the pleased one') &#8212; son of Kadhim; 8th Imam. Appointed heir-apparent by Abbasid Caliph al-Ma'mun (a political move). His shrine in Mashhad, Iran is one of the largest mosques in the world.]</span> :@imam-7:
-    + <span style="text-decoration: underline;"><a href="mamun">[[mamun][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;taqi&gt;&gt;</span> Muhammad al-Taqi \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1578;&#1602;&#1610;) \\ 9th Imam
-    <span style="text-decoration: underline;">[fn::Muhammad al-Taqi ('the pious') &#8212; son of Ridha; 9th Imam. Became Imam at age 8 after his father's death. Married a daughter of the Abbasid caliph al-Ma'mun. Died aged ~25, reportedly poisoned.]</span> :@imam-8:
-    + <span style="text-decoration: underline;"><a href="mutasim">[[mutasim][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;hadi&gt;&gt;</span> Ali al-Hadi \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1607;&#1575;&#1583;&#1610;) \\ 10th Imam
-    <span style="text-decoration: underline;">[fn::Ali al-Hadi ('the guide') &#8212; son of Taqi; 10th Imam. Placed under house arrest in Samarra by Abbasid authorities for most of his life. Father of Hasan al-Askari.]</span> :@imam-9:
-    + <span style="font-weight: bold;">imprisoned ::</span> <span style="text-decoration: underline;"><a href="mutawakkil">[[mutawakkil][:imprisoned:]]</a></span>
-      | :edge.dir | back |
-  + <span style="text-decoration: underline;">&lt;&lt;askari&gt;&gt;</span> Hasan al-Askari \\ (&#1575;&#1604;&#1581;&#1587;&#1606; &#1575;&#1604;&#1593;&#1587;&#1603;&#1585;&#1610;) \\ 11th Imam
-    <span style="text-decoration: underline;">[fn::Hasan al-Askari &#8212; son of Hadi; 11th Imam. Named 'al-Askari' for the military garrison city of Samarra where he was confined. Father of the 12th Imam. Died 874 CE, reportedly poisoned.]</span> :@imam-10:
-    + <span style="text-decoration: underline;"><a href="mutamid">[[mutamid][:killed-by:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;mahdi&gt;&gt;</span> Muhammad al-Mahdi \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1605;&#1607;&#1583;&#1610;) \\ 12th Imam
-    <span style="text-decoration: underline;">[fn::Muhammad al-Mahdi &#8212; son of Askari; 12th and final Imam. Believed to be in 'occultation' (ghayba) since 874 CE &#8212; hidden from sight but alive, to return at the end of times as the Mahdi who establishes justice.]</span>
-
-# The mothers of Imams 5&#8211;11, each the wife of the Imam before; each sits on her husband's row.
-+ <span style="text-decoration: underline;">&lt;&lt;ummabdullah&gt;&gt;</span> Fatimah bint al-Hasan \\ (&#1601;&#1575;&#1591;&#1605;&#1577; &#1576;&#1606;&#1578; &#1575;&#1604;&#1581;&#1587;&#1606;)
-  <span style="text-decoration: underline;">[fn::Fatimah bint al-Hasan, Umm Abd Allah &#8212; daughter of Imam Hasan; wife of Imam al-Sajjad, and mother of Imam al-Baqir, who was thus the first Imam descended from both Hasan and Hussain.]</span> :loyal:@imam-3:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="baqir">[[baqir]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ummfarwa&gt;&gt;</span> Umm Farwa \\ (&#1571;&#1605; &#1601;&#1585;&#1608;&#1577;)
-  <span style="text-decoration: underline;">[fn::Umm Farwa bint al-Qasim &#8212; wife of Imam al-Baqir; mother of Imam al-Sadiq. Her grandfather was Muhammad ibn Abi Bakr, Ali's foster-son and governor of Egypt.]</span> :loyal:@imam-4:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="baqir">[[baqir][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hamida&gt;&gt;</span> Hamida \\ (&#1581;&#1605;&#1610;&#1583;&#1577;)
-  <span style="text-decoration: underline;">[fn::Hamida al-Barbariyya &#8212; a Berber woman; wife of Imam al-Sadiq, and mother of Imam al-Kadhim. Al-Sadiq praised her learning and sent the women of his household to her to learn their religion.]</span> :loyal:@imam-5:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="kadhim">[[kadhim]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;najma&gt;&gt;</span> Najma \\ (&#1606;&#1580;&#1605;&#1577;)
-  <span style="text-decoration: underline;">[fn::Najma, also Tuktam, later called al-Tahira &#8212; wife of Imam al-Kadhim; mother of Imam al-Ridha.]</span> :loyal:@imam-6:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="kadhim">[[kadhim][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="ridha">[[ridha]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;sabika&gt;&gt;</span> Sabika \\ (&#1587;&#1576;&#1610;&#1603;&#1577;)
-  <span style="text-decoration: underline;">[fn::Sabika, also Khayzuran &#8212; a Nubian woman; wife of Imam al-Ridha, and mother of Imam al-Taqi.]</span> :loyal:@imam-7:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="ridha">[[ridha][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="taqi">[[taqi]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;samana&gt;&gt;</span> Samana \\ (&#1587;&#1605;&#1575;&#1606;&#1577;)
-  <span style="text-decoration: underline;">[fn::Samana al-Maghribiyya &#8212; a woman of North Africa; wife of Imam al-Taqi, and mother of Imam al-Hadi.]</span> :loyal:@imam-8:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="taqi">[[taqi][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="hadi">[[hadi]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hudayth&gt;&gt;</span> Hudayth \\ (&#1581;&#1583;&#1610;&#1579;)
-  <span style="text-decoration: underline;">[fn::Hudayth, also called Susan or Salil &#8212; wife of Imam al-Hadi; mother of Imam al-Askari. After al-Askari's death she was the household's elder, through whom the Shia were guided.]</span> :loyal:@imam-9:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="hadi">[[hadi][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="askari">[[askari]]</a></span>
-
-# Hussain's wives, each the mother of her children, as in family-tree.org; after them, Ali's other children, whom he references.
-+ <span style="text-decoration: underline;">&lt;&lt;shahrbanu&gt;&gt;</span> Shahr Banu \\ (&#1588;&#1607;&#1585;&#1576;&#1575;&#1606;&#1608;)
-  <span style="text-decoration: underline;">[fn::Shahr Banu &#8212; Persian princess, daughter of Yazdegerd III (last Sasanid emperor). Married Hussain after her father's defeat; mother of Ali al-Sajjad (4th Imam). Her lineage connects the Imam line to Persian royalty.]</span> :loyal:container_Wives_of_the_Imams:@imam-2b:
-  + <span style="text-decoration: underline;"><a href="hussain">[[hussain][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;rabab&gt;&gt;</span> Rabab \\ (&#1585;&#1576;&#1575;&#1576;)
-  <span style="text-decoration: underline;">[fn::Rabab bint Imru al-Qays &#8212; wife of Hussain; mother of Ali Asghar (the infant martyr) and Sukaynah. She was present at Karbala and held her son as he was martyred by an arrow.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="sukaynah">[[sukaynah]]</a></span>
-  + <span style="text-decoration: underline;"><a href="aliasghar">[[aliasghar]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;layla&gt;&gt;</span> Layla \\ (&#1604;&#1610;&#1604;&#1609;)
-  <span style="text-decoration: underline;">[fn::Layla bint Abi Murra &#8212; mother of Ali al-Akbar. At Karbala, pleading for her son's life, she invoked Prophet Yusuf's legendary beauty to describe Ali al-Akbar &#8212; 'there is no youth more like the Prophet.']</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="aliakbar">[[aliakbar]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;sukaynah&gt;&gt;</span> Sukaynah \\ (&#1587;&#1603;&#1610;&#1606;&#1577;)
-  <span style="text-decoration: underline;">[fn::Sukaynah bint Hussain &#8212; known for her piety and eloquence. Witnessed Karbala as a child; taken captive to Kufa and Damascus. She famously mourned her father's severed head.]</span> :@karbala-youth:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;ruqayyah&gt;&gt;</span> Ruqayyah \\ (&#1585;&#1602;&#1610;&#1577;)
-  <span style="text-decoration: underline;">[fn::Ruqayyah bint Hussain &#8212; the young daughter of Hussain taken captive after Karbala. Tradition holds she died in the dungeon of Damascus from grief after seeing her father's head.]</span> :@karbala-youth:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;aliakbar&gt;&gt;</span> Ali Al-Akbar \\ (&#1575;&#1604;&#1571;&#1603;&#1576;&#1585;)
-  <span style="text-decoration: underline;">[fn::Ali al-Akbar ibn Hussain &#8212; eldest son of Hussain; son of Layla. The Prophet's companions said no youth resembled the Prophet more in appearance and character. Martyred at Karbala aged ~18.]</span> :@karbala-youth:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;aliasghar&gt;&gt;</span> Ali Asghar \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1571;&#1589;&#1594;&#1585;) \\ infant martyr
-  <span style="text-decoration: underline;">[fn::Ali Asghar ibn Hussain &#8212; the infant son of Hussain and Rabab; only months old at Karbala. Hussain held him up to the enemy army asking for water; he was killed by a three-pronged arrow. The youngest martyr of Karbala.]</span> :@karbala-youth:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;zaynab&gt;&gt;</span> Zaynab \\ (&#1586;&#1610;&#1606;&#1576;)
-  <span style="text-decoration: underline;">[fn::Zaynab bint Ali &#8212; sister of Hussain; survived Karbala and became its voice. Her speech before Yazid in Damascus is celebrated as one of the most defiant addresses in Islamic history. Called 'the heroine of Karbala.']</span> :@alis-children:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;ummkulthum&gt;&gt;</span> Umm Kulthum \\ (&#1571;&#1605; &#1603;&#1604;&#1579;&#1608;&#1605;)
-  <span style="text-decoration: underline;">[fn::Umm Kulthum bint Ali &#8212; sister of Hussain and Zaynab; also taken captive after Karbala. She delivered passionate elegies in Kufa and Damascus alongside Zaynab.]</span> :@alis-children:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;abbas&gt;&gt;</span> Abbas \\ (&#1575;&#1604;&#1593;&#1576;&#1575;&#1587;)
-  <span style="text-decoration: underline;">[fn::Abbas ibn Ali (Abu al-Fadl) &#8212; half-brother of Hussain; son of Umm al-Banin. Standard-bearer at Karbala. Martyred at the Euphrates trying to fetch water for the children; his shrine in Karbala stands beside Hussain's.]</span> :@karbala-youth:loyal:
-+ <span style="text-decoration: underline;">&lt;&lt;qasim&gt;&gt;</span> Qasim \\ (&#1602;&#1575;&#1587;&#1605;)
-  <span style="text-decoration: underline;">[fn::Qasim ibn Hasan &#8212; son of Hasan; nephew of Hussain. Betrothed to Hussain's daughter before Karbala; martyred in battle there. His marriage and martyrdom on the same day is a poignant motif in Shia lamentation.]</span> :@karbala-youth:loyal:
+    + <span style="text-decoration: underline;">&lt;&lt;sajjad&gt;&gt;</span> Ali Al-Sajjad \\ (&#1575;&#1604;&#1587;&#1580;&#1575;&#1583;) \\ 4th Imam
+      <span style="text-decoration: underline;">[fn::Ali ibn Hussain al-Sajjad (Zayn al-Abidin) &#8212; 4th Imam; survived Karbala as he was too ill to fight. His Sahifa al-Sajjadiyya (the Psalms of the Ahl al-Bayt) is a landmark of Islamic spirituality.]</span> :@karbala-youth:
+    + <span style="text-decoration: underline;">&lt;&lt;sukaynah&gt;&gt;</span> Sukaynah \\ (&#1587;&#1603;&#1610;&#1606;&#1577;)
+      <span style="text-decoration: underline;">[fn::Sukaynah bint Hussain &#8212; known for her piety and eloquence. Witnessed Karbala as a child; taken captive to Kufa and Damascus. She famously mourned her father's severed head.]</span> :@karbala-youth:
+    + <span style="text-decoration: underline;">&lt;&lt;ruqayyah&gt;&gt;</span> Ruqayyah \\ (&#1585;&#1602;&#1610;&#1577;)
+      <span style="text-decoration: underline;">[fn::Ruqayyah bint Hussain &#8212; the young daughter of Hussain taken captive after Karbala. Tradition holds she died in the dungeon of Damascus from grief after seeing her father's head.]</span> :@karbala-youth:
+    + <span style="text-decoration: underline;">&lt;&lt;abbas&gt;&gt;</span> Abbas \\ (&#1575;&#1604;&#1593;&#1576;&#1575;&#1587;)
+      <span style="text-decoration: underline;">[fn::Abbas ibn Ali (Abu al-Fadl) &#8212; half-brother of Hussain; son of Umm al-Banin. Standard-bearer at Karbala. Martyred at the Euphrates trying to fetch water for the children; his shrine in Karbala stands beside Hussain's.]</span> :@karbala-youth:
+      + <span style="text-decoration: underline;"><a href="ummalbanin">[[ummalbanin][:motherhood:]]</a></span>
+    + <span style="text-decoration: underline;">&lt;&lt;aliakbar&gt;&gt;</span> Ali Al-Akbar \\ (&#1575;&#1604;&#1571;&#1603;&#1576;&#1585;)
+      <span style="text-decoration: underline;">[fn::Ali al-Akbar ibn Hussain &#8212; eldest son of Hussain; son of Layla. The Prophet's companions said no youth resembled the Prophet more in appearance and character. Martyred at Karbala aged ~18.]</span> :@karbala-youth:
+    + <span style="text-decoration: underline;">&lt;&lt;qasim&gt;&gt;</span> Qasim \\ (&#1602;&#1575;&#1587;&#1605;)
+      <span style="text-decoration: underline;">[fn::Qasim ibn Hasan &#8212; son of Hasan; nephew of Hussain. Betrothed to Hussain's daughter before Karbala; martyred in battle there. His marriage and martyrdom on the same day is a poignant motif in Shia lamentation.]</span> :@karbala-youth:
+    + <span style="text-decoration: underline;">&lt;&lt;aliasghar&gt;&gt;</span> Ali Asghar \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1571;&#1589;&#1594;&#1585;) \\ infant martyr
+      <span style="text-decoration: underline;">[fn::Ali Asghar ibn Hussain &#8212; the infant son of Hussain and Rabab; only months old at Karbala. Hussain held him up to the enemy army asking for water; he was killed by a three-pronged arrow. The youngest martyr of Karbala.]</span> :@karbala-youth:
+      | fillcolor | #aaffaa |
+      | color     | #007700 |
+      + <span style="text-decoration: underline;"><a href="rabab">[[rabab][:motherhood:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;hasan&gt;&gt;</span> Hasan \\ (&#1575;&#1604;&#1581;&#1587;&#1606;) \\ 2nd Imam
+    <span style="text-decoration: underline;">[fn::Hasan ibn Ali &#8212; 2nd Imam; grandson of Muhammad &#65018;. Abdicated the caliphate to Muawiya to prevent civil war, under a treaty. Died 670 CE, reportedly poisoned; buried in Medina.]</span> :@alis-children:
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;zaynab&gt;&gt;</span> Zaynab \\ (&#1586;&#1610;&#1606;&#1576;)
+    <span style="text-decoration: underline;">[fn::Zaynab bint Ali &#8212; sister of Hussain; survived Karbala and became its voice. Her speech before Yazid in Damascus is celebrated as one of the most defiant addresses in Islamic history. Called 'the heroine of Karbala.']</span> :@alis-children:
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ummkulthum&gt;&gt;</span> Umm Kulthum \\ (&#1571;&#1605; &#1603;&#1604;&#1579;&#1608;&#1605;)
+    <span style="text-decoration: underline;">[fn::Umm Kulthum bint Ali &#8212; sister of Hussain and Zaynab; also taken captive after Karbala. She delivered passionate elegies in Kufa and Damascus alongside Zaynab.]</span> :@alis-children:
+    + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
 
 # Muslim was Hussain's envoy to Kufa &#8212; executed before Karbala.
 # Hurr was the Umayyad commander who defected to Hussain's side on Ashura morning.
 + <span style="text-decoration: underline;">&lt;&lt;muslibinaqil&gt;&gt;</span> Muslim ibn Aqil \\ (&#1605;&#1587;&#1604;&#1605; &#1576;&#1606; &#1593;&#1602;&#1610;&#1604;) \\ Hussain's envoy
-  <span style="text-decoration: underline;">[fn::Muslim ibn Aqil &#8212; cousin of Hussain (son of Aqil ibn Abi Talib); sent as envoy to Kufa to assess support before Karbala. Initially received pledges from thousands; abandoned when Ibn Ziyad arrived and crushed the uprising. Executed on Ibn Ziyad's orders in 680 CE.]</span> :loyal:
+  <span style="text-decoration: underline;">[fn::Muslim ibn Aqil &#8212; cousin of Hussain (son of Aqil ibn Abi Talib); sent as envoy to Kufa to assess support before Karbala. Initially received pledges from thousands; abandoned when Ibn Ziyad arrived and crushed the uprising. Executed on Ibn Ziyad's orders in 680 CE.]</span>
+  + <span style="text-decoration: underline;"><a href="aqil">[[aqil]]</a></span>
   + <span style="text-decoration: underline;"><a href="hussain">[[hussain][:ancestry:]]</a></span>
   + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad][:killed-by:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;hurr&gt;&gt;</span> Hurr al-Riyahi \\ (&#1575;&#1604;&#1581;&#1585; &#1575;&#1604;&#1585;&#1610;&#1575;&#1581;&#1610;) \\ Defected to Hussain
-  <span style="text-decoration: underline;">[fn::Hurr ibn Yazid al-Riyahi &#8212; Umayyad cavalry commander sent to intercept Hussain. On the morning of Ashura, he defected to Hussain's side, knowing it meant death. His repentance is one of the most celebrated acts in Shia literature; he was martyred in the battle.]</span> :loyal:
+  <span style="text-decoration: underline;">[fn::Hurr ibn Yazid al-Riyahi &#8212; Umayyad cavalry commander sent to intercept Hussain. On the morning of Ashura, he defected to Hussain's side, knowing it meant death. His repentance is one of the most celebrated acts in Shia literature; he was martyred in the battle.]</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
   + <span style="text-decoration: underline;"><a href="hussain">[[hussain][:ancestry:]]</a></span>
 
 # Zayd and Ismail are sons of Imams whose followings became separate Shia branches.
 # Their placement here, adjacent to the Imam chain, shows where the sectarian splits occurred.
 + <span style="text-decoration: underline;">&lt;&lt;zayd&gt;&gt;</span> Zayd ibn Ali \\ (&#1586;&#1610;&#1583; &#1576;&#1606; &#1593;&#1604;&#1610;) \\ Zaydi Shia eponym
-  <span style="text-decoration: underline;">[fn::Zayd ibn Ali &#8212; son of Imam Sajjad (4th Imam); brother of Imam Baqir. Led an armed uprising against Umayyad Caliph Hisham in Kufa, 740 CE. Was killed in battle, but his followers became Zaydi ('Fiver') Shia &#8212; the branch that holds Imams must be active, just rulers willing to fight for their rights.]</span> :@offshoots:loyal:
+  <span style="text-decoration: underline;">[fn::Zayd ibn Ali &#8212; son of Imam Sajjad (4th Imam); brother of Imam Baqir. Led an armed uprising against Umayyad Caliph Hisham in Kufa, 740 CE. Was killed in battle, but his followers became Zaydi ('Fiver') Shia &#8212; the branch that holds Imams must be active, just rulers willing to fight for their rights.]</span> :@offshoots:
+  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span>
   + <span style="text-decoration: underline;"><a href="hisham">[[hisham][:killed-by:]]</a></span>
 + <span style="text-decoration: underline;">&lt;&lt;ismailbnjafar&gt;&gt;</span> Ismail ibn Jafar \\ (&#1573;&#1587;&#1605;&#1575;&#1593;&#1610;&#1604; &#1576;&#1606; &#1580;&#1593;&#1601;&#1585;) \\ Ismaili Shia eponym
-  <span style="text-decoration: underline;">[fn::Ismail ibn Jafar &#8212; eldest son of Imam Sadiq (6th Imam). Died before his father, yet a group held the Imamate passed through him to his son Muhammad ibn Ismail. This became Ismaili ('Sevener') Shia Islam &#8212; the branch behind the Fatimid Caliphate, and today the Nizari (Aga Khanis), Dawoodi Bohoras, and others.]</span> :@offshoots:loyal:
+  <span style="text-decoration: underline;">[fn::Ismail ibn Jafar &#8212; eldest son of Imam Sadiq (6th Imam). Died before his father, yet a group held the Imamate passed through him to his son Muhammad ibn Ismail. This became Ismaili ('Sevener') Shia Islam &#8212; the branch behind the Fatimid Caliphate, and today the Nizari (Aga Khanis), Dawoodi Bohoras, and others.]</span> :@offshoots:
+  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span>
 
 # Muhammad al-Nafs al-Zakiyya is a Hasanid martyr &#8212; grandson of Hasan, not in the Husayni Imam chain,
 # but his uprising against al-Mansur shows the Abbasids targeted the entire Alid family, not just the Imams.
 + <span style="text-decoration: underline;">&lt;&lt;nafs&gt;&gt;</span> Muhammad al-Nafs al-Zakiyya \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1606;&#1601;&#1587; &#1575;&#1604;&#1586;&#1603;&#1610;&#1577;) \\ Hasanid Martyr
-  <span style="text-decoration: underline;">[fn::Muhammad ibn Abdullah al-Mahd al-Nafs al-Zakiyya ('the Pure Soul') &#8212; grandson of Imam Hasan (2nd Imam). Led an armed uprising in Medina, 762 CE, against Abbasid Caliph al-Mansur, who had his family imprisoned. Many believed him to be the awaited Mahdi. Killed in battle; his brother Ibrahim's simultaneous revolt in Basra was also crushed. Venerated as a martyr; pivotal in Zaydi tradition.]</span> :loyal:
+  <span style="text-decoration: underline;">[fn::Muhammad ibn Abdullah al-Mahd al-Nafs al-Zakiyya ('the Pure Soul') &#8212; grandson of Imam Hasan (2nd Imam). Led an armed uprising in Medina, 762 CE, against Abbasid Caliph al-Mansur, who had his family imprisoned. Many believed him to be the awaited Mahdi. Killed in battle; his brother Ibrahim's simultaneous revolt in Basra was also crushed. Venerated as a martyr; pivotal in Zaydi tradition.]</span>
+  + <span style="text-decoration: underline;"><a href="hasan">[[hasan]]</a></span>
   + <span style="text-decoration: underline;"><a href="almansur">[[almansur][:killed-by:]]</a></span>
 
+# The first 4 Imams (Ali, Hasan, Hussain, Sajjad) are declared above as standalone
+# nodes; this cluster adds Imams 5&#8211;12 as a chain descending from Ali Al-Sajjad.
+# All 12 are descendants of Ali ibn Abi Talib through the line of Hussain.
++ The Twelve Imams (&#1593;&#1604;&#1610;&#1607;&#1605; &#1575;&#1604;&#1587;&#1604;&#1575;&#1605;) :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #eeffee |
+  | color     | #006600 |
+  | fontcolor | #004400 |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
+  + <span style="text-decoration: underline;">&lt;&lt;baqir&gt;&gt;</span> Muhammad al-Baqir \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1576;&#1575;&#1602;&#1585;) \\ 5th Imam
+    <span style="text-decoration: underline;">[fn::Muhammad al-Baqir ('the one who opens up knowledge') &#8212; son of Sajjad; 5th Imam. Renowned for expansive religious scholarship; established the foundations of Shia jurisprudence in Medina.]</span>
+    + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;sadiq&gt;&gt;</span> Jafar al-Sadiq \\ (&#1580;&#1593;&#1601;&#1585; &#1575;&#1604;&#1589;&#1575;&#1583;&#1602;) \\ 6th Imam
+    <span style="text-decoration: underline;">[fn::Jafar al-Sadiq ('the truthful') &#8212; son of Baqir; 6th Imam. The most prolific scholarly Imam; his students included Abu Hanifa and Malik ibn Anas. Shia fiqh is called the Ja'fari school in his honor.]</span>
+    + <span style="text-decoration: underline;"><a href="baqir">[[baqir]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;kadhim&gt;&gt;</span> Musa al-Kadhim \\ (&#1605;&#1608;&#1587;&#1609; &#1575;&#1604;&#1603;&#1575;&#1592;&#1605;) \\ 7th Imam
+    <span style="text-decoration: underline;">[fn::Musa al-Kadhim ('the forbearing') &#8212; son of Sadiq; 7th Imam. Imprisoned repeatedly by the Abbasid caliphs Mahdi and Harun al-Rashid; died in prison in Baghdad, 799 CE.]</span>
+    + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ridha&gt;&gt;</span> Ali al-Ridha \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1585;&#1590;&#1575;) \\ 8th Imam
+    <span style="text-decoration: underline;">[fn::Ali al-Ridha ('the pleased one') &#8212; son of Kadhim; 8th Imam. Appointed heir-apparent by Abbasid Caliph al-Ma'mun (a political move). His shrine in Mashhad, Iran is one of the largest mosques in the world.]</span>
+    + <span style="text-decoration: underline;"><a href="kadhim">[[kadhim]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;taqi&gt;&gt;</span> Muhammad al-Taqi \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1578;&#1602;&#1610;) \\ 9th Imam
+    <span style="text-decoration: underline;">[fn::Muhammad al-Taqi ('the pious') &#8212; son of Ridha; 9th Imam. Became Imam at age 8 after his father's death. Married a daughter of the Abbasid caliph al-Ma'mun. Died aged ~25, reportedly poisoned.]</span>
+    + <span style="text-decoration: underline;"><a href="ridha">[[ridha]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;hadi&gt;&gt;</span> Ali al-Hadi \\ (&#1593;&#1604;&#1610; &#1575;&#1604;&#1607;&#1575;&#1583;&#1610;) \\ 10th Imam
+    <span style="text-decoration: underline;">[fn::Ali al-Hadi ('the guide') &#8212; son of Taqi; 10th Imam. Placed under house arrest in Samarra by Abbasid authorities for most of his life. Father of Hasan al-Askari.]</span>
+    + <span style="text-decoration: underline;"><a href="taqi">[[taqi]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;askari&gt;&gt;</span> Hasan al-Askari \\ (&#1575;&#1604;&#1581;&#1587;&#1606; &#1575;&#1604;&#1593;&#1587;&#1603;&#1585;&#1610;) \\ 11th Imam
+    <span style="text-decoration: underline;">[fn::Hasan al-Askari &#8212; son of Hadi; 11th Imam. Named 'al-Askari' for the military garrison city of Samarra where he was confined. Father of the 12th Imam. Died 874 CE, reportedly poisoned.]</span>
+    + <span style="text-decoration: underline;"><a href="hadi">[[hadi]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;mahdi&gt;&gt;</span> Muhammad al-Mahdi \\ (&#1605;&#1581;&#1605;&#1583; &#1575;&#1604;&#1605;&#1607;&#1583;&#1610;) \\ 12th Imam
+    <span style="text-decoration: underline;">[fn::Muhammad al-Mahdi &#8212; son of Askari; 12th and final Imam. Believed to be in 'occultation' (ghayba) since 874 CE &#8212; hidden from sight but alive, to return at the end of times as the Mahdi who establishes justice.]</span>
+    + <span style="text-decoration: underline;"><a href="askari">[[askari]]</a></span>
 
 # Narjis Khatun is theologically indispensable &#8212; as mother of the 12th Imam, she anchors the eschatological
 # narrative of the Major Occultation. Her Byzantine origin and conversion are part of the tradition's telling.
 + <span style="text-decoration: underline;">&lt;&lt;narjis&gt;&gt;</span> Narjis Khatun \\ (&#1606;&#1585;&#1580;&#1587; &#1582;&#1575;&#1578;&#1608;&#1606;) \\ Mother of the Mahdi
-  <span style="text-decoration: underline;">[fn::Narjis Khatun &#8212; wife of Imam Hasan al-Askari (11th Imam); mother of Imam Muhammad al-Mahdi (12th Imam). Of Byzantine/Roman origin; the tradition holds she was a princess who converted to Islam and was brought to Samarra. Her role as mother of the hidden Imam makes her a figure of profound theological significance in Twelver Shia eschatology.]</span> :loyal:@imam-10:container_Wives_of_the_Imams:
+  <span style="text-decoration: underline;">[fn::Narjis Khatun &#8212; wife of Imam Hasan al-Askari (11th Imam); mother of Imam Muhammad al-Mahdi (12th Imam). Of Byzantine/Roman origin; the tradition holds she was a princess who converted to Islam and was brought to Samarra. Her role as mother of the hidden Imam makes her a figure of profound theological significance in Twelver Shia eschatology.]</span>
   + <span style="text-decoration: underline;"><a href="askari">[[askari][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="mahdi">[[mahdi]]</a></span>
+  + <span style="text-decoration: underline;"><a href="mahdi">[[mahdi][:motherhood:]]</a></span>
 
-# Companions of Ali, each :companion: &#8212; figures whose loyalty to the Ahl al-Bayt defined early Shia social identity.
+# Companions of Ali &#8212; figures whose loyalty to the Ahl al-Bayt defined early Shia social identity.
 # Salman's hadith ("Salman is from us, Ahl al-Bayt"), Ammar's martyrdom at Siffin, and
 # Malik al-Ashtar's generalship are cornerstones of Shia historical memory.
-+ <span style="text-decoration: underline;">&lt;&lt;salman&gt;&gt;</span> Salman al-Farisi \\ (&#1587;&#1604;&#1605;&#1575;&#1606; &#1575;&#1604;&#1601;&#1575;&#1585;&#1587;&#1610;) \\ Persian Companion
-  <span style="text-decoration: underline;">[fn::Salman al-Farisi &#8212; Persian companion of the Prophet; converted from Zoroastrianism after a long spiritual quest. The Prophet declared: 'Salman is from us, Ahl al-Bayt.' Became a close companion of Ali and later Governor of Ctesiphon (al-Madain) under him. Considered the first Persian Muslim of note.]</span> :companion:
-  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ammar&gt;&gt;</span> Ammar ibn Yasir \\ (&#1593;&#1605;&#1575;&#1585; &#1576;&#1606; &#1610;&#1575;&#1587;&#1585;) \\ Martyr of Siffin
-  <span style="text-decoration: underline;">[fn::Ammar ibn Yasir &#8212; one of the earliest Muslims; his mother Sumayyah was the first martyr of Islam. The Prophet foretold: 'Ammar will be killed by the transgressing group.' Fought for Ali at the Battle of Siffin (657 CE) and was killed by Muawiya's forces &#8212; fulfilling the prophecy and cementing Ali's legitimacy in Shia eyes.]</span> :companion:
-  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:killed-by:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;malikashtar&gt;&gt;</span> Malik al-Ashtar \\ (&#1605;&#1575;&#1604;&#1603; &#1575;&#1604;&#1571;&#1588;&#1578;&#1585;) \\ Ali's Foremost General
-  <span style="text-decoration: underline;">[fn::Malik ibn al-Harith al-Ashtar &#8212; Ali's most trusted and capable general; appointed Governor of Egypt by Ali. Reportedly poisoned by Muawiya's agents (via honey laced with poison) before he could take up his Egyptian post. Ali mourned him: 'Malik was to me as I was to the Prophet.' An unrivalled figure in Shia military and moral tradition.]</span> :companion:
-  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:killed-by:]]</a></span>
++ Companions of Ali :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #fef3c7 |
+  | color     | #92400e |
+  | fontcolor | #78350f |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #fde68a |
+  | color     | #92400e |
+  + <span style="text-decoration: underline;">&lt;&lt;salman&gt;&gt;</span> Salman al-Farisi \\ (&#1587;&#1604;&#1605;&#1575;&#1606; &#1575;&#1604;&#1601;&#1575;&#1585;&#1587;&#1610;) \\ Persian Companion
+    <span style="text-decoration: underline;">[fn::Salman al-Farisi &#8212; Persian companion of the Prophet; converted from Zoroastrianism after a long spiritual quest. The Prophet declared: 'Salman is from us, Ahl al-Bayt.' Became a close companion of Ali and later Governor of Ctesiphon (al-Madain) under him. Considered the first Persian Muslim of note.]</span>
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="ali">[[ali][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ammar&gt;&gt;</span> Ammar ibn Yasir \\ (&#1593;&#1605;&#1575;&#1585; &#1576;&#1606; &#1610;&#1575;&#1587;&#1585;) \\ Martyr of Siffin
+    <span style="text-decoration: underline;">[fn::Ammar ibn Yasir &#8212; one of the earliest Muslims; his mother Sumayyah was the first martyr of Islam. The Prophet foretold: 'Ammar will be killed by the transgressing group.' Fought for Ali at the Battle of Siffin (657 CE) and was killed by Muawiya's forces &#8212; fulfilling the prophecy and cementing Ali's legitimacy in Shia eyes.]</span>
+    + <span style="text-decoration: underline;"><a href="ali">[[ali][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;malikashtar&gt;&gt;</span> Malik al-Ashtar \\ (&#1605;&#1575;&#1604;&#1603; &#1575;&#1604;&#1571;&#1588;&#1578;&#1585;) \\ Ali's Foremost General
+    <span style="text-decoration: underline;">[fn::Malik ibn al-Harith al-Ashtar &#8212; Ali's most trusted and capable general; appointed Governor of Egypt by Ali. Reportedly poisoned by Muawiya's agents (via honey laced with poison) before he could take up his Egyptian post. Ali mourned him: 'Malik was to me as I was to the Prophet.' An unrivalled figure in Shia military and moral tradition.]</span>
+    + <span style="text-decoration: underline;"><a href="ali">[[ali][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:killed-by:]]</a></span>
 
-# Abu Bakr, Umar, and Uthman held the caliphate before Ali; they, and Muawiya after him, are each :antagonist:.
+# The Rashidun (Rightly Guided) Caliphs &#8212; Sunni Islam's first four successors to Muhammad.
+# Ali (4th Caliph) is already in the graph above; Muawiya (1st Umayyad) is in Antagonists.
 # Aisha (daughter of Abu Bakr, wife of Muhammad) was a major hadith transmitter and
 # political figure &#8212; she led opposition to Ali at the Battle of the Camel (656 CE).
-+ <span style="text-decoration: underline;">&lt;&lt;abubakr&gt;&gt;</span> Abu Bakr \\ (&#1571;&#1576;&#1608; &#1576;&#1603;&#1585;) \\ 1st Caliph
-  <span style="text-decoration: underline;">[fn::Abu Bakr al-Siddiq &#8212; 1st Caliph (632&#8211;634 CE). Sunni tradition venerates him as the Prophet's closest companion and first successor. In Shia tradition: the Saqifa assembly that chose him convened while Ali was still washing and shrouding Muhammad &#65018; for burial &#8212; bypassing the Prophet's explicit designation of Ali at Ghadir Khumm (18 Dhul-Hijja 10 AH). He confiscated Fadak from Fatimah, citing a solitary hadith ('prophets leave no inheritance') that Shia scholars hold as fabricated. Fatimah never reconciled with him; she died unreconciled and was buried secretly.]</span> :antagonist:
-+ <span style="text-decoration: underline;">&lt;&lt;umar&gt;&gt;</span> Umar ibn al-Khattab \\ (&#1593;&#1605;&#1585;) \\ 2nd Caliph
-  <span style="text-decoration: underline;">[fn::Umar ibn al-Khattab &#8212; 2nd Caliph (634&#8211;644 CE). Sunni tradition credits him with vast Islamic expansion into Persia, Syria, and Egypt, and with administrative reform. In Shia tradition: Umar was the driving force behind the Saqifa succession that sidelined Ali. He led the party to Fatimah's house to compel Ali's pledge of allegiance &#8212; in Shia narrations, the door was forced or set alight, Fatimah was struck by the door or directly, and she miscarried Muhsin. He also enforced the confiscation of Fadak. These events are among the deepest grievances in Shia historical memory.]</span> :antagonist:
-  + <span style="font-weight: bold;">his shura chose ::</span> <span style="text-decoration: underline;"><a href="uthman">[[uthman][:mention:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;uthman&gt;&gt;</span> Uthman ibn Affan \\ (&#1593;&#1579;&#1605;&#1575;&#1606;) \\ 3rd Caliph
-  <span style="text-decoration: underline;">[fn::Uthman ibn Affan &#8212; 3rd Caliph (644&#8211;656 CE). Compiled the standard Quran text (Uthmanic codex). His favoritism toward Umayyad relatives bred rebellion; he was assassinated in his home in Medina.]</span> :antagonist:
-  + <span style="font-weight: bold;">made governor of all Syria ::</span> <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:mention:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;aisha&gt;&gt;</span> Aisha \\ (&#1593;&#1575;&#1574;&#1588;&#1577;) \\ wife of Muhammad
-  <span style="text-decoration: underline;">[fn::Aisha bint Abi Bakr &#8212; youngest and most prominent wife of Muhammad &#65018;; 'Mother of the Believers.' The primary transmitter of thousands of hadith. Led the Battle of the Camel (656 CE) against Ali &#8212; a defining Sunni-Shia fault line.]</span> :loyal:
-  + <span style="font-weight: bold;">daughter ::</span> <span style="text-decoration: underline;"><a href="abubakr">[[abubakr]]</a></span>
-  + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:married:]]</a></span>
++ Rashidun Caliphs (&#1575;&#1604;&#1582;&#1604;&#1601;&#1575;&#1569; &#1575;&#1604;&#1585;&#1575;&#1588;&#1583;&#1608;&#1606;) :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #fff8e1 |
+  | color     | #aa7700 |
+  | fontcolor | #664400 |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #ffe082 |
+  | color     | #aa7700 |
+  + <span style="text-decoration: underline;">&lt;&lt;abubakr&gt;&gt;</span> Abu Bakr \\ (&#1571;&#1576;&#1608; &#1576;&#1603;&#1585;) \\ 1st Caliph
+    <span style="text-decoration: underline;">[fn::Abu Bakr al-Siddiq &#8212; 1st Caliph (632&#8211;634 CE). Sunni tradition venerates him as the Prophet's closest companion and first successor. In Shia tradition: the Saqifa assembly that chose him convened while Ali was still washing and shrouding Muhammad &#65018; for burial &#8212; bypassing the Prophet's explicit designation of Ali at Ghadir Khumm (18 Dhul-Hijja 10 AH). He confiscated Fadak from Fatimah, citing a solitary hadith ('prophets leave no inheritance') that Shia scholars hold as fabricated. Fatimah never reconciled with him; she died unreconciled and was buried secretly.]</span>
+  + <span style="text-decoration: underline;">&lt;&lt;umar&gt;&gt;</span> Umar ibn al-Khattab \\ (&#1593;&#1605;&#1585;) \\ 2nd Caliph
+    <span style="text-decoration: underline;">[fn::Umar ibn al-Khattab &#8212; 2nd Caliph (634&#8211;644 CE). Sunni tradition credits him with vast Islamic expansion into Persia, Syria, and Egypt, and with administrative reform. In Shia tradition: Umar was the driving force behind the Saqifa succession that sidelined Ali. He led the party to Fatimah's house to compel Ali's pledge of allegiance &#8212; in Shia narrations, the door was forced or set alight, Fatimah was struck by the door or directly, and she miscarried Muhsin. He also enforced the confiscation of Fadak. These events are among the deepest grievances in Shia historical memory.]</span>
+  + <span style="text-decoration: underline;">&lt;&lt;uthman&gt;&gt;</span> Uthman ibn Affan \\ (&#1593;&#1579;&#1605;&#1575;&#1606;) \\ 3rd Caliph
+    <span style="text-decoration: underline;">[fn::Uthman ibn Affan &#8212; 3rd Caliph (644&#8211;656 CE). Compiled the standard Quran text (Uthmanic codex). His favoritism toward Umayyad relatives bred rebellion; he was assassinated in his home in Medina.]</span>
+  + <span style="text-decoration: underline;">&lt;&lt;aisha&gt;&gt;</span> Aisha \\ (&#1593;&#1575;&#1574;&#1588;&#1577;) \\ wife of Muhammad
+    <span style="text-decoration: underline;">[fn::Aisha bint Abi Bakr &#8212; youngest and most prominent wife of Muhammad &#65018;; 'Mother of the Believers.' The primary transmitter of thousands of hadith. Led the Battle of the Camel (656 CE) against Ali &#8212; a defining Sunni-Shia fault line.]</span>
+    + <span style="font-weight: bold;">daughter ::</span> <span style="text-decoration: underline;"><a href="abubakr">[[abubakr]]</a></span>
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:married:]]</a></span>
 
-# Umayyad caliphs, each :umayyad:, who oppressed the early Imams after the Karbala period.
+# Umayyad caliphs who oppressed the early Imams after the Karbala period.
 # The Umayyad dynasty (661&#8211;750 CE) persecuted Imams 4&#8211;6.
-+ <span style="text-decoration: underline;">&lt;&lt;abdmalik&gt;&gt;</span> Abd al-Malik \\ (&#1593;&#1576;&#1583; &#1575;&#1604;&#1605;&#1604;&#1603;) \\ Umayyad Caliph
-  <span style="text-decoration: underline;">[fn::Abd al-Malik ibn Marwan &#8212; 5th Umayyad Caliph (685&#8211;705 CE). The dominant caliph during Imam Sajjad's era; sent al-Hajjaj ibn Yusuf to crush Iraqi uprisings. Centralised power and Arabised the administration.]</span> :umayyad:
-  + <span style="text-decoration: underline;"><a href="aishabinthisham">[[aishabinthisham][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="wallada">[[wallada][:married:]]</a></span>
-  + <span style="font-weight: bold;">oppressed ::</span> <span style="text-decoration: underline;"><a href="sajjad">[[sajjad][:imprisoned:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;walid1&gt;&gt;</span> al-Walid I \\ (&#1575;&#1604;&#1608;&#1604;&#1610;&#1583; &#1575;&#1604;&#1571;&#1608;&#1604;) \\ Umayyad Caliph
-  <span style="text-decoration: underline;">[fn::al-Walid ibn Abd al-Malik &#8212; 6th Umayyad Caliph (705&#8211;715 CE). Son of Abd al-Malik; continued his father's oppressive policies. Imam Sajjad died during his reign, reportedly at his instigation.]</span> :umayyad:@imam-3:
-+ <span style="text-decoration: underline;">&lt;&lt;hisham&gt;&gt;</span> Hisham \\ (&#1607;&#1588;&#1575;&#1605;) \\ Umayyad Caliph
-  <span style="text-decoration: underline;">[fn::Hisham ibn Abd al-Malik &#8212; 10th Umayyad Caliph (724&#8211;743 CE). The main political oppressor of Imams Baqir and Sadiq; summoned both Imams to Damascus and subjected them to interrogation. Reportedly had Imam Baqir poisoned.]</span> :umayyad:@imam-4:
-  + <span style="font-weight: bold;">oppressed ::</span> <span style="text-decoration: underline;"><a href="sadiq">[[sadiq][:imprisoned:]]</a></span>
++ Umayyad Caliphs (&#1575;&#1604;&#1571;&#1605;&#1608;&#1610;&#1608;&#1606;) :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #fff3e0 |
+  | color     | #b34700 |
+  | fontcolor | #7a2e00 |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #ffe0b2 |
+  | color     | #b34700 |
+  + <span style="text-decoration: underline;">&lt;&lt;abdmalik&gt;&gt;</span> Abd al-Malik \\ (&#1593;&#1576;&#1583; &#1575;&#1604;&#1605;&#1604;&#1603;) \\ Umayyad Caliph
+    <span style="text-decoration: underline;">[fn::Abd al-Malik ibn Marwan &#8212; 5th Umayyad Caliph (685&#8211;705 CE). The dominant caliph during Imam Sajjad's era; sent al-Hajjaj ibn Yusuf to crush Iraqi uprisings. Centralised power and Arabised the administration.]</span> :@consolidators:
+    + <span style="font-weight: bold;">oppressed ::</span> <span style="text-decoration: underline;"><a href="sajjad">[[sajjad][:imprisoned:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;walid1&gt;&gt;</span> al-Walid I \\ (&#1575;&#1604;&#1608;&#1604;&#1610;&#1583; &#1575;&#1604;&#1571;&#1608;&#1604;) \\ Umayyad Caliph
+    <span style="text-decoration: underline;">[fn::al-Walid ibn Abd al-Malik &#8212; 6th Umayyad Caliph (705&#8211;715 CE). Son of Abd al-Malik; continued his father's oppressive policies. Imam Sajjad died during his reign, reportedly at his instigation.]</span>
+    + <span style="text-decoration: underline;"><a href="abdmalik">[[abdmalik]]</a></span>
+    + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;hisham&gt;&gt;</span> Hisham \\ (&#1607;&#1588;&#1575;&#1605;) \\ Umayyad Caliph
+    <span style="text-decoration: underline;">[fn::Hisham ibn Abd al-Malik &#8212; 10th Umayyad Caliph (724&#8211;743 CE). The main political oppressor of Imams Baqir and Sadiq; summoned both Imams to Damascus and subjected them to interrogation. Reportedly had Imam Baqir poisoned.]</span> :@zeniths:
+    + <span style="text-decoration: underline;"><a href="abdmalik">[[abdmalik][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="baqir">[[baqir][:killed-by:]]</a></span>
+    + <span style="font-weight: bold;">oppressed ::</span> <span style="text-decoration: underline;"><a href="sadiq">[[sadiq][:imprisoned:]]</a></span>
 
 # The Abbasids overthrew the Umayyads in 750 CE but continued &#8212; and intensified &#8212;
 # persecution of the Imams, shifting from open warfare to imprisonment and poisoning.
-# Each :abbasid: caliph is the primary oppressor of the corresponding Imam.
-+ <span style="text-decoration: underline;">&lt;&lt;almansur&gt;&gt;</span> al-Mansur \\ (&#1575;&#1604;&#1605;&#1606;&#1589;&#1608;&#1585;) \\ 2nd Abbasid
-  <span style="text-decoration: underline;">[fn::Abu Ja'far al-Mansur &#8212; 2nd Abbasid Caliph (754&#8211;775 CE). Founded Baghdad. Repeatedly summoned and interrogated Imam Sadiq; according to most Shia sources, had him poisoned in 765 CE.]</span> :abbasid:@imam-5:
-  + <span style="text-decoration: underline;"><a href="harun">[[harun][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;harun&gt;&gt;</span> Harun al-Rashid \\ (&#1607;&#1575;&#1585;&#1608;&#1606; &#1575;&#1604;&#1585;&#1588;&#1610;&#1583;) \\ 5th Abbasid
-  <span style="text-decoration: underline;">[fn::Harun al-Rashid &#8212; 5th Abbasid Caliph (786&#8211;809 CE). Famous for the tales of 1001 Nights. Imprisoned Imam Kadhim repeatedly in Baghdad; the Imam died in prison in 799 CE, most likely by Harun's order.]</span> :abbasid:@imam-6:
-  + <span style="text-decoration: underline;"><a href="mamun">[[mamun][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;mamun&gt;&gt;</span> al-Ma'mun \\ (&#1575;&#1604;&#1605;&#1571;&#1605;&#1608;&#1606;) \\ 7th Abbasid
-  <span style="text-decoration: underline;">[fn::al-Ma'mun &#8212; 7th Abbasid Caliph (813&#8211;833 CE). Son of Harun. Appointed Imam Ridha as heir-apparent (a political manoeuvre to co-opt Shia support), then likely had him poisoned in 818 CE in Khurasan.]</span> :abbasid:@imam-7:
-  + <span style="text-decoration: underline;"><a href="mutasim">[[mutasim][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;mutasim&gt;&gt;</span> al-Mu'tasim \\ (&#1575;&#1604;&#1605;&#1593;&#1578;&#1589;&#1605;) \\ 8th Abbasid
-  <span style="text-decoration: underline;">[fn::al-Mu'tasim &#8212; 8th Abbasid Caliph (833&#8211;842 CE). Brother of al-Ma'mun. Summoned Imam Taqi to Baghdad and reportedly had him poisoned; Imam Taqi died aged ~25 in 835 CE.]</span> :abbasid:@imam-8:
-  + <span style="text-decoration: underline;"><a href="mutawakkil">[[mutawakkil][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;mutawakkil&gt;&gt;</span> al-Mutawakkil \\ (&#1575;&#1604;&#1605;&#1578;&#1608;&#1603;&#1604;) \\ 10th Abbasid
-  <span style="text-decoration: underline;">[fn::al-Mutawakkil &#8212; 10th Abbasid Caliph (847&#8211;861 CE). Notorious for anti-Shia policies: demolished the Karbala shrine, forbade pilgrimage, and forcibly relocated Imam Hadi to the garrison city of Samarra under house arrest.]</span> :abbasid:@imam-9:
-  + <span style="text-decoration: underline;"><a href="mutamid">[[mutamid][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;mutamid&gt;&gt;</span> al-Mu'tamid \\ (&#1575;&#1604;&#1605;&#1593;&#1578;&#1605;&#1583;) \\ 15th Abbasid
-  <span style="text-decoration: underline;">[fn::al-Mu'tamid &#8212; 15th Abbasid Caliph (870&#8211;892 CE). Kept Imam Askari under strict house arrest in Samarra; the Imam died under suspicious circumstances in 874 CE during his reign, triggering the Major Occultation of the 12th Imam.]</span> :abbasid:@imam-10:
+# Each node here is the primary oppressor of the corresponding Imam.
++ Abbasid Caliphs (&#1575;&#1604;&#1593;&#1576;&#1575;&#1587;&#1610;&#1608;&#1606;) :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #f3e5f5 |
+  | color     | #6a0dad |
+  | fontcolor | #3d0066 |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #e1bee7 |
+  | color     | #6a0dad |
+  + <span style="text-decoration: underline;">&lt;&lt;almansur&gt;&gt;</span> al-Mansur \\ (&#1575;&#1604;&#1605;&#1606;&#1589;&#1608;&#1585;) \\ 2nd Abbasid
+    <span style="text-decoration: underline;">[fn::Abu Ja'far al-Mansur &#8212; 2nd Abbasid Caliph (754&#8211;775 CE). Founded Baghdad. Repeatedly summoned and interrogated Imam Sadiq; according to most Shia sources, had him poisoned in 765 CE.]</span> :@consolidators:
+    + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;harun&gt;&gt;</span> Harun al-Rashid \\ (&#1607;&#1575;&#1585;&#1608;&#1606; &#1575;&#1604;&#1585;&#1588;&#1610;&#1583;) \\ 5th Abbasid
+    <span style="text-decoration: underline;">[fn::Harun al-Rashid &#8212; 5th Abbasid Caliph (786&#8211;809 CE). Famous for the tales of 1001 Nights. Imprisoned Imam Kadhim repeatedly in Baghdad; the Imam died in prison in 799 CE, most likely by Harun's order.]</span> :@zeniths:
+    + <span style="text-decoration: underline;"><a href="almansur">[[almansur][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="kadhim">[[kadhim][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;mamun&gt;&gt;</span> al-Ma'mun \\ (&#1575;&#1604;&#1605;&#1571;&#1605;&#1608;&#1606;) \\ 7th Abbasid
+    <span style="text-decoration: underline;">[fn::al-Ma'mun &#8212; 7th Abbasid Caliph (813&#8211;833 CE). Son of Harun. Appointed Imam Ridha as heir-apparent (a political manoeuvre to co-opt Shia support), then likely had him poisoned in 818 CE in Khurasan.]</span> :@mihna:
+    + <span style="text-decoration: underline;"><a href="harun">[[harun][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="ridha">[[ridha][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;mutasim&gt;&gt;</span> al-Mu'tasim \\ (&#1575;&#1604;&#1605;&#1593;&#1578;&#1589;&#1605;) \\ 8th Abbasid
+    <span style="text-decoration: underline;">[fn::al-Mu'tasim &#8212; 8th Abbasid Caliph (833&#8211;842 CE). Brother of al-Ma'mun. Summoned Imam Taqi to Baghdad and reportedly had him poisoned; Imam Taqi died aged ~25 in 835 CE.]</span> :@mihna:
+    + <span style="text-decoration: underline;"><a href="mamun">[[mamun][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="taqi">[[taqi][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;mutawakkil&gt;&gt;</span> al-Mutawakkil \\ (&#1575;&#1604;&#1605;&#1578;&#1608;&#1603;&#1604;) \\ 10th Abbasid
+    <span style="text-decoration: underline;">[fn::al-Mutawakkil &#8212; 10th Abbasid Caliph (847&#8211;861 CE). Notorious for anti-Shia policies: demolished the Karbala shrine, forbade pilgrimage, and forcibly relocated Imam Hadi to the garrison city of Samarra under house arrest.]</span> :@samarra:
+    + <span style="text-decoration: underline;"><a href="mutasim">[[mutasim][:ancestry:]]</a></span>
+    + <span style="font-weight: bold;">imprisoned ::</span> <span style="text-decoration: underline;"><a href="hadi">[[hadi][:imprisoned:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;mutamid&gt;&gt;</span> al-Mu'tamid \\ (&#1575;&#1604;&#1605;&#1593;&#1578;&#1605;&#1583;) \\ 15th Abbasid
+    <span style="text-decoration: underline;">[fn::al-Mu'tamid &#8212; 15th Abbasid Caliph (870&#8211;892 CE). Kept Imam Askari under strict house arrest in Samarra; the Imam died under suspicious circumstances in 874 CE during his reign, triggering the Major Occultation of the 12th Imam.]</span> :@samarra:
+    + <span style="text-decoration: underline;"><a href="mutawakkil">[[mutawakkil][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="askari">[[askari][:killed-by:]]</a></span>
 
 # Hamza is Muhammad's paternal uncle &#8212; a son of Abd al-Muttalib, same as Abu Talib.
-# He is :loyal:, as are the Imams; his martyrdom at Uhud is mourned alongside Hussain in Shia tradition.
+# Green fill marks him as a hero; his martyrdom at Uhud is mourned alongside Hussain in Shia tradition.
 + <span style="text-decoration: underline;">&lt;&lt;hamza&gt;&gt;</span> Hamza ibn Abd al-Muttalib \\ (&#1581;&#1605;&#1586;&#1577;) \\ Lion of God
-  <span style="text-decoration: underline;">[fn::Hamza ibn Abd al-Muttalib &#8212; uncle of Muhammad &#65018;; among the earliest and fiercest converts to Islam. Called 'Asad Allah' (Lion of God) and 'Sayyid al-Shuhada' (Master of Martyrs). Martyred at Uhud (625 CE) by Wahshi ibn Harb, a spear-thrower hired by Hind bint Utbah for personal revenge (her father was killed at Badr). Hind then mutilated his body. His martyrdom is mourned alongside Hussain in Shia tradition.]</span> :loyal:
+  <span style="text-decoration: underline;">[fn::Hamza ibn Abd al-Muttalib &#8212; uncle of Muhammad &#65018;; among the earliest and fiercest converts to Islam. Called 'Asad Allah' (Lion of God) and 'Sayyid al-Shuhada' (Master of Martyrs). Martyred at Uhud (625 CE) by Wahshi ibn Harb, a spear-thrower hired by Hind bint Utbah for personal revenge (her father was killed at Badr). Hind then mutilated his body. His martyrdom is mourned alongside Hussain in Shia tradition.]</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
+  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib][:ancestry:]]</a></span>
   + <span style="text-decoration: underline;"><a href="uhud">[[uhud][:killed-by:]]</a></span>
 
-# Khalid converted after years as a foe; :ambiguous:, neither hero nor villain.
+# Khalid converted after years as a foe; amber fill signals moral ambiguity &#8212; neither pure hero nor villain.
 # His flanking maneuver at Uhud broke the Muslim line; his later conquests were under Abu Bakr and Umar.
-+ <span style="text-decoration: underline;">&lt;&lt;khalid&gt;&gt;</span> Khalid ibn al-Walid \\ (&#1582;&#1575;&#1604;&#1583; &#1576;&#1606; &#1575;&#1604;&#1608;&#1604;&#1610;&#1583;)
-  <span style="text-decoration: underline;">[fn::Khalid ibn al-Walid &#8212; fought against Muslims at Uhud (his flanking maneuver broke the Muslim line). Converted to Islam in 629 CE; became Islam's greatest military commander. Conquered much of Persia and Syria under Abu Bakr and Umar. Complex figure in Shia tradition: celebrated for military genius, yet his loyal service to the caliphs who sidelined Ali colours his legacy.]</span> :ambiguous:
++ <span style="text-decoration: underline;">&lt;&lt;khalid&gt;&gt;</span> Khalid ibn al-Walid \\ (&#1582;&#1575;&#1604;&#1583; &#1576;&#1606; &#1575;&#1604;&#1608;&#1604;&#1610;&#1583;) \\ Sword of God
+  <span style="text-decoration: underline;">[fn::Khalid ibn al-Walid &#8212; 'Sayf Allah al-Maslul' (the Drawn Sword of God). Fought against Muslims at Uhud (his flanking maneuver broke the Muslim line). Converted to Islam in 629 CE; became Islam's greatest military commander. Conquered much of Persia and Syria under Abu Bakr and Umar. Complex figure in Shia tradition: celebrated for military genius, yet his loyal service to the caliphs who sidelined Ali colours his legacy.]</span>
+  | fillcolor | #fff3cc |
+  | color     | #886600 |
   + <span style="font-weight: bold;">fought against Muslims ::</span> <span style="text-decoration: underline;"><a href="uhud">[[uhud][:mention:]]</a></span>
   + <span style="text-decoration: underline;"><a href="fath">[[fath][:ancestry:]]</a></span>
 
-# The key battles of the Prophet's life &#8212; each a turning point in the narrative arc from
+# The four key battles of the Prophet's life &#8212; each a turning point in the narrative arc from
 # persecuted minority in Mecca to unified force that transformed the Arabian peninsula.
 + Battles of the Prophet :<span style="color: #e44649; font-weight: bold;">container</span>:
   | fillcolor | #f0f4ff |
@@ -514,171 +524,92 @@ descent, and a template such as =:married:= styles an arc ---all without a singl
   | color     | #334499 |
   + <span style="text-decoration: underline;">&lt;&lt;badr&gt;&gt;</span> Battle of Badr \\ (&#1594;&#1586;&#1608;&#1577; &#1576;&#1583;&#1585;) \\ 624 CE
     <span style="text-decoration: underline;">[fn::Battle of Badr &#8212; first major battle of Islam (17 Ramadan 2 AH / 624 CE). ~313 Muslims vs. ~1,000 Quraysh; decisive Muslim victory. Abu Jahl killed here. The Quran calls it 'the Day of Distinction' (&#1610;&#1608;&#1605; &#1575;&#1604;&#1601;&#1585;&#1602;&#1575;&#1606;). This victory established the Muslim community as a political and military force.]</span> :@battles:
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:ancestry:]]</a></span>
   + <span style="text-decoration: underline;">&lt;&lt;uhud&gt;&gt;</span> Battle of Uhud \\ (&#1594;&#1586;&#1608;&#1577; &#1571;&#1581;&#1583;) \\ 625 CE
     <span style="text-decoration: underline;">[fn::Battle of Uhud &#8212; Quraysh retaliation for Badr (7 Shawwal 3 AH / 625 CE). Initial Muslim advantage reversed when archers abandoned their post for plunder. Hamza martyred; Muhammad &#65018; wounded. Khalid ibn al-Walid's flanking maneuver decided the day. A Quranic lesson in discipline and the cost of disobedience.]</span> :@battles:
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:ancestry:]]</a></span>
   + <span style="text-decoration: underline;">&lt;&lt;khandaq&gt;&gt;</span> Battle of Khandaq \\ (&#1594;&#1586;&#1608;&#1577; &#1575;&#1604;&#1582;&#1606;&#1583;&#1602;) \\ 627 CE
     <span style="text-decoration: underline;">[fn::Battle of Khandaq ('the Trench', also Ahzab) &#8212; Quraysh-led coalition of ~10,000 besieged Medina (5 AH / 627 CE). Salman al-Farisi proposed the Persian tactic of digging a defensive trench. The siege collapsed after ~20 days; a turning point that ended Quraysh's ability to threaten Medina.]</span> :@battles:
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:ancestry:]]</a></span>
     + <span style="font-weight: bold;">Salman's idea ::</span> <span style="text-decoration: underline;"><a href="salman">[[salman][:ancestry:]]</a></span>
   + <span style="text-decoration: underline;">&lt;&lt;fath&gt;&gt;</span> Conquest of Mecca \\ (&#1601;&#1578;&#1581; &#1605;&#1603;&#1577;) \\ 630 CE
     <span style="text-decoration: underline;">[fn::Conquest of Mecca (&#1601;&#1578;&#1581; &#1605;&#1603;&#1577;) &#8212; 20 Ramadan 8 AH / January 630 CE. 10,000-strong Muslim force entered Mecca with near-zero bloodshed. Muhammad &#65018; granted general amnesty; Abu Sufyan converted at the last moment. The Kaaba was purified of idols. Khalid ibn al-Walid commanded the right flank.]</span> :@battles:
+    + <span style="text-decoration: underline;"><a href="muhammad">[[muhammad][:ancestry:]]</a></span>
     + <span style="font-weight: bold;">surrendered ::</span> <span style="text-decoration: underline;"><a href="abusufyan">[[abusufyan][:ancestry:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;khaybar&gt;&gt;</span> Battle of Khaybar \\ (&#1594;&#1586;&#1608;&#1577; &#1582;&#1610;&#1576;&#1585;) \\ 628 CE
-    <span style="text-decoration: underline;">[fn::Battle of Khaybar &#8212; Muharram 7 AH / 628 CE, against the fortified oasis of Khaybar, north of Medina. After the fortress of al-Qamus withstood several assaults, Muhammad &#65018; said: 'Tomorrow I shall give the banner to a man who loves God and His Messenger, and whom God and His Messenger love.' He gave it to Ali, who slew the champion Marhab, tore off the fortress's gate, and took it.]</span> :@battles:
-    + <span style="font-weight: bold;">bore the banner ::</span> <span style="text-decoration: underline;"><a href="ali">[[ali][:mention:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;hunayn&gt;&gt;</span> Battle of Hunayn \\ (&#1594;&#1586;&#1608;&#1577; &#1581;&#1606;&#1610;&#1606;) \\ 630 CE
-    <span style="text-decoration: underline;">[fn::Battle of Hunayn &#8212; Shawwal 8 AH / 630 CE, weeks after the Conquest of Mecca, against the Hawazin and Thaqif. Ambushed in the valley of Hunayn, the 12,000-strong Muslim army broke and fled; a handful stood firm beside the Prophet &#65018;, Ali among them, and the rally turned the day (Quran 9:25&#8211;26).]</span> :@battles:
-    + <span style="font-weight: bold;">stood firm ::</span> <span style="text-decoration: underline;"><a href="ali">[[ali][:mention:]]</a></span>
-  + <span style="text-decoration: underline;">&lt;&lt;tabuk&gt;&gt;</span> Expedition of Tabuk \\ (&#1594;&#1586;&#1608;&#1577; &#1578;&#1576;&#1608;&#1603;) \\ 630 CE
-    <span style="text-decoration: underline;">[fn::Expedition of Tabuk &#8212; Rajab 9 AH / 630 CE, the Prophet's last campaign: some 30,000 marched north against the Byzantines, who never met them. Ali alone stayed behind, in charge of Medina; to his dismay, the Prophet &#65018; said: 'Are you not content to be to me as Aaron was to Moses, save that there is no prophet after me?' This Hadith of Position (&#1581;&#1583;&#1610;&#1579; &#1575;&#1604;&#1605;&#1606;&#1586;&#1604;&#1577;) is a pillar of the Shia case for Ali's succession.]</span> :@battles:
-    + <span style="font-weight: bold;">Hadith of Position ::</span> <span style="text-decoration: underline;"><a href="ali">[[ali][:mention:]]</a></span>
-    + <span style="font-weight: bold;">as Aaron to Moses ::</span> <span style="text-decoration: underline;"><a href="aaron">[[aaron][:mention:]]</a></span>
 
-# Enemies of the Ahl al-Bayt, each :antagonist:.
-+ <span style="text-decoration: underline;">&lt;&lt;abusufyan&gt;&gt;</span> Abu Sufyan \\ (&#1571;&#1576;&#1608; &#1587;&#1601;&#1610;&#1575;&#1606;)
-  <span style="text-decoration: underline;">[fn::Abu Sufyan ibn Harb &#8212; leader of the Quraysh and chief opponent of Muhammad &#65018; for two decades. Accepted Islam only at the conquest of Mecca (630 CE). Father of Muawiya; progenitor of the Umayyad dynasty.]</span> :antagonist:
-  + <span style="text-decoration: underline;"><a href="hind">[[hind][:married:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;muawiya&gt;&gt;</span> Muawiya \\ (&#1605;&#1593;&#1575;&#1608;&#1610;&#1577;)
-  <span style="text-decoration: underline;">[fn::Muawiya ibn Abi Sufyan &#8212; 1st Umayyad Caliph (661&#8211;680 CE). Fought Ali at the Battle of Siffin; gained control through the arbitration. His decision to appoint his son Yazid as successor broke the principle of the Shura and set up the Karbala tragedy.]</span> :antagonist:umayyad:@imam-2:
-  + <span style="text-decoration: underline;"><a href="maysun">[[maysun][:married:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;yazid&gt;&gt;</span> Yazid \\ (&#1610;&#1586;&#1610;&#1583;)
-  <span style="text-decoration: underline;">[fn::Yazid ibn Muawiya &#8212; 2nd Umayyad Caliph. His demand that Hussain pledge allegiance triggered the march to Karbala. His forces massacred Hussain and his companions on Ashura, 680 CE &#8212; an act condemned even by many Sunni scholars. Three years on, in 683 CE, his army sacked Medina at the Battle of al-Harra, then besieged Ibn al-Zubayr in Mecca: its catapults bombarded the Kaaba, which caught fire and burned. The siege lifted only when news came of Yazid's death, that November.]</span> :antagonist:umayyad:
-+ <span style="text-decoration: underline;">&lt;&lt;ziyad&gt;&gt;</span> Ziyad ibn Abih \\ (&#1586;&#1610;&#1575;&#1583; &#1576;&#1606; &#1571;&#1576;&#1610;&#1607;)
-  <span style="text-decoration: underline;">[fn::Ziyad ibn Abih ('son of his father' &#8212; his paternity disputed) &#8212; powerful governor under Muawiya; claimed as a half-brother by Muawiya's decree. Father of Ibn Ziyad; notorious for harsh governance of Iraq.]</span> :antagonist:
-  + <span style="text-decoration: underline;"><a href="marjana">[[marjana][:married:]]</a></span>
-  + <span style="font-weight: bold;">claimed half-brother ::</span> <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span>
-    | :edge.style | dashed |
-+ <span style="text-decoration: underline;">&lt;&lt;ibnziyad&gt;&gt;</span> Ibn Ziyad \\ (&#1593;&#1576;&#1610;&#1583; &#1575;&#1604;&#1604;&#1607; &#1576;&#1606; &#1586;&#1610;&#1575;&#1583;) \\ Governor of Kufa
-  <span style="text-decoration: underline;">[fn::Ubayd Allah ibn Ziyad &#8212; Governor of Kufa at the time of Karbala; the logistical architect of the massacre. He sent Muslim ibn Aqil (Hussain's envoy) to execution, then dispatched the army that surrounded Karbala.]</span> :antagonist:
-  | shape | diamond |
-  + <span style="font-weight: bold;">avenged by ::</span> <span style="text-decoration: underline;"><a href="mukhtar">[[mukhtar][:killed-by:]]</a></span>
-  + <span style="font-weight: bold;">commanded ::</span> <span style="text-decoration: underline;"><a href="amribnsaad">[[amribnsaad][:mention:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="yazid">[[yazid][:ancestry:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;amribnsaad&gt;&gt;</span> Amr ibn Sa'd \\ (&#1593;&#1605;&#1585; &#1576;&#1606; &#1587;&#1593;&#1583;) \\ Commander at Karbala
-  <span style="text-decoration: underline;">[fn::Amr ibn Sa'd ibn Abi Waqqas &#8212; field commander of the Umayyad army at Karbala; son of a revered companion. He wavered before obeying Ibn Ziyad's orders; his complicity haunted him. He was later killed by Mukhtar al-Thaqafi in revenge.]</span> :antagonist:
-  | shape | diamond |
-  + <span style="font-weight: bold;">commanded ::</span> <span style="text-decoration: underline;"><a href="shimr">[[shimr][:mention:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;shimr&gt;&gt;</span> Shimr \\ (&#1588;&#1605;&#1585;) \\ Killed Hussain
-  <span style="text-decoration: underline;">[fn::Shimr ibn Dhi al-Jawshan &#8212; the man who delivered the killing blow to Hussain at Karbala, severing his head. Reviled across Islamic traditions; killed in revenge by Mukhtar al-Thaqafi shortly after.]</span> :antagonist:@imam-2b:
-  | shape | diamond |
-  + <span style="font-weight: bold;">avenged by ::</span> <span style="text-decoration: underline;"><a href="mukhtar">[[mukhtar][:killed-by:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ibnmuljam&gt;&gt;</span> Ibn Muljam \\ (&#1575;&#1576;&#1606; &#1605;&#1604;&#1580;&#1605;) \\ Assassin of Ali
-  <span style="text-decoration: underline;">[fn::Abd al-Rahman ibn Muljam al-Muradi &#8212; Kharijite assassin who struck Ali with a poisoned sword in the mosque of Kufa on 19 Ramadan 40 AH (661 CE). Ali died two days later. His act split the caliphate and deepened the Sunni-Shia divide permanently.]</span> :antagonist:@imam-1:
-  | shape | diamond |
-+ <span style="text-decoration: underline;">&lt;&lt;abujahl&gt;&gt;</span> Abu Jahl \\ (&#1571;&#1576;&#1608; &#1580;&#1607;&#1604;) \\ Pharaoh of the Nation
-  <span style="text-decoration: underline;">[fn::Abu Jahl ibn Hisham al-Makhzumi &#8212; chief persecutor of early Muslims in Mecca; Muhammad &#65018; called him 'the Pharaoh of this nation.' Led Quraysh forces at Badr; killed there (624 CE) &#8212; his death was a pivotal blow to Qurayshi leadership. Of the rival Makhzum clan, not the Umayyad line.]</span> :antagonist:
-  + <span style="text-decoration: underline;"><a href="badr">[[badr][:killed-by:]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hind&gt;&gt;</span> Hind bint Utbah \\ (&#1607;&#1606;&#1583; &#1576;&#1606;&#1578; &#1593;&#1578;&#1576;&#1577;)
-  <span style="text-decoration: underline;">[fn::Hind bint Utbah &#8212; wife of Abu Sufyan; mother of Muawiya. Her father was killed at Badr, fuelling her hatred. At Uhud she hired Wahshi ibn Harb to kill Hamza (personal revenge), then mutilated his body and bit into his liver. Accepted Islam at the Conquest of Mecca. Her conversion, and Muawiya's parentage through her, are a recurrent irony in Shia historical memory.]</span> :antagonist:
-  + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span>
-  + <span style="text-decoration: underline;"><a href="uhud">[[uhud][:mention:]]</a></span>
++ Antagonists :<span style="color: #e44649; font-weight: bold;">container</span>:
+  | fillcolor | #ffeeee |
+  | color     | #cc0000 |
+  | fontcolor | #990000 |
+  <span style="color: #a626a4; font-weight: bold;">#+node:</span>
+  | fillcolor | #ff9999 |
+  | color     | #cc0000 |
+  | fontcolor | #660000 |
+  + <span style="text-decoration: underline;">&lt;&lt;abusufyan&gt;&gt;</span> Abu Sufyan \\ (&#1571;&#1576;&#1608; &#1587;&#1601;&#1610;&#1575;&#1606;)
+    <span style="text-decoration: underline;">[fn::Abu Sufyan ibn Harb &#8212; leader of the Quraysh and chief opponent of Muhammad &#65018; for two decades. Accepted Islam only at the conquest of Mecca (630 CE). Father of Muawiya; progenitor of the Umayyad dynasty.]</span>
+  + <span style="text-decoration: underline;">&lt;&lt;muawiya&gt;&gt;</span> Muawiya \\ (&#1605;&#1593;&#1575;&#1608;&#1610;&#1577;)
+    <span style="text-decoration: underline;">[fn::Muawiya ibn Abi Sufyan &#8212; 1st Umayyad Caliph (661&#8211;680 CE). Fought Ali at the Battle of Siffin; gained control through the arbitration. His decision to appoint his son Yazid as successor broke the principle of the Shura and set up the Karbala tragedy.]</span> :@rivals:
+    + <span style="text-decoration: underline;"><a href="abusufyan">[[abusufyan]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;yazid&gt;&gt;</span> Yazid \\ (&#1610;&#1586;&#1610;&#1583;)
+    <span style="text-decoration: underline;">[fn::Yazid ibn Muawiya &#8212; 2nd Umayyad Caliph. His demand that Hussain pledge allegiance triggered the march to Karbala. His forces massacred Hussain and his companions on Ashura, 680 CE &#8212; an act condemned even by many Sunni scholars.]</span>
+    + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ziyad&gt;&gt;</span> Ziyad ibn Abih \\ (&#1586;&#1610;&#1575;&#1583; &#1576;&#1606; &#1571;&#1576;&#1610;&#1607;)
+    <span style="text-decoration: underline;">[fn::Ziyad ibn Abih ('son of his father' &#8212; his paternity disputed) &#8212; powerful governor under Muawiya; claimed as a half-brother by Muawiya's decree. Father of Ibn Ziyad; notorious for harsh governance of Iraq.]</span>
+    + <span style="font-weight: bold;">claimed half-brother ::</span> <span style="text-decoration: underline;"><a href="muawiya">[[muawiya]]</a></span>
+      | :edge.style | dashed |
+  + <span style="text-decoration: underline;">&lt;&lt;ibnziyad&gt;&gt;</span> Ibn Ziyad \\ (&#1593;&#1576;&#1610;&#1583; &#1575;&#1604;&#1604;&#1607; &#1576;&#1606; &#1586;&#1610;&#1575;&#1583;) \\ Governor of Kufa
+    <span style="text-decoration: underline;">[fn::Ubayd Allah ibn Ziyad &#8212; Governor of Kufa at the time of Karbala; the logistical architect of the massacre. He sent Muslim ibn Aqil (Hussain's envoy) to execution, then dispatched the army that surrounded Karbala.]</span>
+    | shape | diamond |
+    + <span style="text-decoration: underline;"><a href="ziyad">[[ziyad]]</a></span>
+    + <span style="text-decoration: underline;"><a href="yazid">[[yazid][:ancestry:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;amribnsaad&gt;&gt;</span> Amr ibn Sa'd \\ (&#1593;&#1605;&#1585; &#1576;&#1606; &#1587;&#1593;&#1583;) \\ Commander at Karbala
+    <span style="text-decoration: underline;">[fn::Amr ibn Sa'd ibn Abi Waqqas &#8212; field commander of the Umayyad army at Karbala; son of a revered companion. He wavered before obeying Ibn Ziyad's orders; his complicity haunted him. He was later killed by Mukhtar al-Thaqafi in revenge.]</span>
+    | shape | diamond |
+    + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;shimr&gt;&gt;</span> Shimr \\ (&#1588;&#1605;&#1585;) \\ Killed Hussain
+    <span style="text-decoration: underline;">[fn::Shimr ibn Dhi al-Jawshan &#8212; the man who delivered the killing blow to Hussain at Karbala, severing his head. Reviled across Islamic traditions; killed in revenge by Mukhtar al-Thaqafi shortly after.]</span>
+    | shape | diamond |
+    + <span style="text-decoration: underline;"><a href="amribnsaad">[[amribnsaad]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;ibnmuljam&gt;&gt;</span> Ibn Muljam \\ (&#1575;&#1576;&#1606; &#1605;&#1604;&#1580;&#1605;) \\ Assassin of Ali
+    <span style="text-decoration: underline;">[fn::Abd al-Rahman ibn Muljam al-Muradi &#8212; Kharijite assassin who struck Ali with a poisoned sword in the mosque of Kufa on 19 Ramadan 40 AH (661 CE). Ali died two days later. His act split the caliphate and deepened the Sunni-Shia divide permanently.]</span>
+    | shape | diamond |
+    + <span style="text-decoration: underline;"><a href="ali">[[ali][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;abujahl&gt;&gt;</span> Abu Jahl \\ (&#1571;&#1576;&#1608; &#1580;&#1607;&#1604;) \\ Pharaoh of the Nation
+    <span style="text-decoration: underline;">[fn::Abu Jahl ibn Hisham al-Makhzumi &#8212; chief persecutor of early Muslims in Mecca; Muhammad &#65018; called him 'the Pharaoh of this nation.' Led Quraysh forces at Badr; killed there (624 CE) &#8212; his death was a pivotal blow to Qurayshi leadership. Of the rival Makhzum clan, not the Umayyad line.]</span>
+    + <span style="text-decoration: underline;"><a href="badr">[[badr][:killed-by:]]</a></span>
+  + <span style="text-decoration: underline;">&lt;&lt;hind&gt;&gt;</span> Hind bint Utbah \\ (&#1607;&#1606;&#1583; &#1576;&#1606;&#1578; &#1593;&#1578;&#1576;&#1577;)
+    <span style="text-decoration: underline;">[fn::Hind bint Utbah &#8212; wife of Abu Sufyan; mother of Muawiya. Her father was killed at Badr, fuelling her hatred. At Uhud she hired Wahshi ibn Harb to kill Hamza (personal revenge), then mutilated his body and bit into his liver. Accepted Islam at the Conquest of Mecca. Her conversion, and Muawiya's parentage through her, are a recurrent irony in Shia historical memory.]</span>
+    + <span style="font-weight: bold;">wife ::</span> <span style="text-decoration: underline;"><a href="abusufyan">[[abusufyan][:ancestry:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="muawiya">[[muawiya][:motherhood:]]</a></span>
+    + <span style="text-decoration: underline;"><a href="uhud">[[uhud][:mention:]]</a></span>
 
 # Mukhtar al-Thaqafi is the avenger of Karbala &#8212; the man who hunted down and killed the architects
-# of the massacre. He is :loyal:, as is Hurr al-Riyahi (the other figure who redeemed himself at Karbala).
+# of the massacre. Green fill matches Hurr al-Riyahi (the other figure who redeemed himself at Karbala).
 + <span style="text-decoration: underline;">&lt;&lt;mukhtar&gt;&gt;</span> Mukhtar al-Thaqafi \\ (&#1575;&#1604;&#1605;&#1582;&#1578;&#1575;&#1585; &#1575;&#1604;&#1579;&#1602;&#1601;&#1610;) \\ Avenger of Karbala
-  <span style="text-decoration: underline;">[fn::Mukhtar ibn Abi Ubaid al-Thaqafi &#8212; led the uprising of 685&#8211;687 CE to avenge Hussain. He captured and killed Ubaydullah ibn Ziyad (the architect of Karbala) in 686 CE, and hunted down Shimr and other perpetrators. His forces were eventually defeated by Abd al-Malik. A complex figure: celebrated avenger in popular Shia piety, yet theologically controversial in some Shia scholarly circles for his messianic claims on behalf of Muhammad ibn al-Hanafiyya.]</span> :loyal:
-
-# Mothers: every child descends from a mother, wed to his father, as in family-tree.org.
-+ <span style="text-decoration: underline;">&lt;&lt;salma&gt;&gt;</span> Salma bint Amr \\ (&#1587;&#1604;&#1605;&#1609; &#1576;&#1606;&#1578; &#1593;&#1605;&#1585;&#1608;)
-  <span style="text-decoration: underline;">[fn::Salma bint Amr &#8212; of the Banu Najjar of Medina; wife of Hashim, and mother of Abd al-Muttalib, whom she raised in Medina until his uncle brought him to Mecca.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="abdmutallib">[[abdmutallib]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;fatimahbintamr&gt;&gt;</span> Fatimah bint Amr \\ (&#1601;&#1575;&#1591;&#1605;&#1577; &#1576;&#1606;&#1578; &#1593;&#1605;&#1585;&#1608;)
-  <span style="text-decoration: underline;">[fn::Fatimah bint Amr al-Makhzumiyya &#8212; wife of Abd al-Muttalib; mother of Abdullah, the Prophet's father, and of Abu Talib.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="abdullah">[[abdullah]]</a></span>
-  + <span style="text-decoration: underline;"><a href="abutalib">[[abutalib]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hala&gt;&gt;</span> Hala bint Wuhayb \\ (&#1607;&#1575;&#1604;&#1577; &#1576;&#1606;&#1578; &#1608;&#1607;&#1610;&#1576;)
-  <span style="text-decoration: underline;">[fn::Hala bint Wuhayb &#8212; wife of Abd al-Muttalib, and mother of Hamza; a cousin of Aminah, the Prophet's mother.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="hamza">[[hamza]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;fatimahbintasad&gt;&gt;</span> Fatimah bint Asad \\ (&#1601;&#1575;&#1591;&#1605;&#1577; &#1576;&#1606;&#1578; &#1571;&#1587;&#1583;)
-  <span style="text-decoration: underline;">[fn::Fatimah bint Asad &#8212; wife of Abu Talib; mother of Ali, Aqil, and Ja'far. She raised the orphaned Muhammad &#65018; as her own; at her death he shrouded her in his own shirt.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="ali">[[ali]]</a></span>
-  + <span style="text-decoration: underline;"><a href="aqil">[[aqil]]</a></span>
-  + <span style="text-decoration: underline;"><a href="jafaribnabutalib">[[jafaribnabutalib]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hulayya&gt;&gt;</span> Hulayya \\ (&#1581;&#1615;&#1604;&#1610;&#1617;&#1577;)
-  <span style="text-decoration: underline;">[fn::Hulayya &#8212; a Nabataean woman; wife of Aqil, and mother of Muslim ibn Aqil. Her name varies among the sources.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="muslibinaqil">[[muslibinaqil]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ramla&gt;&gt;</span> Ramla \\ (&#1585;&#1605;&#1604;&#1577;)
-  <span style="text-decoration: underline;">[fn::Ramla &#8212; wife of Imam Hasan, and mother of Qasim, martyred at Karbala.]</span> :loyal:@imam-2:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="hasan">[[hasan][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="qasim">[[qasim]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;ummishaq&gt;&gt;</span> Umm Ishaq \\ (&#1571;&#1605; &#1573;&#1587;&#1581;&#1575;&#1602;)
-  <span style="text-decoration: underline;">[fn::Umm Ishaq bint Talha &#8212; wife of Imam Hasan, then of Imam Hussain. The sources differ on Ruqayyah's mother; many name her.]</span> :loyal:container_Wives_of_the_Imams:@imam-2b:
-  + <span style="text-decoration: underline;"><a href="hussain">[[hussain][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="ruqayyah">[[ruqayyah]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;jayda&gt;&gt;</span> Jayda \\ (&#1580;&#1610;&#1583;&#1575;)
-  <span style="text-decoration: underline;">[fn::Jayda al-Sindiyya &#8212; a woman of Sindh; wife of Imam al-Sajjad, and mother of Zayd ibn Ali.]</span> :loyal:@imam-3:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="sajjad">[[sajjad][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="zayd">[[zayd]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;fatimahathram&gt;&gt;</span> Fatimah bint al-Athram \\ (&#1601;&#1575;&#1591;&#1605;&#1577; &#1576;&#1606;&#1578; &#1575;&#1604;&#1571;&#1579;&#1585;&#1605;)
-  <span style="text-decoration: underline;">[fn::Fatimah bint al-Husayn al-Athram &#8212; granddaughter of Imam Hasan; wife of Imam al-Sadiq, and mother of Ismail, eponym of the Ismailis.]</span> :loyal:@imam-5:container_Wives_of_the_Imams:
-  + <span style="text-decoration: underline;"><a href="sadiq">[[sadiq][:married:]]</a></span>
-  + <span style="text-decoration: underline;"><a href="ismailbnjafar">[[ismailbnjafar]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;hajar&gt;&gt;</span> Hajar \\ (&#1607;&#1575;&#1580;&#1585;)
-  <span style="text-decoration: underline;">[fn::Hajar &#8212; wife of Ibrahim, and mother of Ismail. Left with her infant in the valley of Mecca, she ran seven times between Safa and Marwa seeking water, until Zamzam sprang forth; pilgrims retrace her steps.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="ismail">[[ismail]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;sarah&gt;&gt;</span> Sarah \\ (&#1587;&#1575;&#1585;&#1577;)
-  <span style="text-decoration: underline;">[fn::Sarah &#8212; wife of Ibrahim, and mother of Ishaaq, whose birth angels foretold to her in her old age (Quran 11:71&#8211;73).]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="ishaaq">[[ishaaq]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;rafqa&gt;&gt;</span> Rafqa \\ (&#1585;&#1601;&#1602;&#1577;)
-  <span style="text-decoration: underline;">[fn::Rafqa (Rebecca) &#8212; wife of Ishaaq, and mother of Yaqub.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="yaqub">[[yaqub]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;rahil&gt;&gt;</span> Rahil \\ (&#1585;&#1575;&#1581;&#1610;&#1604;)
-  <span style="text-decoration: underline;">[fn::Rahil (Rachel) &#8212; wife of Yaqub, and mother of Yusuf.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="yusuf">[[yusuf]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;bathsheba&gt;&gt;</span> Bathsheba \\ (&#1576;&#1579;&#1588;&#1576;&#1593;)
-  <span style="text-decoration: underline;">[fn::Bathsheba &#8212; wife of Dawood, and mother of Sulayman.]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="sulayman">[[sulayman]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;elizabeth&gt;&gt;</span> Elizabeth \\ (&#1571;&#1604;&#1610;&#1589;&#1575;&#1576;&#1575;&#1578;)
-  <span style="text-decoration: underline;">[fn::Elizabeth &#8212; wife of Zakariya, and mother of Yahya; barren until God answered Zakariya's prayer (Quran 21:89&#8211;90).]</span> :loyal:
-  + <span style="text-decoration: underline;"><a href="yahya">[[yahya]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;maysun&gt;&gt;</span> Maysun bint Bahdal \\ (&#1605;&#1610;&#1587;&#1608;&#1606; &#1576;&#1606;&#1578; &#1576;&#1581;&#1583;&#1604;)
-  <span style="text-decoration: underline;">[fn::Maysun bint Bahdal &#8212; of the Christian Kalb tribe; wife of Muawiya, and mother of Yazid.]</span> :other:
-  + <span style="text-decoration: underline;"><a href="yazid">[[yazid]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;marjana&gt;&gt;</span> Marjana \\ (&#1605;&#1585;&#1580;&#1575;&#1606;&#1577;)
-  <span style="text-decoration: underline;">[fn::Marjana &#8212; wife of Ziyad ibn Abih, and mother of Ubayd Allah ibn Ziyad, who was often named after her: Ibn Marjana.]</span> :other:
+  <span style="text-decoration: underline;">[fn::Mukhtar ibn Abi Ubaid al-Thaqafi &#8212; led the uprising of 685&#8211;687 CE to avenge Hussain. He captured and killed Ubaydullah ibn Ziyad (the architect of Karbala) in 686 CE, and hunted down Shimr and other perpetrators. His forces were eventually defeated by Abd al-Malik. A complex figure: celebrated avenger in popular Shia piety, yet theologically controversial in some Shia scholarly circles for his messianic claims on behalf of Muhammad ibn al-Hanafiyya.]</span>
+  | fillcolor | #ccffcc |
+  | color     | #006600 |
   + <span style="text-decoration: underline;"><a href="ibnziyad">[[ibnziyad]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;wallada&gt;&gt;</span> Wallada \\ (&#1608;&#1604;&#1575;&#1583;&#1577;)
-  <span style="text-decoration: underline;">[fn::Wallada bint al-Abbas &#8212; wife of Abd al-Malik; mother of the caliphs al-Walid I and Sulayman.]</span> :other:
-  + <span style="text-decoration: underline;"><a href="walid1">[[walid1]]</a></span>
-+ <span style="text-decoration: underline;">&lt;&lt;aishabinthisham&gt;&gt;</span> A'isha bint Hisham \\ (&#1593;&#1575;&#1574;&#1588;&#1577; &#1576;&#1606;&#1578; &#1607;&#1588;&#1575;&#1605;)
-  <span style="text-decoration: underline;">[fn::A'isha bint Hisham al-Makhzumiyya &#8212; wife of Abd al-Malik, and mother of the caliph Hisham.]</span> :other:
-  + <span style="text-decoration: underline;"><a href="hisham">[[hisham]]</a></span>
-
-# The Imams' wives, gathered by their :container_Wives_of_the_Imams: tags; so the Imams' rows read wife &#8596; Imam &#8592; killer.
-+ Wives of the Imams :<span style="color: #e44649; font-weight: bold;">container</span>:
-  | label     | Wives of the Imams (&#1586;&#1608;&#1580;&#1575;&#1578; &#1575;&#1604;&#1571;&#1574;&#1605;&#1577;) |
-  | fillcolor | #f6ecd9                           |
-  | color     | #8a6a3a                           |
+    | :edge.color     | red  |
+    | :edge.style     | bold |
+    | :edge.arrowhead | dot  |
+  + <span style="text-decoration: underline;"><a href="shimr">[[shimr]]</a></span>
+    | :edge.color     | red  |
+    | :edge.style     | bold |
+    | :edge.arrowhead | dot  |
 
 + Legend :<span style="color: #e44649; font-weight: bold;">container</span>:
   | fillcolor | #f5f5dc |
   | color     | #555555 |
   | fontsize  | 11      |
-  + :<span style="color: #e44649; font-weight: bold;">container</span>:
-    | fillcolor   | #f5f5dc |
-    | peripheries | 0       |
-    1. Parentage                         :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">parentage</span>:
-    2. Marriage                          :<span style="color: #1f8393; background-color: #ddf4f7; font-weight: bold;">married</span>:
-    3. Motherhood                        :<span style="color: #931f2e; background-color: #f7dde0; font-weight: bold;">motherhood</span>:
-    4. Killed, or \\ ordered killed :<span style="color: #57931f; background-color: #eaf7dd; font-weight: bold;">killed-by</span>:
-    5. Ancestry, \\ or descent :<span style="color: #5b931f; background-color: #ebf7dd; font-weight: bold;">ancestry</span>:
-    6. Historical \\ mention :<span style="color: #32931f; background-color: #e1f7dd; font-weight: bold;">mention</span>:
-    7. Imprisoned, \\ or oppressed :<span style="color: #47931f; background-color: #e6f7dd; font-weight: bold;">imprisoned</span>:
-  + :<span style="color: #e44649; font-weight: bold;">container</span>:
-    | fillcolor   | #f5f5dc |
-    | peripheries | 0       |
-    1. Light upon light \\ (&#1606;&#1615;&#1608;&#1585;&#1612; &#1593;&#1614;&#1604;&#1614;&#1609;&#1648; &#1606;&#1615;&#1608;&#1585;&#1613;) :<span style="color: #1f9351; background-color: #ddf7e8; font-weight: bold;">light</span>:
-    2. Family of the Prophets or the Imams, \\ or one who fell for them :<span style="color: #931f7f; background-color: #f7ddf3; font-weight: bold;">loyal</span>:
-    3. Of mixed legacy                   :<span style="color: #28931f; background-color: #dff7dd; font-weight: bold;">ambiguous</span>:
-    4. An enemy of \\ the Ahl al-Bayt :<span style="color: #701f93; background-color: #efddf7; font-weight: bold;">antagonist</span>:
-    5. Others :<span style="color: #93511f; background-color: #f7e8dd; font-weight: bold;">other</span>:
-  + :<span style="color: #e44649; font-weight: bold;">container</span>:
-    | fillcolor   | #f5f5dc |
-    | peripheries | 0       |
-    1. Prophets \\ (&#1593;&#1604;&#1610;&#1607;&#1605; &#1575;&#1604;&#1587;&#1604;&#1575;&#1605;) :<span style="color: #937d1f; background-color: #f7f2dd; font-weight: bold;">prophet</span>:
-    2. Ladies of Heaven \\ (&#1587;&#1610;&#1583;&#1575;&#1578; &#1575;&#1604;&#1580;&#1606;&#1577;) :<span style="color: #361f93; background-color: #e2ddf7; font-weight: bold;">lady</span>:
-    3. Companions of Ali \\ (&#1571;&#1589;&#1581;&#1575;&#1576; &#1593;&#1604;&#1610;) :<span style="color: #1f9378; background-color: #ddf7f1; font-weight: bold;">companion</span>:
-    4. Umayyad Caliphs \\ (&#1575;&#1604;&#1571;&#1605;&#1608;&#1610;&#1608;&#1606;) :<span style="color: #1f9349; background-color: #ddf7e7; font-weight: bold;">umayyad</span>:
-    5. Abbasid Caliphs \\ (&#1575;&#1604;&#1593;&#1576;&#1575;&#1587;&#1610;&#1608;&#1606;) :<span style="color: #931f3c; background-color: #f7dde3; font-weight: bold;">abbasid</span>:
+  - Parentage                         :<span style="color: #935d1f; background-color: #f7ebdd; font-weight: bold;">parentage</span>:
+  - Marriage                          :<span style="color: #1f8393; background-color: #ddf4f7; font-weight: bold;">married</span>:
+  - Motherhood                        :<span style="color: #931f2e; background-color: #f7dde0; font-weight: bold;">motherhood</span>:
+  - Killed, or ordered killed         :<span style="color: #57931f; background-color: #eaf7dd; font-weight: bold;">killed-by</span>:
+  - Ancestry, or descent              :<span style="color: #5b931f; background-color: #ebf7dd; font-weight: bold;">ancestry</span>:
+  - Historical mention                :<span style="color: #32931f; background-color: #e1f7dd; font-weight: bold;">mention</span>:
+  - Imprisoned, or oppressed          :<span style="color: #47931f; background-color: #e6f7dd; font-weight: bold;">imprisoned</span>:
+# :@consolidators: Rank hints to reduce cross-cluster edge chaos
 <span style="color: #a0a1a7;">#+end_graph
 </span>
 <span style="color: #a0a1a7;">#+html: &lt;/div&gt;</span>
