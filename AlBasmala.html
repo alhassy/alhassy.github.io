@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-16 Mon 18:43 -->
+<!-- 2026-11-17 Tue 16:12 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AlBasmala: @@html: &lt;br&gt;@@ Blogging with Emacs &amp; Org-mode (•̀ᴗ•́)و</title>
@@ -480,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <li><a href="#blog-license-html-for-creative-commons-attribution-sharealike-30-unported-license">6.6. blog&ndash;license: HTML for Creative Commons Attribution-ShareAlike 3.0 Unported License</a></li>
 <li><a href="#blog-read-remaining-js-html-to-use-readremainingjs">6.7. blog&ndash;read-remaining-js: HTML to use ReadRemaining.js</a></li>
 <li><a href="#link-types-and-glossaries-shared-by-every-article">6.8. Link types and glossaries shared by every article</a></li>
+<li><a href="#diagram-articles-open-on-their-graph-alone">6.9. Diagram articles open on their graph alone</a></li>
 </ul>
 </li>
 <li><a href="#look-and-feel">7. Look and Feel</a>
@@ -619,9 +620,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function FF9&gt;
+C-RET		#&lt;interpreted-function C82&gt;
 
-C-x C-s		#&lt;interpreted-function 237&gt;
+C-x C-s		#&lt;interpreted-function 151&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr> to get live WYSIWYG in an adjacent buffer after every
@@ -4102,6 +4103,77 @@ registering it here lets every article, on every machine, resolve them.
 </div>
 </div>
 </div>
+<div id="outline-container-diagram-articles-open-on-their-graph-alone" class="outline-3">
+<h3 id="diagram-articles-open-on-their-graph-alone"><span class="section-number-3">6.9.</span> <a href="#diagram-articles-open-on-their-graph-alone">Diagram articles open on their graph alone</a></h3>
+<div class="outline-text-3" id="text-diagram-articles-open-on-their-graph-alone">
+<p>
+An article that is mostly one big diagram ---<a href="karbala.html">Karbala</a>, say, or <a href="family-tree.html">my family tree</a>&mdash; opens on that
+diagram alone, at full size, with a <i>← Back for the article</i> button; so the reader meets the picture first,
+and the prose only on asking.  The opening view is a history entry of its own, so the browser's back button,
+or <code>Esc</code>, shows the article.  An article opts in by wrapping its graph in a <code>graph-only</code> div, whose optional
+<code>data-focus</code> names the node to open centred on, and including this block:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+include: "AlBasmala.org::graph-only"</span>
+<span style="color: #a0a1a7;">#+html: &lt;div class="graph-only" data-focus="Hussain"&gt;</span>
+#+begin_graph &#8230; #+end_graph
+#+html: &lt;/div&gt;
+</code></pre>
+</div>
+</div>
+
+<style>
+  /* While the page shows only the graph, everything off its path is hidden, and its path spans the page. */
+  .graph-off { display: none !important; }
+  body.graph-only .graph-path { max-width: none !important; width: auto !important;
+                                margin: 0 !important; padding: 0 !important; }
+  /* The graph's own box would scroll it within the page's width; the page itself scrolls instead. */
+  body.graph-only .graph-only div { overflow: visible !important; }
+  #graph-back { position: fixed; top: 0.6em; left: 0.6em; z-index: 1001; padding: 0.3em 0.8em;
+                border: 1px solid #555; border-radius: 1em; background: #f5f5dc; cursor: pointer; }
+  body:not(.graph-only) #graph-back { display: none; }
+</style>
+<script>
+  // The page opens on the graph alone, as a history entry of its own; so “back” shows the article.
+  document.addEventListener('DOMContentLoaded', () => {
+    const graph = document.querySelector('div.graph-only');
+    const svg = graph?.querySelector('svg');
+    if (!svg) return;
+    const show = (only) => {
+      document.body.classList.toggle('graph-only', only);
+      for (let node = graph; node !== document.body; node = node.parentElement) {
+        node.classList.toggle('graph-path', only);
+        for (const sibling of node.parentElement.children)
+          // tooltips.js shows every tooltip in one box beside <body>'s children; it, and our button, stay.
+          if (sibling !== node && !sibling.matches('#graph-back, .tooltip-box')) sibling.classList.toggle('graph-off', only);
+      }
+      svg.style.maxWidth = only ? '' : '100%';
+      // At full size, a graph may be many screens wide; so we open on its focus, its heart, rather than its corner.
+      const focus = only && graph.dataset.focus
+                    && [...svg.querySelectorAll('text')].find(t => t.textContent === graph.dataset.focus);
+      if (focus) {
+        const box = focus.getBoundingClientRect();
+        window.scrollTo(box.left + scrollX - innerWidth / 2, box.top + scrollY - innerHeight / 3);
+      } else window.scrollTo(0, 0);
+    };
+    const back = document.createElement('button');
+    back.id = 'graph-back';
+    back.textContent = '← Back for the article';
+    back.onclick = () => history.back();
+    document.body.appendChild(back);
+    history.replaceState(null, '', location.pathname);
+    history.pushState({graph: true}, '', '#graph');
+    show(true);
+    window.addEventListener('popstate', (e) => show(e.state?.graph === true));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('graph-only')) history.back();
+    });
+  });
+</script>
+</div>
+</div>
 </div>
 <div id="outline-container-look-and-feel" class="outline-2">
 <h2 id="look-and-feel"><span class="section-number-2">7.</span> <a href="#look-and-feel">Look and Feel</a></h2>
@@ -6318,9 +6390,9 @@ disabled.
 
 Key             Binding
 -------------------------------------------------------------------------------
-C-RET		#&lt;interpreted-function FF9&gt;
+C-RET		#&lt;interpreted-function C82&gt;
 
-C-x C-s		#&lt;interpreted-function 237&gt;
+C-x C-s		#&lt;interpreted-function 151&gt;
 
 C-c i i		blog-insert-image
 C-c i s		blog-insert-screenshot</pre></template></abbr>.  As such, I cannot have my lines being too wide. I'll settle
