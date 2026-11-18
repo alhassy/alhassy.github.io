@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-18 Wed 15:51 -->
+<!-- 2026-11-18 Wed 19:15 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Org lists, drawn as Graphviz graphs</title>
@@ -5729,68 +5729,269 @@ still labels it; its extension picks the format, so <code>:file parse-tree.svg</
 <div class="outline-text-3" id="text-sections-are-graphs-the-graph-tag">
 <p>
 Sometimes a whole section is nothing but the outline we want drawn; wrapping it in a block is ceremony.
-A <code>#+begin_graph</code> block is a function on a region; a <code>:graph:</code> tag is the same function on a section. The
-section's text is the graph, and its <code>:PROPERTIES:</code> drawer &mdash;Org's own home for key-value settings&mdash; is
-the <code>#+begin_graph</code> line: <code>:DIRECTION: right</code> is <code>:direction right</code>, <code>:NODE.SHAPE: oval</code> is <code>:node.shape oval</code>, and
-<code>:FILE:</code> is <code>:file</code>:
+A <code>#+begin_graph</code> block is a function on a region; a <code>:graph:</code> tag is the same function on a section, its
+subsections included. Its subheadings are the items; their <code>:PROPERTIES:</code> drawers &mdash;Org's own home for
+key-value settings&mdash; are the items' tables; and the root's own drawer is the <code>#+begin_graph</code> line.
 </p>
-<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">* Our grammar :graph_The_Grammar:
+</div>
+<div id="outline-container-the-equivalence-by-example" class="outline-4">
+<h4 id="the-equivalence-by-example"><span class="section-number-4">11.2.1.</span> <a href="#the-equivalence-by-example">The equivalence, by example</a></h4>
+<div class="outline-text-4" id="text-the-equivalence-by-example">
+<p>
+Here is a block:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_graph Our grammar :direction right
+</span>+ expr
+  | shape | box |
+  + term
+
+    A product of factors.
+
+    + factor
+      1. NUMBER
+      2. ( &#8230; ) :: <span style="text-decoration: underline;"><a href="expr">[[expr]]</a></span>
+<span style="color: #a0a1a7;">#+end_graph</span>
+</code></pre>
+</div>
+</div>
+
+<p>
+And here is the very same graph, as a section; both draw the same dot, and so the same picture:
+</p>
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">* Our grammar :graph_Our_grammar:
 :PROPERTIES:
 :DIRECTION: right
-:NODE.SHAPE: oval
 :END:
-+ expr
-  + term
-    + factor
-      + NUMBER
-      + ( … ) :: [[expr]]</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div id="outline-container-org0000001" class="outline-2">
+** expr
+:PROPERTIES:
+:SHAPE: box
+:END:
+*** term
+A product of factors.
+**** factor
+:PROPERTIES:
+:ORDERED: t
+:END:
+***** NUMBER
+***** ( … ) :: [[expr]]</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div id="outline-container-org0000001" class="outline-2">
 <h2>Our grammar</h2>
 <div class="outline-text-2" id="text-org0000001">
-<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="584pt" height="141pt"
- viewBox="0.00 0.00 584.00 141.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 136.82)">
-<polygon fill="white" stroke="none" points="-4,4 -4,-136.82 579.99,-136.82 579.99,4 -4,4"/>
-<text xml:space="preserve" text-anchor="middle" x="288" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">The Grammar</text>
+<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="339pt" height="175pt"
+ viewBox="0.00 0.00 339.00 175.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 171.35)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-171.35 335.1,-171.35 335.1,4 -4,4"/>
+<text xml:space="preserve" text-anchor="middle" x="165.55" y="-9" font-family="Helvetica,sans-Serif" font-size="20.00" fill="#170206">Our grammar</text>
 <!-- expr -->
 <g id="node1" class="node">
-<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="50.7" cy="-58.41" rx="50.7" ry="26.41"/>
-<text xml:space="preserve" text-anchor="middle" x="50.7" y="-52.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">expr</text>
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="87.45,-139.35 15.75,-139.35 15.75,-102 87.45,-102 87.45,-139.35"/>
+<text xml:space="preserve" text-anchor="middle" x="51.6" y="-115.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">expr</text>
 </g>
 <!-- term -->
 <g id="node2" class="node">
-<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="190.16" cy="-106.41" rx="51.76" ry="26.41"/>
-<text xml:space="preserve" text-anchor="middle" x="190.16" y="-100.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">term</text>
+<g id="a_node2"><a class="tooltip osbe-tip-g1" tabindex="0">
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="213.4,-167.35 140.2,-167.35 140.2,-130 213.4,-130 213.4,-167.35"/>
+<text xml:space="preserve" text-anchor="middle" x="176.8" y="-143.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">term</text>
+</a>
+</g>
 </g>
 <!-- expr&#45;&gt;term -->
 <g id="edge1" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M94.06,-73.2C107.26,-77.81 121.99,-82.96 135.84,-87.79"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="134.89,-90.43 143.37,-90.42 136.74,-85.14 134.89,-90.43"/>
+<path fill="none" stroke="#311602" stroke-width="2" d="M88.23,-128.77C100.91,-131.65 115.38,-134.94 128.85,-138"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="128.02,-140.69 136.44,-139.73 129.26,-135.23 128.02,-140.69"/>
 </g>
 <!-- factor -->
 <g id="node3" class="node">
-<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="335.98" cy="-58.41" rx="57.06" ry="26.41"/>
-<text xml:space="preserve" text-anchor="middle" x="335.98" y="-52.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">factor</text>
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="331.1,-115.35 250.4,-115.35 250.4,-78 331.1,-78 331.1,-115.35"/>
+<text xml:space="preserve" text-anchor="middle" x="290.75" y="-91.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">factor</text>
 </g>
 <!-- term&#45;&gt;factor -->
 <g id="edge2" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M234.7,-91.88C248.34,-87.33 263.6,-82.23 278.02,-77.42"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="278.76,-80.12 285.47,-74.94 276.99,-74.81 278.76,-80.12"/>
+<path fill="none" stroke="#311602" stroke-width="2" d="M214.15,-131.79C222.32,-128 231.12,-123.91 239.74,-119.91"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="240.89,-122.46 246.97,-116.55 238.53,-117.38 240.89,-122.46"/>
 </g>
 <!-- factor&#45;&gt;expr -->
 <g id="edge4" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M278.39,-56.47C266.35,-56.13 253.72,-55.83 241.92,-55.66 195.92,-54.98 184.4,-54.93 138.4,-55.66 130.14,-55.79 121.44,-55.99 112.87,-56.23"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="113.06,-53.42 105.15,-56.45 113.23,-59.02 113.06,-53.42"/>
-<text xml:space="preserve" text-anchor="middle" x="190.16" y="-58.11" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">( … )</text>
+<path fill="none" stroke="#311602" stroke-width="2" d="M249.65,-97.55C219.47,-98.54 177.13,-100.6 140.2,-104.92 126.77,-106.5 112.29,-108.83 99.04,-111.23"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="98.58,-108.47 91.23,-112.69 99.61,-113.97 98.58,-108.47"/>
+<text xml:space="preserve" text-anchor="middle" x="176.8" y="-107.38" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">( … )</text>
 </g>
 <!-- NUMBER -->
 <g id="node4" class="node">
-<ellipse fill="#ffe0c7" stroke="#311602" stroke-width="2" cx="503.02" cy="-58.41" rx="72.97" ry="26.41"/>
-<text xml:space="preserve" text-anchor="middle" x="503.02" y="-52.99" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER</text>
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="103.2,-69.35 0,-69.35 0,-32 103.2,-32 103.2,-69.35"/>
+<text xml:space="preserve" text-anchor="middle" x="51.6" y="-45.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">NUMBER</text>
 </g>
 <!-- factor&#45;&gt;NUMBER -->
 <g id="edge3" class="edge">
-<path fill="none" stroke="#311602" stroke-width="2" d="M393.78,-58.41C401.69,-58.41 409.95,-58.41 418.23,-58.41"/>
-<polygon fill="#311602" stroke="#311602" stroke-width="2" points="418.06,-61.21 426.06,-58.41 418.06,-55.61 418.06,-61.21"/>
+<path fill="none" stroke="#311602" stroke-width="2" d="M249.76,-88.92C212.81,-81.75 157.32,-70.99 114.62,-62.71"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="115.42,-60.01 107.03,-61.23 114.35,-65.5 115.42,-60.01"/>
+</g>
+</g>
+</svg>
+
+<template id="osbe-tip-g1"><p>
+A product of factors.</p></template></div></div>
+</div>
+</div> </div></div>
+
+<p>
+Every left cell is a block's spelling; the right, what a section says instead.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Block</th>
+<th scope="col" class="org-left">Section</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>#+begin_graph TITLE :direction right</code></td>
+<td class="org-left"><code>* HEADING :graph_TITLE:</code>, its drawer holding <code>:DIRECTION: right</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>+ child</code> nested under <code>+ parent</code></td>
+<td class="org-left"><code>** child</code> under <code>* parent</code></td>
+</tr>
+
+<tr>
+<td class="org-left">item text: markup, <code>&lt;&lt;id&gt;&gt;</code>, <code>[[T]]</code>, <code>[fn::…]</code></td>
+<td class="org-left">the heading's title: the very same text</td>
+</tr>
+
+<tr>
+<td class="org-left">trailing <code>:t₁:t₂:</code> tags</td>
+<td class="org-left">the heading's own tags &mdash;the very same spelling</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>+ LABEL :: CHILD</code>, labelling the arc into <code>CHILD</code></td>
+<td class="org-left"><code>** LABEL :: CHILD</code></td>
+</tr>
+
+<tr>
+<td class="org-left">an item's <code>shape</code> / <code>box</code> row</td>
+<td class="org-left"><code>:SHAPE: box</code> in its drawer; the table still works too</td>
+</tr>
+
+<tr>
+<td class="org-left">an item's <code>:edge.color</code> / <code>red</code> row</td>
+<td class="org-left"><code>:EDGE.COLOR: red</code></td>
+</tr>
+
+<tr>
+<td class="org-left">an item's <code>:edge[T].color</code> / <code>red</code> row</td>
+<td class="org-left"><code>:EDGE[T].COLOR: red</code>, <code>T</code> keeping its case</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+node:</code> under an item, for its subtree</td>
+<td class="org-left"><code>:NODE.SHAPE: box</code>; likewise <code>:GRAPH.KEY:</code>; <code>#+edge:</code> stays as it is</td>
+</tr>
+
+<tr>
+<td class="org-left">an item's later paragraphs, its notes</td>
+<td class="org-left">the heading's body paragraphs</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>1. 2.</code> children, one rank in the order written</td>
+<td class="org-left">the parent's <code>:ORDERED: t</code> &mdash;Org's own property, meaning just this</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>[X]</code> / <code>[ ]</code> checkbox</td>
+<td class="org-left">a <code>DONE</code> / <code>TODO</code> keyword; a keyword <code>K</code> applies template <code>k</code>, if any</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>#+graph:</code>, <code>#+name:</code>, a legend, before the items</td>
+<td class="org-left">the root's own text, before its first subheading</td>
+</tr>
+</tbody>
+</table>
+
+<ul class="org-ul">
+<li><code>:graph_The_Grammar:</code> titles the graph <code>The Grammar</code>; plain <code>:graph:</code> leaves it untitled, the heading
+being title enough.</li>
+<li>The heading stays a heading; its text and subsections become the graph, on export, and the next
+section is untouched. A node's own tags, such as <code>:details:</code>, style it; they never fold its section.</li>
+<li>A drawer's keys are Graphviz attributes, regardless of case: <code>:url:</code> is <code>URL</code>. Org's own properties, such
+as <code>:CUSTOM_ID:</code> and <code>:CATEGORY:</code>, stay Org's &mdash;bar <code>:STYLE:</code>, which Graphviz names too&mdash; and any other
+key is an error, so a typo never vanishes silently.</li>
+<li><code>COMMENT</code> headings, and those tagged <code>:noexport:</code> or <code>:ARCHIVE:</code>, are no nodes, their subtrees neither.</li>
+<li>A <code>:graph:</code> heading cannot hold another; a <code>:container:</code> tag draws a box.</li>
+<li><code>C-c C-c</code> anywhere in the section's body renders it, its image right beneath the root's drawer; on a
+heading, <code>C-c C-c</code> stays Org's, setting tags.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-go-only-as-deep-as-is-comfortable" class="outline-4">
+<h4 id="go-only-as-deep-as-is-comfortable"><span class="section-number-4">11.2.2.</span> <a href="#go-only-as-deep-as-is-comfortable">Go only as deep as is comfortable</a></h4>
+<div class="outline-text-4" id="text-go-only-as-deep-as-is-comfortable">
+<p>
+A section's body may hold a list, read exactly as a block's body is. So the sections need only go as deep
+as is comfortable, and leaves stay terse:
+</p>
+<div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start;"><div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 1em;background-color: #CCFF99;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Write﴿ </h6> <pre class="src src-org">* Lineage :graph:
+** λ-calculus
+*** inspired :: Lisp
++ subset of :: Emacs Lisp
++ dialect :: Scheme</pre> </div><div style="flex: 999 1 20em; min-width: 0; overflow-x: auto; padding: 1em;background-color: #FFCCCC;border-radius: 15px;font-size: 0.9em;"> <h6 style="text-align:center; font-family: Lorna; padding: 0; margin: 0;"> ﴾What You Get﴿ </h6> <div id="outline-container-org0000001" class="outline-2">
+<h2>Lineage</h2>
+<div class="outline-text-2" id="text-org0000001">
+<div style="overflow-x: auto"><div style="cursor: zoom-in" onclick="if (event.target.closest('a')) return; let s = this.firstElementChild.style; s.maxWidth = s.maxWidth ? '' : '100%'; this.style.cursor = s.maxWidth ? 'zoom-in' : 'zoom-out';"><svg style="max-width: 100%; height: auto" width="240pt" height="224pt"
+ viewBox="0.00 0.00 240.00 224.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 219.55)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-219.55 236.32,-219.55 236.32,4 -4,4"/>
+<!-- λ&#45;calculus -->
+<g id="node1" class="node">
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="176.07,-215.55 66.88,-215.55 66.88,-178.2 176.07,-178.2 176.07,-215.55"/>
+<text xml:space="preserve" text-anchor="middle" x="121.47" y="-191.45" font-family="Helvetica Bold" font-size="14.00" fill="#170206">λ&#45;calculus</text>
+</g>
+<!-- Lisp -->
+<g id="node2" class="node">
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="156.95,-126.45 86,-126.45 86,-89.1 156.95,-89.1 156.95,-126.45"/>
+<text xml:space="preserve" text-anchor="middle" x="121.47" y="-102.35" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Lisp</text>
+</g>
+<!-- λ&#45;calculus&#45;&gt;Lisp -->
+<g id="edge1" class="edge">
+<path fill="none" stroke="#311602" stroke-width="2" d="M121.47,-177.4C121.47,-165.97 121.47,-151.04 121.47,-138.03"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="124.28,-138.25 121.48,-130.25 118.68,-138.25 124.28,-138.25"/>
+<text xml:space="preserve" text-anchor="middle" x="145.1" y="-146.9" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">inspired</text>
+</g>
+<!-- Emacs Lisp -->
+<g id="node3" class="node">
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="118.95,-37.35 0,-37.35 0,0 118.95,0 118.95,-37.35"/>
+<text xml:space="preserve" text-anchor="middle" x="59.47" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Emacs Lisp</text>
+</g>
+<!-- Lisp&#45;&gt;Emacs Lisp -->
+<g id="edge2" class="edge">
+<path fill="none" stroke="#311602" stroke-width="2" d="M108.33,-88.3C99.78,-76.29 88.48,-60.42 78.9,-46.97"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="81.28,-45.48 74.36,-40.59 76.72,-48.73 81.28,-45.48"/>
+<text xml:space="preserve" text-anchor="middle" x="123.4" y="-57.8" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">subset of</text>
+</g>
+<!-- Scheme -->
+<g id="node4" class="node">
+<polygon fill="#ffe0c7" stroke="#311602" stroke-width="2" points="232.32,-37.35 136.62,-37.35 136.62,0 232.32,0 232.32,-37.35"/>
+<text xml:space="preserve" text-anchor="middle" x="184.47" y="-13.25" font-family="Helvetica Bold" font-size="14.00" fill="#170206">Scheme</text>
+</g>
+<!-- Lisp&#45;&gt;Scheme -->
+<g id="edge3" class="edge">
+<path fill="none" stroke="#311602" stroke-width="2" d="M140.09,-88.19C145.02,-82.87 150.16,-76.93 154.47,-71.1 159.92,-63.74 165.19,-55.32 169.76,-47.44"/>
+<polygon fill="#311602" stroke="#311602" stroke-width="2" points="172.16,-48.88 173.64,-40.53 167.28,-46.14 172.16,-48.88"/>
+<text xml:space="preserve" text-anchor="middle" x="184.01" y="-57.8" font-family="Helvetica Oblique" font-size="14.00" fill="#535152">dialect</text>
 </g>
 </g>
 </svg>
@@ -5798,12 +5999,28 @@ the <code>#+begin_graph</code> line: <code>:DIRECTION: right</code> is <code>:di
 </div>
 </div> </div></div>
 
+<p>
+Hence a section holding a lone list, and no subheadings, is a graph too: as is <a href="#a-section-is-a-graph">this one</a>, further below.
+</p>
+</div>
+</div>
+<div id="outline-container-org-is-the-graph-editor" class="outline-4">
+<h4 id="org-is-the-graph-editor"><span class="section-number-4">11.2.3.</span> <a href="#org-is-the-graph-editor">Org is the graph editor</a></h4>
+<div class="outline-text-4" id="text-org-is-the-graph-editor">
+<p>
+A block's editor is <code>C-c '</code> and our own commands; a section's is Org itself.
+</p>
 <ul class="org-ul">
-<li>The heading stays a heading; only its text becomes the graph, on export.</li>
-<li><code>:graph_The_Grammar:</code> titles the graph <code>The Grammar</code>, as the words before the first <code>:key</code> would; plain
-<code>:graph:</code> leaves it untitled.</li>
-<li>Org's own properties, such as <code>:CUSTOM_ID:</code> and <code>:CATEGORY:</code>, stay Org's; they never reach Graphviz.</li>
+<li><code>M-←</code> and <code>M-→</code> re-parent a node, its subtree in tow; <code>M-↑</code> and <code>M-↓</code> reorder siblings; <code>C-c C-w</code> refiles a
+node into another graph.</li>
+<li>Folding: a 200-node graph is a page of headings, not a page of nested bullets and tables.</li>
+<li>Column view, <code>C-c C-x C-c</code>, is a spreadsheet of every node's attributes, editable in place; say, by
+<code>#+columns: %ITEM %SHAPE %COLOR %EDGE.LABEL</code>.</li>
+<li><code>C-M-i</code> in a drawer completes Graphviz's attributes, then their values, and eldoc explains them;
+<code>C-c C-x p</code> completes a value, and <code>S-→</code> cycles through them, as for any of Org's allowed values.</li>
+<li><code>TODO</code> nodes reach the agenda; <code>C-c ;</code> comments a node out; <code>C-c / m</code> sparse-trees the graph by tag.</li>
 </ul>
+</div>
 </div>
 </div>
 </div>
@@ -6141,7 +6358,7 @@ Once the demo is over, this is the page we keep open.
 
 <tr>
 <td class="org-left"><code>* HEADING :graph:</code>, with <code>:PROPERTIES:</code></td>
-<td class="org-left">the section's text is a graph; <code>:DIRECTION: right</code> is <code>:direction right</code>, and so on</td>
+<td class="org-left">subheadings are nodes, drawers their attributes; the root's drawer, the header line</td>
 </tr>
 
 <tr>

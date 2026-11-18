@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-18 Wed 15:51 -->
+<!-- 2026-11-18 Wed 19:15 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: Make your own blocks and links</title>
@@ -600,9 +600,12 @@ the box. Declaring <code>:tag [:subsections MODE]</code> picks what becomes of s
 </p>
 <ul class="org-ul">
 <li><code>ignore</code> &mdash;the default, as with <code>:tag t</code>&mdash; leaves them outside the block;</li>
-<li><code>error</code> refuses a tagged section that has any, naming both headings; and</li>
+<li><code>error</code> refuses a tagged section that has any, naming both headings;</li>
 <li><code>recurse</code> wraps each subsection's own text in a block of its own, with the same
-arguments, unless the subsection carries the tag itself.</li>
+arguments, unless the subsection carries the tag itself; and</li>
+<li><code>contents</code> hands the whole subtree, subsections and all, to the block as its contents;
+no block is written, the handler reading the subtree itself. A <a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org#sections-are-graphs-the-graph-tag">:graph:</a> section's
+subheadings are so its nodes.</li>
 </ul>
 
 <p>
@@ -811,7 +814,10 @@ Within the block body:
   - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
 
 A #+name: table outside any graph is a template every graph in the buffer may use; the graph’s own wins.
-A section tagged :graph: exports as a graph of its text, its :PROPERTIES: drawer serving as the header line.
+A section tagged :graph: is a graph of its text and subsections, its :PROPERTIES: drawer serving as the header line:
+each subheading is an item, its title the item’s text, its drawer’s :KEY: v the item’s | key | v | rows, its body
+paragraphs notes, its ORDERED property 1. 2. children, and a TODO keyword its checkbox; a list in its body is more
+children.  C-c C-c in the section’s body renders it; see ‘org--graph-read-heading’ and ‘org-graph--section-cc’.
 
 Each list item declares a node.  Nesting encodes edges (parent → child); ordered children, 1. 2. 3., share a rank
 in the order written.  An item’s text may hold a &lt;&lt;target&gt;&gt;, its id; [[TARGET]] or [[TARGET][LABEL]] links, extra arcs;
@@ -988,7 +994,10 @@ Within the block body:
   - :T: :: MEANING  ↦ at the top, a legend entry: a sample of template T, captioned MEANING
 
 A #+name: table outside any graph is a template every graph in the buffer may use; the graph’s own wins.
-A section tagged :graph: exports as a graph of its text, its :PROPERTIES: drawer serving as the header line.
+A section tagged :graph: is a graph of its text and subsections, its :PROPERTIES: drawer serving as the header line:
+each subheading is an item, its title the item’s text, its drawer’s :KEY: v the item’s | key | v | rows, its body
+paragraphs notes, its ORDERED property 1. 2. children, and a TODO keyword its checkbox; a list in its body is more
+children.  C-c C-c in the section’s body renders it; see ‘org--graph-read-heading’ and ‘org-graph--section-cc’.
 
 Each list item declares a node.  Nesting encodes edges (parent → child); ordered children, 1. 2. 3., share a rank
 in the order written.  An item’s text may hold a &lt;&lt;target&gt;&gt;, its id; [[TARGET]] or [[TARGET][LABEL]] links, extra arcs;
