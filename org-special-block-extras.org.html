@@ -4816,6 +4816,17 @@ from&#8728;to m = {! try it! }
      in any HTML recognisable units; e.g., &#8220;5em 20px 30%&#8221; is valid.
      I personally advise only the use of percentage measurements.
      
+     A section tagged :parallel: sets each subheading as a column, its title in bold atop its text; COLS defaults to
+     how many there are, and its drawer&#8217;s :COLS: and :BAR: are the block&#8217;s arguments.  Its own text sits above them.
+     
+        ,* Lisp or Haskell? :parallel:          &#8801;   #+begin_parallel 2
+        ,** Lisp                                     *Lisp*
+        Code is data.                              Code is data.
+        ,** Haskell                                  #+columnbreak:
+        Types are propositions.                    *Haskell*
+                                                   Types are propositions.
+                                                   ,#+end_parallel
+     
      In the Soft Columns style above, any &#8216;#+columnbreak:&#8217; are merely ignored.
      With LaTeX export, the use of &#8216;#+columnbreak:&#8217; is used to request a column break.
      
@@ -4913,6 +4924,17 @@ from&#8728;to m = {! try it! }
      in any HTML recognisable units; e.g., &#8220;5em 20px 30%&#8221; is valid.
      I personally advise only the use of percentage measurements.
      
+     A section tagged :parallel: sets each subheading as a column, its title in bold atop its text; COLS defaults to
+     how many there are, and its drawer&#8217;s :COLS: and :BAR: are the block&#8217;s arguments.  Its own text sits above them.
+     
+        ,* Lisp or Haskell? :parallel:          &#8801;   #+begin_parallel 2
+        ,** Lisp                                     *Lisp*
+        Code is data.                              Code is data.
+        ,** Haskell                                  #+columnbreak:
+        Types are propositions.                    *Haskell*
+                                                   Types are propositions.
+                                                   ,#+end_parallel
+     
      In the Soft Columns style above, any &#8216;#+columnbreak:&#8217; are merely ignored.
      With LaTeX export, the use of &#8216;#+columnbreak:&#8217; is used to request a column break.
      
@@ -4975,6 +4997,29 @@ from&#8728;to m = {! try it! }
      <span style="color: #a626a4;">\emph</span>{<span style="color: #a626a4; font-style: italic;">\hyperref</span><span style="font-style: italic;">[o-glossary-org--parallel-block]{parallel}</span><span style="color: #a626a4; font-style: italic;">\label</span><span style="font-style: italic;">{</span><span style="font-weight: bold; font-style: italic; text-decoration: underline;">o-glossary-declaration-site-org--parallel-block</span><span style="font-style: italic;">} columns of text</span>}.
 <span style="color: #a0a1a7;">     #+end_export
 </span>     <span style="font-weight: bold;">:end:</span>
+
+  A section tagged =:parallel:= sets each subheading as a column, its title in bold atop its text; so
+  there are as many columns as subheadings, and no =#+columnbreak:= to write. Its drawer's =:COLS:= and
+  =:BAR:= are the block's arguments, and its own text sits above the columns. These two agree:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_parallel 2 :bar green
+,*Lisp*
+Code is data.
+,#+columnbreak:
+,*Haskell*
+Types are propositions.
+,#+end_parallel
+
+,* Lisp or Haskell?        :parallel:
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:BAR:</span> <span style="color: #383a42; background-color: #fafafa;">green</span>
+<span style="font-weight: bold;">:END:</span>
+,** Lisp
+Code is data.
+,** Haskell
+Types are propositions.
+<span style="color: #a0a1a7;">  #+end_src
+</span>  A deeper subheading is a bold paragraph within its column; =:COLS: 30% 70%= fixes the widths.
 
 <span style="color: #8b4513; font-weight: bold;">** Display maths ---</span><span style="color: #8b4513; font-weight: bold;">=#+begin_math=</span><span style="color: #8b4513; font-weight: bold;">, wherein </span><span style="color: #8b4513; font-weight: bold;">=red:&#119987;=</span><span style="color: #8b4513; font-weight: bold;"> colors a symbol</span>
   <span style="font-weight: bold;">:PROPERTIES:</span>
@@ -5728,6 +5773,28 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
   links, src blocks--- replaces LaTeX's =\newcommand=, =\texttt=, =\textcolor=, and
   hand-tuned =\hspace='s; <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org">graphs-README.org</a></span> sets the two side by side.
 
+  A section tagged =:smartdiagram:= is the same diagram, spelt as an outline, as a <span style="text-decoration: underline;"><a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org#sections-are-graphs-the-graph-tag">:graph:</a></span>
+  section is: its heading is the title, its drawer's =:TYPE:= the type, and its subheadings the items,
+  their drawers' =:COLOR:=, =:FONTCOLOR:=, and =:FONTSIZE:= their rows. Its own text sits above the
+  diagram, its =#+graph:= table included. These two agree:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,#+begin_smartdiagram From text to value :type flow:horizontal
++ Read
++ Expand
++ Evaluate
+,#+end_smartdiagram
+
+,* From text to value        :smartdiagram:
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:TYPE:</span> <span style="color: #383a42; background-color: #fafafa;">flow:horizontal</span>
+<span style="font-weight: bold;">:END:</span>
+,** Read
+,** Expand
+,** Evaluate
+<span style="color: #a0a1a7;">  #+end_src
+</span>  =C-c C-c= within the section's text shows its picture atop the section, as within the block; again,
+  to remove it. On a heading, =C-c C-c= stays Org's, setting tags.
+
   Class diagrams, state machines, entity-relationship diagrams, mindmaps, and even sequence
   diagrams are graphs too: tags such as =:inherits:=, =:start:=, and =:one-to-many:= ---templates
   every graph has, by ~org-defgraph-tag~--- and =#+begin_graph :theme mindmap= draw them; see
@@ -5778,6 +5845,17 @@ Hence, by <span style="text-decoration: underline;"><a href="Geometric">Geometri
 <span style="color: #a0a1a7;">  #+end_src
 </span>  Five dashes, since three alone are LaTeX's em-dash.
 
+  A section tagged =:image_LANG:= is a =#+begin_image LANG= block of its text, up to the next heading,
+  its drawer holding the block's keyword arguments; and that text shows as =LANG= in our buffer, as
+  the block's contents do, sans Org's markup. Plain =:image:= is LaTeX, as the block is by default:
+<span style="color: #a0a1a7;">  #+begin_src org :tangle no
+</span>,* Our button        :image_html:
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CSS:</span> <span style="color: #383a42; background-color: #fafafa;">button { background: gold; padding: 1em }</span>
+<span style="font-weight: bold;">:END:</span>
+&lt;button&gt;Click me&lt;/button&gt;
+<span style="color: #a0a1a7;">  #+end_src
+</span>
   =C-c C-c= within the block renders it, and shows its PNG atop the block; again, to remove it.
   A p5.js sketch, in an Emacs built with xwidgets, is shown running instead.
   The renderings are =images/NAME.{svg,pdf,png}=, by ~org-image-block-directory~; each way of

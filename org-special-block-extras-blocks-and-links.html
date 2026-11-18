@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-18 Wed 20:36 -->
+<!-- 2026-11-18 Wed 20:48 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>org-special-block-extras: The block and link types</title>
@@ -1393,6 +1393,17 @@ wasted on thin lines; instead, one could save space by using
      in any HTML recognisable units; e.g., “5em 20px 30%” is valid.
      I personally advise only the use of percentage measurements.
      
+     A section tagged :parallel: sets each subheading as a column, its title in bold atop its text; COLS defaults to
+     how many there are, and its drawer’s :COLS: and :BAR: are the block’s arguments.  Its own text sits above them.
+     
+        * Lisp or Haskell? :parallel:          ≡   #+begin_parallel 2
+        ** Lisp                                     *Lisp*
+        Code is data.                              Code is data.
+        ** Haskell                                  #+columnbreak:
+        Types are propositions.                    *Haskell*
+                                                   Types are propositions.
+                                                   #+end_parallel
+     
      In the Soft Columns style above, any ‘#+columnbreak:’ are merely ignored.
      With LaTeX export, the use of ‘#+columnbreak:’ is used to request a column break.
      
@@ -1490,6 +1501,17 @@ wasted on thin lines; instead, one could save space by using
      in any HTML recognisable units; e.g., “5em 20px 30%” is valid.
      I personally advise only the use of percentage measurements.
      
+     A section tagged :parallel: sets each subheading as a column, its title in bold atop its text; COLS defaults to
+     how many there are, and its drawer’s :COLS: and :BAR: are the block’s arguments.  Its own text sits above them.
+     
+        * Lisp or Haskell? :parallel:          ≡   #+begin_parallel 2
+        ** Lisp                                     *Lisp*
+        Code is data.                              Code is data.
+        ** Haskell                                  #+columnbreak:
+        Types are propositions.                    *Haskell*
+                                                   Types are propositions.
+                                                   #+end_parallel
+     
      In the Soft Columns style above, any ‘#+columnbreak:’ are merely ignored.
      With LaTeX export, the use of ‘#+columnbreak:’ is used to request a column break.
      
@@ -1511,8 +1533,8 @@ wasted on thin lines; instead, one could save space by using
      </p> </div></div><br> <details style="background-color: #FFFFCC"><summary style="text-align:center; font-family: Lorna; padding: 0; margin: 0; cursor: pointer;">﴾How It’s Implemented﴿</summary> <div class="osbe-copy" style="position: relative;">
 <button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
 <div class="org-src-container">
-<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (<span style="color: #c18401;">&amp;optional</span> (cols <span style="color: #50a14f;">"2"</span>) <span style="color: #c18401;">&amp;key</span> bar <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span>
-                       <span style="color: #c18401;">&amp;context</span> backend contents)
+<pre class="src src-emacs-lisp"><code>(<span style="color: #a626a4;">org-defblock</span> parallel (<span style="color: #c18401;">&amp;optional</span> cols <span style="color: #c18401;">&amp;key</span> bar <span style="color: #c18401;">&amp;allow-other-keys</span> <span style="color: #e44649;">:latex-head</span> (<span style="color: #50a14f;">"multicol"</span>) <span style="color: #e44649;">:manual</span> <span style="color: #50a14f;">"#Parallel"</span>
+                       <span style="color: #e44649;">:tag</span> [<span style="color: #e44649;">:subsections</span> contents] <span style="color: #c18401;">&amp;context</span> backend raw-contents contents)
               <span style="color: #50a14f;">"Place ideas side-by-side, possibly with a separator.
 
 There are COLS many columns, and they may be separated by solid
@@ -1552,15 +1574,32 @@ The specification is &#119951; measurements denoting widths; which may be
 in any HTML recognisable units; e.g., &#8220;5em 20px 30%&#8221; is valid.
 I personally advise only the use of percentage measurements.
 
+A section tagged :parallel: sets each subheading as a column, its title in bold atop its text; COLS defaults to
+how many there are, and its drawer's :COLS: and :BAR: are the block's arguments.  Its own text sits above them.
+
+   * Lisp or Haskell? :parallel:          &#8801;   #+begin_parallel 2
+   ** Lisp                                     *Lisp*
+   Code is data.                              Code is data.
+   ** Haskell                                  #+columnbreak:
+   Types are propositions.                    *Haskell*
+                                              Types are propositions.
+                                              #+end_parallel
+
 In the Soft Columns style above, any &#8216;#+columnbreak:&#8217; are merely ignored.
 With LaTeX export, the use of &#8216;#+columnbreak:&#8217; is used to request a column break."</span>
-              (<span style="color: #a626a4;">let*</span> ((widths (split-string cols))
+              (<span style="color: #a626a4;">-let*</span> (((preamble count . columns) (<span style="color: #a626a4;">and</span> (string-match-p org-outline-regexp-bol raw-contents)
+                                                        (org--parallel-columns raw-contents)))
+                      (contents (<span style="color: #a626a4;">if</span> columns (org-parse columns) contents))
+                      (cols (format <span style="color: #50a14f;">"%s"</span> (<span style="color: #a626a4;">or</span> cols (<span style="color: #a626a4;">and</span> columns count) 2)))
+                      (widths (split-string cols))
                      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">Hard columns have their widths given; e.g., 20% 60% 20%, or 5em 20px.
 </span>                     (hard? (<span style="color: #a626a4;">--any?</span> (not (string-match-p <span style="color: #50a14f;">"\\`[0-9]+\\'"</span> it)) widths))
                      (color (<span style="color: #a626a4;">if</span> (equal (format <span style="color: #50a14f;">"%s"</span> bar) <span style="color: #50a14f;">"t"</span>) <span style="color: #50a14f;">"black"</span> bar))
                      <span style="color: #a0a1a7; font-weight: bold;">;; </span><span style="color: #a0a1a7;">A line of its own, so that mentions such as ~#+columnbreak:~ are left alone.
 </span>                     (column-break <span style="color: #50a14f;">"^[ \t]*#\\+columnbreak:[ \t]*$"</span>))
-                (<span style="color: #a626a4;">pcase</span> backend
+                (concat
+                 (<span style="color: #a626a4;">and</span> columns (org-parse preamble))
+                 (<span style="color: #a626a4;">pcase</span> backend
                   ('latex (format (concat <span style="color: #50a14f;">"\\par \\setlength{\\columnseprule}{%s pt}\n"</span>
                                           <span style="color: #50a14f;">"\\begin{minipage}[t]{\\linewidth}\n"</span>
                                           <span style="color: #50a14f;">"\\begin{multicols}{%s}\n%s\n"</span>
@@ -1583,11 +1622,42 @@ With LaTeX export, the use of &#8216;#+columnbreak:&#8217; is used to request a 
                                        (<span style="color: #a626a4;">cl-loop</span> for column in (cdr columns)
                                                 for chunk in (cdr chunks)
                                                 concat (format <span style="color: #50a14f;">"@@html:&lt;/div&gt;%s@@%s"</span> column chunk))
-                                       <span style="color: #50a14f;">"&lt;/div&gt;"</span>)))))))
+                                       <span style="color: #50a14f;">"&lt;/div&gt;"</span>))))))))
 </code></pre>
 </div>
 </div>
  </details>
+
+<p>
+A section tagged <code>:parallel:</code> sets each subheading as a column, its title in bold atop its text; so
+there are as many columns as subheadings, and no <code>#+columnbreak:</code> to write. Its drawer's <code>:COLS:</code> and
+<code>:BAR:</code> are the block's arguments, and its own text sits above the columns. These two agree:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_parallel 2 :bar green
+</span><span style="font-weight: bold;">*Lisp*</span>
+Code is data.
+#+columnbreak:
+<span style="font-weight: bold;">*Haskell*</span>
+Types are propositions.
+<span style="color: #a0a1a7;">#+end_parallel
+</span>
+<span style="color: #0184bc; font-weight: bold;">* Lisp or Haskell?        </span><span style="color: #0184bc; font-weight: bold;">:parallel:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:BAR:</span> <span style="color: #383a42; background-color: #fafafa;">green</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #8b4513; font-weight: bold;">** Lisp</span>
+Code is data.
+<span style="color: #8b4513; font-weight: bold;">** Haskell</span>
+Types are propositions.
+</code></pre>
+</div>
+</div>
+<p>
+A deeper subheading is a bold paragraph within its column; <code>:COLS: 30% 70%</code> fixes the widths.
+</p>
 </div>
 </div>
 <div id="outline-container-math" class="outline-2">
@@ -2787,6 +2857,36 @@ hand-tuned <code>\hspace</code>'s; <a href="https://github.com/alhassy/org-speci
 </p>
 
 <p>
+A section tagged <code>:smartdiagram:</code> is the same diagram, spelt as an outline, as a <a href="https://github.com/alhassy/org-special-block-extras/blob/master/graphs-README.org#sections-are-graphs-the-graph-tag">:graph:</a>
+section is: its heading is the title, its drawer's <code>:TYPE:</code> the type, and its subheadings the items,
+their drawers' <code>:COLOR:</code>, <code>:FONTCOLOR:</code>, and <code>:FONTSIZE:</code> their rows. Its own text sits above the
+diagram, its <code>#+graph:</code> table included. These two agree:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #a0a1a7;">#+begin_smartdiagram From text to value :type flow:horizontal
+</span>+ Read
++ Expand
++ Evaluate
+<span style="color: #a0a1a7;">#+end_smartdiagram
+</span>
+<span style="color: #0184bc; font-weight: bold;">* From text to value        </span><span style="color: #0184bc; font-weight: bold;">:smartdiagram:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:TYPE:</span> <span style="color: #383a42; background-color: #fafafa;">flow:horizontal</span>
+<span style="font-weight: bold;">:END:</span>
+<span style="color: #8b4513; font-weight: bold;">** Read</span>
+<span style="color: #8b4513; font-weight: bold;">** Expand</span>
+<span style="color: #8b4513; font-weight: bold;">** Evaluate</span>
+</code></pre>
+</div>
+</div>
+<p>
+<code>C-c C-c</code> within the section's text shows its picture atop the section, as within the block; again,
+to remove it. On a heading, <code>C-c C-c</code> stays Org's, setting tags.
+</p>
+
+<p>
 Class diagrams, state machines, entity-relationship diagrams, mindmaps, and even sequence
 diagrams are graphs too: tags such as <code>:inherits:</code>, <code>:start:</code>, and <code>:one-to-many:</code> &mdash;templates
 every graph has, by <code>org-defgraph-tag</code>&mdash; and <code>#+begin_graph :theme mindmap</code> draw them; see
@@ -2920,6 +3020,23 @@ block's preamble joins the document's; an HTML block's precedes it.
 <p>
 Five dashes, since three alone are LaTeX's em-dash.
 </p>
+
+<p>
+A section tagged <code>:image_LANG:</code> is a <code>#+begin_image LANG</code> block of its text, up to the next heading,
+its drawer holding the block's keyword arguments; and that text shows as <code>LANG</code> in our buffer, as
+the block's contents do, sans Org's markup. Plain <code>:image:</code> is LaTeX, as the block is by default:
+</p>
+<div class="osbe-copy" style="position: relative;">
+<button class="osbe-copy-button" type="button" aria-label="Copy to clipboard" style="position: absolute; top: 0.4em; right: 0.4em; z-index: 1; font-size: 0.75em; cursor: pointer; padding: 0.1em 0.6em; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; opacity: 0.8;" onclick="var p = this.parentElement.querySelector('pre') || this.parentElement, c = p.cloneNode(true); c.querySelectorAll('.linenr').forEach(function (n) { n.remove(); }); var b = this; navigator.clipboard.writeText(c.textContent.replace(/\n$/, '')).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });">Copy</button>
+<div class="org-src-container">
+<pre class="src src-org"><code><span style="color: #0184bc; font-weight: bold;">* Our button        </span><span style="color: #0184bc; font-weight: bold;">:image_html:</span>
+<span style="font-weight: bold;">:PROPERTIES:</span>
+<span style="color: #a626a4;">:CSS:</span> <span style="color: #383a42; background-color: #fafafa;">button { background: gold; padding: 1em }</span>
+<span style="font-weight: bold;">:END:</span>
+&lt;<span style="color: #0184bc;">button</span>&gt;Click me&lt;/<span style="color: #0184bc;">button</span>&gt;
+</code></pre>
+</div>
+</div>
 
 <p>
 <code>C-c C-c</code> within the block renders it, and shows its PNG atop the block; again, to remove it.
